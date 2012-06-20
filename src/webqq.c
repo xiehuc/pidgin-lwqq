@@ -4,7 +4,11 @@
 #include <version.h>
 #include "internal.h"
 #include "webqq.h"
+#include "qq_types.h"
+#include "qq_async.h"
+#include "login.h"
 
+#include <type.h>
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -83,14 +87,40 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 	return types;
 }
 
+qq_account* qq_account_new(PurpleAccount* account)
+{
+    qq_account* ac = g_malloc0(sizeof(qq_account));
+    ac->account = account;
+    qq_async_set(ac,1);
+    return ac;
+}
+
+void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
+{
+}
 
 static void qq_login(PurpleAccount *account)
 {
-    return;
+    PurpleConnection* pc= purple_account_get_connection(account);
+    qq_account* ac = qq_account_new(account);
+    const char* username = purple_account_get_username(account);
+    const char* password = purple_account_get_password(account);
+    ac->gc = pc;
+    ac->qq = lwqq_client_new(username,password);
+    purple_connection_set_protocol_data(pc,ac);
+
+    qq_async_add_listener(ac,LOGIN_COMPLETE,login_complete,NULL);
+    background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)
 {
-    return;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqErrorCode err;
+    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0)
+        lwqq_logout(ac->qq,&err);
+    lwqq_client_free(ac->qq);
+    g_free(ac);
+    purple_connection_set_protocol_data(gc,NULL);
 }
 
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
@@ -156,6 +186,7 @@ static PurplePluginInfo info = {
 	.author=        "xiehuc<xiehuc@gmail.com>", /* author */
 	.homepage=      "https://github.com/xiehuc/pidgin-lwqq", 
 	.extra_info=    &tsina_prpl_info, /* extra_info */
+    .actions=       plugin_actions
 };
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)

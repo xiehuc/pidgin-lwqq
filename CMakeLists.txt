@@ -1,4 +1,6 @@
 Project(libwebqq)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/src)
+
 add_subdirectory(src)
