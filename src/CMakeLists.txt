@@ -1,20 +1,26 @@
 AUX_SOURCE_DIRECTORY(. SRC_LIST)
+AUX_SOURCE_DIRECTORY(../include/liblwqq LWQQ_LIST)
+AUX_SOURCE_DIRECTORY(../include/libghttp GHTTP_LIST)
 
 
 ADD_LIBRARY(webqq MODULE 
     ${SRC_LIST} 
+    ${LWQQ_LIST}
+    ${GHTTP_LIST}
     )
 
 INCLUDE_DIRECTORIES(webqq
 	${PURPLE_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${PIDGIN_INCLUDE_DIRS}
+    ../include/libghttp
+    ../include/liblwqq
 	)
 TARGET_LINK_LIBRARIES(webqq
-					${PURPLE_LIBRARIES}
-                    ${GLIB_LIBRARIES}
-                    ${PIDGIN_LIBRARIES}
-					)
+    ${PURPLE_LIBRARIES}
+    ${GLIB_LIBRARIES}
+    ${PIDGIN_LIBRARIES}
+    )
 
 
 
