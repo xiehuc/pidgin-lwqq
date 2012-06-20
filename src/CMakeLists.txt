@@ -17,12 +17,14 @@ TARGET_LINK_LIBRARIES(webqq
 					)
 
 
+
 FIND_PACKAGE(PkgConfig REQUIRED)
 
 PKG_CHECK_MODULES(PURPLE REQUIRED  purple)
 PKG_CHECK_MODULES(GLIB REQUIRED  glib-2.0)
 PKG_CHECK_MODULES(PIDGIN REQUIRED  pidgin)
 
+SET(ICON_FILE "../res/")
 
 option(NLS "Native language support" OFF)
 if(NLS)
@@ -38,7 +40,10 @@ EXEC_PROGRAM("whereis libpurple| sed -e 's/[^\\/]*//' -e 's/\\(.*\\)lib\\/libpur
 
 EXEC_PROGRAM("whereis pidgin | sed -e 's/[^\\/]*//' -e 's/\\(.*\\)bin\\/pidgin.*/\\1/'"
 			OUTPUT_VARIABLE PIDGIN_PREFIX)
+
+SET(PIDGIN_PIX_INSTALL_DIR "${PIDGIN_PREFIX}share/pixmaps/pidgin/protocols")
 SET(LIB_INSTALL_DIR "${PURPLE_PREFIX}lib/purple-${PURPLE_MAJOR_VERSION}")
 
+INSTALL(DIRECTORY "../res/" DESTINATION ${PIDGIN_PIX_INSTALL_DIR})
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 
