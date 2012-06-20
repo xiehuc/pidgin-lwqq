@@ -16,26 +16,6 @@ static void* _background_login(void* data)
 
     lwqq_login(lc, &err);
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
-        /*snprintf(vc_image, sizeof(vc_image), "/tmp/lwqq_%s.jpeg", lc->username);
-        snprintf(vc_file, sizeof(vc_file), "/tmp/lwqq_%s.txt", lc->username);
-        unlink(vc_file);
-
-        lwqq_log(LOG_NOTICE, "Need verify code to login, please check "
-                 "image file %s, and input what you see to file %s\n",
-                 vc_image, vc_file);
-        while (1) {
-            if (!access(vc_file, F_OK)) {
-                sleep(1);
-                break;
-            }
-            sleep(1);
-        }
-        lc->vc->str = get_vc();
-        if (!lc->vc->str) {
-            goto failed;
-        }
-        lwqq_log(LOG_NOTICE, "Get verify code: %s\n", lc->vc->str);
-        lwqq_login(lc, &err);*/
         qq_async_dispatch(ac,VERIFY_COME,err);
     }else{
         qq_async_dispatch(ac,LOGIN_COMPLETE,err);
@@ -43,6 +23,48 @@ static void* _background_login(void* data)
     return NULL;
 }
 
+
 void background_login(qq_account* ac){
     START_THREAD(_background_login,ac);
+}
+
+static void* _background_friends_info(void* data)
+{
+    qq_account* ac=(qq_account*)data;
+    LwqqErrorCode err;
+    LwqqClient* lc=ac->qq;
+
+    lwqq_info_get_group_name_list(lc,&err);
+    qq_async_dispatch(ac,GROUPS_COMPLETE,err);
+
+    lwqq_info_get_friends_info(lc,&err);
+    lwqq_info_get_all_friend_qqnumbers(lc,err);
+    qq_async_dispatch(ac,FRIENDS_COMPLETE,err);
+}
+void background_friends_info(qq_account* ac)
+{
+    START_THREAD(_background_friends_info,ac);
+}
+
+void* _background_msg_poll(void* data)
+{
+    qq_account* ac = (qq_account*)data;
+    LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
+    LwqqErrorCode err;
+
+    /* Poll to receive message */
+    l->poll_msg(l);
+
+    /* Need to wrap those code so look like more nice */
+    while (1) {
+        sleep(1);
+        LwqqRecvMsg *msg;
+        if (!SIMPLEQ_EMPTY(&l->head)) {
+            qq_async_dispatch(ac,MSG_COME,err);
+        }
+    }
+}
+void background_msg_poll(qq_account* ac)
+{
+    START_THREAD(_background_msg_poll,ac);
 }

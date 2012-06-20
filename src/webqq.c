@@ -94,9 +94,72 @@ qq_account* qq_account_new(PurpleAccount* account)
     qq_async_set(ac,1);
     return ac;
 }
-
-void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
+void qq_account_free(qq_account* ac)
 {
+    if(qq_async_enabled(ac))
+        qq_async_set(ac,0);
+    g_free(ac);
+}
+static void groups_complete(qq_account* ac,LwqqErrorCode err,void* data)
+{
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group;
+    /*LIST_FOREACH(group,&lc->groups,entries){
+        if(purple_find_group(group->name)==NULL)
+            purple_group_new(group->name);
+    }*/
+}
+static void friends_complete(qq_account* ac,LwqqErrorCode err,void* data)
+{
+    LwqqClient* lc = ac->qq;
+    PurpleAccount* account=ac->account;
+    LwqqBuddy* buddy;
+    PurpleBuddy* bu;
+    PurpleGroup* gp;
+    gp = purple_group_new("QQ");
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if(purple_find_buddy(ac->account,buddy->qqnumber)==NULL){
+            bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
+            //gp = purple_find_group(buddy->group);
+            purple_blist_add_buddy(bu,NULL,gp,NULL);
+        }
+        purple_prpl_got_user_status(account, buddy->qqnumber, "online", NULL);
+    }
+}
+
+static void msg_come(qq_account* ac,LwqqErrorCode err,void* data)
+{
+    LwqqRecvMsgList* l = ac->qq->msg_list;
+    LwqqBuddy* buddy;
+    PurpleConnection* pc = ac->gc;
+    LwqqRecvMsg *msg;
+
+    pthread_mutex_lock(&l->mutex);
+    if (!SIMPLEQ_EMPTY(&l->head)) {
+        msg = SIMPLEQ_FIRST(&l->head);
+        if (msg->msg->content) {
+            buddy = lwqq_buddy_find_buddy_by_uin(ac->qq,msg->msg->from);
+            serv_got_im(pc, buddy->qqnumber, msg->msg->content, PURPLE_MESSAGE_RECV, time(NULL));
+        }
+        SIMPLEQ_REMOVE_HEAD(&l->head, entries);
+    }
+    pthread_mutex_unlock(&l->mutex);
+}
+
+static void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
+{
+    PurpleConnection* gc = ac->gc;
+    if(err!=LWQQ_EC_OK)
+        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
+
+    purple_connection_set_state(gc,PURPLE_CONNECTED);
+
+    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    qq_async_add_listener(ac,GROUPS_COMPLETE,groups_complete,NULL);
+    qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    background_friends_info(ac);
+    qq_async_add_listener(ac,MSG_COME,msg_come,NULL);
+    background_msg_poll(ac);
 }
 
 static void qq_login(PurpleAccount *account)
@@ -119,21 +182,36 @@ static void qq_close(PurpleConnection *gc)
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0)
         lwqq_logout(ac->qq,&err);
     lwqq_client_free(ac->qq);
-    g_free(ac);
+    qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
 }
 
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
 {
+    qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+    PurpleBuddy* buddy;
+    LwqqBuddy* friend;
+    LwqqBuddy* item;
+    LwqqSendMsg* msg;
+    LwqqClient* lc = ac->qq;
+
+	if(!(buddy = purple_find_buddy(ac->account, who))) return 0;
+    LIST_FOREACH(item, &ac->qq->friends, entries) {
+        if(strcmp(buddy->name,item->qqnumber)==0){
+            friend=item;
+            break;
+        }
+    }
+    
+    msg = lwqq_sendmsg_new(lc,friend->uin,"message",what);
+    if(!msg) return 1;
+
+    msg->send(msg);
+
     return 1;
 }
 
 
-gboolean plugin_load(PurplePlugin* plugin)
-{
-    purple_debug_info(DBGID,"plugin loaded\n");
-    return 1;
-}
 static void
 init_plugin(PurplePlugin *UNUSED(plugin))
 {

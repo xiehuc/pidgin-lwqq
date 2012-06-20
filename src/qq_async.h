@@ -15,9 +15,9 @@ typedef void (*ASYNC_CALLBACK)(qq_account* lc,LwqqErrorCode err,void* data);
 typedef enum ListenerType{
     LOGIN_COMPLETE,
     VERIFY_COME,
-    FRIENDS_ALL_COMPLETE,
-    POLL_MSG_COMPLETE,
-    MSG_COME
+    FRIENDS_COMPLETE,
+    GROUPS_COMPLETE,
+    MSG_COME,
 } ListenerType;
 
 void qq_async_add_listener(qq_account* ac,ListenerType type,ASYNC_CALLBACK callback,void* data);
