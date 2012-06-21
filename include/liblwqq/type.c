@@ -220,6 +220,8 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->cate_index);
     s_free(buddy->client_type);
     
+    s_free(buddy->status);
+    
     s_free(buddy);
 }
 
@@ -267,6 +269,7 @@ LwqqGroup *lwqq_group_new()
  */
 void lwqq_group_free(LwqqGroup *group)
 {
+    LwqqBuddy *m_entry, *m_next;
     if (!group)
         return ;
 
@@ -284,7 +287,13 @@ void lwqq_group_free(LwqqGroup *group)
     s_free(group->owner);
     s_free(group->flag);
     s_free(group->option);
-        
+
+    /* Free Group members list */
+    LIST_FOREACH_SAFE(m_entry, &group->members, entries, m_next) {
+        LIST_REMOVE(m_entry, entries);
+        lwqq_buddy_free(m_entry);
+    }
+	
     s_free(group);
 }
 
@@ -307,6 +316,29 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid)
     LIST_FOREACH(group, &lc->groups, entries) {
         if (group->gid && (strcmp(group->gid, gid) == 0))
             return group;
+    }
+
+    return NULL;
+}
+
+/** 
+ * Find group member object by member's uin
+ * 
+ * @param group Our Lwqq group object
+ * @param uin The uin of group member which we want to find
+ * 
+ * @return A LwqqBuddy instance 
+ */
+LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin)
+{
+    LwqqBuddy *member;
+    
+    if (!group || !uin)
+        return NULL;
+
+    LIST_FOREACH(member, &group->members, entries) {
+        if (member->uin && (strcmp(member->uin, uin) == 0))
+            return member;
     }
 
     return NULL;

@@ -364,7 +364,7 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
     
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
-      	group = s_malloc0(sizeof(*group));
+      	group = lwqq_group_new();
         group->flag = s_strdup(json_parse_simple_value(cur, "flag"));
         group->name = s_strdup(json_parse_simple_value(cur, "name"));
         group->gid = s_strdup(json_parse_simple_value(cur, "gid"));
@@ -553,6 +553,274 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
 char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
 {
     return get_friend_qqnumber(lc, uin);
+}
+
+/** 
+ * Parse group info like this
+ * Is the "members" in "ginfo" useful ? Here not parsing it...
+ *
+ * "result":{
+ * "ginfo":
+ *   {"face":0,"memo":"","class":10026,"fingermemo":"","code":3968641865,"createtime":1339647698,"flag":1,
+ *    "level":0,"name":"............","gid":2698833507,"owner":909998471,
+ *    "members":[{"muin":56360327,"mflag":0},{"muin":909998471,"mflag":0}],
+ *    "option":2},
+ * 
+ * @param lc 
+ * @param group
+ * @param json Point to the first child of "result"'s value
+ */
+static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    char *gid;
+
+    /* Make json point "ginfo" reference */
+    while (json) {
+        if (json->text && !strcmp(json->text, "ginfo")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+
+    //json = json->child;    // there's no array here , comment it.
+    gid = json_parse_simple_value(json,"gid");
+    if (strcmp(group->gid, gid) != 0) {
+        lwqq_log(LOG_ERROR, "Parse json object error.");
+        return;
+    }
+    
+#define  SET_GINFO(key, name) {                                    \
+        if (group->key) {                                               \
+            s_free(group->key);                                         \
+        }                                                               \
+        group->key = s_strdup(json_parse_simple_value(json, name));     \
+    }
+
+    /* we have got the 'code','name' and 'gid', so we comment it here. */
+    SET_GINFO(face, "face");
+    SET_GINFO(memo, "memo");
+    SET_GINFO(class, "class");
+    SET_GINFO(fingermemo,"fingermemo");
+    //SET_GINFO(code, "code");
+    SET_GINFO(createtime, "createtime");
+    SET_GINFO(flag, "flag");
+    SET_GINFO(level, "level");
+    //SET_GINFO(name, "name");
+    //SET_GINFO(gid, "gid");
+    SET_GINFO(owner, "owner");
+    SET_GINFO(option, "option");
+    
+#undef SET_GINFO
+    
+}
+
+/** 
+ * Parse group members info
+ * we only get the "nick" and the "uin", and get the members' qq number.
+ *
+ * "minfo":[
+ *   {"nick":"evildoer","province":"......","gender":"male","uin":56360327,"country":"......","city":"......"},
+ *   {"nick":"evil...doer","province":"......","gender":"male","uin":909998471,"country":"......","city":"......"}],
+ *
+ * @param lc 
+ * @param group
+ * @param json Point to the first child of "result"'s value
+ */
+static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    LwqqBuddy *member;
+    json_t *cur;
+    char *uin;
+    char *nick;
+    
+    /* Make json point "minfo" reference */
+    while (json) {
+        if (json->text && !strcmp(json->text, "minfo")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+    
+    json = json->child;    //point to the array.[]
+    for (cur = json->child; cur != NULL; cur = cur->next) {
+        uin = json_parse_simple_value(cur, "uin");
+        nick = json_parse_simple_value(cur, "nick");
+
+        if (!uin || !nick)
+            continue;
+        member = lwqq_buddy_new();
+
+        member->uin = s_strdup(uin);
+        member->nick = s_strdup(nick);
+
+        /* FIX ME: should we get group members qqnumber here ? */
+        /* we can get the members' qq number by uin */
+        member->qqnumber = get_friend_qqnumber(lc, member->uin);
+
+        /* Add to members list */
+        LIST_INSERT_HEAD(&group->members, member, entries);
+    }
+}
+
+/** 
+ * mark qq group's online members 
+ *
+ * "stats":[{"client_type":1,"uin":56360327,"stat":10},{"client_type":41,"uin":909998471,"stat":10}],
+ *
+ * @param lc 
+ * @param group
+ * @param json Point to the first child of "result"'s value
+ */
+static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    LwqqBuddy *member;
+    json_t *cur;
+    char *uin;
+    
+    /* Make json point "stats" reference */
+    while (json) {
+        if (json->text && !strcmp(json->text, "stats")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+    
+    json = json->child;    //point to the array.[]
+    for (cur = json->child; cur != NULL; cur = cur->next) {
+        uin = json_parse_simple_value(cur, "uin");
+
+        if (!uin)
+            continue;
+        member = lwqq_group_find_group_member_by_uin(group, uin);
+        if (!member)
+            continue;
+        member->client_type = s_strdup(json_parse_simple_value(cur, "client_type"));
+        member->stat = s_strdup(json_parse_simple_value(cur, "stat"));
+
+    }
+}
+
+/** 
+ * Get QQ groups detail information. 
+ * 
+ * @param lc 
+ * @param group
+ * @param err 
+ */
+void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
+                                      LwqqErrorCode *err)
+{
+    lwqq_log(LOG_DEBUG, "in function.");
+
+    char url[512];
+    LwqqHttpRequest *req = NULL;  
+    int ret;
+    json_t *json = NULL, *json_tmp;
+    char *cookies;
+
+    if (!lc || ! group) {
+        return ;
+    }
+
+    /* Make sure we know code. */
+    if (!group->code) {
+        if (err)
+            *err = LWQQ_EC_NULL_POINTER;
+        return ;
+    }
+    
+    /* Create a GET request */
+    snprintf(url, sizeof(url),
+             "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s",
+             "http://s.web2.qq.com", group->code, lc->vfwebqq);
+    req = lwqq_http_create_default_request(url, err);
+    if (!req) {
+        goto done;
+    }
+    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Content-Transfer-Encoding", "binary");
+    req->set_header(req, "Content-type", "utf-8");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    ret = req->do_request(req, 0, NULL);
+    if (ret || req->http_code != 200) {
+        if (err)
+            *err = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
+
+    /**
+     * Here, we got a json object like this:
+     *
+     * {"retcode":0,
+     * "result":{
+     * "stats":[{"client_type":1,"uin":56360327,"stat":10},{"client_type":41,"uin":909998471,"stat":10}],
+     * "minfo":[
+     *   {"nick":"evildoer","province":"......","gender":"male","uin":56360327,"country":"......","city":"......"},
+     *   {"nick":"evil...doer","province":"......","gender":"male","uin":909998471,"country":"......","city":"......"}
+     *   {"nick":"glrapl","province":"","gender":"female","uin":1259717843,"country":"","city":""}],
+     * "ginfo":
+     *   {"face":0,"memo":"","class":10026,"fingermemo":"","code":3968641865,"createtime":1339647698,"flag":1,
+     *    "level":0,"name":"............","gid":2698833507,"owner":909998471,
+     *    "members":[{"muin":56360327,"mflag":0},{"muin":909998471,"mflag":0}],
+     *    "option":2},
+     * "cards":[{"muin":3777107595,"card":""},{"muin":3437728033,"card":":FooTearth"}],
+     * "vipinfo":[{"vip_level":0,"u":56360327,"is_vip":0},{"vip_level":0,"u":909998471,"is_vip":0}]}}
+     * 
+     */
+    ret = json_parse_document(&json, req->response);
+    if (ret != JSON_OK) {
+        lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
+        if (err)
+            *err = LWQQ_EC_ERROR;
+        goto done;
+    }
+
+    json_tmp = get_result_json_object(json);
+    if (!json_tmp) {
+        lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
+        goto json_error;
+    }
+
+    /** It seems everything is ok, we start parsing information
+     * now
+     */
+    if (json_tmp->child && json_tmp->child->child ) {
+        json_tmp = json_tmp->child->child;
+
+        /* first , get group information */
+        parse_groups_ginfo_child(lc, group, json_tmp);
+        /* second , get group members */
+        parse_groups_minfo_child(lc, group, json_tmp);
+        /* third , mark group's online members */
+        parse_groups_stats_child(lc, group, json_tmp);
+               
+    }
+        
+done:
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return ;
+
+json_error:
+    *err = LWQQ_EC_ERROR;
+    /* Free temporary string */
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
 }
 
 /** 
@@ -761,6 +1029,118 @@ done:
     lwqq_http_request_free(req);
     return ;
 
+json_error:
+    if (err)
+        *err = LWQQ_EC_ERROR;
+    /* Free temporary string */
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+}
+
+static void update_online_buddies(LwqqClient *lc, json_t *json)
+{
+    /**
+     * The json object is:
+     * [{"uin":1100872453,"status":"online","client_type":21},"
+     * "{"uin":2726159277,"status":"busy","client_type":1}]
+     */
+    json_t *cur;
+    for (cur = json->child; cur != NULL; cur = cur->next) {
+        char *uin, *status, *client_type;
+        LwqqBuddy *b;
+        uin = json_parse_simple_value(cur, "uin");
+        status = json_parse_simple_value(cur, "status");
+        if (!uin || !status) {
+            continue;
+        }
+        client_type = json_parse_simple_value(cur, "client_type");
+        b = lwqq_buddy_find_buddy_by_uin(lc, uin);
+        if (b) {
+            s_free(b->status);
+            b->status = s_strdup(status);
+            if (client_type) {
+                s_free(b->client_type);
+                b->client_type = s_strdup(client_type);
+            }
+        }
+    }
+}
+
+/** 
+ * Get online buddies
+ * NB : This function must be called after lwqq_info_get_friends_info()
+ * because we stored buddy's status in buddy object which is created in
+ * lwqq_info_get_friends_info()
+ * 
+ * @param lc 
+ * @param err 
+ */
+void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
+{
+    char url[512];
+    LwqqHttpRequest *req = NULL;  
+    int ret;
+    json_t *json = NULL, *json_tmp;
+    char *cookies;
+
+    if (!lc) {
+        return ;
+    }
+
+    /* Create a GET request */
+    snprintf(url, sizeof(url),
+             "%s/channel/get_online_buddies2?clientid=%s&psessionid=%s",
+             "http://d.web2.qq.com", lc->clientid, lc->psessionid);
+    req = lwqq_http_create_default_request(url, err);
+    if (!req) {
+        goto done;
+    }
+    req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Content-Transfer-Encoding", "binary");
+    req->set_header(req, "Content-type", "utf-8");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    ret = req->do_request(req, 0, NULL);
+    if (ret || req->http_code != 200) {
+        if (err)
+            *err = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
+
+    /**
+     * Here, we got a json object like this:
+     * {"retcode":0,"result":[{"uin":1100872453,"status":"online","client_type":21},"
+     * "{"uin":2726159277,"status":"busy","client_type":1}]}
+    */
+    ret = json_parse_document(&json, req->response);
+    if (ret != JSON_OK) {
+        lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
+        if (err)
+            *err = LWQQ_EC_ERROR;
+        goto done;
+    }
+
+    json_tmp = get_result_json_object(json);
+    if (!json_tmp) {
+        lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
+        goto json_error;
+    }
+
+    if (json_tmp->child) {
+        json_tmp = json_tmp->child;
+        update_online_buddies(lc, json_tmp);
+    }
+    
+done:
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return ;
+    
 json_error:
     if (err)
         *err = LWQQ_EC_ERROR;

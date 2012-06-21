@@ -38,8 +38,11 @@ static void* _background_friends_info(void* data)
     qq_async_dispatch(ac,GROUPS_COMPLETE,err);
 
     lwqq_info_get_friends_info(lc,&err);
-    lwqq_info_get_all_friend_qqnumbers(lc,err);
+    lwqq_info_get_all_friend_qqnumbers(lc,&err);
     qq_async_dispatch(ac,FRIENDS_COMPLETE,err);
+
+    lwqq_info_get_online_buddies(lc,&err);
+    qq_async_dispatch(ac,ONLINE_COME,err);
 }
 void background_friends_info(qq_account* ac)
 {

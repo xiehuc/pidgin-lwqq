@@ -60,7 +60,10 @@ typedef struct LwqqBuddy {
      * 41: Web QQ Client
      */
     char *client_type;
-    LIST_ENTRY(LwqqBuddy) entries;
+
+    char *status;               /* Online status */
+    pthread_mutex_t mutex;
+    LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
 
 /* QQ group */
@@ -83,7 +86,7 @@ typedef struct LwqqGroup {
     char *option;
 
     LIST_ENTRY(LwqqGroup) entries;
-
+    LIST_HEAD(, LwqqBuddy) members; /** < QQ Group members */
 } LwqqGroup;
 
 typedef struct LwqqVerifyCode {
@@ -228,6 +231,16 @@ LwqqGroup *lwqq_group_new();
  * @return A LwqqGroup instance
  */
 LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
+
+/** 
+ * Find group member object by member's uin
+ * 
+ * @param group Our Lwqq group object
+ * @param uin The uin of group member which we want to find
+ * 
+ * @return A LwqqBuddy instance 
+ */
+LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
 
 /************************************************************************/
 

@@ -19,6 +19,8 @@ typedef struct _AsyncListener {
     void* groups_data;
     ASYNC_CALLBACK msg_come;
     void* msg_data;
+    ASYNC_CALLBACK online_come;
+    void* online_data;
 } _AsyncListener;
 
 
@@ -46,6 +48,10 @@ void qq_async_add_listener(qq_account* ac,ListenerType type,ASYNC_CALLBACK callb
         case MSG_COME:
             async->msg_come = callback;
             async->msg_data = data;
+            break;
+        case ONLINE_COME:
+            async->online_come = callback;
+            async->online_data = data;
             break;
     }
 }
@@ -77,6 +83,10 @@ static gboolean timeout_come(void* p)
         case MSG_COME:
             if(async->msg_come!=NULL)
                 async->msg_come(lc,data->err,async->msg_data);
+            break;
+        case ONLINE_COME:
+            if(async->online_come!=NULL)
+                async->online_come(lc,data->err,async->online_data);
             break;
     }
     purple_timeout_remove(data->handle);

@@ -18,6 +18,7 @@ typedef enum ListenerType{
     FRIENDS_COMPLETE,
     GROUPS_COMPLETE,
     MSG_COME,
+    ONLINE_COME,
 } ListenerType;
 
 void qq_async_add_listener(qq_account* ac,ListenerType type,ASYNC_CALLBACK callback,void* data);

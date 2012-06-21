@@ -61,4 +61,25 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err);
  */
 char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin);
 
+/**
+ * Get QQ groups detail information. 
+ * 
+ * @param lc 
+ * @param group
+ * @param err 
+ */
+void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
+                                     LwqqErrorCode *err);
+
+/** 
+ * Get online buddies
+ * NB : This function must be called after lwqq_info_get_friends_info()
+ * because we stored buddy's status in buddy object which is created in
+ * lwqq_info_get_friends_info()
+ * 
+ * @param lc 
+ * @param err 
+ */
+void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err);
+
 #endif  /* LWQQ_INFO_H */

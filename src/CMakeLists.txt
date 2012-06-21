@@ -28,7 +28,7 @@ PKG_CHECK_MODULES(GLIB REQUIRED  glib-2.0)
 PKG_CHECK_MODULES(PIDGIN REQUIRED  pidgin)
 
 SET(ICON_FILE "../res/")
-ADD_DEFINITIONS(-g -O0 -Wall -Wextra)
+ADD_DEFINITIONS(-g -O0 -Wall )
 
 option(NLS "Native language support" OFF)
 if(NLS)
