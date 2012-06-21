@@ -63,6 +63,7 @@ typedef struct LwqqRecvMsgList {
     SIMPLEQ_HEAD(, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
+    void (*poll_close)(struct LwqqRecvMsgList *list);
 } LwqqRecvMsgList;
 
 /** 

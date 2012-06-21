@@ -178,9 +178,8 @@ static void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
     qq_async_add_listener(ac,GROUPS_COMPLETE,groups_complete,NULL);
-    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
     //qq_async_add_listener(ac,FRIEND_COME,friend_come,NULL);
     qq_async_add_listener(ac,ONLINE_COME,online_come,NULL);
     background_friends_info(ac);
@@ -205,8 +204,10 @@ static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
-    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0)
+    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0){
+        background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);
+    }
     lwqq_client_free(ac->qq);
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);

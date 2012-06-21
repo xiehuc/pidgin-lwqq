@@ -38,8 +38,8 @@ static void* _background_friends_info(void* data)
     qq_async_dispatch(ac,GROUPS_COMPLETE,err);
 
     lwqq_info_get_friends_info(lc,&err);
-    //lwqq_info_get_all_friend_qqnumbers(lc,&err);
-    qq_fake_get_all_friend_qqnumbers(ac,&err);
+    lwqq_info_get_all_friend_qqnumbers(lc,&err);
+    //qq_fake_get_all_friend_qqnumbers(ac,&err);
     qq_async_dispatch(ac,FRIENDS_COMPLETE,err);
 
     lwqq_info_get_online_buddies(lc,&err);
@@ -68,7 +68,14 @@ void* _background_msg_poll(void* data)
         }
     }
 }
+pthread_t msg_th;
 void background_msg_poll(qq_account* ac)
 {
-    START_THREAD(_background_msg_poll,ac);
+    pthread_create(&msg_th,NULL,_background_msg_poll,ac);
+}
+void background_msg_drain(qq_account* ac)
+{
+    LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
+    l->poll_close(l);
+    pthread_cancel(msg_th);
 }

@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "unicode.h"
 
+static void lwqq_recvmsg_poll_close(LwqqRecvMsgList *list);
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
@@ -44,6 +45,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     pthread_mutex_init(&list->mutex, NULL);
     SIMPLEQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
+    list->poll_close = lwqq_recvmsg_poll_close;
     
     return list;
 }
@@ -266,15 +268,19 @@ failed:
     pthread_exit(NULL);
 }
 
+pthread_t tid;
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
-    pthread_t tid;
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     pthread_create(&tid, &attr, start_poll_msg, list);
+}
+static void lwqq_recvmsg_poll_close(LwqqRecvMsgList *list)
+{
+    pthread_cancel(tid);
 }
 
 /** 
