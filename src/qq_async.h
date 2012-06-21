@@ -10,20 +10,25 @@
 #ifndef QQ_ASYNC_H
 #define QQ_ASYNC_H
 #include "qq_types.h"
-typedef void (*ASYNC_CALLBACK)(qq_account* lc,LwqqErrorCode err,void* data);
+#include <http.h>
+typedef void (*ASYNC_CALLBACK)(qq_account* lc,int err,void* data);
+typedef void (*CALLBACK)(qq_account* ac,LwqqHttpRequest* request,void* data);
 
 typedef enum ListenerType{
     LOGIN_COMPLETE,
     VERIFY_COME,
+    FRIEND_COME,
     FRIENDS_COMPLETE,
     GROUPS_COMPLETE,
     MSG_COME,
     ONLINE_COME,
 } ListenerType;
 
+#define qq_async_enabled(ac) (ac->async!=NULL)
 void qq_async_add_listener(qq_account* ac,ListenerType type,ASYNC_CALLBACK callback,void* data);
 //void qq_async_watch(qq_account* ac,ListenerType type);
 void qq_async_dispatch(qq_account* lc,ListenerType type,LwqqErrorCode err);
+void qq_async_dispatch_2(qq_account* lc,ListenerType type,void* data);
 void qq_async_set(qq_account* client,int enabled);
-#define qq_async_enabled(ac) (ac->async!=NULL)
+
 #endif 

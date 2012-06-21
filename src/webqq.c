@@ -87,14 +87,14 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 	return types;
 }
 
-qq_account* qq_account_new(PurpleAccount* account)
+static qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
     qq_async_set(ac,1);
     return ac;
 }
-void qq_account_free(qq_account* ac)
+static void qq_account_free(qq_account* ac)
 {
     if(qq_async_enabled(ac))
         qq_async_set(ac,0);
@@ -107,6 +107,21 @@ static void groups_complete(qq_account* ac,LwqqErrorCode err,void* data)
     /*LIST_FOREACH(group,&lc->groups,entries){
         if(purple_find_group(group->name)==NULL)
             purple_group_new(group->name);
+    }*/
+}
+static void friend_come(qq_account* ac,int _buddy,void* data)
+{
+    /*LwqqBuddy* buddy = (LwqqBuddy*)_buddy;
+    LwqqClient* lc = ac->qq;
+    PurpleAccount* account=ac->account;
+    PurpleBuddy* bu;
+    PurpleGroup* gp;
+    if((gp = purple_find_group("QQ"))==NULL)
+        gp = purple_group_new("QQ");
+    if(purple_find_buddy(ac->account,buddy->qqnumber)==NULL){
+        bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
+        //gp = purple_find_group(buddy->group);
+        purple_blist_add_buddy(bu,NULL,gp,NULL);
     }*/
 }
 static void friends_complete(qq_account* ac,LwqqErrorCode err,void* data)
@@ -163,9 +178,10 @@ static void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
-    qq_async_add_listener(ac,GROUPS_COMPLETE,groups_complete,NULL);
     qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    qq_async_add_listener(ac,GROUPS_COMPLETE,groups_complete,NULL);
+    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    //qq_async_add_listener(ac,FRIEND_COME,friend_come,NULL);
     qq_async_add_listener(ac,ONLINE_COME,online_come,NULL);
     background_friends_info(ac);
     qq_async_add_listener(ac,MSG_COME,msg_come,NULL);

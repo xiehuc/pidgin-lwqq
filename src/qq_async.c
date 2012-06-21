@@ -1,11 +1,19 @@
 #include "qq_async.h"
+#include <ghttp.h>
+#include <type.h>
 
-
-typedef struct async_watch_data{
+typedef struct async_dispatch_data{
     ListenerType type;
     qq_account* ac;
     gint handle;
-    LwqqErrorCode err;
+    int err;
+}async_dispatch_data;
+typedef struct async_watch_data{
+    CALLBACK callback;
+    void* data;
+    LwqqHttpRequest* request;
+    gint handle;
+    qq_account* ac;
 }async_watch_data;
 
 typedef struct _AsyncListener {
@@ -59,7 +67,7 @@ void qq_async_add_listener(qq_account* ac,ListenerType type,ASYNC_CALLBACK callb
 
 static gboolean timeout_come(void* p)
 {
-    async_watch_data* data = (async_watch_data*)p;
+    async_dispatch_data* data = (async_dispatch_data*)p;
     qq_account* lc = data->ac;
     AsyncListener* async = lc->async;
     ListenerType type = data->type;
@@ -89,17 +97,27 @@ static gboolean timeout_come(void* p)
                 async->online_come(lc,data->err,async->online_data);
             break;
     }
-    purple_timeout_remove(data->handle);
+    if(data->handle>0)
+        purple_timeout_remove(data->handle);
     free(data);
     return 1;
 }
 void qq_async_dispatch(qq_account* lc,ListenerType type,LwqqErrorCode err)
 {
-    async_watch_data* data = malloc(sizeof(async_watch_data));
+    async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
     data->type = type;
     data->ac = lc;
     data->err = err;
     data->handle = purple_timeout_add(50,timeout_come,data);
+}
+void qq_async_dispatch_2(qq_account* lc,ListenerType type,void* d)
+{
+    async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
+    data->type = type;
+    data->ac = lc;
+    data->err = (int)d;
+    data->handle = 0;
+    timeout_come(data);
 }
 
 void qq_async_set(qq_account* client,int enabled)
@@ -111,3 +129,31 @@ void qq_async_set(qq_account* client,int enabled)
         client->async=NULL;
     }
 }
+
+static void input_come(gpointer p,gint i,PurpleInputCondition cond)
+{
+    async_watch_data* data = (async_watch_data*)p;
+    ghttp_status status;
+    LwqqHttpRequest* request = data->request;
+    status = ghttp_process(request->req);
+
+    if(status!=ghttp_done) return ;
+
+    if(data->callback!=NULL)data->callback(data->ac,data->request,data->data);
+
+    purple_input_remove(data->handle);
+    free(data);
+}
+
+void qq_async_watch(qq_account* ac,LwqqHttpRequest* request,CALLBACK callback,void* d)
+{
+    ghttp_request* req = (ghttp_request*)request->req;
+    async_watch_data* data = malloc(sizeof(async_watch_data));
+    data->request = request;
+    data->callback = callback;
+    data->data = d;
+    data->ac = ac;
+    data->handle = purple_input_add(ghttp_get_socket(req),PURPLE_INPUT_READ,
+            input_come,data);
+}
+
