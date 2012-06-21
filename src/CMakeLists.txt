@@ -27,7 +27,6 @@ TARGET_LINK_LIBRARIES(webqq
     )
 
 
-SET(ICON_FILE "../res/")
 ADD_DEFINITIONS(-g -O0 -Wall )
 
 option(NLS "Native language support" OFF)
@@ -48,6 +47,7 @@ EXEC_PROGRAM("whereis pidgin | sed -e 's/[^\\/]*//' -e 's/\\(.*\\)bin\\/pidgin.*
 SET(PIDGIN_PIX_INSTALL_DIR "${PIDGIN_PREFIX}share/pixmaps/pidgin/protocols")
 SET(LIB_INSTALL_DIR "${PURPLE_PREFIX}lib/purple-${PURPLE_MAJOR_VERSION}")
 
-INSTALL(DIRECTORY "../res/" DESTINATION ${PIDGIN_PIX_INSTALL_DIR})
+INSTALL(DIRECTORY "../res/pidgin/" DESTINATION ${PIDGIN_PIX_INSTALL_DIR})
+INSTALL(DIRECTORY "../res/empathy/" DESTINATION "/usr/share/empathy/icons/hicolor")
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 
