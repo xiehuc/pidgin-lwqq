@@ -133,11 +133,9 @@ static void friends_complete(qq_account* ac,LwqqErrorCode err,void* data)
     PurpleGroup* gp;
     gp = purple_group_new("QQ");
     LIST_FOREACH(buddy,&lc->friends,entries){
-        if(purple_find_buddy(ac->account,buddy->qqnumber)==NULL){
-            bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
-            //gp = purple_find_group(buddy->group);
-            purple_blist_add_buddy(bu,NULL,gp,NULL);
-        }
+        bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
+        //gp = purple_find_group(buddy->group);
+        purple_blist_add_buddy(bu,NULL,gp,NULL);
     }
 }
 
@@ -152,8 +150,8 @@ static void msg_come(qq_account* ac,LwqqErrorCode err,void* data)
     if (!SIMPLEQ_EMPTY(&l->head)) {
         msg = SIMPLEQ_FIRST(&l->head);
         if (msg->msg->content) {
-            buddy = lwqq_buddy_find_buddy_by_uin(ac->qq,msg->msg->from);
-            serv_got_im(pc, buddy->qqnumber, msg->msg->content, PURPLE_MESSAGE_RECV, time(NULL));
+            //buddy = lwqq_buddy_find_buddy_by_uin(ac->qq,msg->msg->from);
+            serv_got_im(pc, msg->msg->from, msg->msg->content, PURPLE_MESSAGE_RECV, time(NULL));
         }
         SIMPLEQ_REMOVE_HEAD(&l->head, entries);
     }
@@ -166,7 +164,7 @@ static void online_come(qq_account* ac,LwqqErrorCode err,void* data)
     PurpleAccount* account = ac->account;
     LIST_FOREACH(buddy,&ac->qq->friends,entries){
         if(buddy->status!=NULL&&strcmp(buddy->status,"online")==0)
-            purple_prpl_got_user_status(account, buddy->qqnumber, "online", NULL);
+            purple_prpl_got_user_status(account, buddy->uin, "online", NULL);
     }
 }
 
@@ -204,6 +202,16 @@ static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
+    GSList* list = purple_blist_get_buddies();
+    PurpleBuddy* buddy;
+    while(list->next!=NULL){
+        buddy = list->data;
+        list = list->next;
+        purple_blist_remove_buddy(buddy);
+    }
+    /*LIST_FOREACH(buddy,&ac->qq->friends,entries){
+        purple_blist_remove_buddy(purple_find_buddy(ac->account,buddy->uin));
+    }*/
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0){
         background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);
@@ -222,15 +230,15 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     LwqqSendMsg* msg;
     LwqqClient* lc = ac->qq;
 
-	if(!(buddy = purple_find_buddy(ac->account, who))) return 0;
+	/*if(!(buddy = purple_find_buddy(ac->account, who))) return 0;
     LIST_FOREACH(item, &ac->qq->friends, entries) {
         if(strcmp(buddy->name,item->qqnumber)==0){
             friend=item;
             break;
         }
-    }
+    }*/
     
-    msg = lwqq_sendmsg_new(lc,friend->uin,"message",what);
+    msg = lwqq_sendmsg_new(lc,who,"message",what);
     if(!msg) return 1;
 
     msg->send(msg);
