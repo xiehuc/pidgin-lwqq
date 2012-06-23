@@ -1046,6 +1046,17 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
      * "{"uin":2726159277,"status":"busy","client_type":1}]
      */
     json_t *cur;
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if(buddy->client_type){
+            s_free(buddy->client_type);
+            buddy->client_type=NULL;
+        }
+        if(buddy->status){
+            s_free(buddy->status);
+            buddy->status=NULL;
+        }
+    }
     for (cur = json->child; cur != NULL; cur = cur->next) {
         char *uin, *status, *client_type;
         LwqqBuddy *b;

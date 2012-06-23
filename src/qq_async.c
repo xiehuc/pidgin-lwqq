@@ -97,10 +97,11 @@ static gboolean timeout_come(void* p)
                 async->online_come(lc,data->err,async->online_data);
             break;
     }
-    if(data->handle>0)
-        purple_timeout_remove(data->handle);
+    /*if(data->handle>0)
+        purple_timeout_remove(data->handle);*/
     free(data);
-    return 1;
+    //remote handle;
+    return 0;
 }
 void qq_async_dispatch(qq_account* lc,ListenerType type,LwqqErrorCode err)
 {

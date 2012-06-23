@@ -337,3 +337,6 @@ void qq_fake_get_all_friend_qqnumbers(qq_account* ac, LwqqErrorCode *err)
     }
 }
 void qq_fake_kill_thread(qq_account* ac);
+
+
+

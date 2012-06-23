@@ -38,19 +38,18 @@ static void* _background_friends_info(void* data)
     qq_async_dispatch(ac,GROUPS_COMPLETE,err);
 
     lwqq_info_get_friends_info(lc,&err);
+    lwqq_info_get_online_buddies(ac->qq,&err);
     //lwqq_info_get_all_friend_qqnumbers(lc,&err);
     //qq_fake_get_all_friend_qqnumbers(ac,&err);
     qq_async_dispatch(ac,FRIENDS_COMPLETE,err);
 
-    lwqq_info_get_online_buddies(lc,&err);
-    qq_async_dispatch(ac,ONLINE_COME,err);
 }
 void background_friends_info(qq_account* ac)
 {
     START_THREAD(_background_friends_info,ac);
 }
 
-void* _background_msg_poll(void* data)
+static void* _background_msg_poll(void* data)
 {
     qq_account* ac = (qq_account*)data;
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
@@ -68,7 +67,7 @@ void* _background_msg_poll(void* data)
         }
     }
 }
-pthread_t msg_th;
+static pthread_t msg_th;
 void background_msg_poll(qq_account* ac)
 {
     pthread_create(&msg_th,NULL,_background_msg_poll,ac);
@@ -78,4 +77,21 @@ void background_msg_drain(qq_account* ac)
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
     l->poll_close(l);
     pthread_cancel(msg_th);
+}
+static void* _background_online_request(void* data)
+{
+    qq_account* ac = data;
+    LwqqErrorCode err;
+    lwqq_info_get_online_buddies(ac->qq,&err);
+    qq_async_dispatch(ac,ONLINE_COME,err);
+}
+static gboolean _background_online_watch(gpointer data)
+{
+    START_THREAD(_background_online_request,data);
+    return 1;
+}
+void background_online_watch(qq_account* ac)
+{
+    _background_online_watch(ac);
+    purple_timeout_add_seconds(60,_background_online_watch,ac);
 }
