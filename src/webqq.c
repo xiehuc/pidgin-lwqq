@@ -136,6 +136,7 @@ static void friends_complete(LwqqClient* lc,void* data)
     lst[0] = purple_group_new("QQ好友");
     LIST_FOREACH(buddy,&lc->friends,entries) {
         bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
+        if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,lst[atoi(buddy->cate_index)],NULL);
         if(buddy->status)
             purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
@@ -164,7 +165,7 @@ static void msg_come(LwqqClient* lc,void* data)
 
 static void status_change(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,STATUS_CHANGE);
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     LwqqBuddy* buddy = (LwqqBuddy*)data;
     PurpleAccount* account = ac->account;
     purple_prpl_got_user_status(account,buddy->uin,buddy->status,NULL);
@@ -180,11 +181,8 @@ static void login_complete(LwqqClient* lc,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
     lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
-    lwqq_async_set_userdata(ac->qq,STATUS_CHANGE,ac);
     lwqq_async_add_listener(ac->qq,STATUS_CHANGE,status_change);
-    //qq_async_add_listener(ac,FRIEND_COME,friend_come,NULL);
     background_friends_info(ac);
 
     lwqq_async_add_listener(ac->qq,MSG_COME,msg_come);
@@ -209,6 +207,7 @@ static void qq_login(PurpleAccount *account)
 static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    lwqq_async_remove_listener(ac->qq,MSG_COME);
     LwqqErrorCode err;
     GSList* list = purple_blist_get_buddies();
     PurpleBuddy* buddy;
@@ -217,6 +216,7 @@ static void qq_close(PurpleConnection *gc)
         list = list->next;
         purple_blist_remove_buddy(buddy);
     }
+    //lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
         background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);

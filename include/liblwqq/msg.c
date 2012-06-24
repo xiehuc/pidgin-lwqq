@@ -26,6 +26,7 @@ static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
 static void parse_recvmsg_from_json(LwqqRecvMsgList* list, const char *str);
+static void lwqq_recvmsg_close_msg(LwqqRecvMsg* list);
 
 static int send_msg(struct LwqqSendMsg *sendmsg);
 
@@ -45,6 +46,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     pthread_mutex_init(&list->mutex, NULL);
     SIMPLEQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
+    list->close_msg = lwqq_recvmsg_close_msg;
     
     return list;
 }
@@ -287,20 +289,25 @@ static void *start_poll_msg(void *msg_list)
             continue;
         }
         parse_recvmsg_from_json(list, req->response);
+        lwqq_async_dispatch(lc,MSG_COME,NULL);
     }
 failed:
     pthread_exit(NULL);
 }
 
+pthread_t tid;
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
-    pthread_t tid;
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     pthread_create(&tid, &attr, start_poll_msg, list);
+}
+static void lwqq_recvmsg_close_msg(LwqqRecvMsg* list)
+{
+    pthread_cancel(tid);
 }
 
 /** 

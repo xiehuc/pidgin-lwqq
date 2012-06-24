@@ -56,14 +56,6 @@ static void* _background_msg_poll(void* data)
     /* Poll to receive message */
     l->poll_msg(l);
 
-    /* Need to wrap those code so look like more nice */
-    while (1) {
-        sleep(1);
-        LwqqRecvMsg *msg;
-        if (!SIMPLEQ_EMPTY(&l->head)) {
-            lwqq_async_dispatch(ac->qq,MSG_COME,NULL);
-        }
-    }
 }
 static pthread_t msg_th;
 void background_msg_poll(qq_account* ac)
@@ -73,6 +65,5 @@ void background_msg_poll(qq_account* ac)
 void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    //l->poll_close(l);
-    pthread_cancel(msg_th);
+    l->close_msg(l);
 }

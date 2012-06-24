@@ -26,6 +26,7 @@ void* lwqq_async_get_userdata(LwqqClient* lc,ListenerType type);
 void lwqq_async_set_error(LwqqClient* lc,ListenerType type,LwqqErrorCode err);
 LwqqErrorCode lwqq_async_get_error(LwqqClient* lc,ListenerType type);
 void lwqq_async_add_listener(LwqqClient* lc,ListenerType type,ASYNC_CALLBACK callback);
+#define lwqq_async_remove_listener(lc,type) (lwqq_async_add_listener(lc,type,NULL))
 void lwqq_async_watch(LwqqClient* client,LwqqHttpRequest* request,ListenerType type);
 void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* extradata);
 #endif

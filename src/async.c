@@ -64,6 +64,7 @@ static gboolean timeout_come(void* p)
     async_dispatch_data* data = (async_dispatch_data*)p;
     LwqqClient* lc = data->client;
     ListenerType type = data->type;
+    if(!lwqq_async_enabled(lc)) return 0;
     if(lc->async->listener[type]!=NULL)
         lc->async->listener[type](lc,data->data);
     /*if(data->handle>0)
