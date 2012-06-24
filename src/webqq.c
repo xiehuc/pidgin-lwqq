@@ -5,10 +5,11 @@
 #include "internal.h"
 #include "webqq.h"
 #include "qq_types.h"
-#include "qq_async.h"
 #include "login.h"
+#include "background.h"
 
 #include <type.h>
+#include <async.h>
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -91,13 +92,10 @@ static qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
-    qq_async_set(ac,1);
     return ac;
 }
 static void qq_account_free(qq_account* ac)
 {
-    if(qq_async_enabled(ac))
-        qq_async_set(ac,0);
     g_free(ac);
 }
 static void friend_come(qq_account* ac,int _buddy,void* data)
@@ -115,9 +113,10 @@ static void friend_come(qq_account* ac,int _buddy,void* data)
         purple_blist_add_buddy(bu,NULL,gp,NULL);
     }*/
 }
-static void friends_complete(qq_account* ac,LwqqErrorCode err,void* data)
+static void friends_complete(LwqqClient* lc,void* data)
 {
-    LwqqClient* lc = ac->qq;
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    //LwqqClient* lc = ac->qq;
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy;
     LwqqFriendCategory* category;
@@ -144,8 +143,9 @@ static void friends_complete(qq_account* ac,LwqqErrorCode err,void* data)
     free(lst);
 }
 
-static void msg_come(qq_account* ac,LwqqErrorCode err,void* data)
+static void msg_come(LwqqClient* lc,void* data)
 {
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     LwqqRecvMsgList* l = ac->qq->msg_list;
     LwqqBuddy* buddy;
     PurpleConnection* pc = ac->gc;
@@ -162,32 +162,32 @@ static void msg_come(qq_account* ac,LwqqErrorCode err,void* data)
     pthread_mutex_unlock(&l->mutex);
 }
 
-static void online_come(qq_account* ac,LwqqErrorCode err,void* data)
+static void status_change(LwqqClient* lc,void* data)
 {
-    LwqqBuddy* buddy;
+    qq_account* ac = lwqq_async_get_userdata(lc,STATUS_CHANGE);
+    LwqqBuddy* buddy = (LwqqBuddy*)data;
     PurpleAccount* account = ac->account;
-    LIST_FOREACH(buddy,&ac->qq->friends,entries) {
-        if(buddy->status!=NULL&&strcmp(buddy->status,"online")==0)
-            purple_prpl_got_user_status(account, buddy->uin, "online", NULL);
-        else purple_prpl_got_user_status(account,buddy->uin,"offline",NULL);
-    }
+    purple_prpl_got_user_status(account,buddy->uin,buddy->status,NULL);
 }
 
-static void login_complete(qq_account* ac,LwqqErrorCode err,void* data)
+static void login_complete(LwqqClient* lc,void* data)
 {
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* gc = ac->gc;
+    LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
     if(err!=LWQQ_EC_OK)
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
-    qq_async_add_listener(ac,ONLINE_COME,online_come,NULL);
+    //qq_async_add_listener(ac,FRIENDS_COMPLETE,friends_complete,NULL);
+    lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
+    lwqq_async_set_userdata(ac->qq,STATUS_CHANGE,ac);
+    lwqq_async_add_listener(ac->qq,STATUS_CHANGE,status_change);
     //qq_async_add_listener(ac,FRIEND_COME,friend_come,NULL);
     background_friends_info(ac);
-    //background_online_watch(ac);
 
-    qq_async_add_listener(ac,MSG_COME,msg_come,NULL);
+    lwqq_async_add_listener(ac->qq,MSG_COME,msg_come);
     background_msg_poll(ac);
 }
 
@@ -199,9 +199,11 @@ static void qq_login(PurpleAccount *account)
     const char* password = purple_account_get_password(account);
     ac->gc = pc;
     ac->qq = lwqq_client_new(username,password);
+    lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
 
-    qq_async_add_listener(ac,LOGIN_COMPLETE,login_complete,NULL);
+    lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
+    lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
     background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)

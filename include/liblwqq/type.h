@@ -109,6 +109,8 @@ typedef struct LwqqCookies {
     char *lwcookies;
 } LwqqCookies;
 
+typedef struct _LwqqAsync LwqqAsync;
+
 /* LwqqClient API */
 typedef struct LwqqClient {
     char *username;             /**< Username */
@@ -125,6 +127,7 @@ typedef struct LwqqClient {
     char *vfwebqq;
     char *psessionid;
     LwqqCookies *cookies;
+    LwqqAsync *async;
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */

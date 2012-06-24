@@ -20,8 +20,8 @@
 #include "msg.h"
 #include "queue.h"
 #include "unicode.h"
+#include "async.h"
 
-static void lwqq_recvmsg_poll_close(LwqqRecvMsgList *list);
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
@@ -45,7 +45,6 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     pthread_mutex_init(&list->mutex, NULL);
     SIMPLEQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
-    list->poll_close = lwqq_recvmsg_poll_close;
     
     return list;
 }
@@ -148,6 +147,26 @@ failed:
     return NULL;
 }
 
+static void process_status_change(LwqqRecvMsgList* list,json_t* node)
+{
+    LwqqClient* lc = (LwqqClient*)list->lc;
+    LwqqBuddy* buddy;
+    char* uin,*status,*client_type;
+    uin = json_parse_simple_value(node,"uin");
+    status = json_parse_simple_value(node,"status");
+    client_type = json_parse_simple_value(node,"client_type");
+
+    buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
+    if(buddy){
+        if(buddy->status) s_free(buddy->status);
+        buddy->status = s_strdup(status);
+
+        if(buddy->client_type) s_free(buddy->client_type);
+        if(client_type)buddy->client_type = s_strdup(client_type);
+        lwqq_async_dispatch(lc,STATUS_CHANGE,buddy);
+    }
+}
+
 /**
  * Parse message received from server
  * Buddy message:
@@ -188,6 +207,11 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList* list, const char *str)
         json_t *tmp, *ctent;
         
         msg_type = json_parse_simple_value(cur, "poll_type");
+        printf("%s\n",msg_type);
+        if(strcmp(msg_type,"buddies_status_change")==0){
+            process_status_change(list,cur);
+            continue;
+        }
         from = json_parse_simple_value(cur, "from_uin");
         to = json_parse_simple_value(cur, "to_uin");
         tmp = json_find_first_label_all(cur, "content");
@@ -268,19 +292,15 @@ failed:
     pthread_exit(NULL);
 }
 
-pthread_t tid;
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
+    pthread_t tid;
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     pthread_create(&tid, &attr, start_poll_msg, list);
-}
-static void lwqq_recvmsg_poll_close(LwqqRecvMsgList *list)
-{
-    pthread_cancel(tid);
 }
 
 /** 
