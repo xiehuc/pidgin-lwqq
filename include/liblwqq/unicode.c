@@ -130,9 +130,10 @@ char *ucs4toutf8(const char *from)
             s_free(s);
             c += 5;
         } else {
-            out = s_realloc(out, ++outlen);
-            out[outlen - 1] = *c;
-            out[outlen] = '\0';
+            out = s_realloc(out, outlen + 2);
+            out[outlen] = *c;
+            out[outlen + 1] = '\0';
+            outlen++;
             continue;
         }
     }

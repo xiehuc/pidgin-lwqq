@@ -13,6 +13,8 @@
 
 #include "type.h"
 
+typedef int (*LwqqAsyncCallback)(LwqqErrorCode ec, char *response, void* data);
+
 /**
  * Lwqq Http request struct, this http object worked donw for lwqq,
  * But for other app, it may work bad.
@@ -27,14 +29,24 @@ typedef struct LwqqHttpRequest {
      */
     int http_code;
     
-    /* Server response, this maybe changed after do_request() called */
+    /* Server response, used when do async request */
     char *response;
+
+    /* Response length, NB: the response may not terminate with '\0' */
+    int resp_len;
 
     /**
      * Send a request to server, method is GET(0) or POST(1), if we make a
      * POST request, we must provide a http body.
      */
     int (*do_request)(struct LwqqHttpRequest *request, int method, char *body);
+
+    /**
+     * Send a request to server asynchronous, method is GET(0) or POST(1),
+     * if we make a POST request, we must provide a http body.
+     */
+    int (*do_request_async)(struct LwqqHttpRequest *request, int method,
+                            char *body, LwqqAsyncCallback callback, void *data);
 
     /* Set our http client header */
     void (*set_header)(struct LwqqHttpRequest *request, const char *name,
