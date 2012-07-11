@@ -383,6 +383,8 @@ static void ev_io_come(void* data,int sock,PurpleInputCondition cond)
 
 
     int status = ghttp_process(req);
+    if (status == ghttp_not_done)
+        return;
     if (status == ghttp_error) {
         ec = LWQQ_EC_ERROR;
         goto done;
@@ -434,10 +436,10 @@ done:
     }
 
     /* Callback */
-    d->callback(ec, lhr->response, d->data);
+    if(d->callback)
+        d->callback(ec, lhr->response, d->data);
 
     /* OK, exit this request */
-    //ev_io_stop(EV_DEFAULT, w);
     purple_input_remove(d->handle);
     lwqq_http_request_free(d->request);
     s_free(d);

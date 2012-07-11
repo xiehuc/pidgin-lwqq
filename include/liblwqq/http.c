@@ -1,5 +1,6 @@
 #include <string.h>
 #include <zlib.h>
+#include <ev.h>
 #include <ghttp.h>
 #include "smemory.h"
 #include "http.h"
@@ -14,6 +15,12 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
 static void lwqq_http_set_default_header(LwqqHttpRequest *request);
 static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name);
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name);
+
+/* For async request */
+static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+                                      char *body, LwqqAsyncCallback callback,
+                                      void *data);
+static void ev_io_come(EV_P_ ev_io* w,int revent);
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                 const char *value)
@@ -114,6 +121,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     }
 
     request->do_request = lwqq_http_do_request;
+    request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
     request->set_default_header = lwqq_http_set_default_header;
     request->get_header = lwqq_http_get_header;
@@ -349,6 +357,167 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
     req->set_default_header(req);
     lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
     return req;
+}
+
+/************************************************************************/
+/* Those Code for async API */
+typedef struct AsyncWatchData
+{
+    LwqqHttpRequest *request;
+    LwqqAsyncCallback callback;
+    void *data;
+} AsyncWatchData;
+
+static pthread_t lwqq_async_tid;
+static pthread_cond_t lwqq_async_cond = PTHREAD_COND_INITIALIZER;
+static int lwqq_async_running = -1;
+
+void *lwqq_async_thread(void* data)
+{
+    struct ev_loop* loop = EV_DEFAULT;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    while (1) {
+        lwqq_async_running = 1;
+        ev_run(loop, 0);
+        lwqq_async_running = 0;
+        pthread_mutex_lock(&mutex);
+        pthread_cond_wait(&lwqq_async_cond, &mutex);
+        pthread_mutex_unlock(&mutex);
+    }
+}
+
+static void ev_io_come(EV_P_ ev_io* w,int revent)
+{
+    AsyncWatchData *d = (AsyncWatchData *)w->data;
+    LwqqErrorCode ec;
+    char *buf;
+    LwqqHttpRequest *lhr = d->request;
+    ghttp_request *req = lhr->req;
+
+
+    int status = ghttp_process(req);
+    if (status == ghttp_error) {
+        ec = LWQQ_EC_ERROR;
+        goto done;
+    }
+    
+    /* NOTE: buf may NULL, notice it */
+    buf = ghttp_get_body(req);
+    if (buf) {
+        int len;
+        len = ghttp_get_body_len(req);
+        lhr->response = s_realloc(lhr->response, lhr->resp_len + len);
+        memcpy(lhr->response + lhr->resp_len, buf, len);
+        lhr->resp_len += len;
+    }
+    if (status == ghttp_done) {
+        ec = LWQQ_EC_OK;
+        goto done;
+    }
+
+    /* Go on */
+    return ;
+    
+done:
+    if (ec == LWQQ_EC_OK && lhr->response) {
+        /* Uncompress data here if we have a Content-Encoding header */
+        char *enc_type = NULL;
+        enc_type = lwqq_http_get_header(lhr, "Content-Encoding");
+        if (enc_type && strstr(enc_type, "gzip")) {
+            char *outdata;
+            int total = 0;
+        
+            outdata = ungzip(lhr->response, lhr->resp_len, &total);
+            if (outdata) {
+                s_free(lhr->response);
+                /* Update response data to uncompress data */
+                lhr->response = s_strdup(outdata);
+                s_free(outdata);
+                lhr->resp_len = total;
+            }
+        }
+        s_free(enc_type);
+
+        /* OK, done */
+        if (lhr->response[lhr->resp_len -1] != '\0') {
+            /* Realloc a byte, cause lhr->response hasn't end with char '\0' */
+            lhr->response = s_realloc(lhr->response, lhr->resp_len + 1);
+            lhr->response[lhr->resp_len] = '\0';
+        }
+    }
+
+    /* Callback */
+    d->callback(ec, lhr->response, d->data);
+
+    /* OK, exit this request */
+    ev_io_stop(EV_DEFAULT, w);
+    lwqq_http_request_free(d->request);
+    s_free(d);
+    s_free(w);
+}
+
+static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+                                      char *body, LwqqAsyncCallback callback,
+                                      void *data)
+{
+    ghttp_type m;
+    int status;
+    
+    /* Set http method */
+    if (method == 0) {
+        m = ghttp_type_get;
+    } else if (method == 1) {
+        m = ghttp_type_post;
+    } else {
+        lwqq_log(LOG_WARNING, "Wrong http method\n");
+        lwqq_http_request_free(request);
+        return -1;
+    }
+    if (ghttp_set_type(request->req, m) == -1) {
+        lwqq_log(LOG_WARNING, "Set request type error\n");
+        lwqq_http_request_free(request);
+        return -1;
+    }
+
+    /* For POST method, set http body */
+    if (m == ghttp_type_post && body) {
+        ghttp_set_body(request->req, body, strlen(body));
+    }
+
+    ghttp_set_sync(request->req, ghttp_async);
+    if (ghttp_prepare(request->req)) {
+        lwqq_http_request_free(request);
+        return -1;
+    }
+    
+    status = ghttp_process(request->req);
+    if (status != ghttp_not_done){
+        lwqq_log(LOG_ERROR, "BUG!!!async error\n");
+        lwqq_http_request_free(request);
+        return -1;
+    }
+
+    ev_io *watcher = (ev_io *)s_malloc(sizeof(ev_io));
+    
+    ghttp_request* req = (ghttp_request*)request->req;
+    
+    ev_io_init(watcher, ev_io_come, ghttp_get_socket(req), EV_READ);
+    AsyncWatchData *d = s_malloc(sizeof(AsyncWatchData));
+    d->request = request;
+    d->callback = callback;
+    d->data = data;
+    watcher->data = d;
+
+    ev_io_start(EV_DEFAULT, watcher);
+
+    if (lwqq_async_running == -1) {
+        lwqq_async_running = 1;
+        pthread_create(&lwqq_async_tid, NULL, lwqq_async_thread, NULL);
+    } else if(lwqq_async_running == 0) {
+        pthread_cond_signal(&lwqq_async_cond);
+    }
+    
+    return 0;
 }
 
 #if 0

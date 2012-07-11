@@ -412,7 +412,7 @@ static int send_msg(struct LwqqSendMsg *sendmsg)
         s_free(cookies);
     }
     
-    ret = req->do_request(req, 1, data);
+    ret = req->do_request_async(req, 1, data,NULL,NULL);
     if (ret || req->http_code != 200) {
         goto failed;
     }
