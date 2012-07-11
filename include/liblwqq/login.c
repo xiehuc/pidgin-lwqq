@@ -29,6 +29,7 @@
 #include "md5.h"
 #include "url.h"
 #include "json.h"
+#include "async.h"
 
 /* URL for webqq login */
 #define LWQQ_URL_LOGIN_HOST "http://ptlogin2.qq.com"
@@ -42,6 +43,7 @@
 #define LWQQ_URL_VERSION "http://ui.ptlogin2.qq.com/cgi-bin/ver"
 
 static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err);
+static int logout_check(LwqqErrorCode ret,char* response,void* data);
 
 /** 
  * Update the cookies needed by webqq
@@ -589,7 +591,6 @@ static char *generate_clientid()
 static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err)
 {
     char msg[1024] ={0};
-    char *ptwebqq;
     char *buf;
     LwqqHttpRequest *req = NULL;  
     char *response = NULL;
@@ -609,8 +610,6 @@ static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err)
         goto done ;
     }
 
-    /* Do we really need ptwebqq */
-    ptwebqq = lc->cookies->ptwebqq ? lc->cookies->ptwebqq : "";
     snprintf(msg, sizeof(msg), "{\"status\":\"%s\",\"ptwebqq\":\"%s\","
              "\"passwd_sig\":""\"\",\"clientid\":\"%s\""
              ", \"psessionid\":null}"
@@ -770,6 +769,10 @@ void lwqq_login(LwqqClient *client, LwqqErrorCode *err)
     /* Last: do real login */
     do_login(client, md5, err);
     s_free(md5);
+
+    /* Free old value */
+    lwqq_vc_free(client->vc);
+    client->vc = NULL;
 }
 
 /** 
@@ -822,13 +825,25 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
         s_free(cookies);
     }
     
-    ret = req->do_request(req, 0, NULL);
-    if (ret) {
-        lwqq_log(LOG_ERROR, "Send logout request failed\n");
-        if (err)
-            *err = LWQQ_EC_NETWORK_ERROR;
-        goto done;
+    if(lwqq_async_enabled(client))
+        req->do_request_async(req,0,NULL,logout_check,req);
+    else{
+        ret = req->do_request(req, 0, NULL);
+        logout_check(0,req->response,req);
     }
+done:
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);    
+}
+static int logout_check(LwqqErrorCode ec,char* response,void* data)
+{
+    LwqqErrorCode error;
+    LwqqErrorCode* err=&error;
+    LwqqHttpRequest* req = data;
+    json_t *json = NULL;
+    char *value;
+    int ret;
     if (req->http_code != 200) {
         if (err)
             *err = LWQQ_EC_HTTP_ERROR;
@@ -864,4 +879,5 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);    
+    return 0;
 }
