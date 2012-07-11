@@ -825,9 +825,10 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
         s_free(cookies);
     }
     
-    if(lwqq_async_enabled(client))
+    if(lwqq_async_enabled(client)){
         req->do_request_async(req,0,NULL,logout_check,req);
-    else{
+        return;
+    }else{
         ret = req->do_request(req, 0, NULL);
         logout_check(0,req->response,req);
     }

@@ -77,7 +77,7 @@ char *lwqq_get_cookies(LwqqClient *lc)
     return NULL;
 }
 
-static void vc_free(LwqqVerifyCode *vc)
+void lwqq_vc_free(LwqqVerifyCode *vc)
 {
     if (vc) {
         s_free(vc->str);
@@ -132,7 +132,7 @@ void lwqq_client_free(LwqqClient *client)
     s_free(client->username);
     s_free(client->password);
     s_free(client->version);
-    vc_free(client->vc);
+    lwqq_vc_free(client->vc);
     cookies_free(client->cookies);
     s_free(client->clientid);
     s_free(client->seskey);
@@ -209,6 +209,7 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->city);
     s_free(buddy->personal);
     s_free(buddy->nick);
+    s_free(buddy->long_nick);
     s_free(buddy->shengxiao);
     s_free(buddy->email);
     s_free(buddy->province);

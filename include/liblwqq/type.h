@@ -21,6 +21,7 @@ typedef struct LwqqFriendCategory {
     int index;
     int sort;
     char *name;
+    int count;
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
 
@@ -42,6 +43,7 @@ typedef struct LwqqBuddy {
     char *city;
     char *personal;
     char *nick;
+    char *long_nick;
     char *shengxiao;
     char *email;
     char *province;
@@ -108,9 +110,7 @@ typedef struct LwqqCookies {
     char *verifysession;
     char *lwcookies;
 } LwqqCookies;
-
 typedef struct _LwqqAsync LwqqAsync;
-
 /* LwqqClient API */
 typedef struct LwqqClient {
     char *username;             /**< Username */
@@ -126,8 +126,8 @@ typedef struct LwqqClient {
     char *status;
     char *vfwebqq;
     char *psessionid;
+    LwqqAsync* async;
     LwqqCookies *cookies;
-    LwqqAsync *async;
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
@@ -170,6 +170,13 @@ LwqqClient *lwqq_client_new(const char *username, const char *password);
  * @return Cookies string on success, or null on failure
  */
 char *lwqq_get_cookies(LwqqClient *lc);
+
+/** 
+ * Free LwqqVerifyCode object
+ * 
+ * @param vc 
+ */
+void lwqq_vc_free(LwqqVerifyCode *vc);
 
 /** 
  * Free LwqqClient instance
