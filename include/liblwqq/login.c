@@ -29,7 +29,6 @@
 #include "md5.h"
 #include "url.h"
 #include "json.h"
-#include "async.h"
 
 /* URL for webqq login */
 #define LWQQ_URL_LOGIN_HOST "http://ptlogin2.qq.com"
@@ -43,7 +42,6 @@
 #define LWQQ_URL_VERSION "http://ui.ptlogin2.qq.com/cgi-bin/ver"
 
 static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err);
-static int logout_check(LwqqErrorCode ret,char* response,void* data);
 
 /** 
  * Update the cookies needed by webqq
@@ -825,26 +823,13 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
         s_free(cookies);
     }
     
-    if(lwqq_async_enabled(client)){
-        req->do_request_async(req,0,NULL,logout_check,req);
-        return;
-    }else{
-        ret = req->do_request(req, 0, NULL);
-        logout_check(0,req->response,req);
+    ret = req->do_request(req, 0, NULL);
+    if (ret) {
+        lwqq_log(LOG_ERROR, "Send logout request failed\n");
+        if (err)
+            *err = LWQQ_EC_NETWORK_ERROR;
+        goto done;
     }
-done:
-    if (json)
-        json_free_value(&json);
-    lwqq_http_request_free(req);    
-}
-static int logout_check(LwqqErrorCode ec,char* response,void* data)
-{
-    LwqqErrorCode error;
-    LwqqErrorCode* err=&error;
-    LwqqHttpRequest* req = data;
-    json_t *json = NULL;
-    char *value;
-    int ret;
     if (req->http_code != 200) {
         if (err)
             *err = LWQQ_EC_HTTP_ERROR;
@@ -880,5 +865,4 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);    
-    return 0;
 }

@@ -105,11 +105,13 @@ static void friends_complete(LwqqClient* lc,void* data)
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy;
     LwqqFriendCategory* category;
+    LwqqGroup* group;
     PurpleGroup** lst;
     int lst_len=0;
     PurpleBuddy* bu;
     PurpleGroup* gp;
     const char* gp_name;
+
     LIST_FOREACH(category,&lc->categories,entries) {
         lst_len = category->index>lst_len?category->index:lst_len;
     }
@@ -125,6 +127,10 @@ static void friends_complete(LwqqClient* lc,void* data)
         purple_blist_add_buddy(bu,NULL,lst[atoi(buddy->cate_index)],NULL);
         if(buddy->status)
             purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
+    }
+
+    LIST_FOREACH(group,&lc->groups,entries){
+        printf(group->name);
     }
     free(lst);
 }
@@ -144,6 +150,7 @@ static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
 void qq_msg_check(qq_account* ac)
 {
     LwqqClient* lc = ac->qq;
+    if(lc==NULL)return;
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
 

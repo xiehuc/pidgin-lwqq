@@ -38,20 +38,19 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_friends_info(lc,&err);
     lwqq_info_get_online_buddies(ac->qq,&err);
-    //lwqq_info_get_all_friend_qqnumbers(lc,&err);
-    //qq_fake_get_all_friend_qqnumbers(ac,&err);
+    lwqq_info_get_group_name_list(ac->qq,&err);
     lwqq_async_dispatch(ac->qq,FRIENDS_ALL_COMPLETE,NULL);
-
 }
 void background_friends_info(qq_account* ac)
 {
     START_THREAD(_background_friends_info,ac);
 }
+static int msg_check_repeat = 1;
 static gboolean msg_check(void* data)
 {
     qq_msg_check((qq_account*)data);
     //repeat for ever;
-    return 1;
+    return msg_check_repeat;
 }
 static int msg_check_handle;
 static void* _background_msg_poll(void* data)
@@ -74,6 +73,7 @@ void background_msg_poll(qq_account* ac)
 void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    //l->close_msg(l);
-    purple_timeout_remove(msg_check_handle);
+    //purple_timeout_remove(msg_check_handle);
+    msg_check_repeat = 0;
+    l->close_msg(l);
 }
