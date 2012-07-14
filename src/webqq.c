@@ -98,21 +98,6 @@ static void qq_account_free(qq_account* ac)
 {
     g_free(ac);
 }
-static void friend_come(qq_account* ac,int _buddy,void* data)
-{
-    /*LwqqBuddy* buddy = (LwqqBuddy*)_buddy;
-    LwqqClient* lc = ac->qq;
-    PurpleAccount* account=ac->account;
-    PurpleBuddy* bu;
-    PurpleGroup* gp;
-    if((gp = purple_find_group("QQ"))==NULL)
-        gp = purple_group_new("QQ");
-    if(purple_find_buddy(ac->account,buddy->qqnumber)==NULL){
-        bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
-        //gp = purple_find_group(buddy->group);
-        purple_blist_add_buddy(bu,NULL,gp,NULL);
-    }*/
-}
 static void friends_complete(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -143,33 +128,56 @@ static void friends_complete(LwqqClient* lc,void* data)
     }
     free(lst);
 }
-
-static void msg_come(LwqqClient* lc,void* data)
+static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    LwqqRecvMsgList* l = ac->qq->msg_list;
-    LwqqBuddy* buddy;
     PurpleConnection* pc = ac->gc;
+    serv_got_im(pc, msg->from, msg->content, PURPLE_MESSAGE_RECV, time(NULL));
+}
+static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleAccount* account = ac->account;
+
+    purple_prpl_got_user_status(account,status->who,status->status,NULL);
+}
+void qq_msg_check(qq_account* ac)
+{
+    LwqqClient* lc = ac->qq;
+    LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
 
     pthread_mutex_lock(&l->mutex);
-    if (!SIMPLEQ_EMPTY(&l->head)) {
-        msg = SIMPLEQ_FIRST(&l->head);
-        if (msg->msg->content) {
-            serv_got_im(pc, msg->msg->from, msg->msg->content, PURPLE_MESSAGE_RECV, time(NULL));
-        }
-        SIMPLEQ_REMOVE_HEAD(&l->head, entries);
+    if (SIMPLEQ_EMPTY(&l->head)) {
+        /* No message now, wait 100ms */
+        pthread_mutex_unlock(&l->mutex);
+        return ;
     }
+
+    msg = SIMPLEQ_FIRST(&l->head);
+    char *msg_type = msg->msg->msg_type;
+
+    if (strcmp(msg_type, MT_MESSAGE) == 0) {
+        buddy_message(lc,(LwqqMsgMessage*)msg->msg);
+    } else if (strcmp(msg_type, MT_GROUP_MESSAGE) == 0) {
+        //group_message(lc,msg->msg);
+    } else if (strcmp(msg_type, MT_STATUS_CHANGE) == 0) {
+        /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
+        if(buddy->status!=NULL)s_free(buddy->status);
+        buddy->status = s_strdup(msg->msg->status.status);*/
+        status_change(lc,(LwqqMsgStatus*)msg->msg);
+    } else {
+        printf("unknow message\n");
+    }
+
+    SIMPLEQ_REMOVE_HEAD(&l->head, entries);
+
     pthread_mutex_unlock(&l->mutex);
+    lwqq_msg_free(msg->msg);
+    s_free(msg);
+
 }
 
-static void status_change(LwqqClient* lc,void* data)
-{
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    LwqqBuddy* buddy = (LwqqBuddy*)data;
-    PurpleAccount* account = ac->account;
-    purple_prpl_got_user_status(account,buddy->uin,buddy->status,NULL);
-}
 
 static void login_complete(LwqqClient* lc,void* data)
 {
@@ -182,10 +190,8 @@ static void login_complete(LwqqClient* lc,void* data)
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
     lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
-    lwqq_async_add_listener(ac->qq,STATUS_CHANGE,status_change);
     background_friends_info(ac);
 
-    lwqq_async_add_listener(ac->qq,MSG_COME,msg_come);
     background_msg_poll(ac);
 }
 

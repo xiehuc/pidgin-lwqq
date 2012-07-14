@@ -14,17 +14,14 @@
 #include <string.h>
 #include <plugin.h>
 #include "async.h"
-typedef struct _LwqqAsync {
-    ASYNC_CALLBACK listener[5];
-    LwqqErrorCode err[5];
-    void* data[5];
-} _LwqqAsync;
 typedef struct async_dispatch_data {
     ListenerType type;
     LwqqClient* client;
     gint handle;
     void* data;
 } async_dispatch_data;
+
+static gboolean timeout_come(void* p);
 
 void lwqq_async_add_listener(LwqqClient* lc,ListenerType type,ASYNC_CALLBACK callback)
 {
@@ -48,10 +45,11 @@ LwqqErrorCode lwqq_async_get_error(LwqqClient* lc,ListenerType type)
 {
     return lc->async->err[type];
 }
-static gboolean timeout_come(void* p);
 
 void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* param)
 {
+    if(!lwqq_async_has_listener(lc,type))
+        return;
     async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
     data->type = type;
     data->client = lc;
@@ -67,8 +65,7 @@ static gboolean timeout_come(void* p)
     if(!lwqq_async_enabled(lc)) return 0;
     if(lc->async->listener[type]!=NULL)
         lc->async->listener[type](lc,data->data);
-    /*if(data->handle>0)
-        purple_timeout_remove(data->handle);*/
+
     free(data);
     //remote handle;
     return 0;

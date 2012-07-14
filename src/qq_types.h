@@ -10,4 +10,5 @@ typedef struct qq_account {
     PurpleConnection* gc;
     AsyncListener* async;
 } qq_account;
+void qq_msg_check(qq_account* ac);
 #endif
