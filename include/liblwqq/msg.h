@@ -51,9 +51,8 @@ typedef struct LwqqMsgGroup {
 
     char *from;                 /**< Message group uin */
     char *to;                   /**< Message receiver(qqnumber) */
-    char *send;                 /**< Message sender(qqnumber) */
-    
     char *content;              /**< Message content */
+    char *send;                 /**< Message sender(qqnumber) */
 
 } LwqqMsgGroup;
 

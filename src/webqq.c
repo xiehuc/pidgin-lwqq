@@ -11,6 +11,8 @@
 #include <type.h>
 #include <async.h>
 
+static void group_member_list_come(LwqqClient* lc,void* data);
+
 static void action_about_webqq(PurplePluginAction *action)
 {
     PurpleConnection *gc = (PurpleConnection *) action->context;
@@ -140,7 +142,7 @@ static void groups_complete(LwqqClient* lc,void* data)
     PurpleGroup* gp = purple_group_new("QQ群");
     purple_blist_add_group(gp,NULL);
     GHashTable *components;
-    LIST_FOREACH(group,&lc->groups,entries){
+    LIST_FOREACH(group,&lc->groups,entries) {
         components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->gid));
         chat = purple_chat_new(account,group->gid,components);
@@ -153,6 +155,25 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     serv_got_im(pc, msg->from, msg->content, PURPLE_MESSAGE_RECV, time(NULL));
+}
+static void group_message(LwqqClient* lc,LwqqMsgGroup* msg)
+{
+    printf("%s\n",msg->content);
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* pc = ac->gc;
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
+
+    //force open dialog
+    serv_got_joined_chat(pc,atoi(group->gid),group->gid);
+    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,msg->content,time(NULL));
+    if(!LIST_EMPTY(&group->members)) {
+        group_member_list_come(lc,group);
+    } else {
+        lwqq_async_add_listener(lc,GROUP_DETAIL,group_member_list_come);
+        lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
+        background_group_detail(ac,group);
+    }
+
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
 {
@@ -181,7 +202,7 @@ void qq_msg_check(qq_account* ac)
     if (strcmp(msg_type, MT_MESSAGE) == 0) {
         buddy_message(lc,(LwqqMsgMessage*)msg->msg);
     } else if (strcmp(msg_type, MT_GROUP_MESSAGE) == 0) {
-        //group_message(lc,msg->msg);
+        group_message(lc,(LwqqMsgGroup*)msg->msg);
     } else if (strcmp(msg_type, MT_STATUS_CHANGE) == 0) {
         /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
         if(buddy->status!=NULL)s_free(buddy->status);
@@ -248,14 +269,14 @@ static void qq_close(PurpleConnection *gc)
     PurpleBlistNode * node;
     PurpleChat* chat;
     //remove all chat
-    if(qun!=NULL){
+    if(qun!=NULL) {
         node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(qun));
-        while(node!=NULL){
-            if(PURPLE_BLIST_NODE_IS_CHAT(node)){
+        while(node!=NULL) {
+            if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
                 chat = PURPLE_CHAT(node);
                 node = purple_blist_node_next(node,1);
                 purple_blist_remove_chat(chat);
-            }else{
+            } else {
                 node = purple_blist_node_next(node,1);
             }
         }
@@ -285,31 +306,49 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     msg->send(msg);
 
     return 1;
-}   
+}
+
+static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
+{
+    char gid[32];
+    snprintf(gid,32,"%u",id);
+    printf("%s\n",gid);
+    qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    LwqqSendMsg* msg;
+
+    msg = lwqq_sendmsg_new(lc,gid,"group_message",message);
+    if(!msg) return 1;
+
+    msg->send(msg);
+
+    return 1;
+}
+
 GList *qq_chat_info(PurpleConnection *gc)
-{ 
-	GList *m;
-	struct proto_chat_entry *pce;
+{
+    GList *m;
+    struct proto_chat_entry *pce;
 
-	m = NULL;
+    m = NULL;
 
-	pce = g_new0(struct proto_chat_entry, 1);
-	pce->label = _("ID: ");
-	pce->identifier = QQ_ROOM_KEY_QUN_ID;
-	m = g_list_append(m, pce);
+    pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = _("ID: ");
+    pce->identifier = QQ_ROOM_KEY_QUN_ID;
+    m = g_list_append(m, pce);
 
-	return m;
+    return m;
 }
 GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
 {
-	GHashTable *defaults;
+    GHashTable *defaults;
 
-	defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+    defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 
-	if (chat_name != NULL)
-		g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
+    if (chat_name != NULL)
+        g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
 
-	return defaults;
+    return defaults;
 }
 
 static void group_member_list_come(LwqqClient* lc,void* data)
@@ -321,11 +360,13 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     PurpleConvChatBuddyFlags flag;
 
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
-            group->gid,account);
-
-    LIST_FOREACH(member,&group->members,entries){
-        flag |= PURPLE_CBFLAGS_TYPING;
-        purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->uin,NULL,flag,FALSE);
+                               group->gid,account);
+    //only there are no member we add it.
+    if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
+        LIST_FOREACH(member,&group->members,entries) {
+            flag |= PURPLE_CBFLAGS_TYPING;
+            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->uin,NULL,flag,FALSE);
+        }
     }
 }
 
@@ -336,13 +377,13 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     char* gid = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
     LwqqGroup* group;
     LwqqBuddy* member;
-    if(gid!=NULL){
+    if(gid!=NULL) {
         group = lwqq_group_find_group_by_gid(lc,gid);
         //this will open chat dialog.
         serv_got_joined_chat(gc,atoi(gid),group->gid);
-        if(!LIST_EMPTY(&group->members)){
+        if(!LIST_EMPTY(&group->members)) {
             group_member_list_come(lc,group);
-        }else{
+        } else {
             lwqq_async_add_listener(lc,GROUP_DETAIL,group_member_list_come);
             lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
             background_group_detail(ac,group);
@@ -378,6 +419,7 @@ PurplePluginProtocolInfo tsina_prpl_info = {
     .login=             qq_login,       /* login */
     .close=             qq_close,       /* close */
     .send_im=           qq_send_im,     /* send_im */
+    .chat_send=         qq_send_chat,
     NULL,//twitter_set_status,/* set_status */
     NULL,                   /* set_idle */
     NULL,                   /* change_passwd */
