@@ -10,5 +10,6 @@
 
 #define DISPLAY_VERSION "0.1"
 #define DBGID   "webqq"
+#define QQ_ROOM_KEY_QUN_ID "gid"
 
 #endif

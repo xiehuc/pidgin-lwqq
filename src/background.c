@@ -78,3 +78,27 @@ void background_msg_drain(qq_account* ac)
     purple_timeout_remove(msg_check_handle);
     //l->close_msg(l);
 }
+
+static void* _background_group_detail(void* d)
+{
+    void** data = (void**)d;
+    qq_account* ac = data[0];
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group = data[1];
+    free(data);
+    LwqqErrorCode err;
+    lwqq_info_get_group_detail_info(lc,group,&err);
+    lwqq_async_dispatch(lc,GROUP_DETAIL,group);
+}
+void background_group_detail(qq_account* ac,LwqqGroup* group)
+{
+    if(!LIST_EMPTY(&group->members)){
+        LwqqClient* lc = ac->qq;
+        lwqq_async_dispatch(lc,GROUP_DETAIL,group);
+        return;
+    }
+    void** data = malloc(sizeof(void*)*2);
+    data[0] = ac;
+    data[1] = group;
+    START_THREAD(_background_group_detail,data);
+}

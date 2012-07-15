@@ -123,6 +123,7 @@ static void friends_complete(LwqqClient* lc,void* data)
     LIST_FOREACH(buddy,&lc->friends,entries) {
         bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
+        else purple_blist_alias_buddy(bu,buddy->nick);
         purple_blist_add_buddy(bu,NULL,lst[atoi(buddy->cate_index)],NULL);
         if(buddy->status)
             purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
@@ -141,8 +142,9 @@ static void groups_complete(LwqqClient* lc,void* data)
     GHashTable *components;
     LIST_FOREACH(group,&lc->groups,entries){
         components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(components,g_strdup("id"),g_strdup(group->gid));
-        chat = purple_chat_new(account,group->name,components);
+        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->gid));
+        chat = purple_chat_new(account,group->gid,components);
+        purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
     }
 }
@@ -277,22 +279,77 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     LwqqSendMsg* msg;
     LwqqClient* lc = ac->qq;
 
-    /*if(!(buddy = purple_find_buddy(ac->account, who))) return 0;
-    LIST_FOREACH(item, &ac->qq->friends, entries) {
-        if(strcmp(buddy->name,item->qqnumber)==0){
-            friend=item;
-            break;
-        }
-    }*/
-
     msg = lwqq_sendmsg_new(lc,who,"message",what);
     if(!msg) return 1;
 
     msg->send(msg);
 
     return 1;
+}   
+GList *qq_chat_info(PurpleConnection *gc)
+{ 
+	GList *m;
+	struct proto_chat_entry *pce;
+
+	m = NULL;
+
+	pce = g_new0(struct proto_chat_entry, 1);
+	pce->label = _("ID: ");
+	pce->identifier = QQ_ROOM_KEY_QUN_ID;
+	m = g_list_append(m, pce);
+
+	return m;
+}
+GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
+{
+	GHashTable *defaults;
+
+	defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+
+	if (chat_name != NULL)
+		g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
+
+	return defaults;
 }
 
+static void group_member_list_come(LwqqClient* lc,void* data)
+{
+    LwqqGroup* group = (LwqqGroup*)data;
+    qq_account* ac = lwqq_async_get_userdata(lc,GROUP_DETAIL);
+    PurpleAccount* account = ac->account;
+    LwqqBuddy* member;
+    PurpleConvChatBuddyFlags flag;
+
+    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
+            group->gid,account);
+
+    LIST_FOREACH(member,&group->members,entries){
+        flag |= PURPLE_CBFLAGS_TYPING;
+        purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->uin,NULL,flag,FALSE);
+    }
+}
+
+static void qq_group_join(PurpleConnection *gc, GHashTable *data)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    char* gid = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
+    LwqqGroup* group;
+    LwqqBuddy* member;
+    if(gid!=NULL){
+        group = lwqq_group_find_group_by_gid(lc,gid);
+        //this will open chat dialog.
+        serv_got_joined_chat(gc,atoi(gid),group->gid);
+        if(!LIST_EMPTY(&group->members)){
+            group_member_list_come(lc,group);
+        }else{
+            lwqq_async_add_listener(lc,GROUP_DETAIL,group_member_list_come);
+            lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
+            background_group_detail(ac,group);
+        }
+    }
+    return;
+}
 
 static void
 init_plugin(PurplePlugin *UNUSED(plugin))
@@ -315,8 +372,9 @@ PurplePluginProtocolInfo tsina_prpl_info = {
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
     NULL,                   /* blist_node_menu */
-    NULL,                   /* chat_info */
-    NULL,                   /* chat_info_defaults */
+    .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
+    .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
+    .join_chat=         qq_group_join,
     .login=             qq_login,       /* login */
     .close=             qq_close,       /* close */
     .send_im=           qq_send_im,     /* send_im */
