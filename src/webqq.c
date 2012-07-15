@@ -101,7 +101,6 @@ static void qq_account_free(qq_account* ac)
 static void friends_complete(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    //LwqqClient* lc = ac->qq;
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy;
     LwqqFriendCategory* category;
@@ -129,10 +128,23 @@ static void friends_complete(LwqqClient* lc,void* data)
             purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
     }
 
-    LIST_FOREACH(group,&lc->groups,entries){
-        printf(group->name);
-    }
     free(lst);
+}
+static void groups_complete(LwqqClient* lc,void* data)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleAccount* account=ac->account;
+    LwqqGroup* group;
+    PurpleChat *chat;
+    PurpleGroup* gp = purple_group_new("QQ群");
+    purple_blist_add_group(gp,NULL);
+    GHashTable *components;
+    LIST_FOREACH(group,&lc->groups,entries){
+        components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        g_hash_table_insert(components,g_strdup("id"),g_strdup(group->gid));
+        chat = purple_chat_new(account,group->name,components);
+        purple_blist_add_chat(chat,gp,NULL);
+    }
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -197,6 +209,7 @@ static void login_complete(LwqqClient* lc,void* data)
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
     lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
+    lwqq_async_add_listener(ac->qq,GROUPS_ALL_COMPLETE,groups_complete);
     background_friends_info(ac);
 
     background_msg_poll(ac);
@@ -220,14 +233,30 @@ static void qq_login(PurpleAccount *account)
 static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    lwqq_async_remove_listener(ac->qq,MSG_COME);
     LwqqErrorCode err;
     GSList* list = purple_blist_get_buddies();
     PurpleBuddy* buddy;
+    //remove all buddy;
     while(list->next!=NULL) {
         buddy = list->data;
         list = list->next;
         purple_blist_remove_buddy(buddy);
+    }
+    PurpleGroup* qun = purple_find_group("QQ群");
+    PurpleBlistNode * node;
+    PurpleChat* chat;
+    //remove all chat
+    if(qun!=NULL){
+        node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(qun));
+        while(node!=NULL){
+            if(PURPLE_BLIST_NODE_IS_CHAT(node)){
+                chat = PURPLE_CHAT(node);
+                node = purple_blist_node_next(node,1);
+                purple_blist_remove_chat(chat);
+            }else{
+                node = purple_blist_node_next(node,1);
+            }
+        }
     }
     //lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {

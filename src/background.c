@@ -38,8 +38,10 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_friends_info(lc,&err);
     lwqq_info_get_online_buddies(ac->qq,&err);
-    lwqq_info_get_group_name_list(ac->qq,&err);
     lwqq_async_dispatch(ac->qq,FRIENDS_ALL_COMPLETE,NULL);
+
+    lwqq_info_get_group_name_list(ac->qq,&err);
+    lwqq_async_dispatch(ac->qq,GROUPS_ALL_COMPLETE,NULL);
 }
 void background_friends_info(qq_account* ac)
 {
@@ -73,7 +75,6 @@ void background_msg_poll(qq_account* ac)
 void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    //purple_timeout_remove(msg_check_handle);
-    msg_check_repeat = 0;
-    l->close_msg(l);
+    purple_timeout_remove(msg_check_handle);
+    //l->close_msg(l);
 }

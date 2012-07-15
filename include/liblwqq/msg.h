@@ -43,6 +43,21 @@ typedef struct LwqqMsgMessage {
 } LwqqMsgMessage;
 
 /**
+ * Message object, receiving and sending chat message
+ * 
+ */
+typedef struct LwqqMsgGroup {
+    char * msg_type;            /**< must not be changed */
+
+    char *from;                 /**< Message group uin */
+    char *to;                   /**< Message receiver(qqnumber) */
+    char *send;                 /**< Message sender(qqnumber) */
+    
+    char *content;              /**< Message content */
+
+} LwqqMsgGroup;
+
+/**
  * buddies status change message body.
  */
 typedef struct LwqqMsgStatus {
@@ -64,6 +79,7 @@ typedef union LwqqMsg {
     char *msg_type;
     LwqqMsgAny any;
     LwqqMsgMessage message;
+    LwqqMsgGroup group;
     LwqqMsgStatus status;
 } LwqqMsg;
 
@@ -103,7 +119,6 @@ typedef struct LwqqRecvMsgList {
     SIMPLEQ_HEAD(, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
-    void (*close_msg)(struct LwqqRecvMsgList *list);
 } LwqqRecvMsgList;
 
 /** 

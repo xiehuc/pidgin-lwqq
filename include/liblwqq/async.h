@@ -15,10 +15,8 @@ typedef void (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
     FRIENDS_ALL_COMPLETE,
+    GROUPS_ALL_COMPLETE,
     VERIFY_COME,
-    MSG_COME,
-    GROUP_MSG,
-    STATUS_CHANGE,
     ListenerTypeLength
 } ListenerType;
 typedef struct _LwqqAsync {
