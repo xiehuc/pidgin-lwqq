@@ -41,7 +41,11 @@ void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err);
  */
 void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
                                       LwqqErrorCode *err);
-
+/**
+ * Store QQ face to LwqqBuddy::avatar
+ */
+void lwqq_info_get_friend_avatar(LwqqClient * lc,LwqqBuddy * buddy,
+                                        LwqqErrorCode *err);
 /** 
  * Get all friends qqnumbers
  * 
