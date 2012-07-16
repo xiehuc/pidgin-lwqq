@@ -184,7 +184,8 @@ static void avatar_complete(LwqqClient* lc,void* data)
     purple_buddy_icons_set_caching(0);
     
     LIST_FOREACH(buddy,&lc->friends,entries){
-        purple_buddy_icons_set_for_user(account, buddy->uin, buddy->avatar, buddy->avatar_len, NULL);
+        if(buddy->avatar_len)
+            purple_buddy_icons_set_for_user(account, buddy->uin, buddy->avatar, buddy->avatar_len, NULL);
     }
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
@@ -278,6 +279,7 @@ static void qq_close(PurpleConnection *gc)
         list = list->next;
         purple_blist_remove_buddy(buddy);
     }
+
     PurpleGroup* qun = purple_find_group("QQ群");
     PurpleBlistNode * node;
     PurpleChat* chat;
@@ -294,6 +296,13 @@ static void qq_close(PurpleConnection *gc)
             }
         }
     }
+
+    LwqqBuddy* friend;
+    LIST_FOREACH(friend,&ac->qq->friends,entries){
+        //let purple free avatar not lwqq
+        friend->avatar = NULL;
+    }
+
     //lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
         background_msg_drain(ac);
