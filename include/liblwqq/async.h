@@ -17,6 +17,7 @@ typedef enum ListenerType {
     FRIENDS_ALL_COMPLETE,
     GROUPS_ALL_COMPLETE,
     GROUP_DETAIL,
+    AVATAR_COMPLETE,
     VERIFY_COME,
     ListenerTypeLength
 } ListenerType;

@@ -42,6 +42,12 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_group_name_list(ac->qq,&err);
     lwqq_async_dispatch(ac->qq,GROUPS_ALL_COMPLETE,NULL);
+
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        lwqq_info_get_friend_avatar(lc,buddy,&err);
+    }
+    lwqq_async_dispatch(lc,AVATAR_COMPLETE,NULL);
 }
 void background_friends_info(qq_account* ac)
 {

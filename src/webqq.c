@@ -175,6 +175,18 @@ static void group_message(LwqqClient* lc,LwqqMsgGroup* msg)
     }
 
 }
+static void avatar_complete(LwqqClient* lc,void* data)
+{
+    LwqqBuddy* buddy;
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleAccount* account = ac->account;
+    //do not catch icons 
+    purple_buddy_icons_set_caching(0);
+    
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        purple_buddy_icons_set_for_user(account, buddy->uin, buddy->avatar, buddy->avatar_len, NULL);
+    }
+}
 static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -233,6 +245,7 @@ static void login_complete(LwqqClient* lc,void* data)
 
     lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
     lwqq_async_add_listener(ac->qq,GROUPS_ALL_COMPLETE,groups_complete);
+    lwqq_async_add_listener(ac->qq,AVATAR_COMPLETE,avatar_complete);
     background_friends_info(ac);
 
     background_msg_poll(ac);

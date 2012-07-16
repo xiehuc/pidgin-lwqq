@@ -55,6 +55,7 @@ typedef struct LwqqBuddy {
     char *flag;
 
     char *avatar;
+    size_t avatar_len;
 
     char *cate_index;           /**< Index of the category */
 

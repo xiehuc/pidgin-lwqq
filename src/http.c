@@ -274,6 +274,7 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         if (buf) {
             len = ghttp_get_body_len(request->req);
             *resp = s_realloc(*resp, have_read_bytes + len);
+	    request->resp_len = have_read_bytes + len;
             memcpy(*resp + have_read_bytes, buf, len);
             have_read_bytes += len;
         }
