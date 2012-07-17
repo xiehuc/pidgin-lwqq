@@ -339,22 +339,21 @@ json_error:
     lwqq_http_request_free(req);
 }
 
-void lwqq_info_get_friend_avatar(LwqqClient * lc,LwqqBuddy * buddy,LwqqErrorCode *err)
+void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,LwqqErrorCode *err)
 {
-    if(!lc||!buddy) return;
-    if(!buddy->uin) return;
+    if(!lc||!uin||!avatar||!len) return;
     //there have avatar already do not repeat work;
-    if(buddy->avatar) return;
+    if(*len) return;
 
     LwqqHttpRequest* req;
     char* cookies;
-    char url[512];
     int ret;
+    char url[512];
     //there are face 1 to face 10 server to accelerate speed.
     //we only use face5 now.
     snprintf(url, sizeof(url),
              "%s/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
-             "http://face5.qun.qq.com", buddy->uin, lc->vfwebqq);
+             "http://face5.qun.qq.com", uin, lc->vfwebqq);
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
@@ -372,10 +371,11 @@ void lwqq_info_get_friend_avatar(LwqqClient * lc,LwqqBuddy * buddy,LwqqErrorCode
             *err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
+    if(!req->resp_len) goto done;
 
-    buddy->avatar = s_malloc(req->resp_len);
-    memcpy(buddy->avatar,req->response,req->resp_len);
-    buddy->avatar_len = req->resp_len;
+    *avatar = s_malloc(req->resp_len);
+    memcpy(*avatar,req->response,req->resp_len);
+    *len = req->resp_len;
 
 done:
     lwqq_http_request_free(req);

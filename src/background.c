@@ -2,6 +2,7 @@
 
 #include <login.h>
 #include <async.h>
+#include <info.h>
 
 #define START_THREAD(thread,data)\
 do{pthread_t th;\
@@ -44,8 +45,12 @@ static void* _background_friends_info(void* data)
     lwqq_async_dispatch(ac->qq,GROUPS_ALL_COMPLETE,NULL);
 
     LwqqBuddy* buddy;
+    LwqqGroup* group;
     LIST_FOREACH(buddy,&lc->friends,entries){
         lwqq_info_get_friend_avatar(lc,buddy,&err);
+    }
+    LIST_FOREACH(group,&lc->groups,entries){
+        lwqq_info_get_group_avatar(lc,group,&err);
     }
     lwqq_async_dispatch(lc,AVATAR_COMPLETE,NULL);
 }

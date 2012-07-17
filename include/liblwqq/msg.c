@@ -2,14 +2,15 @@
  * @file   msg.c
  * @author mathslinux <riegamaths@gmail.com>
  * @date   Thu Jun 14 14:42:17 2012
- *
+ * 
  * @brief  Message receive and send API
- *
- *
+ * 
+ * 
  */
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "type.h"
 #include "smemory.h"
@@ -26,27 +27,14 @@ static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
 static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
-static int send_msg(struct LwqqSendMsg *sendmsg);
-
-static LwqqMsg *lwqq_msg_message_new(const char *msg_type, const char *from,
-                                     const char *to, const char *content);
-static void lwqq_msg_message_free(LwqqMsg *msg);
-static LwqqMsg *lwqq_msg_status_new(const char *msg_type, const char *who,
-                                    const char *status);
-static void lwqq_msg_status_free(LwqqMsg *msg);
-
-static LwqqMsg *lwqq_msg_any_new(const char *msg_type);
-static void lwqq_msg_any_free(LwqqMsg *msg);
-
-static LwqqMsg *lwqq_msg_group_new(const char *msg_type, const char *from,
-                                   const char *to, const char *send, const char *content);
-static void lwqq_msg_group_free(LwqqMsg *msg);
+static void lwqq_msg_message_free(void *opaque);
+static void lwqq_msg_status_free(void *opaque);
 
 /**
  * Create a new LwqqRecvMsgList object
- *
+ * 
  * @param client Lwqq Client reference
- *
+ * 
  * @return NULL on failure
  */
 LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
@@ -58,19 +46,19 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     pthread_mutex_init(&list->mutex, NULL);
     SIMPLEQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
-
+    
     return list;
 }
 
 /**
  * Free a LwqqRecvMsgList object
- *
- * @param list
+ * 
+ * @param list 
  */
 void lwqq_recvmsg_free(LwqqRecvMsgList *list)
 {
     LwqqRecvMsg *recvmsg;
-
+    
     if (!list)
         return ;
 
@@ -86,229 +74,100 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
     return ;
 }
 
-/**
- * Create a new LwqqMsg object
- *
- * @param msg_type
- * @param ... different type will call different constructor
- *            and pass these parameters to the constructor
- *
- * @return NULL on failure
- */
-LwqqMsg *lwqq_msg_new(const char *msg_type, ...)
+LwqqMsg *lwqq_msg_new(LwqqMsgType type)
 {
-    va_list ap;
-    va_start(ap, msg_type);
-    if (strncmp(msg_type, MT_MESSAGE, strlen(MT_MESSAGE)) == 0) {
-        char *from = va_arg(ap, char *);
-        char *to = va_arg(ap, char *);
-        char *content = va_arg(ap, char *);
-        va_end(ap);
-        return lwqq_msg_message_new(msg_type, from, to, content);
-    } else if(strncmp(msg_type, MT_GROUP_MESSAGE, strlen(MT_GROUP_MESSAGE)) == 0) {
-        char *from = va_arg(ap, char *);
-        char *to = va_arg(ap, char *);
-        char *sender = va_arg(ap,char *);
-        char *content = va_arg(ap, char *);
-        va_end(ap);
-        return lwqq_msg_group_new(msg_type, from, to, sender, content);
-    } else if (strncmp(msg_type, MT_STATUS_CHANGE, strlen(MT_STATUS_CHANGE)) == 0) {
-        char *who = va_arg(ap, char *);
-        char *status = va_arg(ap, char *);
-        va_end(ap);
-        return lwqq_msg_status_new(msg_type, who, status);
-    } else {
-        va_end(ap);
-        return lwqq_msg_any_new(msg_type);
+    LwqqMsg *msg = NULL;
+
+    msg = s_malloc0(sizeof(*msg));
+    msg->type = type;
+
+    switch (type) {
+    case LWQQ_MT_BUDDY_MSG:
+    case LWQQ_MT_GROUP_MSG:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgMessage));
+        break;
+    case LWQQ_MT_STATUS_CHANGE:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgStatusChange));
+        break;
+    default:
+        lwqq_log(LOG_ERROR, "No such message type\n");
+        goto failed;
+        break;
     }
+
+    return msg;
+failed:
+    lwqq_msg_free(msg);
     return NULL;
+}
+
+static void lwqq_msg_message_free(void *opaque)
+{
+    LwqqMsgMessage *msg = opaque;
+    if (!msg) {
+        return ;
+    }
+
+    s_free(msg->from);
+    s_free(msg->to);
+    s_free(msg->send);
+    s_free(msg->f_name);
+    s_free(msg->f_color);
+
+    LwqqMsgContent *c;
+    LIST_FOREACH(c, &msg->content, entries) {
+        if (c->type == LWQQ_CONTENT_STRING) {
+            s_free(c->data.str);
+        }
+        s_free(c);
+    }
+    
+    s_free(msg);
+}
+
+static void lwqq_msg_status_free(void *opaque)
+{
+    LwqqMsgStatusChange *s = opaque;
+    if (!s) {
+        return ;
+    }
+
+    s_free(s->who);
+    s_free(s);
 }
 
 /**
  * Free a LwqqMsg object
- *
- * @param msg
+ * 
+ * @param msg 
  */
 void lwqq_msg_free(LwqqMsg *msg)
 {
     if (!msg)
         return;
-    if (strncmp(msg->msg_type, MT_MESSAGE, strlen(MT_MESSAGE)) == 0) {
-        lwqq_msg_message_free(msg);
-    } else if (strncmp(msg->msg_type, MT_GROUP_MESSAGE, strlen(MT_GROUP_MESSAGE)) == 0) {
-        lwqq_msg_group_free(msg);
-    } else if (strncmp(msg->msg_type, MT_STATUS_CHANGE, strlen(MT_STATUS_CHANGE)) == 0) {
-        lwqq_msg_status_free(msg);
-    } else {
-        lwqq_msg_any_free(msg);
+
+    printf ("type: %d\n", msg->type);
+    switch (msg->type) {
+    case LWQQ_MT_BUDDY_MSG:
+    case LWQQ_MT_GROUP_MSG:
+        lwqq_msg_message_free(msg->opaque);
+        break;
+    case LWQQ_MT_STATUS_CHANGE:
+        lwqq_msg_status_free(msg->opaque);
+        break;
+    default:
+        lwqq_log(LOG_ERROR, "No such message type\n");
+        break;
     }
+
     s_free(msg);
 }
 
 /**
- * Create message object. msg_type must be MT_MESSAGE.
- *
- * @param msg_type
- * @param from
- * @param to
- * @param content
- *
- * @return
- */
-static LwqqMsg *lwqq_msg_message_new(const char *msg_type, const char *from,
-                                     const char *to, const char *content)
-{
-    LwqqMsg *msg;
-
-    if (strcmp(msg_type, MT_MESSAGE) != 0)
-        return NULL;
-
-    msg = s_malloc0(sizeof(*msg));
-    msg->message.from = s_strdup(from);
-    msg->message.to = s_strdup(to);
-    msg->message.msg_type = s_strdup(msg_type);
-    msg->message.content = s_strdup(content);
-    return msg;
-}
-
-/**
- * Free message object
- *
- * @param msg
- */
-static void lwqq_msg_message_free(LwqqMsg *msg)
-{
-    if (!msg)
-        return;
-    if (strncmp(msg->msg_type, MT_MESSAGE, strlen(MT_MESSAGE)) != 0)
-        return;
-    s_free(msg->message.from);
-    s_free(msg->message.to);
-    s_free(msg->message.msg_type);
-    s_free(msg->message.content);
-}
-/**
- * Create message object. msg_type must be MT_MESSAGE.
- *
- * @param msg_type
- * @param from
- * @param to
- * @param content
- *
- * @return
- */
-static LwqqMsg *lwqq_msg_group_new(const char *msg_type, const char *from,
-                                   const char *to, const char *send, const char *content)
-{
-    LwqqMsg *msg;
-
-    if (strcmp(msg_type, MT_GROUP_MESSAGE) != 0)
-        return NULL;
-
-    msg = s_malloc0(sizeof(*msg));
-    msg->group.from = s_strdup(from);
-    msg->group.to = s_strdup(to);
-    msg->group.send = s_strdup(send);
-    msg->group.msg_type = s_strdup(msg_type);
-    msg->group.content = s_strdup(content);
-    return msg;
-}
-/**
- * Free message object
- *
- * @param msg
- */
-static void lwqq_msg_group_free(LwqqMsg *msg)
-{
-    if (!msg)
-        return;
-    if (strncmp(msg->msg_type, MT_GROUP_MESSAGE, strlen(MT_GROUP_MESSAGE)) != 0)
-        return;
-    s_free(msg->group.from);
-    s_free(msg->group.to);
-    s_free(msg->group.send);
-    s_free(msg->group.msg_type);
-    s_free(msg->group.content);
-}
-
-/**
- * create status change message object, msg_type must be MT_STATUS_CHANGE
- *
- * @param msg_type
- * @param who
- * @param status
- *
- * @return
- */
-static LwqqMsg *lwqq_msg_status_new(const char *msg_type, const char *who,
-                                    const char *status)
-{
-    LwqqMsg *msg;
-
-    if (strcmp(msg_type, MT_STATUS_CHANGE) != 0)
-        return NULL;
-    msg = s_malloc(sizeof(*msg));
-    LwqqMsgStatus *m = (LwqqMsgStatus *)msg;
-
-    m->who = s_strdup(who);
-    m->status = s_strdup(status);
-    m->msg_type = s_strdup(msg_type);
-    return msg;
-}
-
-/**
- * free status change message object.
- *
- * @param msg
- */
-static void lwqq_msg_status_free(LwqqMsg *msg)
-{
-    if (!msg)
-        return;
-    if (strncmp(msg->msg_type, MT_STATUS_CHANGE, strlen(MT_STATUS_CHANGE)) != 0)
-        return;
-    s_free(msg->status.who);
-    s_free(msg->status.msg_type);
-    s_free(msg->status.status);
-}
-
-/**
- * create "any" object. it only contains msg_type now.
- *
- * @param msg_type
- *
- * @return NULL on failure.
- */
-static LwqqMsg *lwqq_msg_any_new(const char *msg_type)
-{
-    LwqqMsg *msg;
-
-    if (!msg_type)
-        return NULL;
-    msg = s_malloc(sizeof(*msg));
-    LwqqMsgAny *m = (LwqqMsgAny *)msg;
-
-    m->msg_type = s_strdup(msg_type);
-    return msg;
-}
-
-/**
- * free "any" object.
- *
- * @param msg
- */
-static void lwqq_msg_any_free(LwqqMsg *msg)
-{
-    if (!msg)
-        return;
-    s_free(msg->any.msg_type);
-}
-
-/**
  * Get the result object in a json object.
- *
+ * 
  * @param str
- *
+ * 
  * @return result object pointer on success, else NULL on failure.
  */
 static json_t *get_result_json_object(json_t *json)
@@ -332,26 +191,195 @@ static json_t *get_result_json_object(json_t *json)
     if (!json_tmp) {
         goto failed;
     }
-
+    
     return json_tmp;
 
 failed:
     return NULL;
 }
 
+static LwqqMsgType parse_recvmsg_type(json_t *json)
+{
+    LwqqMsgType type = LWQQ_MT_UNKNOWN;
+    char *msg_type = json_parse_simple_value(json, "poll_type");
+    if (!msg_type) {
+        return type;
+    }
+    if (!strncmp(msg_type, "message", strlen("message"))) {
+        type = LWQQ_MT_BUDDY_MSG;
+    } else if (!strncmp(msg_type, "group_message", strlen("group_message"))) {
+        type = LWQQ_MT_GROUP_MSG;
+    } else if (!strncmp(msg_type, "buddies_status_change",
+                        strlen("buddies_status_change"))) {
+        type = LWQQ_MT_STATUS_CHANGE;
+    }
+    return type;
+}
+
+static int parse_content(json_t *json, void *opaque)
+{
+    json_t *tmp, *ctent;
+    LwqqMsgMessage *msg = opaque;
+
+    tmp = json_find_first_label_all(json, "content");
+    if (!tmp || !tmp->child || !tmp->child) {
+        return -1;
+    }
+    tmp = tmp->child->child;
+    for (ctent = tmp; ctent != NULL; ctent = ctent->next) {
+        if (ctent->type == JSON_ARRAY) {
+            /* ["font",{"size":10,"color":"000000","style":[0,0,0],"name":"\u5B8B\u4F53"}] */
+            char *buf;
+            /* FIXME: ensure NULL access */
+            buf = ctent->child->text;
+            if (!strcmp(buf, "font")) {
+                const char *name, *color, *size;
+                int sa, sb, sc;
+                /* Font name */
+                name = json_parse_simple_value(ctent, "name");
+                name = name ?: "Arial";
+                msg->f_name = ucs4toutf8(name);
+
+                /* Font color */
+                color = json_parse_simple_value(ctent, "color");
+                color = color ?: "000000";
+                msg->f_color = s_strdup(color);
+
+                /* Font size */
+                size = json_parse_simple_value(ctent, "size");
+                size = size ?: "12";
+                msg->f_size = atoi(size);
+
+                /* Font style: style":[0,0,0] */
+                tmp = json_find_first_label_all(ctent, "style");
+                if (tmp) {
+                    json_t *style = tmp->child->child;
+                    const char *stylestr = style->text;
+                    sa = (int)strtol(stylestr, NULL, 10);
+                    style = style->next;
+                    stylestr = style->text;
+                    sb = (int)strtol(stylestr, NULL, 10);
+                    style = style->next;
+                    stylestr = style->text;
+                    sc = (int)strtol(stylestr, NULL, 10);
+                } else {
+                    sa = 0;
+                    sb = 0;
+                    sc = 0;
+                }
+                msg->f_style.a = sa;
+                msg->f_style.b = sb;
+                msg->f_style.b = sb;
+            } else if (!strcmp(buf, "face")) {
+                /* ["face", 107] */
+                /* FIXME: ensure NULL access */
+                int facenum = (int)strtol(ctent->child->next->text, NULL, 10);
+                LwqqMsgContent *c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_FACE;
+                c->data.face = facenum; 
+                LIST_INSERT_HEAD(&msg->content, c, entries);
+            }
+        } else if (ctent->type == JSON_STRING) {
+            LwqqMsgContent *c = s_malloc0(sizeof(*c));
+            c->type = LWQQ_CONTENT_STRING;
+            c->data.str = ucs4toutf8(ctent->text);
+            LIST_INSERT_HEAD(&msg->content, c, entries);
+        }
+    }
+
+    /* Make msg valid */
+    if (!msg->f_name || !msg->f_color || LIST_EMPTY(&msg->content)) {
+        return -1;
+    }
+    if (msg->f_size < 10) {
+        msg->f_size = 10;
+    }
+
+    return 0;
+}
+
+/**
+ * {"poll_type":"message","value":{"msg_id":5244,"from_uin":570454553,
+ * "to_uin":75396018,"msg_id2":395911,"msg_type":9,"reply_ip":176752041,
+ * "time":1339663883,"content":[["font",{"size":10,"color":"000000",
+ * "style":[0,0,0],"name":"\u5B8B\u4F53"}],"hello\n "]}}
+ * 
+ * @param json
+ * @param opaque
+ * 
+ * @return
+ */
+static int parse_new_msg(json_t *json, void *opaque)
+{
+    LwqqMsgMessage *msg = opaque;
+    char *time;
+    
+    msg->from = s_strdup(json_parse_simple_value(json, "from_uin"));
+    if (!msg->from) {
+        return -1;
+    }
+
+    time = json_parse_simple_value(json, "time");
+    time = time ?: "0";
+    msg->time = (time_t)strtoll(time, NULL, 10);
+
+    msg->to = s_strdup(json_parse_simple_value(json, "to_uin"));
+
+    //if it failed means it is not group message.
+    //so it equ NULL.
+    msg->send = s_strdup(json_parse_simple_value(json, "send_uin"));
+
+    if (!msg->to) {
+        return -1;
+    }
+    
+    if (parse_content(json, opaque)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * {"poll_type":"buddies_status_change",
+ * "value":{"uin":570454553,"status":"offline","client_type":1}}
+ * 
+ * @param json
+ * @param opaque
+ * 
+ * @return 
+ */
+static int parse_status_change(json_t *json, void *opaque)
+{
+    LwqqMsgStatusChange *msg = opaque;
+    char *c_type;
+
+    msg->who = s_strdup(json_parse_simple_value(json, "uin"));
+    if (!msg->who) {
+        return -1;
+    }
+    msg->status = s_strdup(json_parse_simple_value(json, "status"));
+    if (!msg->status) {
+        return -1;
+    }
+    c_type = s_strdup(json_parse_simple_value(json, "client_type"));
+    c_type = c_type ?: "1";
+    msg->client_type = atoi(c_type);
+
+    return 0;
+}
+
 /**
  * Parse message received from server
  * Buddy message:
  * {"retcode":0,"result":[{"poll_type":"message","value":{"msg_id":5244,"from_uin":570454553,"to_uin":75396018,"msg_id2":395911,"msg_type":9,"reply_ip":176752041,"time":1339663883,"content":[["font",{"size":10,"color":"000000","style":[0,0,0],"name":"\u5B8B\u4F53"}],"hello\n "]}}]}
- *
+ * 
  * Message for Changing online status:
  * {"retcode":0,"result":[{"poll_type":"buddies_status_change","value":{"uin":570454553,"status":"offline","client_type":1}}]}
- *
- * Message for group information :
- * {"retcode":0,"result":[{"poll_type":"group_message","value":{"msg_id":2702,"from_uin":3669274215,"to_uin":350512021,"msg_id2":656171,"msg_type":43,"reply_ip":176622059,"group_code":3640489384,"send_uin":2105692212,"seq":2356,"time":1342274727,"info_seq":55899143,"content":[["font",{"size":22,"color":"400040","style":[0,1,0],"name":"\u534E\u5EB7\u5A03\u5A03\u4F53W5(P)"}],"\uFF1F "]}}]}
- *
- * @param list
- * @param response
+ * 
+ * 
+ * @param list 
+ * @param response 
  */
 static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
 {
@@ -377,65 +405,42 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     /* make json_tmp point to first child of "result" */
     json_tmp = json_tmp->child->child;
     for (cur = json_tmp; cur != NULL; cur = cur->next) {
-        LwqqRecvMsg *msg = NULL;
-        char *msg_type;
-
-        msg_type = json_parse_simple_value(cur, "poll_type");
-
-        if (!msg_type)
+        LwqqMsg *msg = NULL;
+        LwqqMsgType msg_type;
+        int ret;
+        
+        msg_type = parse_recvmsg_type(cur);
+        msg = lwqq_msg_new(msg_type);
+        if (!msg) {
             continue;
-
-        /* FIXME, MT_MESSAGE should be a MACRO */
-        msg = s_malloc0(sizeof(*msg));
-        int isgroup = (strncmp(msg_type, MT_GROUP_MESSAGE, strlen(MT_GROUP_MESSAGE)) == 0);
-        if (strncmp(msg_type, MT_MESSAGE, strlen(MT_MESSAGE)) == 0 || isgroup) {
-            char *from, *to, *content,*sender = NULL;
-            json_t *tmp;
-            from = json_parse_simple_value(cur, "from_uin");
-            to = json_parse_simple_value(cur, "to_uin");
-            tmp = json_find_first_label_all(cur, "content");
-            if (tmp && tmp->child && tmp->child->child) {
-                json_t *ctent;
-                for (ctent = tmp->child->child; ctent != NULL; ctent = ctent->next) {
-                    if (ctent->type != JSON_STRING)
-                        continue;
-                    /* Convert to utf-8 */
-                    content = ucs4toutf8(ctent->text);
-                }
-            } else {
-                content = NULL;
-            }
-
-            if (!from || !to || !content) {
-                continue;
-            }
-            if(isgroup) {
-                sender = json_parse_simple_value(cur,"send_uin");
-                msg->msg = lwqq_msg_new(msg_type, from, to, sender, content);
-            } else {
-                msg->msg = lwqq_msg_new(msg_type, from, to, content);
-            }
-            s_free(content);
-        } else if (strncmp(msg_type, MT_STATUS_CHANGE, strlen(MT_STATUS_CHANGE)) == 0) {
-            char *who = json_parse_simple_value(cur, "uin");
-            char *status = json_parse_simple_value(cur, "status");
-            if (!who || !status) {
-                continue;
-            }
-            msg->msg = lwqq_msg_new(msg_type, who, status);
-        } else {
-            msg->msg = lwqq_msg_new(msg_type);
         }
 
-        if (msg->msg) {
-        pthread_mutex_lock(&list->mutex);
-            SIMPLEQ_INSERT_TAIL(&list->head, msg, entries);
+        switch (msg_type) {
+        case LWQQ_MT_BUDDY_MSG:
+        case LWQQ_MT_GROUP_MSG:
+            ret = parse_new_msg(cur, msg->opaque);
+            break;
+        case LWQQ_MT_STATUS_CHANGE:
+            ret = parse_status_change(cur, msg->opaque);
+            break;
+        default:
+            ret = -1;
+            lwqq_log(LOG_ERROR, "No such message type\n");
+            break;
+        }
+
+        if (ret == 0) {
+            LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
+            rmsg->msg = msg;
+            /* Parse a new message successfully, link it to our list */
+            pthread_mutex_lock(&list->mutex);
+            SIMPLEQ_INSERT_TAIL(&list->head, rmsg, entries);
             pthread_mutex_unlock(&list->mutex);
         } else {
-            s_free(msg);
+            lwqq_msg_free(msg);
         }
     }
-
+    
 done:
     if (json) {
         json_free_value(&json);
@@ -444,13 +449,13 @@ done:
 
 /**
  * Poll to receive message.
- *
+ * 
  * @param list
  */
 static void *start_poll_msg(void *msg_list)
 {
     LwqqClient *lc;
-    LwqqHttpRequest *req = NULL;
+    LwqqHttpRequest *req = NULL;  
     int ret;
     char *cookies;
     char *s;
@@ -505,49 +510,8 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
     pthread_create(&tid, &attr, start_poll_msg, list);
 }
 
-/**
- * Create a new LwqqSendMsg object
- *
- * @param client
- * @param to
- * @param msg_type
- * @param content
- *
- * @return
- */
-LwqqSendMsg *lwqq_sendmsg_new(void *client, const char *to,
-                              const char *msg_type, const char *content)
-{
-    LwqqSendMsg *sendmsg;
-    LwqqClient *lc = client;
-
-    if (!client || !to || !msg_type || !content) {
-        return NULL;
-    }
-
-    sendmsg = s_malloc0(sizeof(*sendmsg));
-    sendmsg->lc = client;
-    sendmsg->msg = lwqq_msg_new(msg_type, lc->username, to, content);
-    sendmsg->send = send_msg;
-
-    return sendmsg;
-}
-
-/**
- * Free a LwqqSendMsg object
- *
- * @param msg
- */
-void lwqq_sendmsg_free(LwqqSendMsg *msg)
-{
-    if (!msg)
-        return;
-
-    lwqq_msg_free(msg->msg);
-    s_free(msg);
-}
-
 /* FIXME: So much hard code */
+#if 0
 char *create_default_content(const char *content)
 {
     char s[2048];
@@ -557,35 +521,46 @@ char *create_default_content(const char *content)
              "\\\"style\\\":[0,0,0],\\\"color\\\":\\\"000000\\\"}]]\"", content);
     return strdup(s);
 }
+#endif
 
-/**
- *
- *
- * @param msg
- * @param lc
- *
- * @return
+/** 
+ * 
+ * 
+ * @param lc 
+ * @param sendmsg 
+ * 
+ * @return 
  */
-static int send_msg(struct LwqqSendMsg *sendmsg)
+int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
     int ret;
-    LwqqClient *lc;
-    LwqqMsgMessage *msg;
-    LwqqHttpRequest *req = NULL;
+    LwqqHttpRequest *req = NULL;  
     char *cookies;
     char *s;
     char *content = NULL;
     char data[1024];
+    LwqqMsgMessage *mmsg;
+    const char *tostr;
+    const char *apistr;
 
-    lc = (LwqqClient *)(sendmsg->lc);
-    if (!lc) {
+    if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
+                 msg->type != LWQQ_MT_GROUP_MSG)) {
         goto failed;
     }
-    msg = &sendmsg->msg->message;
-    content = create_default_content(msg->content);
-    snprintf(data, sizeof(data), "{\"to\":%s,\"face\":0,\"content\":%s,"
+    if(msg->type == LWQQ_MT_BUDDY_MSG){
+        tostr = "to";
+        apistr = "send_buddy_msg2";
+    }else if(msg->type == LWQQ_MT_GROUP_MSG){
+        tostr = "group_uin";
+        apistr = "send_qun_msg2";
+    }
+    mmsg = msg->opaque;
+#if 0
+    content = create_default_content(mmsg->content);
+#endif
+    snprintf(data, sizeof(data), "{\"%s\":%s,\"face\":0,\"content\":%s,"
              "\"msg_id\":%ld,\"clientid\":\"%s\",\"psessionid\":\"%s\"}",
-             msg->to, content, lc->msg_id, lc->clientid, lc->psessionid);
+             tostr, mmsg->to, content, lc->msg_id, lc->clientid, lc->psessionid);
     s_free(content);
     s = url_encode(data);
     snprintf(data, sizeof(data), "r=%s", s);
@@ -593,7 +568,7 @@ static int send_msg(struct LwqqSendMsg *sendmsg)
 
     /* Create a POST request */
     char url[512];
-    snprintf(url, sizeof(url), "%s/channel/send_buddy_msg2", "http://d.web2.qq.com");
+    snprintf(url, sizeof(url), "%s/channel/%s", "http://d.web2.qq.com",apistr);
     req = lwqq_http_create_default_request(url, NULL);
     if (!req) {
         goto failed;
@@ -606,7 +581,7 @@ static int send_msg(struct LwqqSendMsg *sendmsg)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-
+    
     ret = req->do_request(req, 1, data);
     if (ret || req->http_code != 200) {
         goto failed;

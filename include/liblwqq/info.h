@@ -44,8 +44,19 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
 /**
  * Store QQ face to LwqqBuddy::avatar
  */
-void lwqq_info_get_friend_avatar(LwqqClient * lc,LwqqBuddy * buddy,
-                                        LwqqErrorCode *err);
+#define lwqq_info_get_friend_avatar(lc,buddy,err) \
+do{ \
+if(buddy!=NULL) \
+    _lwqq_info_get_avatar(lc,buddy->uin,&buddy->avatar,&buddy->avatar_len,err); \
+}while(0)
+
+#define lwqq_info_get_group_avatar(lc,group,err) \
+do{ \
+if(group!=NULL) \
+    _lwqq_info_get_avatar(lc,group->gid,&group->avatar,&group->avatar_len,err); \
+}while(0)
+void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,
+        char** avatar,size_t* len,LwqqErrorCode *err);
 /** 
  * Get all friends qqnumbers
  * 

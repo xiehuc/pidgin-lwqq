@@ -90,6 +90,9 @@ typedef struct LwqqGroup {
     char *flag;
     char *option;
 
+    char *avatar;
+    size_t avatar_len;
+
     LIST_ENTRY(LwqqGroup) entries;
     LIST_HEAD(, LwqqBuddy) members; /** < QQ Group members */
 } LwqqGroup;

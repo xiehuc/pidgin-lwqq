@@ -290,6 +290,8 @@ void lwqq_group_free(LwqqGroup *group)
     s_free(group->flag);
     s_free(group->option);
 
+    s_free(group->avatar);
+
     /* Free Group members list */
     LIST_FOREACH_SAFE(m_entry, &group->members, entries, m_next) {
         LIST_REMOVE(m_entry, entries);

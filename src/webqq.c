@@ -10,6 +10,7 @@
 
 #include <type.h>
 #include <async.h>
+#include <msg.h>
 
 static void group_member_list_come(LwqqClient* lc,void* data);
 
@@ -154,18 +155,36 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    serv_got_im(pc, msg->from, msg->content, PURPLE_MESSAGE_RECV, time(NULL));
+    char buf[1024] = {0};
+    LwqqMsgContent *c;
+    LIST_FOREACH(c, &msg->content, entries) {
+        if (c->type == LWQQ_CONTENT_STRING) {
+            strcat(buf, c->data.str);
+        } else {
+            printf ("Receive face msg: %d\n", c->data.face);
+        }
+    }
+    serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, time(NULL));
 }
-static void group_message(LwqqClient* lc,LwqqMsgGroup* msg)
+static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
-    printf("%s\n",msg->content);
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
 
     //force open dialog
     serv_got_joined_chat(pc,atoi(group->gid),group->gid);
-    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,msg->content,time(NULL));
+    char buf[1024] = {0};
+    LwqqMsgContent *c;
+    LIST_FOREACH(c, &msg->content, entries) {
+        if (c->type == LWQQ_CONTENT_STRING) {
+            strcat(buf, c->data.str);
+        } else {
+            printf ("Receive face msg: %d\n", c->data.face);
+        }
+    }
+    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
+
     if(!LIST_EMPTY(&group->members)) {
         group_member_list_come(lc,group);
     } else {
@@ -173,13 +192,21 @@ static void group_message(LwqqClient* lc,LwqqMsgGroup* msg)
         lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
         background_group_detail(ac,group);
     }
+}
+static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleAccount* account = ac->account;
 
+    purple_prpl_got_user_status(account,status->who,status->status,NULL);
 }
 static void avatar_complete(LwqqClient* lc,void* data)
 {
-    LwqqBuddy* buddy;
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
+    LwqqBuddy* buddy;
+    LwqqGroup* group;
+    PurpleChat* chat;
     //do not catch icons 
     purple_buddy_icons_set_caching(0);
     
@@ -187,13 +214,13 @@ static void avatar_complete(LwqqClient* lc,void* data)
         if(buddy->avatar_len)
             purple_buddy_icons_set_for_user(account, buddy->uin, buddy->avatar, buddy->avatar_len, NULL);
     }
-}
-static void status_change(LwqqClient* lc,LwqqMsgStatus* status)
-{
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    PurpleAccount* account = ac->account;
-
-    purple_prpl_got_user_status(account,status->who,status->status,NULL);
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(group->avatar_len){
+            chat = purple_blist_find_chat(account,group->gid);
+            if(chat==NULL) continue;
+            purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
+        }
+    }
 }
 void qq_msg_check(qq_account* ac)
 {
@@ -210,19 +237,22 @@ void qq_msg_check(qq_account* ac)
     }
 
     msg = SIMPLEQ_FIRST(&l->head);
-    char *msg_type = msg->msg->msg_type;
-
-    if (strcmp(msg_type, MT_MESSAGE) == 0) {
-        buddy_message(lc,(LwqqMsgMessage*)msg->msg);
-    } else if (strcmp(msg_type, MT_GROUP_MESSAGE) == 0) {
-        group_message(lc,(LwqqMsgGroup*)msg->msg);
-    } else if (strcmp(msg_type, MT_STATUS_CHANGE) == 0) {
-        /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
-        if(buddy->status!=NULL)s_free(buddy->status);
-        buddy->status = s_strdup(msg->msg->status.status);*/
-        status_change(lc,(LwqqMsgStatus*)msg->msg);
-    } else {
-        printf("unknow message\n");
+    switch(msg->msg->type){
+        case LWQQ_MT_BUDDY_MSG:
+            buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+            break;
+        case LWQQ_MT_GROUP_MSG:
+            group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+            break;
+        case LWQQ_MT_STATUS_CHANGE:
+            /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
+              if(buddy->status!=NULL)s_free(buddy->status);
+              buddy->status = s_strdup(msg->msg->status.status);*/
+            status_change(lc,(LwqqMsgStatusChange*)msg->msg->opaque);
+            break;
+        default:
+            printf("unknow message\n");
+            break;
     }
 
     SIMPLEQ_REMOVE_HEAD(&l->head, entries);
@@ -298,9 +328,13 @@ static void qq_close(PurpleConnection *gc)
     }
 
     LwqqBuddy* friend;
+    LwqqGroup* group;
     LIST_FOREACH(friend,&ac->qq->friends,entries){
         //let purple free avatar not lwqq
         friend->avatar = NULL;
+    }
+    LIST_FOREACH(group,&ac->qq->groups,entries){
+        group->avatar = NULL;
     }
 
     //lwqq_async_set(ac->qq,0);
@@ -316,16 +350,13 @@ static void qq_close(PurpleConnection *gc)
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    PurpleBuddy* buddy;
-    LwqqBuddy* friend;
-    LwqqBuddy* item;
-    LwqqSendMsg* msg;
+    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
+    LwqqMsgMessage* mmsg= msg->opaque;
     LwqqClient* lc = ac->qq;
 
-    msg = lwqq_sendmsg_new(lc,who,"message",what);
-    if(!msg) return 1;
-
-    msg->send(msg);
+    mmsg->to = who;
+    lwqq_msg_send(lc,msg);
+    lwqq_msg_free(msg);
 
     return 1;
 }
@@ -336,13 +367,14 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     snprintf(gid,32,"%u",id);
     printf("%s\n",gid);
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+
+    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
+    LwqqMsgMessage* mmsg= msg->opaque;
     LwqqClient* lc = ac->qq;
-    LwqqSendMsg* msg;
 
-    msg = lwqq_sendmsg_new(lc,gid,"group_message",message);
-    if(!msg) return 1;
-
-    msg->send(msg);
+    mmsg->to = gid;
+    lwqq_msg_send(lc,msg);
+    lwqq_msg_free(msg);
 
     return 1;
 }
