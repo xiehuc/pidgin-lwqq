@@ -43,20 +43,32 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
                                       LwqqErrorCode *err);
 /**
  * Store QQ face to LwqqBuddy::avatar
+ * and save it possibly
+ * @note you want to cache it you 
+ *       first need provide qqnumber of group or buddy
+ *       or lwqq do not know save it to where
+ *       understand?
+ * @param lc
+ * @param buddy or group
+ * @param err the pointer of LwqqErrorCode
+ * @return 1 means updated from server.
+ *         2 means read from local cache
+ *         0 means failed
  */
+#define LWQQ_CACHE_DIR "/tmp/lwqq/"
 #define lwqq_info_get_friend_avatar(lc,buddy,err) \
-do{ \
-if(buddy!=NULL) \
-    _lwqq_info_get_avatar(lc,buddy->uin,&buddy->avatar,&buddy->avatar_len,err); \
-}while(0)
+((buddy!=NULL) \
+ ? _lwqq_info_get_avatar(lc,buddy->uin,&buddy->avatar,\
+            &buddy->avatar_len,buddy->qqnumber,err):NULL) 
 
 #define lwqq_info_get_group_avatar(lc,group,err) \
-do{ \
-if(group!=NULL) \
-    _lwqq_info_get_avatar(lc,group->gid,&group->avatar,&group->avatar_len,err); \
-}while(0)
-void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,
-        char** avatar,size_t* len,LwqqErrorCode *err);
+((group!=NULL) \
+ ?  _lwqq_info_get_avatar(lc,group->gid,&group->avatar,\
+            &group->avatar_len,group->account,err):NULL) 
+
+
+int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,
+        char** avatar,size_t* len,const char* qqnumber,LwqqErrorCode *err);
 /** 
  * Get all friends qqnumbers
  * 

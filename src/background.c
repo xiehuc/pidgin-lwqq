@@ -105,10 +105,10 @@ static void* _background_friends_info(void* data)
         g_thread_pool_push(thread_pool,(gpointer)par,NULL);
     }
     g_thread_pool_free(thread_pool,0,0);
-    /*LIST_FOREACH(buddy,&lc->friends,entries){
+    LIST_FOREACH(buddy,&lc->friends,entries){
         lwqq_info_get_friend_avatar(lc,buddy,&err);
     }
-    LIST_FOREACH(group,&lc->groups,entries){
+    /*LIST_FOREACH(group,&lc->groups,entries){
         lwqq_info_get_group_avatar(lc,group,&err);
     }*/
     //lwqq_async_dispatch(lc,AVATAR_COMPLETE,NULL);

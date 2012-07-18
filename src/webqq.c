@@ -156,6 +156,9 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     PurpleConnection* pc = ac->gc;
     char buf[1024] = {0};
     LwqqMsgContent *c;
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
+    if(buddy==NULL) return;
+
     LIST_FOREACH(c, &msg->content, entries) {
         if (c->type == LWQQ_CONTENT_STRING) {
             strcat(buf, c->data.str);
@@ -163,7 +166,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
             printf ("Receive face msg: %d\n", c->data.face);
         }
     }
-    serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, time(NULL));
+    serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
 }
 static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -172,7 +175,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
 
     //force open dialog
-    serv_got_joined_chat(pc,atoi(group->gid),group->gid);
+    serv_got_joined_chat(pc,atoi(group->gid),group->account);
     char buf[1024] = {0};
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
@@ -390,12 +393,12 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     PurpleConvChatBuddyFlags flag;
 
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
-                               group->gid,account);
+                               group->account,account);
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             flag |= PURPLE_CBFLAGS_TYPING;
-            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->uin,NULL,flag,FALSE);
+            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->qqnumber,NULL,flag,FALSE);
         }
     }
 }
@@ -404,13 +407,19 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    char* gid = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
-    LwqqGroup* group;
+    char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
+    LwqqGroup* group,*gp;
     LwqqBuddy* member;
-    if(gid!=NULL) {
-        group = lwqq_group_find_group_by_gid(lc,gid);
+    if(account!=NULL) {
+        LIST_FOREACH(gp,&lc->groups,entries){
+            if(strcmp(account,gp->account)==0){
+                group = gp;
+                break;
+            }
+        }
+        if(group == NULL) return;
         //this will open chat dialog.
-        serv_got_joined_chat(gc,atoi(gid),group->gid);
+        serv_got_joined_chat(gc,atoi(group->gid),group->account);
         if(!LIST_EMPTY(&group->members)) {
             group_member_list_come(lc,group);
         } else {

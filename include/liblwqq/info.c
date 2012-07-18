@@ -2,14 +2,22 @@
  * @file   info.c
  * @author mathslinux <riegamaths@gmail.com>
  * @date   Sun May 27 19:48:58 2012
- * 
+ *
  * @brief  Fetch QQ information. e.g. friends information, group information.
- * 
- * 
+ *
+ *
  */
 
 #include <string.h>
 #include <stdlib.h>
+//to enable strptime
+#define __USE_XOPEN
+#include <time.h>
+#include <utime.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <locale.h>
+
 #include "info.h"
 #include "url.h"
 #include "logger.h"
@@ -22,11 +30,11 @@ static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
 char *get_group_qqnumber(LwqqClient *lc, const char *code);
 
-/** 
+/**
  * Get the result object in a json object.
- * 
+ *
  * @param str
- * 
+ *
  * @return result object pointer on success, else NULL on failure.
  */
 static json_t *get_result_json_object(json_t *json)
@@ -50,19 +58,19 @@ static json_t *get_result_json_object(json_t *json)
     if (!json_tmp) {
         goto failed;
     }
-    
+
     return json_tmp;
 
 failed:
     return NULL;
 }
 
-/** 
+/**
  * Just a utility function
- * 
- * @param lc 
- * @param buf 
- * @param buflen 
+ *
+ * @param lc
+ * @param buf
+ * @param buflen
  */
 static void create_post_data(LwqqClient *lc, char *buf, int buflen)
 {
@@ -75,10 +83,10 @@ static void create_post_data(LwqqClient *lc, char *buf, int buflen)
     s_free(s);
 }
 
-/** 
+/**
  * Parse friend category information
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_categories_child(LwqqClient *lc, json_t *json)
@@ -86,7 +94,7 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
     LwqqFriendCategory *cate;
     json_t *cur;
     char *index, *sort, *name;
-    
+
     /* Make json point category reference */
     while (json) {
         if (json->text && !strcmp(json->text, "categories")) {
@@ -97,7 +105,7 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
         index = json_parse_simple_value(cur, "index");
@@ -125,17 +133,17 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
     LIST_INSERT_HEAD(&lc->categories, cate, entries);
 }
 
-/** 
+/**
  * Parse info child
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_info_child(LwqqClient *lc, json_t *json)
 {
     LwqqBuddy *buddy;
     json_t *cur;
-    
+
     /* Make json point "info" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "info")) {
@@ -146,7 +154,7 @@ static void parse_info_child(LwqqClient *lc, json_t *json)
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
         buddy = lwqq_buddy_new();
@@ -154,16 +162,16 @@ static void parse_info_child(LwqqClient *lc, json_t *json)
         buddy->flag = s_strdup(json_parse_simple_value(cur, "flag"));
         buddy->nick = s_strdup(json_parse_simple_value(cur, "nick"));
         buddy->uin = s_strdup(json_parse_simple_value(cur, "uin"));
-                                
+
         /* Add to buddies list */
         LIST_INSERT_HEAD(&lc->friends, buddy, entries);
     }
 }
 
-/** 
+/**
  * Parse marknames child
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_marknames_child(LwqqClient *lc, json_t *json)
@@ -171,7 +179,7 @@ static void parse_marknames_child(LwqqClient *lc, json_t *json)
     LwqqBuddy *buddy;
     char *uin, *markname;
     json_t *cur;
-    
+
     /* Make json point "info" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "marknames")) {
@@ -189,22 +197,22 @@ static void parse_marknames_child(LwqqClient *lc, json_t *json)
         markname = json_parse_simple_value(cur, "markname");
         if (!uin || !markname)
             continue;
-        
+
         buddy = lwqq_buddy_find_buddy_by_uin(lc, uin);
         if (!buddy)
             continue;
 
         /* Free old markname */
-        if (buddy->markname) 
+        if (buddy->markname)
             s_free(buddy->markname);
         buddy->markname = s_strdup(markname);
     }
 }
 
-/** 
+/**
  * Parse friends child
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_friends_child(LwqqClient *lc, json_t *json)
@@ -212,7 +220,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     LwqqBuddy *buddy;
     char *uin, *cate_index;
     json_t *cur;
-    
+
     /* Make json point "info" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "friends")) {
@@ -232,7 +240,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
         cate_index = json_parse_simple_value(cur, "categories");
         if (!uin || !cate_index)
             continue;
-        
+
         buddy = lwqq_buddy_find_buddy_by_uin(lc, uin);
         if (!buddy)
             continue;
@@ -246,17 +254,17 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     }
 }
 
-/** 
+/**
  * Get QQ friends information. These information include basic friend
  * information, friends group information, and so on
- * 
- * @param lc 
- * @param err 
+ *
+ * @param lc
+ * @param err
  */
 void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
 {
-    char msg[256] ={0};
-    LwqqHttpRequest *req = NULL;  
+    char msg[256] = {0};
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
     char *cookies;
@@ -289,7 +297,7 @@ void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     /**
      * Here, we got a json object like this:
      * {"retcode":0,"result":{"friends":[{"flag":0,"uin":1907104721,"categories":0},{"flag":0,"uin":1745701153,"categories":0},{"flag":0,"uin":445284794,"categories":0},{"flag":0,"uin":4188952283,"categories":0},{"flag":0,"uin":276408653,"categories":0},{"flag":0,"uin":1526867107,"categories":0}],"marknames":[{"uin":276408653,"markname":""}],"categories":[{"index":1,"sort":1,"name":""},{"index":2,"sort":2,"name":""},{"index":3,"sort":3,"name":""}],"vipinfo":[{"vip_level":1,"u":1907104721,"is_vip":1},{"vip_level":1,"u":1745701153,"is_vip":1},{"vip_level":1,"u":445284794,"is_vip":1},{"vip_level":6,"u":4188952283,"is_vip":1},{"vip_level":0,"u":276408653,"is_vip":0},{"vip_level":1,"u":1526867107,"is_vip":1}],"info":[{"face":294,"flag":8389126,"nick":"","uin":1907104721},{"face":0,"flag":518,"nick":"","uin":1745701153},{"face":0,"flag":526,"nick":"","uin":445284794},{"face":717,"flag":8388614,"nick":"QQ","uin":4188952283},{"face":81,"flag":8389186,"nick":"Kernel","uin":276408653},{"face":0,"flag":2147484166,"nick":"Q","uin":1526867107}]}}
-     * 
+     *
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
@@ -339,13 +347,32 @@ json_error:
     lwqq_http_request_free(req);
 }
 
-void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,LwqqErrorCode *err)
+int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,const char* qqnumber,LwqqErrorCode *err)
 {
     static int serv_id = 0;
-    if(!lc||!uin||!avatar||!len) return;
+    if(!lc||!uin||!avatar||!len) return 0;
     //there have avatar already do not repeat work;
-    if(*len) return;
+    if(*len) return 0;
 
+    //to avoid chinese character
+    setlocale(LC_TIME,"en_US.utf8");
+    //first we try to read from disk
+    char path[32];
+    int hasfile=0;
+    time_t modify=0;
+    size_t filesize=0;
+    if(qqnumber) {
+        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
+        struct stat st = {0};
+        //we read it last modify date
+        stat(path,&st);
+        hasfile = 1;
+        modify = st.st_mtime;
+        filesize = st.st_size;
+    }
+
+    //we send request if possible with modify time
+    //to reduce download rate
     LwqqHttpRequest* req;
     char* cookies;
     int ret;
@@ -354,13 +381,27 @@ void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t*
     //we only use face5 now.
     snprintf(url, sizeof(url),
              "http://face%d.qun.qq.com/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
-             serv_id++, uin, lc->vfwebqq);
+             ++serv_id,uin, lc->vfwebqq);
     serv_id %= 10;
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
     }
     req->set_header(req, "Referer", "http://web2.qq.com/");
+
+    //we ask server if it indeed need to update
+#if 0
+    //we enabled later
+    if(modify) {
+        struct tm modify_tm;
+        char buf[32];
+        strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",gmtime_r(&modify,&modify_tm) );
+        req->set_header(req,"If-Modified-Since",buf);
+        printf("send time:%s\n",buf);
+        req->set_header(req,"Cache-Control","max-age=0");
+        req->set_header(req,"Connection","keep-alive");
+    }
+#endif 
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
@@ -368,20 +409,58 @@ void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t*
     }
     ret = req->do_request(req, 0, NULL);
 
-    if (ret || req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
-        goto done;
-    }
-    if(!req->resp_len) goto done;
+    printf("%d,%d\n",req->http_code,req->resp_len);
+    FILE* f;
+    //ok we need update our cache because 
+    //our cache outdate
+    if(req->http_code != 304) {
+        //we 'move' it instead of copy it
+        *avatar = req->response;
+        req->response = NULL;
+        *len = req->resp_len;
+        req->resp_len = 0;
 
-    *avatar = s_malloc(req->resp_len);
-    memcpy(*avatar,req->response,req->resp_len);
-    *len = req->resp_len;
+        //we cache it to file
+        if(qqnumber) {
+            f = fopen(path,"w");
+            if(f==NULL) {
+                mkdir(LWQQ_CACHE_DIR,0777);
+                f = fopen(path,"w");
+            }
+
+            fwrite(*avatar,1,*len,f);
+            fclose(f);
+            //we read last modify time from response header
+            struct tm wtm = {0};
+            char *t = strptime(req->get_header(req,"Last-Modified"),
+                    "%a, %d %b %Y %X GMT",&wtm);
+            printf("get time:%s\n",req->get_header(req,"Last-Modified"));
+            //and write it to file
+            struct utimbuf wutime;
+            wutime.modtime = mktime(&wtm);
+            wutime.actime = wutime.modtime;//it is not important
+            printf("write time:%s\n",ctime(&wutime.modtime));
+            utime(path,&wutime);
+        }
+
+        lwqq_http_request_free(req);
+        return 1;
+    }
+
 
 done:
     lwqq_http_request_free(req);
-    return ;
+    //failed or we do not need update
+    //we read from file
+
+    if(hasfile){
+        f = fopen(path,"r");
+        *avatar = s_malloc(filesize);
+        fread(*avatar,1,filesize,f);
+        *len = filesize;
+        return 1;
+    }
+    return 0;
 }
 
 /**
@@ -391,15 +470,15 @@ done:
  *  {"flag":17825793,"name":"EGE...C/C++............","gid":3772225519,"code":1713443374},
  *  {"flag":1,"name":"............","gid":2698833507,"code":3968641865}
  * ]
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
 {
     LwqqGroup *group;
     json_t *cur;
-    
+
     /* Make json point "gnamelist" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "gnamelist")) {
@@ -410,10 +489,10 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
-      	group = lwqq_group_new();
+        group = lwqq_group_new();
         group->flag = s_strdup(json_parse_simple_value(cur, "flag"));
         group->name = s_strdup(json_parse_simple_value(cur, "name"));
         group->gid = s_strdup(json_parse_simple_value(cur, "gid"));
@@ -427,12 +506,12 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
     }
 }
 
-/** 
+/**
  * Parse group info like this
  *
  * "gmarklist":[{"uin":2698833507,"markname":".................."}]
- * 
- * @param lc 
+ *
+ * @param lc
  * @param json Point to the first child of "result"'s value
  */
 static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
@@ -441,7 +520,7 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
     json_t *cur;
     char *uin;
     char *markname;
-    
+
     /* Make json point "gmarklist" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "gmarklist")) {
@@ -452,7 +531,7 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
         uin = json_parse_simple_value(cur, "uin");
@@ -460,27 +539,27 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
 
         if (!uin || !markname)
             continue;
-      	group = lwqq_group_find_group_by_gid(lc, uin);
+        group = lwqq_group_find_group_by_gid(lc, uin);
         if (!group)
             continue;
         group->markname = s_strdup(markname);
     }
 }
 
-/** 
+/**
  * Get QQ groups' name information. Get only 'name', 'gid' , 'code' .
- * 
- * @param lc 
- * @param err 
+ *
+ * @param lc
+ * @param err
  */
 void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
 {
 
-  	lwqq_log(LOG_DEBUG, "in function.");
+    lwqq_log(LOG_DEBUG, "in function.");
 
     char msg[256];
     char url[512];
-    LwqqHttpRequest *req = NULL;  
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
     char *cookies;
@@ -518,7 +597,7 @@ void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
      *  {"flag":1,"name":"............","gid":2698833507,"code":3968641865}
      * ],
      * "gmarklist":[{"uin":2698833507,"markname":".................."}]}}
-     * 
+     *
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
@@ -533,7 +612,7 @@ void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
         goto json_error;
     }
-    
+
     /** It seems everything is ok, we start parsing information
      * now
      */
@@ -543,9 +622,9 @@ void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
         /* Parse friend category information */
         parse_groups_gnamelist_child(lc, json_tmp);
         parse_groups_gmarklist_child(lc, json_tmp);
-               
+
     }
-        
+
 done:
     if (json)
         json_free_value(&json);
@@ -561,11 +640,11 @@ json_error:
     lwqq_http_request_free(req);
 }
 
-/** 
+/**
  * Get all friends qqnumbers
- * 
- * @param lc 
- * @param err 
+ *
+ * @param lc
+ * @param err
  */
 void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
 {
@@ -573,7 +652,7 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
 
     if (!lc)
         return ;
-    
+
     LIST_FOREACH(buddy, &lc->friends, entries) {
         if (!buddy->qqnumber) {
             /** If qqnumber hasnt been fetched(NB: lc->myself has qqnumber),
@@ -589,12 +668,12 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
     }
 }
 
-/** 
+/**
  * Get friend qqnumber
- * 
- * @param lc 
- * @param uin 
- * 
+ *
+ * @param lc
+ * @param uin
+ *
  * @return qqnumber on sucessful, NB: caller is responsible for freeing
  * the memory returned by this function
  */
@@ -603,7 +682,7 @@ char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
     return get_friend_qqnumber(lc, uin);
 }
 
-/** 
+/**
  * Parse group info like this
  * Is the "members" in "ginfo" useful ? Here not parsing it...
  *
@@ -613,8 +692,8 @@ char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
  *    "level":0,"name":"............","gid":2698833507,"owner":909998471,
  *    "members":[{"muin":56360327,"mflag":0},{"muin":909998471,"mflag":0}],
  *    "option":2},
- * 
- * @param lc 
+ *
+ * @param lc
  * @param group
  * @param json Point to the first child of "result"'s value
  */
@@ -639,7 +718,7 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         lwqq_log(LOG_ERROR, "Parse json object error.");
         return;
     }
-    
+
 #define  SET_GINFO(key, name) {                                    \
         if (group->key) {                                               \
             s_free(group->key);                                         \
@@ -660,12 +739,12 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     //SET_GINFO(gid, "gid");
     SET_GINFO(owner, "owner");
     SET_GINFO(option, "option");
-    
+
 #undef SET_GINFO
-    
+
 }
 
-/** 
+/**
  * Parse group members info
  * we only get the "nick" and the "uin", and get the members' qq number.
  *
@@ -673,7 +752,7 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  *   {"nick":"evildoer","province":"......","gender":"male","uin":56360327,"country":"......","city":"......"},
  *   {"nick":"evil...doer","province":"......","gender":"male","uin":909998471,"country":"......","city":"......"}],
  *
- * @param lc 
+ * @param lc
  * @param group
  * @param json Point to the first child of "result"'s value
  */
@@ -683,7 +762,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     json_t *cur;
     char *uin;
     char *nick;
-    
+
     /* Make json point "minfo" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "minfo")) {
@@ -694,7 +773,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
         uin = json_parse_simple_value(cur, "uin");
@@ -716,12 +795,12 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     }
 }
 
-/** 
- * mark qq group's online members 
+/**
+ * mark qq group's online members
  *
  * "stats":[{"client_type":1,"uin":56360327,"stat":10},{"client_type":41,"uin":909998471,"stat":10}],
  *
- * @param lc 
+ * @param lc
  * @param group
  * @param json Point to the first child of "result"'s value
  */
@@ -730,7 +809,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     LwqqBuddy *member;
     json_t *cur;
     char *uin;
-    
+
     /* Make json point "stats" reference */
     while (json) {
         if (json->text && !strcmp(json->text, "stats")) {
@@ -741,7 +820,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     if (!json) {
         return ;
     }
-    
+
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
         uin = json_parse_simple_value(cur, "uin");
@@ -757,20 +836,20 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     }
 }
 
-/** 
- * Get QQ groups detail information. 
- * 
- * @param lc 
+/**
+ * Get QQ groups detail information.
+ *
+ * @param lc
  * @param group
- * @param err 
+ * @param err
  */
 void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
-                                      LwqqErrorCode *err)
+                                     LwqqErrorCode *err)
 {
     lwqq_log(LOG_DEBUG, "in function.");
 
     char url[512];
-    LwqqHttpRequest *req = NULL;  
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
     char *cookies;
@@ -785,7 +864,7 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
             *err = LWQQ_EC_NULL_POINTER;
         return ;
     }
-    
+
     /* Create a GET request */
     snprintf(url, sizeof(url),
              "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s",
@@ -826,7 +905,7 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
      *    "option":2},
      * "cards":[{"muin":3777107595,"card":""},{"muin":3437728033,"card":":FooTearth"}],
      * "vipinfo":[{"vip_level":0,"u":56360327,"is_vip":0},{"vip_level":0,"u":909998471,"is_vip":0}]}}
-     * 
+     *
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
@@ -854,9 +933,9 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
         parse_groups_minfo_child(lc, group, json_tmp);
         /* third , mark group's online members */
         parse_groups_stats_child(lc, group, json_tmp);
-               
+
     }
-        
+
 done:
     if (json)
         json_free_value(&json);
@@ -872,13 +951,13 @@ json_error:
     lwqq_http_request_free(req);
 }
 
-/** 
+/**
  * Get QQ friend number
- * 
- * @param lc 
+ *
+ * @param lc
  * @param uin Friend's uin
  *
- * @return 
+ * @return
  */
 static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
 {
@@ -887,7 +966,7 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
     }
 
     char url[512];
-    LwqqHttpRequest *req = NULL;  
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL;
     char *qqnumber = NULL;
@@ -923,7 +1002,7 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
     /**
      * Here, we got a json object like this:
      * {"retcode":0,"result":{"uiuin":"","account":615050000,"uin":954663841}}
-     * 
+     *
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
@@ -941,27 +1020,27 @@ done:
     return qqnumber;
 }
 
-/** 
+/**
  * Get QQ group number
- * 
- * @param lc 
+ *
+ * @param lc
  * @param code is group‘s code
  *
- * @return 
+ * @return
  */
 char *get_group_qqnumber(LwqqClient *lc, const char *code)
 {
     return get_friend_qqnumber(lc, code);
 }
 
-/** 
+/**
  * Get detail information of QQ friend(NB: include myself)
  * QQ server need us to pass param like:
  * tuin=244569070&verifysession=&code=&vfwebqq=e64da25c140c66
- * 
- * @param lc 
- * @param buddy 
- * @param err 
+ *
+ * @param lc
+ * @param buddy
+ * @param err
  */
 void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
                                       LwqqErrorCode *err)
@@ -969,7 +1048,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
     lwqq_log(LOG_DEBUG, "in function.");
 
     char url[512];
-    LwqqHttpRequest *req = NULL;  
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
     char *cookies;
@@ -984,7 +1063,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
             *err = LWQQ_EC_NULL_POINTER;
         return ;
     }
-    
+
     /* Create a GET request */
     snprintf(url, sizeof(url),
              "%s/api/get_friend_info2?tuin=%s&verifysession=&code=&vfwebqq=%s",
@@ -1018,7 +1097,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
      * "country":"中国","city":"西安","personal":"给力啊~~","nick":"阿凡达",
      * "shengxiao":5,"email":"avata@126.com","client_type":41,
      * "province":"陕西","gender":"male","mobile":"139********"}}
-     * 
+     *
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
@@ -1071,7 +1150,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
 #undef SET_BUDDY_INFO
     }
 
-    
+
 done:
     if (json)
         json_free_value(&json);
@@ -1116,19 +1195,19 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
     }
 }
 
-/** 
+/**
  * Get online buddies
  * NB : This function must be called after lwqq_info_get_friends_info()
  * because we stored buddy's status in buddy object which is created in
  * lwqq_info_get_friends_info()
- * 
- * @param lc 
- * @param err 
+ *
+ * @param lc
+ * @param err
  */
 void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 {
     char url[512];
-    LwqqHttpRequest *req = NULL;  
+    LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
     char *cookies;
@@ -1183,13 +1262,13 @@ void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
         json_tmp = json_tmp->child;
         update_online_buddies(lc, json_tmp);
     }
-    
+
 done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
     return ;
-    
+
 json_error:
     if (err)
         *err = LWQQ_EC_ERROR;
