@@ -201,8 +201,10 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,status->who);
+    if(buddy==NULL) return;
 
-    purple_prpl_got_user_status(account,status->who,status->status,NULL);
+    purple_prpl_got_user_status(account,buddy->qqnumber,status->status,NULL);
 }
 static void avatar_complete(LwqqClient* lc,void* data)
 {
