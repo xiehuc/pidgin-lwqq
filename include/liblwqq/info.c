@@ -341,6 +341,7 @@ json_error:
 
 void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,LwqqErrorCode *err)
 {
+    static int serv_id = 0;
     if(!lc||!uin||!avatar||!len) return;
     //there have avatar already do not repeat work;
     if(*len) return;
@@ -352,8 +353,9 @@ void _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t*
     //there are face 1 to face 10 server to accelerate speed.
     //we only use face5 now.
     snprintf(url, sizeof(url),
-             "%s/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
-             "http://face5.qun.qq.com", uin, lc->vfwebqq);
+             "http://face%d.qun.qq.com/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
+             serv_id++, uin, lc->vfwebqq);
+    serv_id %= 10;
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;

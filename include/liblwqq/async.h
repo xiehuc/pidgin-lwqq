@@ -14,7 +14,9 @@
 typedef void (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
+    FRIEND_COME,
     FRIENDS_ALL_COMPLETE,
+    GROUP_COME,
     GROUPS_ALL_COMPLETE,
     GROUP_DETAIL,
     AVATAR_COMPLETE,

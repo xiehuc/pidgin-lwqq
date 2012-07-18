@@ -101,52 +101,51 @@ static void qq_account_free(qq_account* ac)
 {
     g_free(ac);
 }
-static void friends_complete(LwqqClient* lc,void* data)
+static void friend_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account=ac->account;
-    LwqqBuddy* buddy;
-    LwqqFriendCategory* category;
-    LwqqGroup* group;
-    PurpleGroup** lst;
-    int lst_len=0;
-    PurpleBuddy* bu;
-    PurpleGroup* gp;
-    const char* gp_name;
+    LwqqBuddy* buddy = data;
+    PurpleBuddy* bu = NULL;
+    PurpleGroup* group;
+    LwqqFriendCategory* cate;
+    int cate_index;
+    LIST_FOREACH(cate,&lc->categories,entries){
+        cate_index = atoi(buddy->cate_index);
+        if(cate_index == 0){
+            group = purple_group_new("QQ好友");
+            break;
+        }
+        if(cate->index==cate_index){
+            group = purple_group_new(cate->name);
+            break;
+        }
+    }
 
-    LIST_FOREACH(category,&lc->categories,entries) {
-        lst_len = category->index>lst_len?category->index:lst_len;
-    }
-    lst_len++;//index 从1开始起始.
-    lst = (PurpleGroup**)malloc(sizeof(PurpleGroup*)*lst_len);
-    LIST_FOREACH(category,&lc->categories,entries) {
-        lst[category->index]=purple_group_new(category->name);
-    }
-    lst[0] = purple_group_new("QQ好友");
-    LIST_FOREACH(buddy,&lc->friends,entries) {
-        bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
+    bu = purple_find_buddy(account,buddy->qqnumber);
+    if(bu = NULL){
+        bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         else purple_blist_alias_buddy(bu,buddy->nick);
-        purple_blist_add_buddy(bu,NULL,lst[atoi(buddy->cate_index)],NULL);
-        if(buddy->status)
-            purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
+        purple_blist_add_buddy(bu,NULL,group,NULL);
     }
+    if(buddy->status)
+        purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
 
-    free(lst);
 }
-static void groups_complete(LwqqClient* lc,void* data)
+static void group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account=ac->account;
-    LwqqGroup* group;
-    PurpleChat *chat;
+    LwqqGroup* group = data;
     PurpleGroup* gp = purple_group_new("QQ群");
-    purple_blist_add_group(gp,NULL);
-    GHashTable *components;
-    LIST_FOREACH(group,&lc->groups,entries) {
+    GHashTable* components;
+    PurpleChat* chat;
+
+    if(purple_blist_find_chat(account,group->account) == NULL){
         components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->gid));
-        chat = purple_chat_new(account,group->gid,components);
+        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->account));
+        chat = purple_chat_new(account,group->account,components);
         purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
     }
@@ -274,8 +273,9 @@ static void login_complete(LwqqClient* lc,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
-    lwqq_async_add_listener(ac->qq,GROUPS_ALL_COMPLETE,groups_complete);
+    //lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
+    lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
+    lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     lwqq_async_add_listener(ac->qq,AVATAR_COMPLETE,avatar_complete);
     background_friends_info(ac);
 
@@ -301,31 +301,7 @@ static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
-    GSList* list = purple_blist_get_buddies();
     PurpleBuddy* buddy;
-    //remove all buddy;
-    while(list->next!=NULL) {
-        buddy = list->data;
-        list = list->next;
-        purple_blist_remove_buddy(buddy);
-    }
-
-    PurpleGroup* qun = purple_find_group("QQ群");
-    PurpleBlistNode * node;
-    PurpleChat* chat;
-    //remove all chat
-    if(qun!=NULL) {
-        node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(qun));
-        while(node!=NULL) {
-            if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
-                chat = PURPLE_CHAT(node);
-                node = purple_blist_node_next(node,1);
-                purple_blist_remove_chat(chat);
-            } else {
-                node = purple_blist_node_next(node,1);
-            }
-        }
-    }
 
     LwqqBuddy* friend;
     LwqqGroup* group;
