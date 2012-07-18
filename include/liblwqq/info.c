@@ -397,7 +397,6 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
         char buf[32];
         strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",gmtime_r(&modify,&modify_tm) );
         req->set_header(req,"If-Modified-Since",buf);
-        printf("send time:%s\n",buf);
         req->set_header(req,"Cache-Control","max-age=0");
         req->set_header(req,"Connection","keep-alive");
     }
@@ -409,7 +408,13 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
     }
     ret = req->do_request(req, 0, NULL);
 
-    printf("%d,%d\n",req->http_code,req->resp_len);
+    if(!ret||(req->http_code!=200&&req->http_code!=304)){
+        if(err){
+            *err = LWQQ_EC_HTTP_ERROR;
+            goto done;
+        }
+    }
+
     FILE* f;
     //ok we need update our cache because 
     //our cache outdate
@@ -434,12 +439,10 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
             struct tm wtm = {0};
             char *t = strptime(req->get_header(req,"Last-Modified"),
                     "%a, %d %b %Y %X GMT",&wtm);
-            printf("get time:%s\n",req->get_header(req,"Last-Modified"));
             //and write it to file
             struct utimbuf wutime;
             wutime.modtime = mktime(&wtm);
             wutime.actime = wutime.modtime;//it is not important
-            printf("write time:%s\n",ctime(&wutime.modtime));
             utime(path,&wutime);
         }
 

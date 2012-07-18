@@ -71,19 +71,15 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE,
                                          "online", _("Online"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
-
     status = purple_status_type_new_full(PURPLE_STATUS_AWAY,
                                          "away", _("Away"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
-
     status = purple_status_type_new_full(PURPLE_STATUS_INVISIBLE,
                                          "hidden", _("Invisible"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
-
     status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE,
                                          "offline", _("Offline"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
-
     status = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE,
                                          "busy", _("Busy"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
@@ -123,15 +119,15 @@ static void friend_come(LwqqClient* lc,void* data)
     }
 
     bu = purple_find_buddy(account,buddy->qqnumber);
-    if(bu = NULL){
+    if(bu == NULL){
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
-        else purple_blist_alias_buddy(bu,buddy->nick);
         purple_blist_add_buddy(bu,NULL,group,NULL);
+        if(buddy->avatar_len)
+            purple_buddy_icons_set_for_user(account, buddy->qqnumber, buddy->avatar, buddy->avatar_len, NULL);
     }
     if(buddy->status)
         purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
-
 }
 static void group_come(LwqqClient* lc,void* data)
 {
@@ -148,6 +144,12 @@ static void group_come(LwqqClient* lc,void* data)
         chat = purple_chat_new(account,group->account,components);
         purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
+    }
+
+    if(group->avatar_len){
+        chat = purple_blist_find_chat(account,group->account);
+        if(chat==NULL) return;
+        purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     }
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
@@ -279,7 +281,6 @@ static void login_complete(LwqqClient* lc,void* data)
     //lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
-    lwqq_async_add_listener(ac->qq,AVATAR_COMPLETE,avatar_complete);
     background_friends_info(ac);
 
     background_msg_poll(ac);

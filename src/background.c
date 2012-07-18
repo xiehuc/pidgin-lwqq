@@ -44,10 +44,14 @@ static void get_buddy_qqnumber_thread(gpointer data,gpointer userdata)
     ThreadFuncPar* par = data;
     LwqqClient* lc = par->lc;
     LwqqBuddy* buddy = par->buddy;
+    LwqqErrorCode err;
     g_slice_free(ThreadFuncPar,par);
 
     s_free(buddy->qqnumber);
+
     buddy->qqnumber = lwqq_info_get_friend_qqnumber(lc,buddy->uin);
+    lwqq_info_get_friend_avatar(lc,buddy,&err);
+
     lwqq_async_dispatch(lc,FRIEND_COME,buddy);
     friend_ref--;
     if(friend_ref==0)
@@ -59,10 +63,14 @@ static void get_group_qqnumber_thread(gpointer data,gpointer userdata)
     ThreadFuncPar* par = data;
     LwqqClient* lc = par->lc;
     LwqqGroup* group = par->group;
+    LwqqErrorCode err;
     g_slice_free(ThreadFuncPar,par);
 
     s_free(group->account);
+
     group->account = lwqq_info_get_friend_qqnumber(lc,group->gid);
+    lwqq_info_get_group_avatar(lc,group,&err);
+
     lwqq_async_dispatch(lc,GROUP_COME,group);
     group_ref--;
     if(group_ref==0)
@@ -105,13 +113,7 @@ static void* _background_friends_info(void* data)
         g_thread_pool_push(thread_pool,(gpointer)par,NULL);
     }
     g_thread_pool_free(thread_pool,0,0);
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        lwqq_info_get_friend_avatar(lc,buddy,&err);
-    }
-    /*LIST_FOREACH(group,&lc->groups,entries){
-        lwqq_info_get_group_avatar(lc,group,&err);
-    }*/
-    //lwqq_async_dispatch(lc,AVATAR_COMPLETE,NULL);
+
 }
 void background_friends_info(qq_account* ac)
 {
