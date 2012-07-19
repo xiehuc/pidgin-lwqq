@@ -144,13 +144,10 @@ static void group_come(LwqqClient* lc,void* data)
         chat = purple_chat_new(account,group->account,components);
         purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
+        if(group->avatar_len)
+            purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     }
 
-    if(group->avatar_len){
-        chat = purple_blist_find_chat(account,group->account);
-        if(chat==NULL) return;
-        purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
-    }
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -170,6 +167,13 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     }
     serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
 }
+//open chat conversation dialog
+static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
+{
+    int id = atoi(group->gid);
+    PurpleConversation *conv = purple_find_chat(gc,id);
+    if(conv == NULL) serv_got_joined_chat(gc,id,group->account);
+}
 static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -177,7 +181,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
 
     //force open dialog
-    serv_got_joined_chat(pc,atoi(group->gid),group->account);
+    qq_conv_open(pc,group);
     char buf[1024] = {0};
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
@@ -187,7 +191,11 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
             printf ("Receive face msg: %d\n", c->data.face);
         }
     }
-    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
+
+    LwqqBuddy* buddy;
+    buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->send);
+
+    serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
 
     if(!LIST_EMPTY(&group->members)) {
         group_member_list_come(lc,group);
@@ -332,13 +340,14 @@ static void qq_close(PurpleConnection *gc)
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
-    LwqqMsgMessage* mmsg= msg->opaque;
     LwqqClient* lc = ac->qq;
-
-    mmsg->to = who;
-    lwqq_msg_send(lc,msg);
-    lwqq_msg_free(msg);
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if(strcmp(buddy->qqnumber,who)==0)
+            break;
+    }
+    
+    lwqq_msg_send_buddy(lc,buddy,what);
 
     return 1;
 }
@@ -349,14 +358,16 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     snprintf(gid,32,"%u",id);
     printf("%s\n",gid);
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-
-    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
-    LwqqMsgMessage* mmsg= msg->opaque;
     LwqqClient* lc = ac->qq;
+    LwqqGroup *group = lwqq_group_find_group_by_gid(lc,gid);
 
-    mmsg->to = gid;
-    lwqq_msg_send(lc,msg);
-    lwqq_msg_free(msg);
+    lwqq_msg_send_group(lc,group,message);
+
+    PurpleConversation* conv = purple_find_chat(gc,id);
+
+    //write message by hand
+    //purple_conv_chat_write(PURPLE_CONV_CHAT(conv),NULL,message,flags,time(NULL));
+    purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;
 }
@@ -369,7 +380,7 @@ GList *qq_chat_info(PurpleConnection *gc)
     m = NULL;
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = _("ID: ");
+    pce->label = "ID: ";
     pce->identifier = QQ_ROOM_KEY_QUN_ID;
     m = g_list_append(m, pce);
 
@@ -395,8 +406,8 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     LwqqBuddy* member;
     PurpleConvChatBuddyFlags flag;
 
-    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
-                               group->account,account);
+    PurpleConversation* conv = purple_find_chat(
+            purple_account_get_connection(ac->account),atoi(group->gid));
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
@@ -405,7 +416,6 @@ static void group_member_list_come(LwqqClient* lc,void* data)
         }
     }
 }
-
 static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
@@ -422,7 +432,7 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
         }
         if(group == NULL) return;
         //this will open chat dialog.
-        serv_got_joined_chat(gc,atoi(group->gid),group->account);
+        qq_conv_open(gc,group);
         if(!LIST_EMPTY(&group->members)) {
             group_member_list_come(lc,group);
         } else {
@@ -432,6 +442,11 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
         }
     }
     return;
+}
+static gboolean qq_offline_message(const PurpleBuddy *buddy)
+{
+    //webqq support offline message indeed
+    return TRUE;
 }
 
 static void
@@ -446,7 +461,7 @@ init_plugin(PurplePlugin *UNUSED(plugin))
     purple_debug_info(DBGID,"plugin has loaded\n");
 }
 
-PurplePluginProtocolInfo tsina_prpl_info = {
+PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           0,
     .icon_spec=         {"svg,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
@@ -462,6 +477,7 @@ PurplePluginProtocolInfo tsina_prpl_info = {
     .close=             qq_close,       /* close */
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
+    .offline_message=   qq_offline_message,
     NULL,//twitter_set_status,/* set_status */
     NULL,                   /* set_idle */
     NULL,                   /* change_passwd */
@@ -487,7 +503,7 @@ static PurplePluginInfo info = {
     .description=   "a webqq plugin based on lwqq", /* description */
     .author=        "xiehuc<xiehuc@gmail.com>", /* author */
     .homepage=      "https://github.com/xiehuc/pidgin-lwqq",
-    .extra_info=    &tsina_prpl_info, /* extra_info */
+    .extra_info=    &webqq_prpl_info, /* extra_info */
     .actions=       plugin_actions
 };
 

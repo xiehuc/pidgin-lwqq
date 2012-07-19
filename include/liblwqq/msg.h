@@ -2,10 +2,10 @@
  * @file   msg.h
  * @author mathslinux <riegamaths@gmail.com>
  * @date   Thu Jun 14 14:42:08 2012
- * 
- * @brief  
- * 
- * 
+ *
+ * @brief
+ *
+ *
  */
 
 #ifndef LWQQ_MSG_H
@@ -13,6 +13,7 @@
 
 #include <pthread.h>
 #include "queue.h"
+#include "type.h"
 
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
@@ -36,7 +37,7 @@ typedef struct LwqqMsgMessage {
     char *f_name;
     int f_size;
     struct {
-        int a, b, c; /* bold , italic , underline */
+        int b, i, u; /* bold , italic , underline */
     } f_style;
     char *f_color;
 
@@ -62,19 +63,19 @@ typedef struct LwqqMsg {
     void *opaque;               /**< Message details */
 } LwqqMsg;
 
-/** 
+/**
  * Create a new LwqqMsg object
- * 
- * @param msg_type 
- * 
+ *
+ * @param msg_type
+ *
  * @return NULL on failure
  */
 LwqqMsg *lwqq_msg_new(LwqqMsgType type);
 
-/** 
+/**
  * Free a LwqqMsg object
- * 
- * @param msg 
+ *
+ * @param msg
  */
 void lwqq_msg_free(LwqqMsg *msg);
 
@@ -82,7 +83,7 @@ void lwqq_msg_free(LwqqMsg *msg);
 /* LwqqRecvMsg API */
 /**
  * Lwqq Receive Message object, used by receiving message
- * 
+ *
  */
 typedef struct LwqqRecvMsg {
     LwqqMsg *msg;
@@ -97,22 +98,49 @@ typedef struct LwqqRecvMsgList {
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
 } LwqqRecvMsgList;
 
-/** 
+/**
  * Create a new LwqqRecvMsgList object
- * 
+ *
  * @param client Lwqq Client reference
- * 
+ *
  * @return NULL on failure
  */
 LwqqRecvMsgList *lwqq_recvmsg_new(void *client);
 
-/** 
+/**
  * Free a LwqqRecvMsgList object
- * 
- * @param list 
+ *
+ * @param list
  */
 void lwqq_recvmsg_free(LwqqRecvMsgList *list);
 
+
+/**
+ *
+ *
+ * @param lc
+ * @param sendmsg
+ *
+ * @return 1 means ok
+ *         0 means failed or send failed
+ */
+int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg);
+
+/**
+ * easy way to send message
+ * @param type LWQQ_MT_BUDDY_MSG or LWQQ_MT_GROUP_MSG
+ * @param to buddy uin or group gid
+ * @param message
+ * @return same as lwqq_msg_send
+ */
+int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message);
+/**
+ * more easy way to send message
+ */
+#define lwqq_msg_send_buddy(lc,buddy,message) \
+    ((buddy!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_BUDDY_MSG,buddy->uin,message) : 0)
+#define lwqq_msg_send_group(lc,group,message) \
+    ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : 0)
 /* LwqqRecvMsg API end */
 
 /************************************************************************/

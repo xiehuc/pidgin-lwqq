@@ -11,8 +11,9 @@
 #ifndef LWQQ_TYPE_H
 #define LWQQ_TYPE_H
 
+#include <pthread.h>
 #include "queue.h"
-#include "msg.h"
+
 
 /************************************************************************/
 /* Struct defination */
@@ -118,6 +119,7 @@ typedef struct LwqqCookies {
 } LwqqCookies;
 typedef struct _LwqqAsync LwqqAsync;
 /* LwqqClient API */
+typedef struct LwqqRecvMsgList LwqqRecvMsgList;
 typedef struct LwqqClient {
     char *username;             /**< Username */
     char *password;             /**< Password */

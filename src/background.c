@@ -3,6 +3,7 @@
 #include <login.h>
 #include <async.h>
 #include <info.h>
+#include <msg.h>
 
 #define START_THREAD(thread,data)\
 do{pthread_t th;\
