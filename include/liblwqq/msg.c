@@ -501,13 +501,11 @@ failed:
 
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
-    pthread_t tid;
-    pthread_attr_t attr;
+    
+    pthread_attr_init(&list->attr);
+    pthread_attr_setdetachstate(&list->attr, PTHREAD_CREATE_DETACHED);
 
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-    pthread_create(&tid, &attr, start_poll_msg, list);
+    pthread_create(&list->tid, &list->attr, start_poll_msg, list);
 }
 
 #define LEFT "\\\""
@@ -641,7 +639,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     if(!lc||!to||!message)
         return 0;
     int ret;
-    LwqqMsg *msg = lwqq_msg_new(type);
+    LwqqMsg *msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = s_strdup(to);
     mmsg->f_name = "songti";

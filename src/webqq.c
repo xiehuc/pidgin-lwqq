@@ -315,17 +315,6 @@ static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
-    PurpleBuddy* buddy;
-
-    LwqqBuddy* friend;
-    LwqqGroup* group;
-    LIST_FOREACH(friend,&ac->qq->friends,entries){
-        //let purple free avatar not lwqq
-        friend->avatar = NULL;
-    }
-    LIST_FOREACH(group,&ac->qq->groups,entries){
-        group->avatar = NULL;
-    }
 
     //lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {

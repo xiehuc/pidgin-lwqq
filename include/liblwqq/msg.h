@@ -15,6 +15,7 @@
 #include "queue.h"
 #include "type.h"
 
+
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
 
@@ -92,6 +93,8 @@ typedef struct LwqqRecvMsg {
 
 typedef struct LwqqRecvMsgList {
     int count;                  /**< Number of message  */
+    pthread_t tid;
+    pthread_attr_t attr;
     pthread_mutex_t mutex;
     SIMPLEQ_HEAD(, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */
@@ -138,9 +141,9 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
  * more easy way to send message
  */
 #define lwqq_msg_send_buddy(lc,buddy,message) \
-    ((buddy!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_BUDDY_MSG,buddy->uin,message) : 0)
+    ((buddy!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_BUDDY_MSG,buddy->uin,message) : NULL)
 #define lwqq_msg_send_group(lc,group,message) \
-    ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : 0)
+    ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : NULL)
 /* LwqqRecvMsg API end */
 
 /************************************************************************/

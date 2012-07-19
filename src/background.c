@@ -128,6 +128,7 @@ static gboolean msg_check(void* data)
     return msg_check_repeat;
 }
 static int msg_check_handle;
+static pthread_t tid = 0;
 static void* _background_msg_poll(void* data)
 {
     qq_account* ac = (qq_account*)data;
@@ -149,7 +150,9 @@ void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
     purple_timeout_remove(msg_check_handle);
-    //l->close_msg(l);
+    pthread_cancel(l->tid);
+    l->tid = NULL;
+    tid = 0;
 }
 
 static void* _background_group_detail(void* d)
