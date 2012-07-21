@@ -377,38 +377,36 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
     char* cookies;
     int ret;
     char url[512];
+    char host[32];
     //there are face 1 to face 10 server to accelerate speed.
-    //we only use face5 now.
-    snprintf(url, sizeof(url),
-             "http://face%d.qun.qq.com/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
-             ++serv_id,uin, lc->vfwebqq);
+    snprintf(host,sizeof(host),"face%d.qun.qq.com",++serv_id);
     serv_id %= 10;
+    snprintf(url, sizeof(url),
+             "http://%s/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
+             host,uin, lc->vfwebqq);
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
     }
     req->set_header(req, "Referer", "http://web2.qq.com/");
+    req->set_header(req,"Host",host);
 
     //we ask server if it indeed need to update
-#if 0
-    //we enabled later
     if(modify) {
         struct tm modify_tm;
         char buf[32];
-        strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",gmtime_r(&modify,&modify_tm) );
+        strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",localtime_r(&modify,&modify_tm) );
         req->set_header(req,"If-Modified-Since",buf);
-        req->set_header(req,"Cache-Control","max-age=0");
-        req->set_header(req,"Connection","keep-alive");
     }
-#endif 
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
+    //req->set_header(req,"Cache-Control","max-age=0");
     ret = req->do_request(req, 0, NULL);
 
-    if(!ret||(req->http_code!=200&&req->http_code!=304)){
+    if(ret||(req->http_code!=200 && req->http_code!=304)){
         if(err){
             *err = LWQQ_EC_HTTP_ERROR;
             goto done;
@@ -438,7 +436,7 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
             //we read last modify time from response header
             struct tm wtm = {0};
             char *t = strptime(req->get_header(req,"Last-Modified"),
-                    "%a, %d %b %Y %X GMT",&wtm);
+                    "%a, %d %b %Y %H:%M:%S GMT",&wtm);
             //and write it to file
             struct utimbuf wutime;
             wutime.modtime = mktime(&wtm);

@@ -453,7 +453,7 @@ init_plugin(PurplePlugin *UNUSED(plugin))
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           0,
-    .icon_spec=         {"svg,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
+    .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
     NULL,//twitter_status_text, /* status_text */
 //	twitterim_tooltip_text,/* tooltip_text */

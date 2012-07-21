@@ -15,6 +15,11 @@
 
 typedef int (*LwqqAsyncCallback)(LwqqErrorCode ec, char *response, void* data);
 
+struct cookie_list{
+    char name[32];
+    char value[256];
+    struct cookie_list* next;
+};
 /**
  * Lwqq Http request struct, this http object worked donw for lwqq,
  * But for other app, it may work bad.
@@ -22,12 +27,16 @@ typedef int (*LwqqAsyncCallback)(LwqqErrorCode ec, char *response, void* data);
  */
 typedef struct LwqqHttpRequest {
     void *req;
+    void *header;// read and write.
+    void *recv_head;
+    char cookie_file[20];
+    struct cookie_list* cookie;
 
     /**
      * Http code return from server. e.g. 200, 404, this maybe changed
      * after do_request() called.
      */
-    int http_code;
+    long http_code;
     
     /* Server response, used when do async request */
     char *response;
@@ -96,5 +105,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri);
  */
 LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
                                                   LwqqErrorCode *err);
+
+void lwqq_http_set_async(LwqqHttpRequest* request);
+
 
 #endif  /* LWQQ_HTTP_H */
