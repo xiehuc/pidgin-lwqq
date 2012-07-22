@@ -24,11 +24,13 @@
 #include "http.h"
 #include "smemory.h"
 #include "json.h"
+#include "async.h"
 
 static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
 char *get_group_qqnumber(LwqqClient *lc, const char *code);
+static void get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
 
 /**
  * Get the result object in a json object.
@@ -435,7 +437,7 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
             fclose(f);
             //we read last modify time from response header
             struct tm wtm = {0};
-            char *t = strptime(req->get_header(req,"Last-Modified"),
+            strptime(req->get_header(req,"Last-Modified"),
                     "%a, %d %b %Y %H:%M:%S GMT",&wtm);
             //and write it to file
             struct utimbuf wutime;
@@ -782,14 +784,21 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 
         if (!uin || !nick)
             continue;
-        member = lwqq_buddy_new();
 
-        member->uin = s_strdup(uin);
-        member->nick = s_strdup(nick);
+        //member = lwqq_buddy_find_buddy_by_uin(lc,uin);
+        if(member!=NULL){
+            //add ref
+            lwqq_buddy_ref(member);
+        }else{
+            member = lwqq_buddy_new();
 
-        /* FIX ME: should we get group members qqnumber here ? */
-        /* we can get the members' qq number by uin */
-        member->qqnumber = get_friend_qqnumber(lc, member->uin);
+            member->uin = s_strdup(uin);
+            member->nick = s_strdup(nick);
+
+            // FIX ME: should we get group members qqnumber here ? 
+            // we can get the members' qq number by uin 
+            //member->qqnumber = get_friend_qqnumber(lc, member->uin);
+        }
 
         /* Add to members list */
         LIST_INSERT_HEAD(&group->members, member, entries);
@@ -968,9 +977,8 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    int ret;
     json_t *json = NULL;
-    char *qqnumber = NULL;
+    //char *qqnumber = NULL;
     char *cookies;
 
     if (!lc || ! uin) {
@@ -995,8 +1003,23 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 0, NULL);
-    if (ret || req->http_code != 200) {
+    req->do_request_async(req, 0, NULL,get_friend_qqnumber_back,lc);
+    return 0;
+
+done:
+    /* Free temporary string */
+    if (json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return 0;
+}
+static void get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
+{
+    LwqqClient* lc = data;
+    char* uin;
+    int ret;
+    json_t* json=NULL;
+    if (req->http_code != 200) {
         goto done;
     }
 
@@ -1010,15 +1033,19 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
         goto done;
     }
+    uin = json_parse_simple_value(json,"uin");
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
+    if(buddy){
+    buddy->qqnumber = s_strdup(json_parse_simple_value(json, "account"));
 
-    qqnumber = s_strdup(json_parse_simple_value(json, "account"));
-
+    lwqq_async_dispatch(lc,FRIEND_COME,buddy);
+    }
 done:
     /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return qqnumber;
+    return;
 }
 
 /**

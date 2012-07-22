@@ -106,20 +106,21 @@ static void friend_come(LwqqClient* lc,void* data)
     PurpleGroup* group;
     LwqqFriendCategory* cate;
     int cate_index;
-    LIST_FOREACH(cate,&lc->categories,entries){
-        cate_index = atoi(buddy->cate_index);
-        if(cate_index == 0){
-            group = purple_group_new("QQ好友");
-            break;
-        }
-        if(cate->index==cate_index){
-            group = purple_group_new(cate->name);
-            break;
-        }
-    }
 
     bu = purple_find_buddy(account,buddy->qqnumber);
     if(bu == NULL){
+        LIST_FOREACH(cate,&lc->categories,entries){
+            cate_index = atoi(buddy->cate_index);
+            if(cate_index == 0){
+                group = purple_group_new("QQ好友");
+                break;
+            }
+            if(cate->index==cate_index){
+                group = purple_group_new(cate->name);
+                break;
+            }
+        }
+
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,group,NULL);
@@ -128,6 +129,7 @@ static void friend_come(LwqqClient* lc,void* data)
     }
     if(buddy->status)
         purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
+
 }
 static void group_come(LwqqClient* lc,void* data)
 {
@@ -170,6 +172,8 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
+    g_return_if_fail(group);
+    g_return_if_fail(group->gid);
     int id = atoi(group->gid);
     PurpleConversation *conv = purple_find_chat(gc,id);
     if(conv == NULL) serv_got_joined_chat(gc,id,group->account);
@@ -179,6 +183,8 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
+
+    g_return_if_fail(group);
 
     //force open dialog
     qq_conv_open(pc,group);
@@ -296,6 +302,10 @@ static void login_complete(LwqqClient* lc,void* data)
     background_msg_poll(ac);
 }
 
+static void show_verify_code(LwqqClient* lc,void* data)
+{
+}
+
 static void qq_login(PurpleAccount *account)
 {
     PurpleConnection* pc= purple_account_get_connection(account);
@@ -309,6 +319,7 @@ static void qq_login(PurpleAccount *account)
 
     lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
     lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
+    lwqq_async_add_listener(ac->qq,VERIFY_COME,show_verify_code);
     background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)
@@ -401,7 +412,10 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             flag |= PURPLE_CBFLAGS_TYPING;
+            if(member->qqnumber!=NULL)
             purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->qqnumber,NULL,flag,FALSE);
+            else 
+            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->nick,NULL,flag,FALSE);
         }
     }
 }

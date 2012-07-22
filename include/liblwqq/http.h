@@ -13,7 +13,8 @@
 
 #include "type.h"
 
-typedef int (*LwqqAsyncCallback)(LwqqErrorCode ec, char *response, void* data);
+struct LwqqHttpRequest;
+typedef void (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
 
 struct cookie_list{
     char name[32];
@@ -107,6 +108,8 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
                                                   LwqqErrorCode *err);
 
 void lwqq_http_set_async(LwqqHttpRequest* request);
+void lwqq_http_global_init();
+void lwqq_http_global_free();
 
 
 #endif  /* LWQQ_HTTP_H */

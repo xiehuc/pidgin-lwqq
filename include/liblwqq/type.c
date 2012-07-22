@@ -193,6 +193,9 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     if (!buddy)
         return ;
 
+    buddy->ref--;
+    if(buddy->ref>0) return;
+
     s_free(buddy->uin);
     s_free(buddy->qqnumber);
     s_free(buddy->face);

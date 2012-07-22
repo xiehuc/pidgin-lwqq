@@ -1,25 +1,38 @@
 AUX_SOURCE_DIRECTORY(. SRC_LIST)
 AUX_SOURCE_DIRECTORY(../include/liblwqq LWQQ_LIST)
-AUX_SOURCE_DIRECTORY(../include/libghttp GHTTP_LIST)
 LIST(REMOVE_ITEM LWQQ_LIST ../include/liblwqq/http.c)
+LIST(REMOVE_ITEM LWQQ_LIST ../include/liblwqq/http_curl.c)
+LIST(REMOVE_ITEM LWQQ_LIST ../include/liblwqq/async.c)
 LIST(REMOVE_ITEM SRC_LIST ./http.c)
+LIST(REMOVE_ITEM SRC_LIST ./test.c)
 
 FIND_PACKAGE(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(PURPLE REQUIRED  purple)
 PKG_CHECK_MODULES(GLIB REQUIRED  glib-2.0)
 PKG_CHECK_MODULES(CURL REQUIRED libcurl)
 
+ADD_EXECUTABLE(test 
+    test.c
+    ../include/liblwqq/async.c
+    ../include/liblwqq/http_curl.c
+    ${LWQQ_LIST}
+    )
+TARGET_LINK_LIBRARIES(test
+    ${CURL_LIBRARIES}
+    ev
+    )
+
 ADD_LIBRARY(webqq MODULE 
     ${SRC_LIST} 
     ${LWQQ_LIST}
     )
-
 INCLUDE_DIRECTORIES(webqq
 	${PURPLE_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ../include/libghttp
     ../include/liblwqq
 	)
+MESSAGE(state "${CURL_LIBRARIES}")
 TARGET_LINK_LIBRARIES(webqq
     ${PURPLE_LIBRARIES}
     ${GLIB_LIBRARIES}

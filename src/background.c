@@ -86,8 +86,10 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_friends_info(lc,&err);
     lwqq_info_get_online_buddies(ac->qq,&err);
+    lwqq_info_get_group_name_list(ac->qq,&err);
 
-    GThreadPool* thread_pool = g_thread_pool_new(
+    lwqq_info_get_all_friend_qqnumbers(lc,&err);
+    /*GThreadPool* thread_pool = g_thread_pool_new(
             get_buddy_qqnumber_thread,NULL,50,TRUE,NULL);
     ThreadFuncPar* par = NULL;
     LwqqBuddy* buddy;
@@ -101,7 +103,6 @@ static void* _background_friends_info(void* data)
     }
     g_thread_pool_free(thread_pool,0,0);
 
-    lwqq_info_get_group_name_list(ac->qq,&err);
 
     LwqqGroup* group;
     thread_pool = g_thread_pool_new(
@@ -113,8 +114,7 @@ static void* _background_friends_info(void* data)
         group_ref++;
         g_thread_pool_push(thread_pool,(gpointer)par,NULL);
     }
-    g_thread_pool_free(thread_pool,0,0);
-
+    g_thread_pool_free(thread_pool,0,0);*/
 }
 void background_friends_info(qq_account* ac)
 {

@@ -11,6 +11,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 /* Converts a hex character to its integer value */
 static char from_hex(char ch)

@@ -68,6 +68,7 @@ typedef struct LwqqBuddy {
     char *client_type;
 
     char *status;               /* Online status */
+    int ref;
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
@@ -205,6 +206,10 @@ void lwqq_client_free(LwqqClient *client);
  */
 LwqqBuddy *lwqq_buddy_new();
 
+//add the ref count of buddy.
+//that means only ref count down to zero.
+//we really free the memo space.
+#define lwqq_buddy_ref(buddy) buddy->ref++;
 /** 
  * Free a LwqqBuddy instance
  * 

@@ -9,15 +9,15 @@
  *
  */
 
-#include <ghttp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <plugin.h>
+#include <eventloop.h>
 #include "async.h"
 typedef struct async_dispatch_data {
     ListenerType type;
     LwqqClient* client;
-    gint handle;
+    int handle;
     void* data;
 } async_dispatch_data;
 
