@@ -7,6 +7,7 @@
 #include "qq_types.h"
 #include "login.h"
 #include "background.h"
+#include "tranverse.h"
 
 #include <type.h>
 #include <async.h>
@@ -171,7 +172,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    int img_id = purple_imgstore_add_with_id(c->data.img.file,c->data.img.size,NULL);
                     //"<IMG ID=\"1\">
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
                     strcat(buf,piece);
@@ -203,6 +204,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     //force open dialog
     qq_conv_open(pc,group);
     char buf[1024] = {0};
+    char piece[24] = {0};
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
         switch(c->type){
@@ -214,7 +216,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    int img_id = purple_imgstore_add_with_id(c->data.img.file,c->data.img.size,NULL);
                     //"<IMG ID=\"1\">
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
                     strcat(buf,piece);
@@ -377,8 +379,23 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         if(strcmp(buddy->qqnumber,who)==0)
             break;
     }
+    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
+    LwqqMsgMessage *mmsg = msg->opaque;
+    mmsg->to = buddy->uin;
+    mmsg->f_name = "宋体";
+    mmsg->f_size = 13;
+    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_color = "000000";
     
-    lwqq_msg_send_buddy(lc,buddy,what);
+    tranverse_message_to_struct(lc,buddy->uin,what,mmsg);
+
+    lwqq_msg_send(lc,msg);
+
+    mmsg->f_name = NULL;
+    mmsg->f_color = NULL;
+    mmsg->to = NULL;
+
+    lwqq_msg_free(msg);
 
     return 1;
 }
@@ -392,7 +409,23 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     LwqqClient* lc = ac->qq;
     LwqqGroup *group = lwqq_group_find_group_by_gid(lc,gid);
 
-    lwqq_msg_send_group(lc,group,message);
+    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
+    LwqqMsgMessage *mmsg = msg->opaque;
+    mmsg->to = group->gid;
+    mmsg->f_name = "宋体";
+    mmsg->f_size = 13;
+    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_color = "000000";
+    
+    tranverse_message_to_struct(lc,gid,message,mmsg);
+
+    lwqq_msg_send(lc,msg);
+
+    mmsg->f_name = NULL;
+    mmsg->f_color = NULL;
+    mmsg->to = NULL;
+
+    lwqq_msg_free(msg);
 
     PurpleConversation* conv = purple_find_chat(gc,id);
 

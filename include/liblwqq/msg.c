@@ -115,8 +115,13 @@ static void lwqq_msg_message_free(void *opaque)
 
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
-        if (c->type == LWQQ_CONTENT_STRING) {
-            s_free(c->data.str);
+        switch(c->type){
+            case LWQQ_CONTENT_STRING:
+                s_free(c->data.str);
+                break;
+            case LWQQ_CONTENT_OFFPIC:
+                s_free(c->data.img.file_path);
+                s_free(c->data.img.file);
         }
         s_free(c);
     }
@@ -427,7 +432,7 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
         }
     }
 
-    c->data.img.data = req->response;
+    c->data.img.file = req->response;
     c->data.img.size = req->resp_len;
     req->response = NULL;
     puts("content img ok");
@@ -602,6 +607,16 @@ static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf)
                 strcat(buf,piece);
                 strcat(buf,"],");
                 break;
+            case LWQQ_CONTENT_OFFPIC:
+                strcat(buf,"["KEY("offpic")","LEFT);
+                strcat(buf,c->data.img.file_path);
+                strcat(buf,RIGHT","LEFT);
+                strcat(buf,c->data.img.file);
+                strcat(buf,RIGHT",");
+                snprintf(piece,sizeof(piece),"%ld",c->data.img.size);
+                strcat(buf,piece);
+                strcat(buf,"],");
+                break;
             case LWQQ_CONTENT_STRING:
                 strcat(buf,LEFT);
                 strcat(buf,c->data.str);
@@ -628,8 +643,84 @@ static char* content_parse_string(LwqqMsgMessage* msg)
     static char buf[2048];
     return content_parse_string_r(msg,buf);
 }
+static void tranverse_escape(char * str)
+{
+    char* ptr;
+    while(ptr = strchr(str,'\\')){
+        switch(*(ptr+1)){
+            case 'n':
+                *ptr = '\n';
+                break;
+            case 'r':
+                *ptr = ' ';
+                break;
+            default:
+                *ptr = *(ptr+1);
+                break;
+        }
+        *(ptr+1) = ' ';
+    }
+    
+}
 
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size)
+{
+    LwqqHttpRequest *req;
+    LwqqErrorCode err;
+    LwqqMsgContent* c = NULL;
+    char url[512];
+    char *cookies;
+    int ret;
 
+    snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%ld",
+            time(NULL));
+    req = lwqq_http_create_default_request(url,&err);
+    req->set_header(req,"Origin","http://web2.qq.com");
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendPic");
+    req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
+    req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
+    req->add_form(req,LWQQ_FORM_CONTENT,"uin",lc->username);///<this may error
+    puts(lc->username);
+    req->add_form(req,LWQQ_FORM_CONTENT,"skey",lc->cookies->skey);
+    req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
+    req->add_form(req,LWQQ_FORM_CONTENT,"peeruin","593023668");///<what this means?
+    //req->add_form(req,LWQQ_FORM_FILE,"file",pic_path);
+    req->add_file_content(req,"file",filename,buffer,size);
+    req->add_form(req,LWQQ_FORM_CONTENT,"field","1");
+    req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
+    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
+    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
+    ret = req->do_request(req,0,NULL);
+
+    if(ret||req->http_code!=200){
+        goto done;
+    }
+
+    json_t* json = NULL;
+    char *end = strchr(req->response,'}');
+    *(end+1) = '\0';
+    json_parse_document(&json,strchr(req->response,'{'));
+    if(strcmp(json_parse_simple_value(json,"retcode"),"0")!=0){
+        goto done;
+    }
+    c = s_malloc0(sizeof(*c));
+    c->type = LWQQ_CONTENT_OFFPIC;
+    c->data.img.size = atol(json_parse_simple_value(json,"filesize"));
+    c->data.img.file_path = s_strdup(json_parse_simple_value(json,"filepath"));
+    c->data.img.file = s_strdup(json_parse_simple_value(json,"filename"));
+
+done:
+    if(json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return c;
+}
 /** 
  * 
  * 

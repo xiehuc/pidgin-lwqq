@@ -28,7 +28,7 @@ typedef struct LwqqMsgContent {
         struct {
             int success;
             char* file_path;
-            char* data;
+            char* file;///<on upload this filename on download this filecontent
             size_t size;
         }img;
     } data;
@@ -155,5 +155,6 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 
 /************************************************************************/
 /*  LwqqSendMsg API */
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size);
 
 #endif  /* LWQQ_MSG_H */

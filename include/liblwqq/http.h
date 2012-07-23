@@ -2,10 +2,10 @@
  * @file   http.h
  * @author mathslinux <riegamaths@gmail.com>
  * @date   Mon May 21 23:07:29 2012
- * 
+ *
  * @brief  Linux WebQQ Http API
- * 
- * 
+ *
+ *
  */
 
 #ifndef LWQQ_HTTP_H
@@ -16,34 +16,37 @@
 struct LwqqHttpRequest;
 typedef void (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
 
-struct cookie_list{
+struct cookie_list {
     char name[32];
     char value[256];
     struct cookie_list* next;
 };
+typedef enum {LWQQ_FORM_FILE,LWQQ_FORM_CONTENT,LWQQ_FORM_BUFFER_IMAGE} LWQQ_FORM;
 /**
  * Lwqq Http request struct, this http object worked donw for lwqq,
  * But for other app, it may work bad.
- * 
+ *
  */
 typedef struct LwqqHttpRequest {
     void *req;
     void *header;// read and write.
     void *recv_head;
-    char cookie_file[20];
     struct cookie_list* cookie;
+    void *form_start;
+    void *form_end;
 
     /**
      * Http code return from server. e.g. 200, 404, this maybe changed
      * after do_request() called.
      */
     long http_code;
-    
+
     /* Server response, used when do async request */
     char *response;
 
     /* Response length, NB: the response may not terminate with '\0' */
     int resp_len;
+    int resp_realloc;
 
     /**
      * Send a request to server, method is GET(0) or POST(1), if we make a
@@ -76,36 +79,39 @@ typedef struct LwqqHttpRequest {
      * free the memory
      */
     char * (*get_cookie)(struct LwqqHttpRequest *request, const char *name);
-    
+
+    void (*add_form)(struct LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* content);
+    void (*add_file_content)(struct LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size);
+
 } LwqqHttpRequest;
 
-/** 
+/**
  * Free Http Request
- * 
- * @param request 
+ *
+ * @param request
  */
 void lwqq_http_request_free(LwqqHttpRequest *request);
 
-/** 
+/**
  * Create a new Http request instance
- * 
+ *
  * @param uri Request service from
- * 
- * @return 
+ *
+ * @return
  */
 LwqqHttpRequest *lwqq_http_request_new(const char *uri);
 
-/** 
+/**
  * Create a default http request object using default http header.
- * 
+ *
  * @param url Which your want send this request to
  * @param err This parameter can be null, if so, we dont give thing
  *        error information.
- * 
+ *
  * @return Null if failed, else a new http request object
  */
 LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
-                                                  LwqqErrorCode *err);
+        LwqqErrorCode *err);
 
 void lwqq_http_set_async(LwqqHttpRequest* request);
 void lwqq_http_global_init();
