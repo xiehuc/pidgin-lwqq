@@ -156,15 +156,29 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     char buf[1024] = {0};
+    char piece[24] = {0};
     LwqqMsgContent *c;
     LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
     if(buddy==NULL) return;
 
     LIST_FOREACH(c, &msg->content, entries) {
-        if (c->type == LWQQ_CONTENT_STRING) {
-            strcat(buf, c->data.str);
-        } else {
-            printf ("Receive face msg: %d\n", c->data.face);
+        switch(c->type){
+            case LWQQ_CONTENT_STRING:
+                strcat(buf,c->data.str);
+                break;
+            case LWQQ_CONTENT_FACE:
+                strcat(buf,translate_smile(c->data.face));
+                break;
+            case LWQQ_CONTENT_OFFPIC:
+                if(c->data.img.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    //"<IMG ID=\"1\">
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else{
+                    strcat(buf,"【图片】");
+                }
+                break;
         }
     }
     serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
@@ -191,17 +205,33 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     char buf[1024] = {0};
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
-        if (c->type == LWQQ_CONTENT_STRING) {
-            strcat(buf, c->data.str);
-        } else {
-            printf ("Receive face msg: %d\n", c->data.face);
+        switch(c->type){
+            case LWQQ_CONTENT_STRING:
+                strcat(buf,c->data.str);
+                break;
+            case LWQQ_CONTENT_FACE:
+                strcat(buf,translate_smile(c->data.face));
+                break;
+            case LWQQ_CONTENT_OFFPIC:
+                if(c->data.img.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    //"<IMG ID=\"1\">
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else{
+                    strcat(buf,"【图片】");
+                }
+                break;
         }
     }
 
     LwqqBuddy* buddy;
     buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->send);
 
+    if(buddy)
     serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
+    else
+    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
 
     if(!LIST_EMPTY(&group->members)) {
         group_member_list_come(lc,group);
@@ -294,7 +324,6 @@ static void login_complete(LwqqClient* lc,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
 
-    //lwqq_async_add_listener(ac->qq,FRIENDS_ALL_COMPLETE,friends_complete);
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     background_friends_info(ac);
@@ -337,6 +366,8 @@ static void qq_close(PurpleConnection *gc)
     purple_connection_set_protocol_data(gc,NULL);
 }
 
+//send a message to a friend.
+//called by purple
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
@@ -366,7 +397,6 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     PurpleConversation* conv = purple_find_chat(gc,id);
 
     //write message by hand
-    //purple_conv_chat_write(PURPLE_CONV_CHAT(conv),NULL,message,flags,time(NULL));
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;
@@ -466,7 +496,7 @@ init_plugin(PurplePlugin *UNUSED(plugin))
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
-    .options=           0,
+    .options=           OPT_PROTO_IM_IMAGE,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
     NULL,//twitter_status_text, /* status_text */

@@ -7,5 +7,7 @@ void background_msg_poll(qq_account* ac);
 void background_msg_drain(qq_account* ac);
 void background_group_detail(qq_account* ac,LwqqGroup* group);
 
+const char* translate_smile(int face);
+
 
 #endif

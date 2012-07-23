@@ -4,6 +4,8 @@
 #include <async.h>
 #include <info.h>
 #include <msg.h>
+//#include <regex.h>
+#include <string.h>
 
 #define START_THREAD(thread,data)\
 do{pthread_t th;\
@@ -12,11 +14,11 @@ do{pthread_t th;\
 
 typedef struct {
     LwqqClient* lc;
-    union{
+    union {
         LwqqBuddy* buddy;
         LwqqGroup* group;
     };
-}ThreadFuncPar;
+} ThreadFuncPar;
 
 static void* _background_login(void* data)
 {
@@ -39,82 +41,28 @@ void background_login(qq_account* ac)
 {
     START_THREAD(_background_login,ac);
 }
-static int friend_ref = 0;
-static void get_buddy_qqnumber_thread(gpointer data,gpointer userdata)
-{
-    ThreadFuncPar* par = data;
-    LwqqClient* lc = par->lc;
-    LwqqBuddy* buddy = par->buddy;
-    LwqqErrorCode err;
-    g_slice_free(ThreadFuncPar,par);
-
-    s_free(buddy->qqnumber);
-
-    buddy->qqnumber = lwqq_info_get_friend_qqnumber(lc,buddy->uin);
-    lwqq_info_get_friend_avatar(lc,buddy,&err);
-
-    lwqq_async_dispatch(lc,FRIEND_COME,buddy);
-    friend_ref--;
-    if(friend_ref==0)
-        lwqq_async_dispatch(lc,FRIENDS_ALL_COMPLETE,NULL);
-}
-static int group_ref = 0;
-static void get_group_qqnumber_thread(gpointer data,gpointer userdata)
-{
-    ThreadFuncPar* par = data;
-    LwqqClient* lc = par->lc;
-    LwqqGroup* group = par->group;
-    LwqqErrorCode err;
-    g_slice_free(ThreadFuncPar,par);
-
-    s_free(group->account);
-
-    group->account = lwqq_info_get_friend_qqnumber(lc,group->gid);
-    lwqq_info_get_group_avatar(lc,group,&err);
-
-    lwqq_async_dispatch(lc,GROUP_COME,group);
-    group_ref--;
-    if(group_ref==0)
-        lwqq_async_dispatch(lc,GROUPS_ALL_COMPLETE,NULL);
-}
-
+//static regex_t smile_re;
+//static regmatch_t *match;
 static void* _background_friends_info(void* data)
 {
     qq_account* ac=(qq_account*)data;
     LwqqErrorCode err;
     LwqqClient* lc=ac->qq;
 
+    //regex
+    //regcomp(&smile_re,"(\\:\\))||(\\:\\-\\D)",0);
+    //match=(regmatch_t*)malloc((smile_re.re_nsub+1)*sizeof(regmatch_t));  
+
     lwqq_info_get_friends_info(lc,&err);
     lwqq_info_get_online_buddies(ac->qq,&err);
     lwqq_info_get_group_name_list(ac->qq,&err);
 
     lwqq_info_get_all_friend_qqnumbers(lc,&err);
-    /*GThreadPool* thread_pool = g_thread_pool_new(
-            get_buddy_qqnumber_thread,NULL,50,TRUE,NULL);
-    ThreadFuncPar* par = NULL;
-    LwqqBuddy* buddy;
-
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        par = g_slice_new0(ThreadFuncPar);
-        par->lc = lc;
-        par->buddy = buddy;
-        friend_ref++;
-        g_thread_pool_push(thread_pool,(gpointer)par,NULL);
-    }
-    g_thread_pool_free(thread_pool,0,0);
-
 
     LwqqGroup* group;
-    thread_pool = g_thread_pool_new(
-            get_group_qqnumber_thread,NULL,10,TRUE,NULL);
-    LIST_FOREACH(group,&lc->groups,entries){
-        par = g_slice_new0(ThreadFuncPar);
-        par->lc = lc;
-        par->group = group;
-        group_ref++;
-        g_thread_pool_push(thread_pool,(gpointer)par,NULL);
+    LIST_FOREACH(group,&ac->qq->groups,entries) {
+        lwqq_info_get_friend_qqnumber(lc,group->gid);
     }
-    g_thread_pool_free(thread_pool,0,0);*/
 }
 void background_friends_info(qq_account* ac)
 {
@@ -168,7 +116,7 @@ static void* _background_group_detail(void* d)
 }
 void background_group_detail(qq_account* ac,LwqqGroup* group)
 {
-    if(!LIST_EMPTY(&group->members)){
+    if(!LIST_EMPTY(&group->members)) {
         LwqqClient* lc = ac->qq;
         lwqq_async_dispatch(lc,GROUP_DETAIL,group);
         return;
@@ -178,3 +126,50 @@ void background_group_detail(qq_account* ac,LwqqGroup* group)
     data[1] = group;
     START_THREAD(_background_group_detail,data);
 }
+
+#define MAP(face,str) \
+    case face:\
+    ret=str;\
+    break;
+const char* translate_smile(int face)
+{
+    const char* ret;
+    switch(face) {
+        MAP(14,":)");
+        MAP(13,":-D");
+        MAP(50,":-(");
+        MAP(12,";-)");
+        //MAP(12,":P");
+        MAP(57,"=-O");
+        MAP(116,":-*");
+        MAP(51,"8-)");
+        MAP(74,":-[");
+        MAP(9,":'(");
+        MAP(76,":-/");
+        MAP(58,"O:-)");
+        MAP(106,":-x");
+        MAP(107,":-$");
+        MAP(85,":-!");
+        MAP(110,":-!");
+    default:
+        ret="";
+        break;
+    }
+    return ret;
+}
+/*LwqqMsg* transtlate_msg(const char* what)
+{
+    int matchnum = regexec(&smile_re,what,smile_re.re_nsub+1,match,0);
+    long off;
+    regmatch_t* mat_ptr = match;
+    char temp[512];
+    if(matchnum>0){
+        while(mat_ptr!=NULL){
+            strncpy(temp,what+off,mat_ptr->rm_so-off);
+            puts(temp);
+            off = mat_ptr->rm_eo;
+            mat_ptr++;
+        }
+    }
+    return NULL;
+}*/

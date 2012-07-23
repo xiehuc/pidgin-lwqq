@@ -785,20 +785,14 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         if (!uin || !nick)
             continue;
 
-        //member = lwqq_buddy_find_buddy_by_uin(lc,uin);
-        if(member!=NULL){
-            //add ref
-            lwqq_buddy_ref(member);
-        }else{
-            member = lwqq_buddy_new();
+        member = lwqq_buddy_new();
 
-            member->uin = s_strdup(uin);
-            member->nick = s_strdup(nick);
+        member->uin = s_strdup(uin);
+        member->nick = s_strdup(nick);
 
-            // FIX ME: should we get group members qqnumber here ? 
-            // we can get the members' qq number by uin 
-            //member->qqnumber = get_friend_qqnumber(lc, member->uin);
-        }
+        // FIX ME: should we get group members qqnumber here ? 
+        // we can get the members' qq number by uin 
+        //member->qqnumber = get_friend_qqnumber(lc, member->uin);
 
         /* Add to members list */
         LIST_INSERT_HEAD(&group->members, member, entries);
@@ -1017,6 +1011,7 @@ static void get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
     LwqqClient* lc = data;
     char* uin;
+    char* account;
     int ret;
     json_t* json=NULL;
     if (req->http_code != 200) {
@@ -1034,11 +1029,17 @@ static void get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
         goto done;
     }
     uin = json_parse_simple_value(json,"uin");
+    account = json_parse_simple_value(json,"account");
+
     LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
     if(buddy){
-    buddy->qqnumber = s_strdup(json_parse_simple_value(json, "account"));
-
-    lwqq_async_dispatch(lc,FRIEND_COME,buddy);
+        buddy->qqnumber = s_strdup(account);
+        lwqq_async_dispatch(lc,FRIEND_COME,buddy);
+    }
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,uin);
+    if(group){
+        group->account = s_strdup(account);
+        lwqq_async_dispatch(lc,GROUP_COME,group);
     }
 done:
     /* Free temporary string */

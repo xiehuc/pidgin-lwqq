@@ -7,7 +7,6 @@
  * 
  * 
  */
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
@@ -215,7 +214,6 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     }
     return type;
 }
-
 static int parse_content(json_t *json, void *opaque)
 {
     json_t *tmp, *ctent;
@@ -278,6 +276,15 @@ static int parse_content(json_t *json, void *opaque)
                 c->type = LWQQ_CONTENT_FACE;
                 c->data.face = facenum; 
                 LIST_INSERT_HEAD(&msg->content, c, entries);
+            } else if(!strcmp(buf, "offpic")) {
+                //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
+                LwqqMsgContent *c = s_malloc0(sizeof(*c));
+                json_t *cur = ctent->child->next->child;
+                c->type = LWQQ_CONTENT_OFFPIC;
+                c->data.img.success = atoi(cur->child->text);
+                cur = cur->next;
+                c->data.img.file_path = s_strdup(cur->child->text);
+                LIST_INSERT_HEAD(&msg->content,c,entries);
             }
         } else if (ctent->type == JSON_STRING) {
             LwqqMsgContent *c = s_malloc0(sizeof(*c));
@@ -368,7 +375,75 @@ static int parse_status_change(json_t *json, void *opaque)
 
     return 0;
 }
+static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgContent* c)
+{
+    LwqqHttpRequest* req;
+    LwqqErrorCode error;
+    LwqqErrorCode *err = &error;
+    char* cookies;
+    int ret;
+    char url[512];
+    char host[32];
+    char *file_path = url_encode(c->data.img.file_path);
+    //there are face 1 to face 10 server to accelerate speed.
+    snprintf(url, sizeof(url),
+             "%s/get_offpic2?file_path=%s&f_uin=%s&clientid=%s&psessionid=%s",
+             "http://d.web2.qq.com/channel",
+             file_path,f_uin,lc->clientid,lc->psessionid);
+    s_free(file_path);
+    req = lwqq_http_create_default_request(url, err);
+    if (!req) {
+        goto done;
+    }
+    req->set_header(req, "Referer", "http://web2.qq.com/");
+    req->set_header(req,"Host","d.web2.qq.com");
 
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    //req->set_header(req,"Cache-Control","max-age=0");
+    ret = req->do_request(req, 0, NULL);
+
+    if(ret||(req->http_code!=200 && req->http_code!=302)){
+        if(err){
+            *err = LWQQ_EC_HTTP_ERROR;
+            goto done;
+        }
+    }
+    const char* location = req->get_header(req,"Location");
+    lwqq_http_request_free(req);
+
+    req = lwqq_http_create_default_request(location,err);
+    req->set_header(req,"Referer","http://web2.qq.com");
+
+    ret = req->do_request(req,0,NULL);
+
+    if(ret||req->http_code!=200){
+        if(err){
+            *err = LWQQ_EC_HTTP_ERROR;
+            goto done;
+        }
+    }
+
+    c->data.img.data = req->response;
+    c->data.img.size = req->resp_len;
+    req->response = NULL;
+    puts("content img ok");
+    
+done:
+    lwqq_http_request_free(req);
+}
+static void request_msg_offpic(LwqqClient* lc,LwqqMsgMessage* msg)
+{
+    LwqqMsgContent* c;
+    LIST_FOREACH(c,&msg->content,entries){
+        if(c->type == LWQQ_CONTENT_OFFPIC){
+            request_content_offpic(lc,msg->from,c);
+        }
+    }
+}
 /**
  * Parse message received from server
  * Buddy message:
@@ -419,6 +494,7 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         case LWQQ_MT_BUDDY_MSG:
         case LWQQ_MT_GROUP_MSG:
             ret = parse_new_msg(cur, msg->opaque);
+            request_msg_offpic(list->lc,msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);
@@ -595,6 +671,7 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
             "\"clientid\":\"%s\","
             "\"psessionid\":\"%s\"}",
             tonam,mmsg->to,content,lc->msg_id,lc->clientid,lc->psessionid);
+    puts(data);
 
     /* Create a POST request */
     char url[512];
@@ -617,6 +694,7 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         goto failed;
     }
 
+    puts(req->response);
 
     //we check result if ok return 1,fail return 0;
     json_t *root = NULL;
@@ -639,10 +717,10 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     if(!lc||!to||!message)
         return 0;
     int ret;
-    LwqqMsg *msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
+    LwqqMsg *msg = lwqq_msg_new(type);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = s_strdup(to);
-    mmsg->f_name = "songti";
+    mmsg->f_name = "宋体";
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
@@ -660,3 +738,4 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 
     return ret;
 }
+

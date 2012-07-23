@@ -18,12 +18,19 @@
 
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
+#define LWQQ_CONTENT_OFFPIC 2
 
 typedef struct LwqqMsgContent {
     int type;
     union {
         int face;
         char *str;
+        struct {
+            int success;
+            char* file_path;
+            char* data;
+            size_t size;
+        }img;
     } data;
     LIST_ENTRY(LwqqMsgContent) entries;
 } LwqqMsgContent ;
