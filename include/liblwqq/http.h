@@ -21,7 +21,10 @@ struct cookie_list {
     char value[256];
     struct cookie_list* next;
 };
-typedef enum {LWQQ_FORM_FILE,LWQQ_FORM_CONTENT,LWQQ_FORM_BUFFER_IMAGE} LWQQ_FORM;
+typedef enum {
+    LWQQ_FORM_FILE,// use add_file_content instead
+    LWQQ_FORM_CONTENT
+} LWQQ_FORM;
 /**
  * Lwqq Http request struct, this http object worked donw for lwqq,
  * But for other app, it may work bad.

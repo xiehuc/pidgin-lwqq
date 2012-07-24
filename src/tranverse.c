@@ -5,6 +5,25 @@
 #include <type.h>
 
 
+static void tranverse_escape(char * str)
+{
+    char* ptr;
+    while((ptr = strchr(str,'\\'))){
+        switch(*(ptr+1)){
+            case 'n':
+                *ptr = '\n';
+                break;
+            case 'r':
+                *ptr = ' ';
+                break;
+            default:
+                *ptr = *(ptr+1);
+                break;
+        }
+        *(ptr+1) = ' ';
+    }
+    
+}
 void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg)
 {
     const char* ptr = what;

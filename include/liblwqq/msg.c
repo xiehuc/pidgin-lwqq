@@ -388,7 +388,6 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     char* cookies;
     int ret;
     char url[512];
-    char host[32];
     char *file_path = url_encode(c->data.img.file_path);
     //there are face 1 to face 10 server to accelerate speed.
     snprintf(url, sizeof(url),
@@ -642,25 +641,6 @@ static char* content_parse_string(LwqqMsgMessage* msg)
     //you need ensure only one thread send msg in one time.
     static char buf[2048];
     return content_parse_string_r(msg,buf);
-}
-static void tranverse_escape(char * str)
-{
-    char* ptr;
-    while(ptr = strchr(str,'\\')){
-        switch(*(ptr+1)){
-            case 'n':
-                *ptr = '\n';
-                break;
-            case 'r':
-                *ptr = ' ';
-                break;
-            default:
-                *ptr = *(ptr+1);
-                break;
-        }
-        *(ptr+1) = ' ';
-    }
-    
 }
 
 LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size)

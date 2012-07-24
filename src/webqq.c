@@ -2,6 +2,7 @@
 #define PURPLE_PLUGINS
 #include <plugin.h>
 #include <version.h>
+#include <smemory.h>
 #include "internal.h"
 #include "webqq.h"
 #include "qq_types.h"
@@ -14,6 +15,7 @@
 #include <msg.h>
 
 static void group_member_list_come(LwqqClient* lc,void* data);
+char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -231,9 +233,13 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->send);
 
     if(buddy)
-    serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
-    else
-    serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
+        serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
+    else{
+        buddy = lwqq_group_find_group_member_by_uin(group,msg->send);
+        serv_got_chat_in(pc,atoi(group->gid),buddy->nick,PURPLE_MESSAGE_RECV,buf,time(NULL));
+    }
+
+    //serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
 
     if(!LIST_EMPTY(&group->members)) {
         group_member_list_come(lc,group);
@@ -465,9 +471,11 @@ static void group_member_list_come(LwqqClient* lc,void* data)
 {
     LwqqGroup* group = (LwqqGroup*)data;
     qq_account* ac = lwqq_async_get_userdata(lc,GROUP_DETAIL);
-    PurpleAccount* account = ac->account;
     LwqqBuddy* member;
+    LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
+    PurpleConnection* gc = purple_account_get_connection(ac->account);
+    long id = atol(group->gid);
 
     PurpleConversation* conv = purple_find_chat(
             purple_account_get_connection(ac->account),atoi(group->gid));
@@ -475,10 +483,13 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             flag |= PURPLE_CBFLAGS_TYPING;
-            if(member->qqnumber!=NULL)
-            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->qqnumber,NULL,flag,FALSE);
-            else 
-            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->nick,NULL,flag,FALSE);
+            if(buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin)){
+                purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),buddy->qqnumber,NULL,flag,FALSE);
+            }else{
+                purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->nick,NULL,flag,FALSE);
+            }
+            /*purple_conv_chat_rename_user(PURPLE_CONV_CHAT(conv),member->uin,
+                    qq_get_cb_real_name(gc,id,member->uin));*/
         }
     }
 }
@@ -488,7 +499,6 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     LwqqClient* lc = ac->qq;
     char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
     LwqqGroup* group,*gp;
-    LwqqBuddy* member;
     if(account!=NULL) {
         LIST_FOREACH(gp,&lc->groups,entries){
             if(strcmp(account,gp->account)==0){
@@ -514,6 +524,33 @@ static gboolean qq_offline_message(const PurpleBuddy *buddy)
     //webqq support offline message indeed
     return TRUE;
 }
+static gboolean qq_can_receive_file(PurpleConnection* gc,const char* who)
+{
+    //webqq support send recv file indeed.
+    return TRUE;
+}
+//this return the member of group 's real name
+char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
+    //if it is our friend we use our buddy infomation.
+    if(buddy){
+        if(buddy->markname) return buddy->markname;
+        else if(buddy->nick) return buddy->nick;
+    }
+    //if it is not.
+    //we use group markname only.
+    char gid[32];
+    snprintf(gid,sizeof(gid),"%d",id);
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    if(group){
+        buddy = lwqq_group_find_group_member_by_uin(group,who);
+        if(buddy && buddy->nick) return buddy->nick;
+    }
+    return NULL;
+}
 
 static void
 init_plugin(PurplePlugin *UNUSED(plugin))
@@ -524,7 +561,6 @@ init_plugin(PurplePlugin *UNUSED(plugin))
     bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
     textdomain(GETTEXT_PACKAGE);
 #endif
-    purple_debug_info(DBGID,"plugin has loaded\n");
 }
 
 PurplePluginProtocolInfo webqq_prpl_info = {
@@ -532,15 +568,18 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .options=           OPT_PROTO_IM_IMAGE,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
+    .login=             qq_login,       /* login */
+    .close=             qq_close,       /* close */
     NULL,//twitter_status_text, /* status_text */
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
     NULL,                   /* blist_node_menu */
+    /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
     .join_chat=         qq_group_join,
-    .login=             qq_login,       /* login */
-    .close=             qq_close,       /* close */
+    .get_cb_real_name=  qq_get_cb_real_name,
+    /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
     .offline_message=   qq_offline_message,

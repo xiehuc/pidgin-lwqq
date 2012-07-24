@@ -63,6 +63,8 @@ static void* _background_friends_info(void* data)
     LIST_FOREACH(group,&ac->qq->groups,entries) {
         lwqq_info_get_friend_qqnumber(lc,group->gid);
     }
+
+    return NULL;
 }
 void background_friends_info(qq_account* ac)
 {
@@ -80,14 +82,14 @@ static pthread_t tid = 0;
 static void* _background_msg_poll(void* data)
 {
     qq_account* ac = (qq_account*)data;
-    LwqqClient* lc = ac->qq;
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    LwqqErrorCode err;
 
     /* Poll to receive message */
     l->poll_msg(l);
 
     msg_check_handle = purple_timeout_add(200,msg_check,ac);
+
+    return NULL;
 }
 static pthread_t msg_th;
 void background_msg_poll(qq_account* ac)
@@ -99,7 +101,7 @@ void background_msg_drain(qq_account* ac)
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
     purple_timeout_remove(msg_check_handle);
     pthread_cancel(l->tid);
-    l->tid = NULL;
+    l->tid = 0;
     tid = 0;
 }
 
@@ -113,6 +115,8 @@ static void* _background_group_detail(void* d)
     LwqqErrorCode err;
     lwqq_info_get_group_detail_info(lc,group,&err);
     lwqq_async_dispatch(lc,GROUP_DETAIL,group);
+
+    return NULL;
 }
 void background_group_detail(qq_account* ac,LwqqGroup* group)
 {
