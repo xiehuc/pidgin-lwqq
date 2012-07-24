@@ -112,6 +112,7 @@ static void lwqq_msg_message_free(void *opaque)
     s_free(msg->send);
     s_free(msg->f_name);
     s_free(msg->f_color);
+    s_free(msg->group_code);
 
     LwqqMsgContent *c;
     LIST_FOREACH(c, &msg->content, entries) {
@@ -122,6 +123,13 @@ static void lwqq_msg_message_free(void *opaque)
             case LWQQ_CONTENT_OFFPIC:
                 s_free(c->data.img.file_path);
                 s_free(c->data.img.file);
+                break;
+            case LWQQ_CONTENT_CFACE:
+                s_free(c->data.cface.data);
+                s_free(c->data.cface.name);
+                s_free(c->data.cface.file_id);
+                s_free(c->data.cface.key);
+                break;
         }
         s_free(c);
     }
@@ -284,11 +292,21 @@ static int parse_content(json_t *json, void *opaque)
             } else if(!strcmp(buf, "offpic")) {
                 //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
                 LwqqMsgContent *c = s_malloc0(sizeof(*c));
-                json_t *cur = ctent->child->next->child;
                 c->type = LWQQ_CONTENT_OFFPIC;
-                c->data.img.success = atoi(cur->child->text);
-                cur = cur->next;
-                c->data.img.file_path = s_strdup(cur->child->text);
+                c->data.img.success = atoi(json_parse_simple_value(ctent,"success"));
+                c->data.img.file_path = s_strdup(json_parse_simple_value(ctent,"file_path"));
+                LIST_INSERT_HEAD(&msg->content,c,entries);
+            } else if(!strcmp(buf,"cface")){
+                //["cface",{"name":"0C3AED06704CA9381EDCC20B7F552802.jPg","file_id":914490174,"key":"YkC3WaD3h5pPxYrY","server":"119.147.15.201:443"}]
+                LwqqMsgContent* c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_CFACE;
+                c->data.cface.name = s_strdup(json_parse_simple_value(ctent,"name"));
+                c->data.cface.file_id = s_strdup(json_parse_simple_value(ctent,"file_id"));
+                c->data.cface.key = s_strdup(json_parse_simple_value(ctent,"key"));
+                char* server = s_strdup(json_parse_simple_value(ctent,"server"));
+                char* split = strchr(server,':');
+                strncpy(c->data.cface.serv_ip,server,split-server);
+                strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
                 LIST_INSERT_HEAD(&msg->content,c,entries);
             }
         } else if (ctent->type == JSON_STRING) {
@@ -340,6 +358,7 @@ static int parse_new_msg(json_t *json, void *opaque)
     //if it failed means it is not group message.
     //so it equ NULL.
     msg->send = s_strdup(json_parse_simple_value(json, "send_uin"));
+    msg->group_code = s_strdup(json_parse_simple_value(json,"group_code"));
 
     if (!msg->to) {
         return -1;
@@ -434,10 +453,52 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     c->data.img.file = req->response;
     c->data.img.size = req->resp_len;
     req->response = NULL;
-    puts("content img ok");
     
 done:
     lwqq_http_request_free(req);
+}
+static void request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
+{
+    LwqqHttpRequest* req;
+    LwqqErrorCode error;
+    LwqqErrorCode *err = &error;
+    char* cookies;
+    int ret;
+    char url[512];
+/*http://web2.qq.com/cgi-bin/get_group_pic?type=0&gid=3971957129&uin=4174682545&rip=120.196.211.216&rport=9072&fid=2857831080&pic=71A8E53B7F678D035656FECDA1BD7F31.jpg&vfwebqq=762a8682d17931d0cc647515e570435bd82e3a4e957bd052faa9615192eb7a3c4f1719006a7176c1&t=1343130567*/
+    snprintf(url, sizeof(url),
+             "%s/get_group_pic?type=0&gid=%s&uin=%s&rip=%s&rport=%s&fid=%s&pic=%s&vfwebqq=%s&t=%ld",
+             "http://web2.qq.com/cgi-bin",
+             group_code,send_uin,c->data.cface.serv_ip,c->data.cface.serv_port,
+             c->data.cface.file_id,c->data.cface.name,lc->vfwebqq,time(NULL));
+    req = lwqq_http_create_default_request(url, err);
+    if (!req) {
+        goto done;
+    }
+    req->set_header(req, "Referer", "http://web2.qq.com/");
+    ///this is very important!!!!!!!!!
+    req->set_header(req, "Host", "web2.qq.com");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+
+    ret = req->do_request(req,0,NULL);
+
+    if(ret||req->http_code!=200){
+        if(err){
+            *err = LWQQ_EC_HTTP_ERROR;
+            goto done;
+        }
+    }
+
+    c->data.cface.data = req->response;
+    c->data.cface.size = req->resp_len;
+    req->response = NULL;
+done:
+    lwqq_http_request_free(req);
+
 }
 static void request_msg_offpic(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -445,6 +506,8 @@ static void request_msg_offpic(LwqqClient* lc,LwqqMsgMessage* msg)
     LIST_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
             request_content_offpic(lc,msg->from,c);
+        }else if(c->type == LWQQ_CONTENT_CFACE){
+            request_content_cface(lc,msg->group_code,msg->send,c);
         }
     }
 }
@@ -466,6 +529,7 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     json_t *json = NULL, *json_tmp, *cur;
 
     ret = json_parse_document(&json, (char *)str);
+    puts(str);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", str);
         goto done;
@@ -570,6 +634,7 @@ static void *start_poll_msg(void *msg_list)
     }
     while(1) {
         ret = req->do_request(req, 1, msg);
+        printf("%ld\n",req->http_code);
         if (ret || req->http_code != 200) {
             continue;
         }
@@ -592,7 +657,7 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 #define RIGHT "\\\""
 #define KEY(key) "\\\""key"\\\""
 
-static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf)
+static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf,int* has_cface)
 {
     strcpy(buf,"\"[");
     LwqqMsgContent* c;
@@ -616,6 +681,15 @@ static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf)
                 strcat(buf,piece);
                 strcat(buf,"],");
                 break;
+            case LWQQ_CONTENT_CFACE:
+                //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
+                strcat(buf,"["KEY("cface")","LEFT);
+                strcat(buf,"group");
+                strcat(buf,RIGHT","LEFT);
+                strcat(buf,c->data.cface.name);
+                strcat(buf,RIGHT"],");
+                *has_cface = 1;
+                break;
             case LWQQ_CONTENT_STRING:
                 strcat(buf,LEFT);
                 strcat(buf,c->data.str);
@@ -635,15 +709,15 @@ static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf)
             msg->f_color);
     return buf;
 }
-static char* content_parse_string(LwqqMsgMessage* msg)
+static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
 {
     //not thread safe. 
     //you need ensure only one thread send msg in one time.
     static char buf[2048];
-    return content_parse_string_r(msg,buf);
+    return content_parse_string_r(msg,buf,has_cface);
 }
 
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size)
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size,char* extension)
 {
     LwqqHttpRequest *req;
     LwqqErrorCode err;
@@ -666,12 +740,11 @@ LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const 
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
     req->add_form(req,LWQQ_FORM_CONTENT,"uin",lc->username);///<this may error
-    puts(lc->username);
     req->add_form(req,LWQQ_FORM_CONTENT,"skey",lc->cookies->skey);
     req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
     req->add_form(req,LWQQ_FORM_CONTENT,"peeruin","593023668");///<what this means?
     //req->add_form(req,LWQQ_FORM_FILE,"file",pic_path);
-    req->add_file_content(req,"file",filename,buffer,size);
+    req->add_file_content(req,"file",filename,buffer,size,extension);
     req->add_form(req,LWQQ_FORM_CONTENT,"field","1");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
@@ -701,6 +774,63 @@ done:
     lwqq_http_request_free(req);
     return c;
 }
+LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,char* extension)
+{
+    LwqqHttpRequest *req;
+    LwqqErrorCode err;
+    LwqqMsgContent* c = NULL;
+    char url[512];
+    char *cookies;
+    int ret;
+
+    snprintf(url,sizeof(url),"http://up.web2.qq.com/cgi-bin/cface_upload?time=%ld",
+            time(NULL));
+    req = lwqq_http_create_default_request(url,&err);
+    req->set_header(req,"Origin","http://web2.qq.com");
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    req->set_header(req,"Host","up.web2.qq.com");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
+    req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
+    req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
+    req->add_file_content(req,"custom_face",filename,buffer,size,extension);
+    req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
+
+    ret = req->do_request(req,0,NULL);
+
+    json_t* json = NULL;
+    if(ret||req->http_code!=200){
+        goto done;
+    }
+    char *ptr = strchr(req->response,'}');
+    *(ptr+1) = '\0';
+    while(ptr = strchr(req->response,'\'')){
+        *ptr = '"';
+    }
+    json_parse_document(&json,strchr(req->response,'{'));
+    ret = atoi(json_parse_simple_value(json,"ret"));
+    if(ret !=0 && ret !=4){
+        goto done;
+    }
+    c = s_malloc0(sizeof(*c));
+    c->type = LWQQ_CONTENT_CFACE;
+    char *file = json_parse_simple_value(json,"msg");
+    char *pos;
+    //force to cut down the filename
+    if((pos = strchr(file,' '))){
+        *pos = '\0';
+    }
+    c->data.cface.name = s_strdup(file);
+done:
+    if(json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return c;
+}
 /** 
  * 
  * 
@@ -720,6 +850,7 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     LwqqMsgMessage *mmsg;
     const char *tonam;
     const char *apistr;
+    int has_cface = 0;
 
     if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
                  msg->type != LWQQ_MT_GROUP_MSG)) {
@@ -733,15 +864,22 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         apistr = "send_qun_msg2";
     }
     mmsg = msg->opaque;
-    content = content_parse_string(mmsg);
+    content = content_parse_string(mmsg,&has_cface);
     snprintf(data,sizeof(data),"r={"
-            "\"%s\":%s,"
+            "\"%s\":%s,",
+            tonam,mmsg->to);
+    if(has_cface){
+        strcat(data,"\"group_code\":");
+        strcat(data,mmsg->group_code);
+        strcat(data,",");
+    }
+    snprintf(data+strlen(data),sizeof(data)-strlen(data),
             "\"face\":0,"
             "\"content\":%s,"
             "\"msg_id\":%ld,"
             "\"clientid\":\"%s\","
             "\"psessionid\":\"%s\"}",
-            tonam,mmsg->to,content,lc->msg_id,lc->clientid,lc->psessionid);
+            content,lc->msg_id,lc->clientid,lc->psessionid);
     puts(data);
 
     /* Create a POST request */

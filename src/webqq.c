@@ -226,8 +226,23 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
                     strcat(buf,"【图片】");
                 }
                 break;
+            case LWQQ_CONTENT_CFACE:
+                if(c->data.cface.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else
+                    strcat(buf,"【图片】");
+                break;
         }
     }
+    LwqqErrorCode err;
+    //get all member list
+    if(LIST_EMPTY(&group->members)) {
+        //use block method to get list
+        lwqq_info_get_group_detail_info(lc,group,&err);
+    }
+    group_member_list_come(lc,group);
 
     LwqqBuddy* buddy;
     buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->send);
@@ -236,17 +251,11 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
         serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
     else{
         buddy = lwqq_group_find_group_member_by_uin(group,msg->send);
-        serv_got_chat_in(pc,atoi(group->gid),buddy->nick,PURPLE_MESSAGE_RECV,buf,time(NULL));
-    }
-
-    //serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
-
-    if(!LIST_EMPTY(&group->members)) {
-        group_member_list_come(lc,group);
-    } else {
-        lwqq_async_add_listener(lc,GROUP_DETAIL,group_member_list_come);
-        lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
-        background_group_detail(ac,group);
+        if(buddy)
+            serv_got_chat_in(pc,atoi(group->gid),buddy->nick,PURPLE_MESSAGE_RECV,buf,time(NULL));
+        else
+            //this means not download all member list;
+            serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
     }
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
@@ -393,7 +402,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
     
-    tranverse_message_to_struct(lc,buddy->uin,what,mmsg);
+    tranverse_message_to_struct(lc,buddy->uin,what,mmsg,0);
 
     lwqq_msg_send(lc,msg);
 
@@ -418,18 +427,20 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = group->gid;
+    mmsg->group_code = group->code;
     mmsg->f_name = "宋体";
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
     
-    tranverse_message_to_struct(lc,gid,message,mmsg);
+    tranverse_message_to_struct(lc,gid,message,mmsg,1);
 
     lwqq_msg_send(lc,msg);
 
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;
     mmsg->to = NULL;
+    mmsg->group_code = NULL;
 
     lwqq_msg_free(msg);
 
@@ -470,7 +481,7 @@ GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
 static void group_member_list_come(LwqqClient* lc,void* data)
 {
     LwqqGroup* group = (LwqqGroup*)data;
-    qq_account* ac = lwqq_async_get_userdata(lc,GROUP_DETAIL);
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     LwqqBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
@@ -498,9 +509,13 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
     char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
-    LwqqGroup* group,*gp;
+    LwqqGroup* group = NULL,*gp;
     if(account!=NULL) {
         LIST_FOREACH(gp,&lc->groups,entries){
+            if(gp->account==NULL){
+                group = NULL;
+                break;
+            }
             if(strcmp(account,gp->account)==0){
                 group = gp;
                 break;

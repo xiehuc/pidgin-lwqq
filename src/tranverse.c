@@ -24,7 +24,7 @@ static void tranverse_escape(char * str)
     }
     
 }
-void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg)
+void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg,int using_cface)
 {
     const char* ptr = what;
     const char* img;
@@ -49,12 +49,22 @@ void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,
             }else{
                 sscanf(img,"<IMG ID=\"%d\">",&img_id);
                 PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
-                c = lwqq_msg_upload_offline_pic(lc,to,
-                        purple_imgstore_get_filename(simg),
-                        purple_imgstore_get_data(simg),
-                        purple_imgstore_get_size(simg));
-                puts(purple_imgstore_get_filename(simg));
-                LIST_INSERT_HEAD(&mmsg->content,c,entries);
+                puts(purple_imgstore_get_extension(simg));
+                if(using_cface){
+                    c = lwqq_msg_upload_cface(lc,
+                            purple_imgstore_get_filename(simg),
+                            purple_imgstore_get_data(simg),
+                            purple_imgstore_get_size(simg),
+                            purple_imgstore_get_extension(simg));
+                }else{
+                    c = lwqq_msg_upload_offline_pic(lc,to,
+                            purple_imgstore_get_filename(simg),
+                            purple_imgstore_get_data(simg),
+                            purple_imgstore_get_size(simg),
+                            NULL);
+                }
+                if(c!=NULL)
+                    LIST_INSERT_HEAD(&mmsg->content,c,entries);
             }
             ptr = strchr(img,'>')+1;
         }

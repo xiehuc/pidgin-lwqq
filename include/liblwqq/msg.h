@@ -19,18 +19,31 @@
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
 #define LWQQ_CONTENT_OFFPIC 2
+//custom face :this can send/recv picture
+#define LWQQ_CONTENT_CFACE 3
 
 typedef struct LwqqMsgContent {
     int type;
     union {
         int face;
         char *str;
+        //webqq protocol
+        //this used in offpic format which may replaced by cface (custom face)
         struct {
             int success;
             char* file_path;
-            char* file;///<on upload this filename on download this filecontent
+            char* file;///<on upload this is filename on download this is image content
             size_t size;
         }img;
+        struct {
+            char* name;
+            char* file_id;
+            char* key;
+            char serv_ip[24];
+            char serv_port[8];
+            char* data;
+            size_t size;
+        }cface;
     } data;
     LIST_ENTRY(LwqqMsgContent) entries;
 } LwqqMsgContent ;
@@ -39,6 +52,7 @@ typedef struct LwqqMsgMessage {
     char *from;
     char *to;
     char *send; /* only group use it to identify who send the group message */
+    char *group_code; /* only avaliable in group message */
     time_t time;
 
     /* For font  */
@@ -155,6 +169,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 
 /************************************************************************/
 /*  LwqqSendMsg API */
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size);
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size,char* extension);
+LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,char* extension);
 
 #endif  /* LWQQ_MSG_H */
