@@ -774,6 +774,46 @@ done:
     lwqq_http_request_free(req);
     return c;
 }
+static int query_gface_sig(LwqqClient* lc)
+{
+    LwqqHttpRequest *req;
+    LwqqErrorCode err;
+    char url[512];
+    char *cookies;
+    int ret;
+    int succ = 0;
+    if(lc->gface_key&&lc->gface_sig){
+        return 1;
+    }
+
+    //https://d.web2.qq.com/channel/get_gface_sig2?clientid=30179476&psessionid=8368046764001e636f6e6e7365727665725f77656271714031302e3132382e36362e31313500006158000000c4036e04005c821a956d0000000a4065466637416b7142666d00000028fdd28eddedb8dd0cd414fdcb13af93532615ebe10b93f55182189da5c557360fee73da41ebf0c9fc&t=1343198241175
+    snprintf(url,sizeof(url),"%s/get_gface_sig2?clientid=%s&psessionid=%s&t=%ld",
+            "https://d.web2.qq.com/channel",lc->clientid,lc->psessionid,time(NULL));
+    req = lwqq_http_create_default_request(url,&err);
+    req->set_header(req,"Host","d.web2.qq.com");
+    req->set_header(req,"Referer","https://d.web2.qq.com/cfproxy.html?v=20110331002&callback=1");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+
+    ret = req->do_request(req,0,NULL);
+    if(ret||req->http_code !=200){
+        goto done;
+    }
+    json_t* json = NULL;
+    json_parse_document(&json,req->response);
+    lc->gface_key = s_strdup(json_parse_simple_value(json,"gface_key"));
+    lc->gface_sig = s_strdup(json_parse_simple_value(json,"gface_sig"));
+    succ = 1;
+    
+done:
+    if(json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return succ;
+}
 LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,char* extension)
 {
     LwqqHttpRequest *req;
@@ -808,7 +848,7 @@ LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const 
     }
     char *ptr = strchr(req->response,'}');
     *(ptr+1) = '\0';
-    while(ptr = strchr(req->response,'\'')){
+    while((ptr = strchr(req->response,'\''))){
         *ptr = '"';
     }
     json_parse_document(&json,strchr(req->response,'{'));
@@ -825,6 +865,9 @@ LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const 
         *pos = '\0';
     }
     c->data.cface.name = s_strdup(file);
+
+    if(!lc->gface_sig)
+        query_gface_sig(lc);
 done:
     if(json)
         json_free_value(&json);
@@ -840,13 +883,15 @@ done:
  * @return 1 means ok
  *         0 means failed or send failed
  */
+#define format_append(str,format...)\
+snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
     int ret;
     LwqqHttpRequest *req = NULL;  
     char *cookies;
     char *content = NULL;
-    char data[1024];
+    char data[1024] = {0};
     LwqqMsgMessage *mmsg;
     const char *tonam;
     const char *apistr;
@@ -865,21 +910,24 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     }
     mmsg = msg->opaque;
     content = content_parse_string(mmsg,&has_cface);
-    snprintf(data,sizeof(data),"r={"
+    format_append(data,"r={"
             "\"%s\":%s,",
             tonam,mmsg->to);
     if(has_cface){
-        strcat(data,"\"group_code\":");
-        strcat(data,mmsg->group_code);
-        strcat(data,",");
+        format_append(data,
+                "\"group_code\":%s,"
+                "\"key\":\"%s\","
+                "\"sig\":\"%s\",",
+                mmsg->group_code,lc->gface_key,lc->gface_sig);
     }
-    snprintf(data+strlen(data),sizeof(data)-strlen(data),
+    format_append(data,
             "\"face\":0,"
             "\"content\":%s,"
             "\"msg_id\":%ld,"
             "\"clientid\":\"%s\","
             "\"psessionid\":\"%s\"}",
             content,lc->msg_id,lc->clientid,lc->psessionid);
+    format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
     puts(data);
 
     /* Create a POST request */

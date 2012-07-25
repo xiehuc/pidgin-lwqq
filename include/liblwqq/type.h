@@ -135,6 +135,8 @@ typedef struct LwqqClient {
     char *status;
     char *vfwebqq;
     char *psessionid;
+    char *gface_key;                  /**< use at cface */
+    char *gface_sig;                  /**<use at cfage */
     LwqqAsync* async;
     LwqqCookies *cookies;
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
