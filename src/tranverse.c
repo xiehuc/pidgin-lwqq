@@ -30,14 +30,15 @@ void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,
     const char* img;
     int img_id;
     LwqqMsgContent *c;
+    puts(what);
     while(*ptr!='\0'){
         img = strstr(ptr,"<IMG");
         if(img==NULL){
             c = s_malloc0(sizeof(*c));
             c->type = LWQQ_CONTENT_STRING;
             c->data.str = s_strdup(ptr);
-            LIST_INSERT_HEAD(&mmsg->content,c,entries);
             ptr += strlen(ptr);
+            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }else{
             //before img there are still text.
             if(img-ptr>0){
@@ -45,28 +46,26 @@ void tranverse_message_to_struct(LwqqClient* lc,const char* to,const char* what,
                 c->type = LWQQ_CONTENT_STRING;
                 c->data.str = s_malloc0(img-ptr+1);
                 strncpy(c->data.str,ptr,img-ptr);
-                LIST_INSERT_HEAD(&mmsg->content,c,entries);
+                TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+            }
+            sscanf(img,"<IMG ID=\"%d\">",&img_id);
+            PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
+            if(using_cface){
+                c = lwqq_msg_upload_cface(lc,
+                        purple_imgstore_get_filename(simg),
+                        purple_imgstore_get_data(simg),
+                        purple_imgstore_get_size(simg),
+                        purple_imgstore_get_extension(simg));
             }else{
-                sscanf(img,"<IMG ID=\"%d\">",&img_id);
-                PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
-                puts(purple_imgstore_get_extension(simg));
-                if(using_cface){
-                    c = lwqq_msg_upload_cface(lc,
-                            purple_imgstore_get_filename(simg),
-                            purple_imgstore_get_data(simg),
-                            purple_imgstore_get_size(simg),
-                            purple_imgstore_get_extension(simg));
-                }else{
-                    c = lwqq_msg_upload_offline_pic(lc,to,
-                            purple_imgstore_get_filename(simg),
-                            purple_imgstore_get_data(simg),
-                            purple_imgstore_get_size(simg),
-                            NULL);
-                }
-                if(c!=NULL)
-                    LIST_INSERT_HEAD(&mmsg->content,c,entries);
+                c = lwqq_msg_upload_offline_pic(lc,to,
+                        purple_imgstore_get_filename(simg),
+                        purple_imgstore_get_data(simg),
+                        purple_imgstore_get_size(simg),
+                        purple_imgstore_get_extension(simg));
             }
             ptr = strchr(img,'>')+1;
+            if(c!=NULL)
+                TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
     }
 }

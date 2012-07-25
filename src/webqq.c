@@ -164,7 +164,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
     if(buddy==NULL) return;
 
-    LIST_FOREACH(c, &msg->content, entries) {
+    TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
                 strcat(buf,c->data.str);
@@ -208,7 +208,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     char buf[1024] = {0};
     char piece[24] = {0};
     LwqqMsgContent *c;
-    LIST_FOREACH(c, &msg->content, entries) {
+    TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
                 strcat(buf,c->data.str);
@@ -345,6 +345,9 @@ static void login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     background_friends_info(ac);
 
+    purple_account_set_alias(ac->account,ac->qq->myself->nick);
+    /*if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
+        lwqq_info_get_friend_avatar(lc,lc->myself,NULL);*/
     background_msg_poll(ac);
 }
 

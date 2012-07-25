@@ -45,7 +45,7 @@ typedef struct LwqqMsgContent {
             size_t size;
         }cface;
     } data;
-    LIST_ENTRY(LwqqMsgContent) entries;
+    TAILQ_ENTRY(LwqqMsgContent) entries;
 } LwqqMsgContent ;
 
 typedef struct LwqqMsgMessage {
@@ -63,7 +63,7 @@ typedef struct LwqqMsgMessage {
     } f_style;
     char *f_color;
 
-    LIST_HEAD(, LwqqMsgContent) content;
+    TAILQ_HEAD(, LwqqMsgContent) content;
 } LwqqMsgMessage;
 
 typedef struct LwqqMsgStatusChange {
@@ -169,7 +169,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 
 /************************************************************************/
 /*  LwqqSendMsg API */
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size,char* extension);
-LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,char* extension);
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size,const char* extension);
+LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,const char* extension);
 
 #endif  /* LWQQ_MSG_H */

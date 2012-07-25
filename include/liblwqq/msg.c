@@ -76,6 +76,7 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
 LwqqMsg *lwqq_msg_new(LwqqMsgType type)
 {
     LwqqMsg *msg = NULL;
+    LwqqMsgMessage* mmsg;
 
     msg = s_malloc0(sizeof(*msg));
     msg->type = type;
@@ -83,7 +84,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     switch (type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgMessage));
+        mmsg = s_malloc0(sizeof(LwqqMsgMessage));
+        TAILQ_INIT(&mmsg->content);
+        msg->opaque = mmsg;
         break;
     case LWQQ_MT_STATUS_CHANGE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgStatusChange));
@@ -115,7 +118,7 @@ static void lwqq_msg_message_free(void *opaque)
     s_free(msg->group_code);
 
     LwqqMsgContent *c;
-    LIST_FOREACH(c, &msg->content, entries) {
+    TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
                 s_free(c->data.str);
@@ -288,14 +291,14 @@ static int parse_content(json_t *json, void *opaque)
                 LwqqMsgContent *c = s_malloc0(sizeof(*c));
                 c->type = LWQQ_CONTENT_FACE;
                 c->data.face = facenum; 
-                LIST_INSERT_HEAD(&msg->content, c, entries);
+                TAILQ_INSERT_TAIL(&msg->content, c, entries);
             } else if(!strcmp(buf, "offpic")) {
                 //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
                 LwqqMsgContent *c = s_malloc0(sizeof(*c));
                 c->type = LWQQ_CONTENT_OFFPIC;
                 c->data.img.success = atoi(json_parse_simple_value(ctent,"success"));
                 c->data.img.file_path = s_strdup(json_parse_simple_value(ctent,"file_path"));
-                LIST_INSERT_HEAD(&msg->content,c,entries);
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
             } else if(!strcmp(buf,"cface")){
                 //["cface",{"name":"0C3AED06704CA9381EDCC20B7F552802.jPg","file_id":914490174,"key":"YkC3WaD3h5pPxYrY","server":"119.147.15.201:443"}]
                 LwqqMsgContent* c = s_malloc0(sizeof(*c));
@@ -307,18 +310,18 @@ static int parse_content(json_t *json, void *opaque)
                 char* split = strchr(server,':');
                 strncpy(c->data.cface.serv_ip,server,split-server);
                 strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
-                LIST_INSERT_HEAD(&msg->content,c,entries);
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
             }
         } else if (ctent->type == JSON_STRING) {
             LwqqMsgContent *c = s_malloc0(sizeof(*c));
             c->type = LWQQ_CONTENT_STRING;
             c->data.str = ucs4toutf8(ctent->text);
-            LIST_INSERT_HEAD(&msg->content, c, entries);
+            TAILQ_INSERT_TAIL(&msg->content, c, entries);
         }
     }
 
     /* Make msg valid */
-    if (!msg->f_name || !msg->f_color || LIST_EMPTY(&msg->content)) {
+    if (!msg->f_name || !msg->f_color || TAILQ_EMPTY(&msg->content)) {
         return -1;
     }
     if (msg->f_size < 10) {
@@ -503,7 +506,7 @@ done:
 static void request_msg_offpic(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
-    LIST_FOREACH(c,&msg->content,entries){
+    TAILQ_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
             request_content_offpic(lc,msg->from,c);
         }else if(c->type == LWQQ_CONTENT_CFACE){
@@ -663,7 +666,7 @@ static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf,int* has_cface
     LwqqMsgContent* c;
     static char piece[10];
 
-    LIST_FOREACH(c,&msg->content,entries){
+    TAILQ_FOREACH(c,&msg->content,entries){
         switch(c->type){
             case LWQQ_CONTENT_FACE:
                 strcat(buf,"["KEY("face")",");
@@ -717,7 +720,7 @@ static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
     return content_parse_string_r(msg,buf,has_cface);
 }
 
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size,char* extension)
+LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size,const char* extension)
 {
     LwqqHttpRequest *req;
     LwqqErrorCode err;
@@ -814,7 +817,7 @@ done:
     lwqq_http_request_free(req);
     return succ;
 }
-LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,char* extension)
+LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,const char* extension)
 {
     LwqqHttpRequest *req;
     LwqqErrorCode err;
@@ -984,7 +987,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     LwqqMsgContent * c = s_malloc(sizeof(*c));
     c->type = LWQQ_CONTENT_STRING;
     c->data.str = s_strdup(message);
-    LIST_INSERT_HEAD(&mmsg->content,c,entries);
+    TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
     ret = lwqq_msg_send(lc,msg);
 

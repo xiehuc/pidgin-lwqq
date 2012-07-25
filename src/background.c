@@ -54,6 +54,7 @@ static void* _background_friends_info(void* data)
     //match=(regmatch_t*)malloc((smile_re.re_nsub+1)*sizeof(regmatch_t));  
 
     lwqq_info_get_friends_info(lc,&err);
+    lwqq_info_get_friend_detail_info(lc,lc->myself,&err);
     lwqq_info_get_online_buddies(ac->qq,&err);
     lwqq_info_get_group_name_list(ac->qq,&err);
 

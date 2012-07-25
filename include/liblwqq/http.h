@@ -84,7 +84,7 @@ typedef struct LwqqHttpRequest {
     char * (*get_cookie)(struct LwqqHttpRequest *request, const char *name);
 
     void (*add_form)(struct LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* content);
-    void (*add_file_content)(struct LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,char* extension);
+    void (*add_file_content)(struct LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,const char* extension);
 
 } LwqqHttpRequest;
 
