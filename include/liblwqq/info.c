@@ -31,6 +31,7 @@ static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
 char *get_group_qqnumber(LwqqClient *lc, const char *code);
 static void get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
+static void get_avatar_back(LwqqHttpRequest* req,void* data);
 
 /**
  * Get the result object in a json object.
@@ -405,7 +406,6 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    //req->set_header(req,"Cache-Control","max-age=0");
     ret = req->do_request(req, 0, NULL);
 
     if(ret||(req->http_code!=200 && req->http_code!=304)){
@@ -464,6 +464,9 @@ done:
         return 1;
     }
     return 0;
+}
+static void get_avatar_back(LwqqHttpRequest* req,void* data)
+{
 }
 
 /**

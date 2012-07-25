@@ -302,6 +302,10 @@ static void get_verify_image(LwqqClient *lc)
         }
         close(fd);
     }
+
+    lc->vc->data = req->response;
+    lc->vc->size = req->resp_len;
+    req->response = NULL;
  
 failed:
     lwqq_http_request_free(req);

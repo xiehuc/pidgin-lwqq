@@ -53,7 +53,6 @@ static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
 
     const char *h = ghttp_get_header(request->req, name);
     if (!h) {
-        lwqq_log(LOG_WARNING, "Cant get http header: %s\n", name);
         return NULL;
     }
 

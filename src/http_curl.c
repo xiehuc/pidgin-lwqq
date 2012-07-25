@@ -9,8 +9,7 @@
 #include "http.h"
 #include "logger.h"
 
-#define LWQQ_HTTP_USER_AGENT "User-Agent: Mozilla/5.0 \
-(X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
+#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
 
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -88,14 +87,14 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
 static void lwqq_http_set_default_header(LwqqHttpRequest *request)
 {
     lwqq_http_set_header(request, "User-Agent", LWQQ_HTTP_USER_AGENT);
-    lwqq_http_set_header(request, "Accept", "text/html, application/xml;q=0.9, "
+    lwqq_http_set_header(request, "Accept", "*/*,text/html, application/xml;q=0.9, "
                          "application/xhtml+xml, image/png, image/jpeg, "
-                         "image/gif, image/x-xbitmap, */*;q=0.1");
+                         "image/gif, image/x-xbitmap,;q=0.1");
     lwqq_http_set_header(request, "Accept-Language", "en-US,zh-CN,zh;q=0.9,en;q=0.8");
     lwqq_http_set_header(request, "Accept-Charset", "GBK, utf-8, utf-16, *;q=0.1");
     lwqq_http_set_header(request, "Accept-Encoding", "deflate, gzip, x-gzip, "
                          "identity, *;q=0");
-    lwqq_http_set_header(request, "Connection", "Keep-Alive");
+    //lwqq_http_set_header(request, "Connection", "Keep-Alive");
 }
 
 static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
@@ -115,7 +114,6 @@ static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
         list = list->next;
     }
     if (!h) {
-        lwqq_log(LOG_WARNING, "Cant get http header: %s\n", name);
         return NULL;
     }
 
@@ -167,6 +165,11 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
     
     if (request) {
         s_free(request->response);
+        struct curl_slist* list = request->header;
+        if(list->data == NULL) {
+            request->header = list->next;
+            free(list);
+        }
         curl_slist_free_all(request->header);
         curl_slist_free_all(request->recv_head);
         slist_free_all(request->cookie);
@@ -194,14 +197,12 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
 static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
 {
     LwqqHttpRequest* request = (LwqqHttpRequest*) userdata;
+    long http_code;
+    curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
+    //this is a redirection. ignore it.
+    if(http_code == 301||http_code == 302)
+        return size*nmemb;
     int resp_len = request->resp_len;
-    /*if(s==-1.0){
-        request->response = s_realloc(request->response,resp_len+size*nmemb+5);
-    }
-    if(request->response==NULL){
-        //add one to ensure the last \0;
-        resp_len = 0;
-    }*/
     if(request->response==NULL){
         const char* content_length = request->get_header(request,"Content-Length");
         if(content_length){
@@ -242,16 +243,23 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
         /* Seem like request->req must be non null. FIXME */
         goto failed;
     }
+    /*char* ptr = strchr(uri,'?');
+    if(ptr){
+        *ptr = '\0';
+        curl_easy_setopt(request->req,CURLOPT_HTTPGET,ptr+1);
+    }*/
     if(curl_easy_setopt(request->req,CURLOPT_URL,uri)!=0){
         lwqq_log(LOG_WARNING, "Invalid uri: %s\n", uri);
         goto failed;
     }
+    //if(ptr) *ptr = '?';
     
     curl_easy_setopt(request->req,CURLOPT_HEADERFUNCTION,write_header);
     curl_easy_setopt(request->req,CURLOPT_HEADERDATA,request);
     curl_easy_setopt(request->req,CURLOPT_WRITEFUNCTION,write_content);
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
+    //curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -387,7 +395,8 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
     have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
 
-    /* NB: *response may null */
+    // NB: *response may null 
+    // jump it .that is no problem.
     if (*resp == NULL) {
         goto failed;
     }
@@ -413,12 +422,6 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
     }
     s_free(enc_type);
 
-    /* OK, done */
-    if ((*resp)[have_read_bytes -1] != '\0') {
-        // Realloc a byte, cause *resp hasn't end with char '\0' 
-        *resp = s_realloc(*resp, have_read_bytes + 1);
-        (*resp)[have_read_bytes] = '\0';
-    }
     return 0;
 
 failed:

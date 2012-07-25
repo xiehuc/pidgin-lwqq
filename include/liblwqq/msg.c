@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
+#include <curl/curl.h>
 
 #include "type.h"
 #include "smemory.h"
@@ -116,6 +117,7 @@ static void lwqq_msg_message_free(void *opaque)
     s_free(msg->f_name);
     s_free(msg->f_color);
     s_free(msg->group_code);
+    s_free(msg->msg_id);
 
     LwqqMsgContent *c;
     TAILQ_FOREACH(c, &msg->content, entries) {
@@ -301,15 +303,20 @@ static int parse_content(json_t *json, void *opaque)
                 TAILQ_INSERT_TAIL(&msg->content,c,entries);
             } else if(!strcmp(buf,"cface")){
                 //["cface",{"name":"0C3AED06704CA9381EDCC20B7F552802.jPg","file_id":914490174,"key":"YkC3WaD3h5pPxYrY","server":"119.147.15.201:443"}]
+                //["cface","0C3AED06704CA9381EDCC20B7F552802.jPg",""]
                 LwqqMsgContent* c = s_malloc0(sizeof(*c));
                 c->type = LWQQ_CONTENT_CFACE;
                 c->data.cface.name = s_strdup(json_parse_simple_value(ctent,"name"));
-                c->data.cface.file_id = s_strdup(json_parse_simple_value(ctent,"file_id"));
-                c->data.cface.key = s_strdup(json_parse_simple_value(ctent,"key"));
-                char* server = s_strdup(json_parse_simple_value(ctent,"server"));
-                char* split = strchr(server,':');
-                strncpy(c->data.cface.serv_ip,server,split-server);
-                strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
+                if(c->data.cface.name!=NULL){
+                    c->data.cface.file_id = s_strdup(json_parse_simple_value(ctent,"file_id"));
+                    c->data.cface.key = s_strdup(json_parse_simple_value(ctent,"key"));
+                    char* server = s_strdup(json_parse_simple_value(ctent,"server"));
+                    char* split = strchr(server,':');
+                    strncpy(c->data.cface.serv_ip,server,split-server);
+                    strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
+                }else{
+                    c->data.cface.name = s_strdup(ctent->child->next->text);
+                }
                 TAILQ_INSERT_TAIL(&msg->content,c,entries);
             }
         } else if (ctent->type == JSON_STRING) {
@@ -355,8 +362,8 @@ static int parse_new_msg(json_t *json, void *opaque)
     time = json_parse_simple_value(json, "time");
     time = time ?: "0";
     msg->time = (time_t)strtoll(time, NULL, 10);
-
     msg->to = s_strdup(json_parse_simple_value(json, "to_uin"));
+    msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
 
     //if it failed means it is not group message.
     //so it equ NULL.
@@ -402,6 +409,20 @@ static int parse_status_change(json_t *json, void *opaque)
 
     return 0;
 }
+const char* get_host_of_url(const char* url,char* buffer)
+{
+    const char* ptr;
+    const char* end;
+    ptr = strstr(url,"://");
+    if (ptr == NULL) return NULL;
+    ptr+=3;
+    end = strstr(ptr,"/");
+    if(end == NULL)
+        strcpy(buffer,ptr);
+    else
+        strncpy(buffer,ptr,end-ptr);
+    return buffer;
+}
 static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
@@ -410,6 +431,7 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     char* cookies;
     int ret;
     char url[512];
+    char piece[64] = {0};
     char *file_path = url_encode(c->data.img.file_path);
     //there are face 1 to face 10 server to accelerate speed.
     snprintf(url, sizeof(url),
@@ -429,7 +451,6 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    //req->set_header(req,"Cache-Control","max-age=0");
     ret = req->do_request(req, 0, NULL);
 
     if(ret||(req->http_code!=200 && req->http_code!=302)){
@@ -438,11 +459,12 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
             goto done;
         }
     }
-    const char* location = req->get_header(req,"Location");
+    char* location = req->get_header(req,"Location");
     lwqq_http_request_free(req);
 
     req = lwqq_http_create_default_request(location,err);
     req->set_header(req,"Referer","http://web2.qq.com");
+    req->set_header(req,"Host",get_host_of_url(location,piece));
 
     ret = req->do_request(req,0,NULL);
 
@@ -458,6 +480,7 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     req->response = NULL;
     
 done:
+    s_free(location);
     lwqq_http_request_free(req);
 }
 static void request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
@@ -487,6 +510,7 @@ static void request_content_cface(LwqqClient* lc,const char* group_code,const ch
         s_free(cookies);
     }
 
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     ret = req->do_request(req,0,NULL);
 
     if(ret||req->http_code!=200){
@@ -501,16 +525,86 @@ static void request_content_cface(LwqqClient* lc,const char* group_code,const ch
     req->response = NULL;
 done:
     lwqq_http_request_free(req);
-
 }
-static void request_msg_offpic(LwqqClient* lc,LwqqMsgMessage* msg)
+static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char* from_uin,LwqqMsgContent* c)
+{
+    LwqqHttpRequest* req;
+    LwqqErrorCode error;
+    LwqqErrorCode *err = &error;
+    char* cookies;
+    int ret;
+    char url[512];
+    char piece[64] = {0};
+/*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
+    snprintf(url, sizeof(url),
+             "%s/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
+             "http://d.web2.qq.com/channel",
+             msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
+    req = lwqq_http_create_default_request(url, err);
+    if (!req) {
+        goto done;
+    }
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,1);
+    req->set_header(req, "Referer", "http://web2.qq.com/");
+    ///this is very important!!!!!!!!!
+    //req->set_header(req, "Host", "d.web2.qq.com");
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+
+    ret = req->do_request(req,0,NULL);
+
+    if(ret||(req->http_code!=302&&req->http_code!=200)){
+        goto done;
+    }
+
+    char* location = req->get_header(req,"Location");
+    lwqq_http_request_free(req);
+
+    //oh shit. why can not directly use location as url.
+    //it product 404 err.because curl send get command error like this:
+    //get a.jpg?p=1234 HTTP/1.1 5678? fuck!!
+    //it should be:
+    //get a.jpg?p=12345678 HTTP/1.1
+    *strchr(location,'?') = '\0';
+    snprintf(url,sizeof(url),"%s?psessionid=%s",
+            location,lc->psessionid);
+    req = lwqq_http_request_new(url);
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //req = lwqq_http_create_default_request(location,err);
+    req->set_header(req,"Referer","http://web2.qq.com/");
+
+    ret = req->do_request(req,0,NULL);
+
+    if(ret||req->http_code!=200){
+        if(err){
+            *err = LWQQ_EC_HTTP_ERROR;
+            goto done;
+        }
+    }
+
+    c->data.cface.data = req->response;
+    c->data.cface.size = req->resp_len;
+    req->response = NULL;
+
+done:
+    s_free(location);
+    lwqq_http_request_free(req);
+}
+static void request_msg_offpic(LwqqClient* lc,int type,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
     TAILQ_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
             request_content_offpic(lc,msg->from,c);
         }else if(c->type == LWQQ_CONTENT_CFACE){
-            request_content_cface(lc,msg->group_code,msg->send,c);
+            if(type == LWQQ_MT_BUDDY_MSG)
+                request_content_cface2(lc,msg->msg_id,msg->from,c);
+            else
+                request_content_cface(lc,msg->group_code,msg->send,c);
         }
     }
 }
@@ -565,7 +659,7 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         case LWQQ_MT_BUDDY_MSG:
         case LWQQ_MT_GROUP_MSG:
             ret = parse_new_msg(cur, msg->opaque);
-            request_msg_offpic(list->lc,msg->opaque);
+            request_msg_offpic(list->lc,msg->type,msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);

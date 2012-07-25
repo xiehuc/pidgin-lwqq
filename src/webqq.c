@@ -3,6 +3,7 @@
 #include <plugin.h>
 #include <version.h>
 #include <smemory.h>
+#include <request.h>
 #include "internal.h"
 #include "webqq.h"
 #include "qq_types.h"
@@ -182,6 +183,14 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
                     strcat(buf,"【图片】");
                 }
                 break;
+            case LWQQ_CONTENT_CFACE:
+                if(c->data.cface.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else
+                    strcat(buf,"【图片】");
+                break;
         }
     }
     serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
@@ -289,6 +298,9 @@ static void avatar_complete(LwqqClient* lc,void* data)
         }
     }
 }
+static void friend_avatar(LwqqClient* lc,void* data)
+{
+}
 void qq_msg_check(qq_account* ac)
 {
     LwqqClient* lc = ac->qq;
@@ -330,11 +342,55 @@ void qq_msg_check(qq_account* ac)
 
 }
 
+void qq_set_basic_info(qq_account* ac)
+{
+    LwqqClient* lc = ac->qq;
+    purple_account_set_alias(ac->account,lc->myself->nick);
+}
 
+static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
+{
+	const gchar *code;
+	code = purple_request_fields_get_string(fields, "code_entry");
+    ac->qq->vc->str = s_strdup(code);
+    background_login(ac);
+}
+static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
+{
+    PurpleConnection* gc = purple_account_get_connection(ac->account);
+	purple_connection_error_reason(gc,
+    					PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
+				       _("Login Failed."));
+}
+static void verify_come(LwqqClient* lc,void* data)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+	PurpleRequestFieldGroup *field_group;
+	PurpleRequestField *code_entry;
+	PurpleRequestField *code_pic;
+	PurpleRequestFields *fields;
+
+	fields = purple_request_fields_new();
+	field_group = purple_request_field_group_new((gchar*)0);
+	purple_request_fields_add_group(fields, field_group);
+
+	code_pic = purple_request_field_image_new("code_pic", _("Confirmation code"), lc->vc->data, lc->vc->size);
+	purple_request_field_group_add_field(field_group, code_pic);
+
+	code_entry = purple_request_field_string_new("code_entry", _("Please input the code"), "", FALSE);
+	purple_request_field_group_add_field(field_group, code_entry);
+
+	purple_request_fields(ac->account, NULL,
+		   		"验证码", (gchar*)0,
+				fields, _("OK"), G_CALLBACK(pic_ok_cb), 
+			   	_("Cancel"), G_CALLBACK(pic_cancel_cb),
+			   	ac->account, NULL, NULL, ac);
+
+}
 static void login_complete(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    PurpleConnection* gc = ac->gc;
+    PurpleConnection* gc = purple_account_get_connection(ac->account);
     LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
     if(err!=LWQQ_EC_OK)
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
@@ -343,17 +399,12 @@ static void login_complete(LwqqClient* lc,void* data)
 
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
+    lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     background_friends_info(ac);
 
-    purple_account_set_alias(ac->account,ac->qq->myself->nick);
-    /*if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
-        lwqq_info_get_friend_avatar(lc,lc->myself,NULL);*/
     background_msg_poll(ac);
 }
 
-static void show_verify_code(LwqqClient* lc,void* data)
-{
-}
 
 static void qq_login(PurpleAccount *account)
 {
@@ -368,7 +419,7 @@ static void qq_login(PurpleAccount *account)
 
     lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
     lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
-    lwqq_async_add_listener(ac->qq,VERIFY_COME,show_verify_code);
+    lwqq_async_add_listener(ac->qq,VERIFY_COME,verify_come);
     background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)

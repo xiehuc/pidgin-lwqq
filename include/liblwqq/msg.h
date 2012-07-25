@@ -53,6 +53,7 @@ typedef struct LwqqMsgMessage {
     char *to;
     char *send; /* only group use it to identify who send the group message */
     char *group_code; /* only avaliable in group message */
+    char *msg_id;
     time_t time;
 
     /* For font  */

@@ -58,12 +58,16 @@ static void* _background_friends_info(void* data)
     lwqq_info_get_online_buddies(ac->qq,&err);
     lwqq_info_get_group_name_list(ac->qq,&err);
 
+    purple_account_set_alias(ac->account,lc->myself->nick);
+
     lwqq_info_get_all_friend_qqnumbers(lc,&err);
 
     LwqqGroup* group;
     LIST_FOREACH(group,&ac->qq->groups,entries) {
         lwqq_info_get_friend_qqnumber(lc,group->gid);
     }
+
+    qq_set_basic_info(ac);
 
     return NULL;
 }

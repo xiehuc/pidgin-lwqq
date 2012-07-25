@@ -104,6 +104,8 @@ typedef struct LwqqVerifyCode {
     char *type;
     char *img;
     char *uin;
+    char *data;
+    size_t size;
 } LwqqVerifyCode ;
 
 typedef struct LwqqCookies {

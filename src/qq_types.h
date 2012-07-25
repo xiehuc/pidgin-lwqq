@@ -10,4 +10,5 @@ typedef struct qq_account {
     PurpleConnection* gc;
 } qq_account;
 void qq_msg_check(qq_account* ac);
+void qq_set_basic_info(qq_account* ac);
 #endif
