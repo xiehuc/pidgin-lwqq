@@ -75,7 +75,7 @@ typedef struct LwqqHttpRequest {
      * Get header, return a alloca memory, so caller has responsibility
      * free the memory
      */
-    char * (*get_header)(struct LwqqHttpRequest *request, const char *name);
+    const char * (*get_header)(struct LwqqHttpRequest *request, const char *name);
 
     /**
      * Get Cookie, return a alloca memory, so caller has responsibility

@@ -15,17 +15,13 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                  const char *value);
 static void lwqq_http_set_default_header(LwqqHttpRequest *request);
-static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name);
+static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name);
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name);
 static void lwqq_http_add_form(LwqqHttpRequest* request,LWQQ_FORM form,
         const char* name,const char* value);
 static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name,
         const char* filename,const void* data,size_t size,const char* extension);
 
-typedef struct CURLPOOL{
-    CURL *easy;
-    LIST_ENTRY(CURLPOOL) entries;
-}CURLPOOL;
 typedef struct GLOBAL {
     CURLM* multi;
     //struct ev_loop* loop;
@@ -97,7 +93,7 @@ static void lwqq_http_set_default_header(LwqqHttpRequest *request)
     //lwqq_http_set_header(request, "Connection", "Keep-Alive");
 }
 
-static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
+static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
 {
     if (!name) {
         lwqq_log(LOG_ERROR, "Invalid parameter\n");
@@ -113,11 +109,8 @@ static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
         }
         list = list->next;
     }
-    if (!h) {
-        return NULL;
-    }
 
-    return s_strdup(h);
+    return h;
 }
 static void lwqq_http_print_header(LwqqHttpRequest* request)
 {
@@ -185,6 +178,12 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
 {
     char* str = (char*)ptr;
     LwqqHttpRequest* request = (LwqqHttpRequest*) userdata;
+
+    long http_code;
+    curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
+    //this is a redirection. ignore it.
+    if(http_code == 301||http_code == 302)
+        return size*nmemb;
     request->recv_head = curl_slist_append(request->recv_head,(char*)ptr);
     //read cookie from header;
     if(strncmp(str,"Set-Cookie",strlen("Set-Cookie"))==0){
@@ -207,13 +206,14 @@ static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
         const char* content_length = request->get_header(request,"Content-Length");
         if(content_length){
             size_t length = atol(content_length);
-            request->response = s_malloc0(length+5);
+            request->response = s_malloc0(length+10);
             request->resp_realloc = 0;
         }else{
-            request->response = s_malloc0(size*nmemb+5);
+            request->response = s_malloc0(size*nmemb+10);
             request->resp_realloc = 1;
         }
         resp_len = 0;
+        request->resp_len = 0;
     }
     if(request->resp_realloc){
         request->response = s_realloc(request->response,resp_len+size*nmemb+5);
@@ -243,23 +243,17 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
         /* Seem like request->req must be non null. FIXME */
         goto failed;
     }
-    /*char* ptr = strchr(uri,'?');
-    if(ptr){
-        *ptr = '\0';
-        curl_easy_setopt(request->req,CURLOPT_HTTPGET,ptr+1);
-    }*/
     if(curl_easy_setopt(request->req,CURLOPT_URL,uri)!=0){
         lwqq_log(LOG_WARNING, "Invalid uri: %s\n", uri);
         goto failed;
     }
-    //if(ptr) *ptr = '?';
     
     curl_easy_setopt(request->req,CURLOPT_HEADERFUNCTION,write_header);
     curl_easy_setopt(request->req,CURLOPT_HEADERDATA,request);
     curl_easy_setopt(request->req,CURLOPT_WRITEFUNCTION,write_content);
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
-    //curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
+    curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -402,7 +396,7 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
     }
 
     /* Uncompress data here if we have a Content-Encoding header */
-    char *enc_type = NULL;
+    const char *enc_type = NULL;
     enc_type = lwqq_http_get_header(request, "Content-Encoding");
     if (enc_type && strstr(enc_type, "gzip")) {
         char *outdata;
@@ -410,7 +404,6 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         
         outdata = ungzip(*resp, have_read_bytes, &total);
         if (!outdata) {
-            s_free(enc_type);
             goto failed;
         }
 
@@ -420,7 +413,6 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         s_free(outdata);
         have_read_bytes = total;
     }
-    s_free(enc_type);
 
     return 0;
 
@@ -484,7 +476,7 @@ static void async_complete(D_ITEM* conn)
     }
 
     /* Uncompress data here if we have a Content-Encoding header */
-    char *enc_type = NULL;
+    const char *enc_type = NULL;
     enc_type = lwqq_http_get_header(request, "Content-Encoding");
     if (enc_type && strstr(enc_type, "gzip")) {
         char *outdata;
@@ -492,7 +484,6 @@ static void async_complete(D_ITEM* conn)
         
         outdata = ungzip(*resp, have_read_bytes, &total);
         if (!outdata) {
-            s_free(enc_type);
             goto failed;
         }
 
@@ -502,7 +493,6 @@ static void async_complete(D_ITEM* conn)
         s_free(outdata);
         have_read_bytes = total;
     }
-    s_free(enc_type);
 
     /* OK, done */
     if ((*resp)[have_read_bytes -1] != '\0') {

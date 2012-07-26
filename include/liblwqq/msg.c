@@ -453,22 +453,7 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     }
     ret = req->do_request(req, 0, NULL);
 
-    if(ret||(req->http_code!=200 && req->http_code!=302)){
-        if(err){
-            *err = LWQQ_EC_HTTP_ERROR;
-            goto done;
-        }
-    }
-    char* location = req->get_header(req,"Location");
-    lwqq_http_request_free(req);
-
-    req = lwqq_http_create_default_request(location,err);
-    req->set_header(req,"Referer","http://web2.qq.com");
-    req->set_header(req,"Host",get_host_of_url(location,piece));
-
-    ret = req->do_request(req,0,NULL);
-
-    if(ret||req->http_code!=200){
+    if(ret||(req->http_code!=200)){
         if(err){
             *err = LWQQ_EC_HTTP_ERROR;
             goto done;
@@ -480,8 +465,8 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     req->response = NULL;
     
 done:
-    s_free(location);
     lwqq_http_request_free(req);
+    return;
 }
 static void request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
 {
@@ -561,37 +546,12 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
         goto done;
     }
 
-    char* location = req->get_header(req,"Location");
-    lwqq_http_request_free(req);
-
-    //oh shit. why can not directly use location as url.
-    //it product 404 err.because curl send get command error like this:
-    //get a.jpg?p=1234 HTTP/1.1 5678? fuck!!
-    //it should be:
-    //get a.jpg?p=12345678 HTTP/1.1
-    *strchr(location,'?') = '\0';
-    snprintf(url,sizeof(url),"%s?psessionid=%s",
-            location,lc->psessionid);
-    req = lwqq_http_request_new(url);
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
-    //req = lwqq_http_create_default_request(location,err);
-    req->set_header(req,"Referer","http://web2.qq.com/");
-
-    ret = req->do_request(req,0,NULL);
-
-    if(ret||req->http_code!=200){
-        if(err){
-            *err = LWQQ_EC_HTTP_ERROR;
-            goto done;
-        }
-    }
 
     c->data.cface.data = req->response;
     c->data.cface.size = req->resp_len;
     req->response = NULL;
 
 done:
-    s_free(location);
     lwqq_http_request_free(req);
 }
 static void request_msg_offpic(LwqqClient* lc,int type,LwqqMsgMessage* msg)
