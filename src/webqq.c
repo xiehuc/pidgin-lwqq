@@ -14,6 +14,7 @@
 #include <type.h>
 #include <async.h>
 #include <msg.h>
+#include <info.h>
 
 static void group_member_list_come(LwqqClient* lc,void* data);
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
@@ -128,12 +129,15 @@ static void friend_come(LwqqClient* lc,void* data)
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,group,NULL);
-        if(buddy->avatar_len)
-            purple_buddy_icons_set_for_user(account, buddy->qqnumber, buddy->avatar, buddy->avatar_len, NULL);
     }
     if(buddy->status)
         purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
-
+    PurpleBuddyIcon* icon;
+    if((icon = purple_buddy_icons_find(account,buddy->qqnumber))==0){
+        lwqq_info_get_friend_avatar(lc,buddy);
+    }else{
+        purple_buddy_set_icon(purple_find_buddy(account,buddy->qqnumber),icon);
+    }
 }
 static void group_come(LwqqClient* lc,void* data)
 {
@@ -150,10 +154,10 @@ static void group_come(LwqqClient* lc,void* data)
         chat = purple_chat_new(account,group->account,components);
         purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
-        if(group->avatar_len)
-            purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     }
-
+    chat = purple_blist_find_chat(account,group->account);
+    if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==NULL)
+        lwqq_info_get_group_avatar(lc,group);
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -276,30 +280,34 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 
     purple_prpl_got_user_status(account,buddy->qqnumber,status->status,NULL);
 }
-static void avatar_complete(LwqqClient* lc,void* data)
+static void friend_avatar(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
-    LwqqBuddy* buddy;
-    LwqqGroup* group;
-    PurpleChat* chat;
-    //do not catch icons 
-    purple_buddy_icons_set_caching(0);
-    
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        if(buddy->avatar_len)
-            purple_buddy_icons_set_for_user(account, buddy->uin, buddy->avatar, buddy->avatar_len, NULL);
+    LwqqBuddy* buddy = data;
+    if(buddy->avatar_len==0)return;
+
+    if(strcmp(buddy->uin,purple_account_get_username(account))==0){
+        purple_buddy_icons_set_account_icon(account,(guchar*)buddy->avatar,buddy->avatar_len);
+    }else{
+        purple_buddy_icons_set_for_user(account,buddy->qqnumber,(guchar*)buddy->avatar,buddy->avatar_len,NULL);
     }
-    LIST_FOREACH(group,&lc->groups,entries){
-        if(group->avatar_len){
-            chat = purple_blist_find_chat(account,group->gid);
-            if(chat==NULL) continue;
-            purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
-        }
-    }
+    //let free by purple;
+    buddy->avatar = NULL;
 }
-static void friend_avatar(LwqqClient* lc,void* data)
+static void group_avatar(LwqqClient* lc,void* data)
 {
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleAccount* account = ac->account;
+    LwqqGroup* group = data;
+    PurpleChat* chat;
+    if(group->avatar_len==0)return;
+
+    chat = purple_blist_find_chat(account,group->account);
+    if(chat==NULL) return;
+    purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
+    //let free by purple;
+    group->avatar = NULL;
 }
 void qq_msg_check(qq_account* ac)
 {
@@ -400,6 +408,7 @@ static void login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
+    lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     background_friends_info(ac);
 
     background_msg_poll(ac);
@@ -416,6 +425,7 @@ static void qq_login(PurpleAccount *account)
     ac->qq = lwqq_client_new(username,password);
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
+    purple_buddy_icons_set_caching(1);
 
     lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
     lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
@@ -435,6 +445,8 @@ static void qq_close(PurpleConnection *gc)
     lwqq_client_free(ac->qq);
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
+    //force save.for telepathy-haze
+    purple_blist_schedule_save();
 }
 
 //send a message to a friend.

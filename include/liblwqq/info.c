@@ -16,7 +16,6 @@
 #include <utime.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <locale.h>
 
 #include "info.h"
 #include "url.h"
@@ -350,7 +349,7 @@ json_error:
     lwqq_http_request_free(req);
 }
 
-int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,const char* qqnumber,LwqqErrorCode *err)
+/*int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* len,const char* qqnumber,LwqqErrorCode *err)
 {
     static int serv_id = 0;
     if(!lc||!uin||!avatar||!len) return 0;
@@ -358,7 +357,6 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
     if(*len) return 0;
 
     //to avoid chinese character
-    setlocale(LC_TIME,"en_US.utf8");
     //first we try to read from disk
     char path[32];
     int hasfile=0;
@@ -381,12 +379,13 @@ int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,char** avatar,size_t* 
     int ret;
     char url[512];
     char host[32];
+    int type = (isgroup)?4:1;
     //there are face 1 to face 10 server to accelerate speed.
     snprintf(host,sizeof(host),"face%d.qun.qq.com",++serv_id);
     serv_id %= 10;
     snprintf(url, sizeof(url),
-             "http://%s/cgi/svr/face/getface?cache=0&type=1&fid=0&uin=%s&vfwebqq=%s",
-             host,uin, lc->vfwebqq);
+             "http://%s/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%s&vfwebqq=%s",
+             host,type,uin, lc->vfwebqq);
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
@@ -464,9 +463,149 @@ done:
         return 1;
     }
     return 0;
+}*/
+void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
+{
+    static int serv_id = 0;
+    if(!lc||!grouporbuddy) return ;
+    //there have avatar already do not repeat work;
+    LwqqBuddy* buddy = NULL;
+    LwqqGroup* group = NULL;
+    LwqqErrorCode error;
+    if(isgroup) group = grouporbuddy;
+    else buddy = grouporbuddy;
+    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    const char* uin = (isgroup)?group->code:buddy->uin;
+
+    //to avoid chinese character
+    //setlocale(LC_TIME,"en_US.utf8");
+    //first we try to read from disk
+    char path[32];
+    time_t modify=0;
+    if(qqnumber) {
+        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
+        struct stat st = {0};
+        //we read it last modify date
+        stat(path,&st);
+        modify = st.st_mtime;
+    }
+    //we send request if possible with modify time
+    //to reduce download rate
+    LwqqHttpRequest* req;
+    char* cookies;
+    char url[512];
+    char host[32];
+    int type = (isgroup)?4:1;
+    //there are face 1 to face 10 server to accelerate speed.
+    snprintf(host,sizeof(host),"face%d.qun.qq.com",++serv_id);
+    serv_id %= 10;
+    snprintf(url, sizeof(url),
+             "http://%s/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%s&vfwebqq=%s",
+             host,type,uin, lc->vfwebqq);
+    req = lwqq_http_create_default_request(url, &error);
+    if (!req) {
+        goto done;
+    }
+    req->set_header(req, "Referer", "http://web2.qq.com/");
+    req->set_header(req,"Host",host);
+
+    //we ask server if it indeed need to update
+    if(modify) {
+        struct tm modify_tm;
+        char buf[32];
+        strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",localtime_r(&modify,&modify_tm) );
+        req->set_header(req,"If-Modified-Since",buf);
+    }
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    void** array = s_malloc0(sizeof(void*)*4);
+    array[0] = lc;
+    array[1] = buddy;
+    array[2] = group;
+    req->do_request_async(req, 0, NULL,get_avatar_back,array);
+    //req->do_request(req,0,NULL);
+    //get_avatar_back(req,array);
+done:
+    return;
 }
 static void get_avatar_back(LwqqHttpRequest* req,void* data)
 {
+    void** array = data;
+    LwqqClient* lc = array[0];
+    LwqqBuddy* buddy = array[1];
+    LwqqGroup* group = array[2];
+    s_free(data);
+    int ret;
+    int isgroup = (group !=NULL);
+    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    char** avatar = (isgroup)?&group->avatar:&buddy->avatar;
+    size_t* len = (isgroup)?&group->avatar_len:&buddy->avatar_len;
+
+    if((req->http_code!=200 && req->http_code!=304)){
+        goto done;
+    }
+
+    char path[32];
+    int hasfile=0;
+    size_t filesize=0;
+    if(qqnumber) {
+        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
+        struct stat st = {0};
+        //we read it last modify date
+        hasfile = !stat(path,&st);
+        filesize = st.st_size;
+    }
+    FILE* f;
+    //ok we need update our cache because 
+    //our cache outdate
+    if(req->http_code != 304) {
+        //we 'move' it instead of copy it
+        *avatar = req->response;
+        *len = req->resp_len;
+        req->response = NULL;
+        req->resp_len = 0;
+
+        //we cache it to file
+        if(qqnumber) {
+            f = fopen(path,"w");
+            if(f==NULL) {
+                mkdir(LWQQ_CACHE_DIR,0777);
+                f = fopen(path,"w");
+            }
+
+            fwrite(*avatar,1,*len,f);
+            fclose(f);
+            //we read last modify time from response header
+            struct tm wtm = {0};
+            strptime(req->get_header(req,"Last-Modified"),
+                    "%a, %d %b %Y %H:%M:%S GMT",&wtm);
+            //and write it to file
+            struct utimbuf wutime;
+            wutime.modtime = mktime(&wtm);
+            wutime.actime = wutime.modtime;//it is not important
+            utime(path,&wutime);
+        }
+        lwqq_http_request_free(req);
+        if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
+        else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
+        return;
+    }
+
+done:
+    lwqq_http_request_free(req);
+    //failed or we do not need update
+    //we read from file
+    if(hasfile){
+        f = fopen(path,"r");
+        *avatar = s_malloc(filesize);
+        fread(*avatar,1,filesize,f);
+        *len = filesize;
+    }
+    if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
+    else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
 }
 
 /**

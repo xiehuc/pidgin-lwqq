@@ -56,19 +56,14 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
  *         0 means failed
  */
 #define LWQQ_CACHE_DIR "/tmp/lwqq/"
-#define lwqq_info_get_friend_avatar(lc,buddy,err) \
-((buddy!=NULL) \
- ? _lwqq_info_get_avatar(lc,buddy->uin,&buddy->avatar,\
-            &buddy->avatar_len,buddy->qqnumber,err):NULL) 
+#define lwqq_info_get_friend_avatar(lc,buddy) \
+((buddy!=NULL) ? lwqq_info_get_avatar(lc,0,buddy):NULL) 
 
-#define lwqq_info_get_group_avatar(lc,group,err) \
-((group!=NULL) \
- ?  _lwqq_info_get_avatar(lc,group->gid,&group->avatar,\
-            &group->avatar_len,group->account,err):NULL) 
+#define lwqq_info_get_group_avatar(lc,group) \
+((group!=NULL) ? lwqq_info_get_avatar(lc,1,group):NULL) 
 
 
-int _lwqq_info_get_avatar(LwqqClient * lc,const char* uin,
-        char** avatar,size_t* len,const char* qqnumber,LwqqErrorCode *err);
+void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy);
 /** 
  * Get all friends qqnumbers
  * 

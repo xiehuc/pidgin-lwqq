@@ -12,13 +12,6 @@ do{pthread_t th;\
     pthread_create(&th,NULL,thread,data);\
 }while(0)
 
-typedef struct {
-    LwqqClient* lc;
-    union {
-        LwqqBuddy* buddy;
-        LwqqGroup* group;
-    };
-} ThreadFuncPar;
 
 static void* _background_login(void* data)
 {

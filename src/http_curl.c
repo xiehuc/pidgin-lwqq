@@ -42,8 +42,8 @@ typedef struct S_ITEM {
 }S_ITEM;
 typedef struct D_ITEM{
     LwqqAsyncCallback callback;
-    void* data;
     LwqqHttpRequest* req;
+    void* data;
 }D_ITEM;
 /* For async request */
 static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -158,11 +158,6 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
     
     if (request) {
         s_free(request->response);
-        struct curl_slist* list = request->header;
-        if(list->data == NULL) {
-            request->header = list->next;
-            free(list);
-        }
         curl_slist_free_all(request->header);
         curl_slist_free_all(request->recv_head);
         slist_free_all(request->cookie);
@@ -357,72 +352,6 @@ static char *ungzip(const char *source, int len, int *total)
     return unzlib(source, len, total, 1);
 }
 
-static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body)
-{
-    if (!request->req)
-        return -1;
-
-    int have_read_bytes = 0;
-    char **resp = &request->response;
-
-    /* Clear off last response */
-    if (*resp) {
-        s_free(*resp);
-        *resp = NULL;
-        request->http_code = 0;
-        request->resp_len = 0;
-        curl_slist_free_all(request->recv_head);
-        request->recv_head = NULL;
-    }
-
-    /* Set http method */
-    if (method==0){
-    }else if (method == 1 && body) {
-        curl_easy_setopt(request->req,CURLOPT_POST,1);
-        curl_easy_setopt(request->req,CURLOPT_COPYPOSTFIELDS,body);
-    } else {
-        lwqq_log(LOG_WARNING, "Wrong http method\n");
-        goto failed;
-    }
-
-    curl_easy_perform(request->req);
-    have_read_bytes = request->resp_len;
-    curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
-
-    // NB: *response may null 
-    // jump it .that is no problem.
-    if (*resp == NULL) {
-        goto failed;
-    }
-
-    /* Uncompress data here if we have a Content-Encoding header */
-    const char *enc_type = NULL;
-    enc_type = lwqq_http_get_header(request, "Content-Encoding");
-    if (enc_type && strstr(enc_type, "gzip")) {
-        char *outdata;
-        int total = 0;
-        
-        outdata = ungzip(*resp, have_read_bytes, &total);
-        if (!outdata) {
-            goto failed;
-        }
-
-        s_free(*resp);
-        /* Update response data to uncompress data */
-        *resp = s_strdup(outdata);
-        s_free(outdata);
-        have_read_bytes = total;
-    }
-
-    return 0;
-
-failed:
-    if (*resp) {
-        s_free(*resp);
-        *resp = NULL;
-    }
-    return 0;
-}
 
 /** 
  * Create a default http request object using default http header.
@@ -464,11 +393,17 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
 static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
+    char* url;
+    curl_easy_getinfo(request->req,CURLINFO_EFFECTIVE_URL,&url);
+    puts("urlcome:");
+    puts(url);
+    char* temptest = strstr(url,"getface");
     int have_read_bytes;
     char** resp = &request->response;
 
     have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
+    printf("%d\n",request->http_code);
 
     /* NB: *response may null */
     if (*resp == NULL) {
@@ -493,22 +428,8 @@ static void async_complete(D_ITEM* conn)
         s_free(outdata);
         have_read_bytes = total;
     }
-
-    /* OK, done */
-    if ((*resp)[have_read_bytes -1] != '\0') {
-        // Realloc a byte, cause *resp hasn't end with char '\0' 
-        *resp = s_realloc(*resp, have_read_bytes + 1);
-        (*resp)[have_read_bytes] = '\0';
-    }
-
-    conn->callback(request,conn->data);
-    return ;
-
 failed:
-    if (*resp) {
-        s_free(*resp);
-        *resp = NULL;
-    }
+    conn->callback(request,conn->data);
     return ;
 }
 
@@ -606,6 +527,7 @@ static int delay_add_handle(void* data)
 {
     D_ITEM* di = data;
     CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
+
     if(rc != CURLM_OK){
         puts(curl_multi_strerror(rc));
     }
@@ -624,6 +546,10 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
     if (*resp) {
         s_free(*resp);
         *resp = NULL;
+        request->http_code = 0;
+        request->resp_len = 0;
+        curl_slist_free_all(request->recv_head);
+        request->recv_head = NULL;
     }
 
     /* Set http method */
@@ -640,12 +566,80 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
         lwqq_http_global_init();
     }
     D_ITEM* di = s_malloc0(sizeof(*di));
-    di->callback = callback;
-    di->data = data;
-    di->req = request;
     curl_easy_setopt(request->req,CURLOPT_PRIVATE,di);
+    di->callback = callback;
+    di->req = request;
+    di->data = data;
+    char* url;
+    curl_easy_getinfo(di->req->req,CURLINFO_EFFECTIVE_URL,&url);
+    puts(url);
     purple_timeout_add(50,delay_add_handle,di);
     return 0;
+
+failed:
+    if (*resp) {
+        s_free(*resp);
+        *resp = NULL;
+    }
+    return 0;
+}
+static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body)
+{
+    if (!request->req)
+        return -1;
+
+    int have_read_bytes = 0;
+    char **resp = &request->response;
+
+    /* Clear off last response */
+    if (*resp) {
+        s_free(*resp);
+        *resp = NULL;
+        request->http_code = 0;
+        request->resp_len = 0;
+        curl_slist_free_all(request->recv_head);
+        request->recv_head = NULL;
+    }
+
+    /* Set http method */
+    if (method==0){
+    }else if (method == 1 && body) {
+        curl_easy_setopt(request->req,CURLOPT_POST,1);
+        curl_easy_setopt(request->req,CURLOPT_COPYPOSTFIELDS,body);
+    } else {
+        lwqq_log(LOG_WARNING, "Wrong http method\n");
+        goto failed;
+    }
+
+    curl_easy_perform(request->req);
+    have_read_bytes = request->resp_len;
+    curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
+
+    // NB: *response may null 
+    // jump it .that is no problem.
+    if (*resp == NULL) {
+        goto failed;
+    }
+
+    /* Uncompress data here if we have a Content-Encoding header */
+    const char *enc_type = NULL;
+    enc_type = lwqq_http_get_header(request, "Content-Encoding");
+    if (enc_type && strstr(enc_type, "gzip")) {
+        char *outdata;
+        int total = 0;
+        
+        outdata = ungzip(*resp, have_read_bytes, &total);
+        if (!outdata) {
+            goto failed;
+        }
+
+        s_free(*resp);
+        /* Update response data to uncompress data */
+        *resp = s_strdup(outdata);
+        s_free(outdata);
+        have_read_bytes = total;
+    }
+
     return 0;
 
 failed:
