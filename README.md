@@ -13,6 +13,9 @@ support for empathy(telepathy-haze):
 send / recv text message
 avatar
 
+telepathy-haze itself not support 
+group or picture.
+
 note:
 telepathy-haze never store buddy list!!
 it only save file in /tmp/haze-XXXXXX

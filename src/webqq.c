@@ -4,12 +4,13 @@
 #include <version.h>
 #include <smemory.h>
 #include <request.h>
+#include <signal.h>
 #include "internal.h"
 #include "webqq.h"
 #include "qq_types.h"
 #include "login.h"
 #include "background.h"
-#include "tranverse.h"
+#include "translate.h"
 
 #include <type.h>
 #include <async.h>
@@ -18,6 +19,7 @@
 
 static void group_member_list_come(LwqqClient* lc,void* data);
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
+static void client_connect_signals(void);
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -415,39 +417,6 @@ static void login_complete(LwqqClient* lc,void* data)
 }
 
 
-static void qq_login(PurpleAccount *account)
-{
-    PurpleConnection* pc= purple_account_get_connection(account);
-    qq_account* ac = qq_account_new(account);
-    const char* username = purple_account_get_username(account);
-    const char* password = purple_account_get_password(account);
-    ac->gc = pc;
-    ac->qq = lwqq_client_new(username,password);
-    lwqq_async_set(ac->qq,1);
-    purple_connection_set_protocol_data(pc,ac);
-    purple_buddy_icons_set_caching(1);
-
-    lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
-    lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
-    lwqq_async_add_listener(ac->qq,VERIFY_COME,verify_come);
-    background_login(ac);
-}
-static void qq_close(PurpleConnection *gc)
-{
-    qq_account* ac = purple_connection_get_protocol_data(gc);
-    LwqqErrorCode err;
-
-    //lwqq_async_set(ac->qq,0);
-    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
-        background_msg_drain(ac);
-        lwqq_logout(ac->qq,&err);
-    }
-    lwqq_client_free(ac->qq);
-    qq_account_free(ac);
-    purple_connection_set_protocol_data(gc,NULL);
-    //force save.for telepathy-haze
-    purple_blist_schedule_save();
-}
 
 //send a message to a friend.
 //called by purple
@@ -468,7 +437,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
     
-    tranverse_message_to_struct(lc,buddy->uin,what,mmsg,0);
+    translate_message_to_struct(lc,buddy->uin,what,mmsg,0);
 
     lwqq_msg_send(lc,msg);
 
@@ -499,7 +468,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
     
-    tranverse_message_to_struct(lc,gid,message,mmsg,1);
+    translate_message_to_struct(lc,gid,message,mmsg,1);
 
     lwqq_msg_send(lc,msg);
 
@@ -633,8 +602,50 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
     return NULL;
 }
 
+static void on_create(void *data)
+{
+    //on conversation create we add smileys to it.
+    PurpleConversation* conv = data;
+    translate_add_smiley_to_conversation(conv);
+}
+static void qq_login(PurpleAccount *account)
+{
+    //purple_conversations_set_ui_ops(&webqq_simple_ui_ops);
+    translate_global_init();
+    PurpleConnection* pc= purple_account_get_connection(account);
+    qq_account* ac = qq_account_new(account);
+    const char* username = purple_account_get_username(account);
+    const char* password = purple_account_get_password(account);
+    ac->gc = pc;
+    ac->qq = lwqq_client_new(username,password);
+    lwqq_async_set(ac->qq,1);
+    purple_connection_set_protocol_data(pc,ac);
+    //purple_buddy_icons_set_caching(1);
+    client_connect_signals();
+
+    lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
+    lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
+    lwqq_async_add_listener(ac->qq,VERIFY_COME,verify_come);
+    background_login(ac);
+}
+static void qq_close(PurpleConnection *gc)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqErrorCode err;
+
+    //lwqq_async_set(ac->qq,0);
+    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
+        background_msg_drain(ac);
+        lwqq_logout(ac->qq,&err);
+    }
+    lwqq_client_free(ac->qq);
+    qq_account_free(ac);
+    purple_connection_set_protocol_data(gc,NULL);
+    translate_global_free();
+    //force save.for telepathy-haze
+}
 static void
-init_plugin(PurplePlugin *UNUSED(plugin))
+init_plugin(PurplePlugin *plugin)
 {
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
@@ -643,7 +654,14 @@ init_plugin(PurplePlugin *UNUSED(plugin))
     textdomain(GETTEXT_PACKAGE);
 #endif
 }
+static void client_connect_signals(void)
+{
+    static int handle;
 
+    void* h = &handle;
+    purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
+            PURPLE_CALLBACK(on_create),NULL);
+}
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,
@@ -690,7 +708,7 @@ static PurplePluginInfo info = {
     .author=        "xiehuc<xiehuc@gmail.com>", /* author */
     .homepage=      "https://github.com/xiehuc/pidgin-lwqq",
     .extra_info=    &webqq_prpl_info, /* extra_info */
-    .actions=       plugin_actions
+    .actions=       plugin_actions,
 };
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)

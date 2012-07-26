@@ -393,17 +393,11 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
 static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
-    char* url;
-    curl_easy_getinfo(request->req,CURLINFO_EFFECTIVE_URL,&url);
-    puts("urlcome:");
-    puts(url);
-    char* temptest = strstr(url,"getface");
     int have_read_bytes;
     char** resp = &request->response;
 
     have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
-    printf("%d\n",request->http_code);
 
     /* NB: *response may null */
     if (*resp == NULL) {
@@ -570,9 +564,6 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
     di->callback = callback;
     di->req = request;
     di->data = data;
-    char* url;
-    curl_easy_getinfo(di->req->req,CURLINFO_EFFECTIVE_URL,&url);
-    puts(url);
     purple_timeout_add(50,delay_add_handle,di);
     return 0;
 
