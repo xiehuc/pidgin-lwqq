@@ -6,7 +6,12 @@
 #include <smiley.h>
 #include "translate.h"
 #include "trex.h"
-#define FACE_DIR "/usr/local/share/lwqq/icons/qqfaces/"
+
+#ifndef INST_PREFIX
+#define INST_PREFIX "/usr/local"
+#endif
+
+#define FACE_DIR INST_PREFIX"/share/lwqq/icons/qqfaces/"
 static GHashTable* smily_table;
 static TRex* _regex;
 const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE \\d+\\]|"
