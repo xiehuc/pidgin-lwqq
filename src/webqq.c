@@ -667,10 +667,10 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .list_icon=         qq_list_icon,   /* list_icon */
     .login=             qq_login,       /* login */
     .close=             qq_close,       /* close */
-    NULL,//twitter_status_text, /* status_text */
+    //NULL,//twitter_status_text, /* status_text */
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
-    NULL,                   /* blist_node_menu */
+    //NULL,                   /* blist_node_menu */
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
