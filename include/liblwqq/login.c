@@ -285,10 +285,9 @@ static void get_verify_image(LwqqClient *lc)
         goto failed;
     }
  
-    char *content_length = req->get_header(req, "Content-Length");
+    const char *content_length = req->get_header(req, "Content-Length");
     if (content_length) {
         image_length = atoi(content_length);
-        s_free(content_length);
     }
     update_cookies(lc->cookies, req, "verifysession", 1);
     snprintf(image_file, sizeof(image_file), "/tmp/%s.jpeg", lc->username);

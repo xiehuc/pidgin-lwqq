@@ -1,13 +1,14 @@
 pidgin-lwqq
 ===========
 
-a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol
+a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol\n
 
 support for pidgin:
-send / recv text message
-send / recv picture message
-send / recv group message
-avatar
+send / recv text message \n
+send / recv picture message \n
+send / recv group message \n
+recv qq face \n
+avatar \n
 
 support for empathy(telepathy-haze):
 send / recv text message

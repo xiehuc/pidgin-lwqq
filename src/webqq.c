@@ -158,7 +158,7 @@ static void group_come(LwqqClient* lc,void* data)
         purple_blist_add_chat(chat,gp,NULL);
     }
     chat = purple_blist_find_chat(account,group->account);
-    if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==NULL)
+    if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
@@ -520,8 +520,6 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     LwqqBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
-    PurpleConnection* gc = purple_account_get_connection(ac->account);
-    long id = atol(group->gid);
 
     PurpleConversation* conv = purple_find_chat(
             purple_account_get_connection(ac->account),atoi(group->gid));
@@ -529,7 +527,7 @@ static void group_member_list_come(LwqqClient* lc,void* data)
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             flag |= PURPLE_CBFLAGS_TYPING;
-            if(buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin)){
+            if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))){
                 purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),buddy->qqnumber,NULL,flag,FALSE);
             }else{
                 purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->nick,NULL,flag,FALSE);

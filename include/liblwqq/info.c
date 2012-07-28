@@ -538,7 +538,6 @@ static void get_avatar_back(LwqqHttpRequest* req,void* data)
     LwqqBuddy* buddy = array[1];
     LwqqGroup* group = array[2];
     s_free(data);
-    int ret;
     int isgroup = (group !=NULL);
     const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     char** avatar = (isgroup)?&group->avatar:&buddy->avatar;

@@ -431,7 +431,6 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
     char* cookies;
     int ret;
     char url[512];
-    char piece[64] = {0};
     char *file_path = url_encode(c->data.img.file_path);
     //there are face 1 to face 10 server to accelerate speed.
     snprintf(url, sizeof(url),
@@ -519,7 +518,6 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
     char* cookies;
     int ret;
     char url[512];
-    char piece[64] = {0};
 /*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
     snprintf(url, sizeof(url),
              "%s/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",

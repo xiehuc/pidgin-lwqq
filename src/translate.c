@@ -74,7 +74,6 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
     int img_id;
     LwqqMsgContent *c;
     puts(what);
-    const TRexChar *error = NULL;
     const char* begin,*end;
     TRexMatch m;
     TRex* x = _regex;
