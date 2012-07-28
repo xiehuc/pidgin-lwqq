@@ -14,37 +14,24 @@
 #include <plugin.h>
 #include <eventloop.h>
 #include "async.h"
+#include "smemory.h"
 typedef struct async_dispatch_data {
     ListenerType type;
     LwqqClient* client;
     int handle;
     void* data;
 } async_dispatch_data;
+typedef struct _LwqqAsyncLock {
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    int ref_count;
+}_LwqqAsyncLock;
+typedef struct _LwqqAsyncEvent {
+    LwqqAsyncLock* host_lock;
+}_LwqqAsyncEvent;
 
 static gboolean timeout_come(void* p);
 
-void lwqq_async_add_listener(LwqqClient* lc,ListenerType type,ASYNC_CALLBACK callback)
-{
-    LwqqAsync* async = lc->async;
-    async->listener[type] = callback;
-}
-void lwqq_async_set_userdata(LwqqClient* lc,ListenerType type,void *data)
-{
-    LwqqAsync* async = lc->async;
-    async->data[type] = data;
-}
-void* lwqq_async_get_userdata(LwqqClient* lc,ListenerType type)
-{
-    return lc->async->data[type];
-}
-void lwqq_async_set_error(LwqqClient* lc,ListenerType type,LwqqErrorCode err)
-{
-    lc->async->err[type] = err;
-}
-LwqqErrorCode lwqq_async_get_error(LwqqClient* lc,ListenerType type)
-{
-    return lc->async->err[type];
-}
 
 void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* param)
 {
@@ -71,88 +58,6 @@ static gboolean timeout_come(void* p)
     return 0;
 }
 
-/*thread_t th;
-int running=0;
-void* lwqq_async_thread(void* data)
-{
-    struct ev_loop* loop = EV_DEFAULT;
-    running=1;
-    while(1){
-        ev_run(loop,0);
-    }
-    running=0;
-}*/
-/*void check_start_thread(){
-    if(th==NULL) thread_init(th);
-    if(!running)
-        thread_create(th,lwqq_async_thread,NULL,"thread");
-}*/
-
-
-/*#define FOREACH_CALLBACK(prefix) \
-    while(async->prefix##_len>0){\
-        data = async->prefix##_data[--async->prefix##_len];\
-        async->prefix##_complete[async->prefix##_len](lc,request,data);\
-        async->prefix##_complete[async->prefix##_len] = NULL;\
-    }
-void lwqq_async_callback(async_watch_data* data){
-    LwqqClient* lc = data->client;
-    LwqqAsyncListener* async = lc->async;
-    LwqqHttpRequest* request = data->request;
-    ListenerType type = data->type;
-    switch(type){
-        case LOGIN_COMPLETE:
-            while(async->login_len>0){
-                data = async->login_data[--async->login_len];
-                async->login_complete[async->login_len](lc,request,data);
-                async->login_complete[async->login_len] = NULL;
-            }
-            break;
-        case FRIENDS_ALL_COMPLETE:
-            FOREACH_CALLBACK(friends_all);
-            break;
-    }
-
-}
-int lwqq_async_has_listener(LwqqClient* lc,ListenerType type)
-{
-    switch(type){
-        case LOGIN_COMPLETE:
-            return lc->async->login_complete!=NULL;
-            break;
-    }
-    return 0;
-}*/
-/*static void ev_io_come(EV_P_ ev_io* w,int revent)
-{
-    async_watch_data* data = (async_watch_data*)w->data;
-    ghttp_status status;
-    LwqqHttpRequest* request = data->request;
-    status = ghttp_process(request->req);
-    if(status!=ghttp_done) return ;
-
-    //restore do_request end part
-    lwqq_http_do_request_async(request);
-    lwqq_async_callback(data);
-
-
-    ev_io_stop(EV_DEFAULT,w);
-    free(data);
-    free(w);
-}
-void lwqq_async_watch(LwqqClient* client,LwqqHttpRequest* request,ListenerType type)
-{
-    ev_io *watcher = (ev_io*)malloc(sizeof(ev_io));
-    ghttp_request* req = (ghttp_request*)request->req;
-    ev_io_init(watcher,ev_io_come,ghttp_get_socket(req),EV_READ);
-    async_watch_data* data = malloc(sizeof(async_watch_data));
-    data->request = request;
-    data->type = type;
-    data->client = client;
-    watcher->data = data;
-    ev_io_start(EV_DEFAULT,watcher);
-    check_start_thread();
-}*/
 
 void lwqq_async_set(LwqqClient* client,int enabled)
 {
@@ -164,4 +69,45 @@ void lwqq_async_set(LwqqClient* client,int enabled)
         client->async=NULL;
     }
 
+}
+LwqqAsyncEvent* lwqq_async_event_new()
+{
+    return s_malloc0(sizeof(LwqqAsyncEvent));
+}
+LwqqAsyncLock* lwqq_async_lock_new()
+{
+    LwqqAsyncLock* l = s_malloc(sizeof(*l));
+    pthread_mutex_init(&l->lock,NULL);
+    pthread_cond_init(&l->cond,NULL);
+    l->ref_count = 0;
+    return l;
+}
+void lwqq_async_event_finish(LwqqAsyncEvent* event)
+{
+    if(event->host_lock !=NULL){
+        pthread_mutex_lock(&event->host_lock->lock);
+        event->host_lock->ref_count--;
+        pthread_mutex_unlock(&event->host_lock->lock);
+        if(event->host_lock->ref_count==0){
+            pthread_cond_signal(&event->host_lock->cond);
+        }
+    }
+    s_free(event);
+}
+void lwqq_async_lock_add_event(LwqqAsyncLock* host,LwqqAsyncEvent *handle)
+{
+    pthread_mutex_lock(&host->lock);
+    handle->host_lock = host;
+    host->ref_count++;
+    pthread_mutex_unlock(&host->lock);
+}
+
+void lwqq_async_wait(LwqqAsyncLock* host)
+{
+    pthread_mutex_lock(&host->lock);
+    if(host->ref_count>0){
+        pthread_cond_wait(&host->cond,&host->lock);
+    }
+    pthread_mutex_unlock(&host->lock);
+    s_free(host);
 }

@@ -5,6 +5,7 @@
 #include <plugin.h>
 #include <eventloop.h>
 #include <stdlib.h>
+#include "async.h"
 #include "smemory.h"
 #include "http.h"
 #include "logger.h"
@@ -43,6 +44,7 @@ typedef struct S_ITEM {
 typedef struct D_ITEM{
     LwqqAsyncCallback callback;
     LwqqHttpRequest* req;
+    LwqqAsyncEvent* event;
     void* data;
 }D_ITEM;
 /* For async request */
@@ -424,6 +426,7 @@ static void async_complete(D_ITEM* conn)
     }
 failed:
     conn->callback(request,conn->data);
+    lwqq_async_event_finish(conn->event);
     return ;
 }
 
@@ -564,6 +567,7 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
     di->callback = callback;
     di->req = request;
     di->data = data;
+    di->event = lwqq_async_event_new();
     purple_timeout_add(50,delay_add_handle,di);
     return 0;
 

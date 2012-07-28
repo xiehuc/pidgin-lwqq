@@ -12,16 +12,16 @@ PKG_CHECK_MODULES(GLIB REQUIRED  glib-2.0)
 PKG_CHECK_MODULES(CURL REQUIRED libcurl)
 ADD_LIBRARY (curldbg STATIC IMPORTED)
 SET_PROPERTY (TARGET curldbg PROPERTY IMPORTED_LOCATION /home/xiehuc/PROJECT/pidgin-lwqq/lib/libcurl7.24.a )
-ADD_EXECUTABLE(test 
-    test.c
-    ../include/liblwqq/async.c
-    ../include/liblwqq/http_curl.c
-    ${LWQQ_LIST}
-    )
-TARGET_LINK_LIBRARIES(test
-    ${CURL_LIBRARIES}
-    ev
-    )
+#ADD_EXECUTABLE(test 
+#    test.c
+#    ../include/liblwqq/async.c
+#    ../include/liblwqq/http_curl.c
+#    ${LWQQ_LIST}
+#    )
+#TARGET_LINK_LIBRARIES(test
+#    ${CURL_LIBRARIES}
+#    ev
+#    )
 
 ADD_LIBRARY(webqq MODULE 
     ${SRC_LIST} 
