@@ -441,7 +441,8 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     
     translate_message_to_struct(lc,buddy->uin,what,mmsg,0);
 
-    lwqq_msg_send(lc,msg);
+    int ret;
+    ret = lwqq_msg_send(lc,msg);
 
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;
@@ -449,7 +450,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 
     lwqq_msg_free(msg);
 
-    return 1;
+    return ret;
 }
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)

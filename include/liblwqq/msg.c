@@ -934,6 +934,7 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     const char *tonam;
     const char *apistr;
     int has_cface = 0;
+    json_t *root = NULL;
 
     if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
                  msg->type != LWQQ_MT_GROUP_MSG)) {
@@ -992,9 +993,6 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     puts(req->response);
 
     //we check result if ok return 1,fail return 0;
-    json_t *root = NULL;
-    if(strcasestr(req->response,"error")!=NULL)
-        goto failed;
     json_t *res;
     ret = json_parse_document(&root,req->response);
     res = get_result_json_object(root);
