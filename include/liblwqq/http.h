@@ -61,7 +61,7 @@ typedef struct LwqqHttpRequest {
      * Send a request to server asynchronous, method is GET(0) or POST(1),
      * if we make a POST request, we must provide a http body.
      */
-    int (*do_request_async)(struct LwqqHttpRequest *request, int method,
+    LwqqAsyncEvent* (*do_request_async)(struct LwqqHttpRequest *request, int method,
                             char *body, LwqqAsyncCallback callback, void *data);
 
     /* Set our http client header */

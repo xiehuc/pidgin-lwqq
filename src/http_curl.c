@@ -48,7 +48,7 @@ typedef struct D_ITEM{
     void* data;
 }D_ITEM;
 /* For async request */
-static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
         char *body, LwqqAsyncCallback callback,
                                       void *data);
 
@@ -384,7 +384,7 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
     }
 
     req->set_default_header(req);
-    lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
+    //lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
     return req;
 }
 
@@ -530,7 +530,7 @@ static int delay_add_handle(void* data)
     }
     return 0;
 }
-static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
                                       char *body, LwqqAsyncCallback callback,
                                       void *data)
 {
@@ -569,14 +569,14 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
     di->data = data;
     di->event = lwqq_async_event_new();
     purple_timeout_add(50,delay_add_handle,di);
-    return 0;
+    return di->event;
 
 failed:
     if (*resp) {
         s_free(*resp);
         *resp = NULL;
     }
-    return 0;
+    return NULL;
 }
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body)
 {

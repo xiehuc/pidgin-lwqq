@@ -20,7 +20,7 @@
  * @param lc 
  * @param err 
  */
-void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err);
+LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err);
 
 /** 
  * Get QQ groups' name information. Get only 'name', 'gid' , 'code' .
@@ -28,7 +28,7 @@ void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err);
  * @param lc 
  * @param err 
  */
-void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err);
+LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err);
 
 /** 
  * Get detail information of QQ friend(NB: include myself)
@@ -102,6 +102,6 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
  * @param lc 
  * @param err 
  */
-void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err);
+LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err);
 
 #endif  /* LWQQ_INFO_H */

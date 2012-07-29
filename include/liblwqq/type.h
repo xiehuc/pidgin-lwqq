@@ -15,6 +15,7 @@
 #include "queue.h"
 
 
+typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 /************************************************************************/
 /* Struct defination */
 

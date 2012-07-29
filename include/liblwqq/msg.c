@@ -30,6 +30,8 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
 
+#define format_append(str,format...)\
+snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -712,43 +714,33 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 #define RIGHT "\\\""
 #define KEY(key) "\\\""key"\\\""
 
-static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf,int* has_cface)
+static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
 {
+    //not thread safe. 
+    //you need ensure only one thread send msg in one time.
+    static char buf[2048];
     strcpy(buf,"\"[");
     LwqqMsgContent* c;
-    static char piece[10];
 
     TAILQ_FOREACH(c,&msg->content,entries){
         switch(c->type){
             case LWQQ_CONTENT_FACE:
-                strcat(buf,"["KEY("face")",");
-                snprintf(piece,sizeof(piece),"%d",c->data.face);
-                strcat(buf,piece);
-                strcat(buf,"],");
+                format_append(buf,"["KEY("face")",%d],",c->data.face);
                 break;
             case LWQQ_CONTENT_OFFPIC:
-                strcat(buf,"["KEY("offpic")","LEFT);
-                strcat(buf,c->data.img.file_path);
-                strcat(buf,RIGHT","LEFT);
-                strcat(buf,c->data.img.file);
-                strcat(buf,RIGHT",");
-                snprintf(piece,sizeof(piece),"%ld",c->data.img.size);
-                strcat(buf,piece);
-                strcat(buf,"],");
+                format_append(buf,"["KEY("offpic")","KEY("%s")","KEY("%s")",%ld],",
+                        c->data.img.file_path,
+                        c->data.img.file,
+                        c->data.img.size);
                 break;
             case LWQQ_CONTENT_CFACE:
                 //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
-                strcat(buf,"["KEY("cface")","LEFT);
-                strcat(buf,"group");
-                strcat(buf,RIGHT","LEFT);
-                strcat(buf,c->data.cface.name);
-                strcat(buf,RIGHT"],");
+                format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
+                        c->data.cface.name);
                 *has_cface = 1;
                 break;
             case LWQQ_CONTENT_STRING:
-                strcat(buf,LEFT);
-                strcat(buf,c->data.str);
-                strcat(buf,RIGHT",");
+                format_append(buf,KEY("%s")",",c->data.str);
                 break;
         }
     }
@@ -763,13 +755,6 @@ static char* content_parse_string_r(LwqqMsgMessage* msg,char* buf,int* has_cface
             msg->f_style.b,msg->f_style.i,msg->f_style.u,
             msg->f_color);
     return buf;
-}
-static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
-{
-    //not thread safe. 
-    //you need ensure only one thread send msg in one time.
-    static char buf[2048];
-    return content_parse_string_r(msg,buf,has_cface);
 }
 
 LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size,const char* extension)
@@ -938,8 +923,6 @@ done:
  * @return 1 means ok
  *         0 means failed or send failed
  */
-#define format_append(str,format...)\
-snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
     int ret;
@@ -1010,8 +993,10 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 
     //we check result if ok return 1,fail return 0;
     json_t *root = NULL;
+    if(strcasestr(req->response,"error")!=NULL)
+        goto failed;
     json_t *res;
-    json_parse_document(&root,req->response);
+    ret = json_parse_document(&root,req->response);
     res = get_result_json_object(root);
     if(!res){
         goto failed;
@@ -1022,6 +1007,9 @@ failed:
     if(root)
         json_free_value(&root);
     return 0;
+}
+static void msg_send_back(LwqqHttpRequest* request,void* data)
+{
 }
 
 int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)

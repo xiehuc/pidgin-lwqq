@@ -34,24 +34,28 @@ void background_login(qq_account* ac)
 {
     START_THREAD(_background_login,ac);
 }
-//static regex_t smile_re;
-//static regmatch_t *match;
 static void* _background_friends_info(void* data)
 {
     qq_account* ac=(qq_account*)data;
     LwqqErrorCode err;
     LwqqClient* lc=ac->qq;
 
-    //regex
-    //regcomp(&smile_re,"(\\:\\))||(\\:\\-\\D)",0);
-    //match=(regmatch_t*)malloc((smile_re.re_nsub+1)*sizeof(regmatch_t));  
+    LwqqAsyncLock* lock = lwqq_async_lock_new();
+    LwqqAsyncEvent* event;
+    event = lwqq_info_get_friends_info(lc,&err);
+    lwqq_async_lock_add_event(lock,event);
+    event = lwqq_info_get_group_name_list(ac->qq,&err);
+    lwqq_async_lock_add_event(lock,event);
+    lwqq_async_wait(lock);
 
-    lwqq_info_get_friends_info(lc,&err);
+    lock = lwqq_async_lock_new();
+    event = lwqq_info_get_online_buddies(ac->qq,&err);
+    lwqq_async_lock_add_event(lock,event);
+    lwqq_async_wait(lock);
+
+
     lwqq_info_get_friend_detail_info(lc,lc->myself,&err);
-    lwqq_info_get_online_buddies(ac->qq,&err);
-    lwqq_info_get_group_name_list(ac->qq,&err);
 
-    purple_account_set_alias(ac->account,lc->myself->nick);
 
     lwqq_info_get_all_friend_qqnumbers(lc,&err);
 

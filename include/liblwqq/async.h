@@ -10,7 +10,7 @@
 #ifndef LWQQ_ASYNC_H
 #define LWQQ_ASYNC_H
 #include "type.h"
-#include "http.h"
+
 typedef void (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
@@ -20,6 +20,7 @@ typedef enum ListenerType {
     GROUP_AVATAR,///<after get_group_avatar
     GROUP_DETAIL,
     VERIFY_COME,
+    IM_SEND_FAILED,
     ListenerTypeLength
 } ListenerType;
 typedef struct _LwqqAsync {
@@ -28,7 +29,6 @@ typedef struct _LwqqAsync {
     void* data[ListenerTypeLength];
 } _LwqqAsync;
 typedef struct _LwqqAsyncLock LwqqAsyncLock;
-typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 void lwqq_async_set(LwqqClient* client,int enabled);
 #define lwqq_async_enabled(lc) (lc->async!=NULL)
 #define lwqq_async_add_listener(lc,type,callback) \

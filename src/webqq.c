@@ -356,6 +356,8 @@ void qq_set_basic_info(qq_account* ac)
 {
     LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
+    if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
+        lwqq_info_get_friend_avatar(lc,lc->myself);
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)

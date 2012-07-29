@@ -31,6 +31,10 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
 char *get_group_qqnumber(LwqqClient *lc, const char *code);
 static void get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
 static void get_avatar_back(LwqqHttpRequest* req,void* data);
+static void get_friends_info_back(LwqqHttpRequest* req,void* data);
+static void get_online_buddies_back(LwqqHttpRequest* req,void* data);
+static void get_group_name_list_back(LwqqHttpRequest* req,void* data);
+
 
 /**
  * Get the result object in a json object.
@@ -263,12 +267,11 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
  * @param lc
  * @param err
  */
-void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
+LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
 {
     char msg[256] = {0};
     LwqqHttpRequest *req = NULL;
     int ret;
-    json_t *json = NULL, *json_tmp;
     char *cookies;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
@@ -289,18 +292,30 @@ void lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 1, msg);
-    if (ret || req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
-        goto done;
-    }
+    return req->do_request_async(req, 1, msg,get_friends_info_back,lc);
 
     /**
      * Here, we got a json object like this:
      * {"retcode":0,"result":{"friends":[{"flag":0,"uin":1907104721,"categories":0},{"flag":0,"uin":1745701153,"categories":0},{"flag":0,"uin":445284794,"categories":0},{"flag":0,"uin":4188952283,"categories":0},{"flag":0,"uin":276408653,"categories":0},{"flag":0,"uin":1526867107,"categories":0}],"marknames":[{"uin":276408653,"markname":""}],"categories":[{"index":1,"sort":1,"name":""},{"index":2,"sort":2,"name":""},{"index":3,"sort":3,"name":""}],"vipinfo":[{"vip_level":1,"u":1907104721,"is_vip":1},{"vip_level":1,"u":1745701153,"is_vip":1},{"vip_level":1,"u":445284794,"is_vip":1},{"vip_level":6,"u":4188952283,"is_vip":1},{"vip_level":0,"u":276408653,"is_vip":0},{"vip_level":1,"u":1526867107,"is_vip":1}],"info":[{"face":294,"flag":8389126,"nick":"","uin":1907104721},{"face":0,"flag":518,"nick":"","uin":1745701153},{"face":0,"flag":526,"nick":"","uin":445284794},{"face":717,"flag":8388614,"nick":"QQ","uin":4188952283},{"face":81,"flag":8389186,"nick":"Kernel","uin":276408653},{"face":0,"flag":2147484166,"nick":"Q","uin":1526867107}]}}
      *
      */
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static void get_friends_info_back(LwqqHttpRequest* req,void* data)
+{
+    json_t *json = NULL, *json_tmp;
+    int ret;
+    LwqqErrorCode error;
+    LwqqErrorCode* err = &error;
+    LwqqClient* lc = data;
+
+    if (req->http_code != 200) {
+        if (err)
+            *err = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", req->response);
@@ -581,7 +596,7 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
  * @param lc
  * @param err
  */
-void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
+LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
 {
 
     lwqq_log(LOG_DEBUG, "in function.");
@@ -610,8 +625,20 @@ void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 1, msg);
-    if (ret || req->http_code != 200) {
+    return req->do_request_async(req, 1, msg,get_group_name_list_back,lc);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static void get_group_name_list_back(LwqqHttpRequest* req,void* data)
+{
+    json_t *json = NULL, *json_tmp;
+    int ret;
+    LwqqClient* lc = data;
+    LwqqErrorCode error;
+    LwqqErrorCode* err = &error;
+
+    if (req->http_code != 200) {
         if (err)
             *err = LWQQ_EC_HTTP_ERROR;
         goto done;
@@ -669,6 +696,7 @@ json_error:
     lwqq_http_request_free(req);
 }
 
+
 /**
  * Get all friends qqnumbers
  *
@@ -688,7 +716,7 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
              * fetch it
              */
             buddy->qqnumber = get_friend_qqnumber(lc, buddy->uin);
-            lwqq_log(LOG_DEBUG, "Get buddy qqnumber: %s\n", buddy->qqnumber);
+            //lwqq_log(LOG_DEBUG, "Get buddy qqnumber: %s\n", buddy->qqnumber);
         }
     }
 
@@ -1259,16 +1287,15 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
  * @param lc
  * @param err
  */
-void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
+LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 {
     char url[512];
     LwqqHttpRequest *req = NULL;
     int ret;
-    json_t *json = NULL, *json_tmp;
     char *cookies;
 
     if (!lc) {
-        return ;
+        return NULL;
     }
 
     /* Create a GET request */
@@ -1287,8 +1314,20 @@ void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 0, NULL);
-    if (ret || req->http_code != 200) {
+    return req->do_request_async(req, 0, NULL,get_online_buddies_back,lc);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static void get_online_buddies_back(LwqqHttpRequest* req,void* data)
+{
+    json_t *json = NULL, *json_tmp;
+    int ret;
+    LwqqClient* lc = data;
+    LwqqErrorCode error;
+    LwqqErrorCode* err = &error;
+
+    if (req->http_code != 200) {
         if (err)
             *err = LWQQ_EC_HTTP_ERROR;
         goto done;
@@ -1318,6 +1357,7 @@ void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
         update_online_buddies(lc, json_tmp);
     }
 
+    puts("online buddies complete");
 done:
     if (json)
         json_free_value(&json);

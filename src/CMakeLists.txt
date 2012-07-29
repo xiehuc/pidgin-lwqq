@@ -64,6 +64,6 @@ SET(LIB_INSTALL_DIR "${PURPLE_PREFIX}lib/purple-${PURPLE_MAJOR_VERSION}")
 
 INSTALL(DIRECTORY "../res/pidgin/" DESTINATION ${PIDGIN_PIX_INSTALL_DIR})
 INSTALL(DIRECTORY "../res/empathy/" DESTINATION "/usr/share/empathy/icons/hicolor")
-INSTALL(DIRECTORY "../res/qqfaces/" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/lwqq/icons/qqfaces/")
+INSTALL(DIRECTORY "../res/qqfaces/" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/lwqq/icons/qqfaces")
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 
