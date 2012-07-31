@@ -2,18 +2,18 @@
 a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
 
 # support
-## pidgin
+## pidgin support
 * send / recv text messages
 * send / recv picture messages
 * send / recv group messages
 * recv qq face
 * avatar
 
-# empathy (via telepathy-haze)
+## empathy support (via telepathy-haze)
 * send / recv text messages
 * avatar
 
-__telepathy-haze itself doesn't support group or picture.__
+*telepathy-haze itself doesn't support group or picture.*
 
 **NOTE:**
 telepathy-haze never store buddy list!!
