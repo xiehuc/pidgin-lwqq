@@ -1,24 +1,21 @@
-pidgin-lwqq
-===========
+# pidgin-lwqq
+a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
 
-a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol\n
+# support
+## pidgin
+* send / recv text messages
+* send / recv picture messages
+* send / recv group messages
+* recv qq face
+* avatar
 
-support for pidgin:
-send / recv text message \n
-send / recv picture message \n
-send / recv group message \n
-recv qq face \n
-avatar \n
+# empathy (via telepathy-haze)
+* send / recv text messages
+* avatar
 
-support for empathy(telepathy-haze):
-send / recv text message
-avatar
+__telepathy-haze itself doesn't support group or picture.__
 
-telepathy-haze itself not support 
-group or picture.
-
-note:
+**NOTE:**
 telepathy-haze never store buddy list!!
-it only save file in /tmp/haze-XXXXXX
-so never want to enjoy a good speed 
-
+It only saves file in /tmp/haze-XXXXXX
+so never want to enjoy a good speed
