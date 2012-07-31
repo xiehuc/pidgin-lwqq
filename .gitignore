@@ -1,7 +1,8 @@
 /build*/
 cscope.*
 .*
-!.gitignore
+!.git*
+.git
 *~
 /tmp/
 generated*.*
