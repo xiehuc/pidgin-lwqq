@@ -21,7 +21,9 @@ SET(PURPLE_LIB_INSTALL_DIR
 message("prefix:\t\t" ${CMAKE_INSTALL_PREFIX})
 message("libwebqq.so:\t" ${PURPLE_LIB_INSTALL_DIR})
 message("")
-message("if not correct.")
+message("!!!note: please ensure libwebqq.so install path correctly.")
+message("in most of situations: it is /usr/lib/purple-2")
+message("if not.")
 message("please use cmake -DCMAKE_INSTALL_PREFIX=<path of purple-2> ..")
 message("")
 
