@@ -49,13 +49,16 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
     }
     return c;
 }
-static LwqqMsgContent* build_face_content(const char* face)
+static LwqqMsgContent* build_face_content(const char* face,int len)
 {
+    static char buf[20];
+    memcpy(buf,face,len);
+    buf[len]= '\0';
     LwqqMsgContent* c;
+    int num = (long)g_hash_table_lookup(smily_table,buf);
+    if(num==0) return NULL;
     c = s_malloc0(sizeof(*c));
     c->type = LWQQ_CONTENT_FACE;
-    int num = (long)g_hash_table_lookup(smily_table,face);
-    if(num==0) return NULL;
     if(num==-1)num++;
     c->data.face = num;
     return c;
@@ -83,11 +86,15 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
         c = NULL;
         if(!trex_search(x,ptr,&begin,&end)){
             ///last part.
-            TAILQ_INSERT_TAIL(&mmsg->content,build_string_content(ptr,NULL),entries);
+            c = build_string_content(ptr,NULL);
+            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
             break;
         }
         if(begin>ptr){
-            TAILQ_INSERT_TAIL(&mmsg->content,build_string_content(ptr,begin),entries);
+            //note you can not pass c directly. 
+            //because insert_tail is a macro.
+            c = build_string_content(ptr,begin);
+            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
         trex_getsubexp(x,0,&m);
         puts(m.begin);
@@ -112,7 +119,7 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
             c = build_face_direct(img_id);
         }else{
             //other face
-            c = build_face_content(m.begin);
+            c = build_face_content(m.begin,m.len);
         }
         ptr = end;
         if(c!=NULL)
