@@ -40,17 +40,17 @@ static void* _background_friends_info(void* data)
     LwqqErrorCode err;
     LwqqClient* lc=ac->qq;
 
-    LwqqAsyncLock* lock = lwqq_async_lock_new();
+    LwqqAsyncEvset* lock = lwqq_async_evset_new();
     LwqqAsyncEvent* event;
     event = lwqq_info_get_friends_info(lc,&err);
-    lwqq_async_lock_add_event(lock,event);
+    lwqq_async_evset_add_event(lock,event);
     event = lwqq_info_get_group_name_list(ac->qq,&err);
-    lwqq_async_lock_add_event(lock,event);
+    lwqq_async_evset_add_event(lock,event);
     lwqq_async_wait(lock);
 
-    lock = lwqq_async_lock_new();
+    lock = lwqq_async_evset_new();
     event = lwqq_info_get_online_buddies(ac->qq,&err);
-    lwqq_async_lock_add_event(lock,event);
+    lwqq_async_evset_add_event(lock,event);
     lwqq_async_wait(lock);
 
 

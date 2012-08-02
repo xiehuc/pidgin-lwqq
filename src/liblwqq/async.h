@@ -28,7 +28,7 @@ typedef struct _LwqqAsync {
     LwqqErrorCode err[ListenerTypeLength];
     void* data[ListenerTypeLength];
 } _LwqqAsync;
-typedef struct _LwqqAsyncLock LwqqAsyncLock;
+typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 void lwqq_async_set(LwqqClient* client,int enabled);
 #define lwqq_async_enabled(lc) (lc->async!=NULL)
 #define lwqq_async_add_listener(lc,type,callback) \
@@ -46,13 +46,20 @@ void lwqq_async_set(LwqqClient* client,int enabled);
 //void lwqq_async_watch(LwqqClient* client,LwqqHttpRequest* request,ListenerType type);
 void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* extradata);
 
-/**===================LOCK API==========================================**/
-LwqqAsyncLock* lwqq_async_lock_new();
+/**===================EVSET API==========================================**/
+LwqqAsyncEvset* lwqq_async_evset_new();
 LwqqAsyncEvent* lwqq_async_event_new();
 void lwqq_async_event_finish(LwqqAsyncEvent* event);
 #define lwqq_async_event_emit(event) lwqq_async_event_finish(event)
-void lwqq_async_lock_add_event(LwqqAsyncLock* host,LwqqAsyncEvent *handle);
-void lwqq_async_wait(LwqqAsyncLock* host);
+void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
+void lwqq_async_wait(LwqqAsyncEvset* host);
+#define LWQQ_SYNC(ev) \
+    do{\
+        LwqqAsyncEvset* evset = lwqq_async_evset_new();\
+        LwqqAsyncEvent* event = ev;\
+        lwqq_async_evset_add_event(evset,event);\
+        lwqq_async_wait(evset);\
+    }while(0)
 
 
 #endif

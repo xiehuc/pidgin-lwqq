@@ -21,13 +21,13 @@ typedef struct async_dispatch_data {
     int handle;
     void* data;
 } async_dispatch_data;
-typedef struct _LwqqAsyncLock {
+typedef struct _LwqqAsyncEvset{
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int ref_count;
-}_LwqqAsyncLock;
+}_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
-    LwqqAsyncLock* host_lock;
+    LwqqAsyncEvset* host_lock;
 }_LwqqAsyncEvent;
 
 static gboolean timeout_come(void* p);
@@ -74,9 +74,9 @@ LwqqAsyncEvent* lwqq_async_event_new()
 {
     return s_malloc0(sizeof(LwqqAsyncEvent));
 }
-LwqqAsyncLock* lwqq_async_lock_new()
+LwqqAsyncEvset* lwqq_async_evset_new()
 {
-    LwqqAsyncLock* l = s_malloc(sizeof(*l));
+    LwqqAsyncEvset* l = s_malloc(sizeof(*l));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
     l->ref_count = 0;
@@ -94,7 +94,7 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
     }
     s_free(event);
 }
-void lwqq_async_lock_add_event(LwqqAsyncLock* host,LwqqAsyncEvent *handle)
+void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
 {
     pthread_mutex_lock(&host->lock);
     handle->host_lock = host;
@@ -102,7 +102,7 @@ void lwqq_async_lock_add_event(LwqqAsyncLock* host,LwqqAsyncEvent *handle)
     pthread_mutex_unlock(&host->lock);
 }
 
-void lwqq_async_wait(LwqqAsyncLock* host)
+void lwqq_async_wait(LwqqAsyncEvset* host)
 {
     pthread_mutex_lock(&host->lock);
     if(host->ref_count>0){
