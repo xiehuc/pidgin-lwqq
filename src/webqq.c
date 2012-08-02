@@ -611,7 +611,6 @@ static void on_create(void *data)
 }
 static void qq_login(PurpleAccount *account)
 {
-    //purple_conversations_set_ui_ops(&webqq_simple_ui_ops);
     translate_global_init();
     PurpleConnection* pc= purple_account_get_connection(account);
     qq_account* ac = qq_account_new(account);
@@ -621,7 +620,6 @@ static void qq_login(PurpleAccount *account)
     ac->qq = lwqq_client_new(username,password);
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
-    //purple_buddy_icons_set_caching(1);
     client_connect_signals();
 
     lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
@@ -643,7 +641,6 @@ static void qq_close(PurpleConnection *gc)
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
-    //force save.for telepathy-haze
 }
 static void
 init_plugin(PurplePlugin *plugin)

@@ -234,6 +234,32 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     }
     return type;
 }
+static char* parse_escape(char* str)
+{
+    char* ptr = str;
+    char* esc;
+    while(ptr!='\0'){
+        esc = strchr(ptr,'\\');
+        if(esc==NULL) break;
+        switch(*(esc+1)){
+            case 'n':
+                *esc = '\n';
+                break;
+            case 'r':
+                *esc = ' ';
+                break;
+            case 't':
+                *esc = '\t';
+                break;
+            case '\\':
+                *esc = '\\';
+                break;
+        }
+        *(esc+1) = ' ';
+        ptr = esc+1;
+    }
+    return str;
+}
 static int parse_content(json_t *json, void *opaque)
 {
     json_t *tmp, *ctent;
@@ -325,6 +351,7 @@ static int parse_content(json_t *json, void *opaque)
             LwqqMsgContent *c = s_malloc0(sizeof(*c));
             c->type = LWQQ_CONTENT_STRING;
             c->data.str = ucs4toutf8(ctent->text);
+            c->data.str = parse_escape(c->data.str);
             TAILQ_INSERT_TAIL(&msg->content, c, entries);
         }
     }
