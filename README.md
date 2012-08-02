@@ -21,7 +21,6 @@ telepathy-haze never store buddy list!!
 It only saves file in /tmp/haze-XXXXXX
 so never want to enjoy a good speed
 
-
 # pidgin-lwqq
 一个基于lwqq库的pidgin插件.
 lwqq库是一个非常安全有效的webqq协议的库.
@@ -46,3 +45,5 @@ telepathy-haze 比较坑爹.居然不保存好友列表.!!
 它只在/tmp/haze-XXXXXX 存放下文件.
 所以速度非常受影响.
 不知道为什么要这样设计.
+
+

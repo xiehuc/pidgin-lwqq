@@ -123,7 +123,6 @@ typedef struct LwqqCookies {
 } LwqqCookies;
 typedef struct _LwqqAsync LwqqAsync;
 /* LwqqClient API */
-typedef struct LwqqRecvMsgList LwqqRecvMsgList;
 typedef struct LwqqClient {
     char *username;             /**< Username */
     char *password;             /**< Password */
@@ -145,7 +144,7 @@ typedef struct LwqqClient {
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
-    LwqqRecvMsgList *msg_list;
+    struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
 } LwqqClient;
 
