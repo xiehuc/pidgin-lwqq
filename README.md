@@ -7,7 +7,7 @@ see github:https://github.com/mathslinux/lwqq
 * send / recv text messages
 * send / recv picture messages
 * send / recv group messages
-* recv qq face
+* send / recv qq face (you should use webqq faces theme in settings)
 * avatar
 
 ## empathy support (via telepathy-haze)
@@ -31,7 +31,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持发送接受文本消息
 * 支持发送接受图片
 * 支持群聊天
-* 支持接受表情
+* 支持发送接受表情(在设置中使用webqq表情主题)
 * 支持头像
 
 ## empathy support (via telepathy-haze)

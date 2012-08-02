@@ -1,0 +1,135 @@
+Name=WebQQ faces
+Description=Webqq smileys
+Icon=0.gif
+Author=xiehuc@gmail.com
+
+# Default smileys
+[default]
+0.gif          :)      :-)
+13.gif         :-D     :-d     :D      :d
+15.gif         :-(     :(
+12.gif         ;-)     ;)
+12.gif         :P      :p      :-P     :-p
+28.gif         =-O     =-o
+65.gif         :-*
+16.gif         8-)
+21.gif         :-[
+9.gif          :'(     :'-(
+23.gif         :-/     :-\\
+29.gif         O:-)    o:-)
+49.gif         :-X
+50.gif         :-$
+36.gif         :-!
+! shout.gif           >:o     >:O
+! skywalker.gif     C:-)    c:-)    C:)     c:)
+! monkey.gif        :-(|)   :(|)    8-|)
+! cyclops.gif       O-)     o-)
+
+[WebQQ]
+0.gif          [FACE_14]	:)      :-)	
+1.gif          [FACE_1]
+2.gif          [FACE_2]
+3.gif          [FACE_3]
+4.gif          [FACE_4]
+5.gif          [FACE_5]
+6.gif          [FACE_6]
+7.gif          [FACE_7]
+8.gif          [FACE_8]
+9.gif          [FACE_9]		:'(     :'-(
+10.gif         [FACE_10]
+11.gif         [FACE_11]
+12.gif         [FACE_12]	;-)     ;)	:P      :p      :-P     :-p
+13.gif         [FACE_13]	:-D     :-d     :D      :d
+14.gif         [FACE_0]
+15.gif         [FACE_50]	:-(     :(
+16.gif         [FACE_51]	8-)
+17.gif         [FACE_96]
+18.gif         [FACE_53]
+19.gif         [FACE_54]
+20.gif         [FACE_73]
+21.gif         [FACE_74]	:-[
+22.gif         [FACE_75]
+23.gif         [FACE_76]	:-/     :-\\
+24.gif         [FACE_77]
+25.gif         [FACE_78]
+26.gif         [FACE_55]
+27.gif         [FACE_56]
+28.gif         [FACE_57]	=-O     =-o
+29.gif         [FACE_58]	O:-)    o:-)
+30.gif         [FACE_79]
+31.gif         [FACE_80]
+32.gif         [FACE_81]
+33.gif         [FACE_82]
+34.gif         [FACE_83]
+35.gif         [FACE_84]
+36.gif         [FACE_85]	:-!
+37.gif         [FACE_86]
+38.gif         [FACE_87]
+39.gif         [FACE_88]
+40.gif         [FACE_97]
+41.gif         [FACE_98]
+42.gif         [FACE_99]
+43.gif         [FACE_100]
+44.gif         [FACE_101]
+45.gif         [FACE_102]
+46.gif         [FACE_103]
+47.gif         [FACE_104]
+48.gif         [FACE_105]
+49.gif         [FACE_106]	:-X
+50.gif         [FACE_107]	:-$
+51.gif         [FACE_108]
+52.gif         [FACE_109]
+53.gif         [FACE_110]
+54.gif         [FACE_111]
+55.gif         [FACE_112]
+56.gif         [FACE_32]
+57.gif         [FACE_113]
+58.gif         [FACE_114]
+59.gif         [FACE_115]
+60.gif         [FACE_63]
+61.gif         [FACE_64]
+62.gif         [FACE_59]
+63.gif         [FACE_33]
+64.gif         [FACE_34]
+65.gif         [FACE_116]	:-*
+66.gif         [FACE_36]
+67.gif         [FACE_37]
+68.gif         [FACE_38]
+69.gif         [FACE_91]
+70.gif         [FACE_92]
+71.gif         [FACE_93]
+72.gif         [FACE_29]
+73.gif         [FACE_117]
+74.gif         [FACE_72]
+75.gif         [FACE_45]
+76.gif         [FACE_42]
+77.gif         [FACE_39]
+78.gif         [FACE_62]
+79.gif         [FACE_46]
+80.gif         [FACE_47]
+81.gif         [FACE_71]
+82.gif         [FACE_95]
+83.gif         [FACE_118]
+84.gif         [FACE_119]
+85.gif         [FACE_120]
+86.gif         [FACE_121]
+87.gif         [FACE_122]
+88.gif         [FACE_123]
+89.gif         [FACE_124]
+90.gif         [FACE_27]
+91.gif         [FACE_21]
+92.gif         [FACE_23]
+93.gif         [FACE_25]
+94.gif         [FACE_26]
+95.gif         [FACE_125]
+96.gif         [FACE_126]
+97.gif         [FACE_127]
+98.gif         [FACE_128]
+99.gif         [FACE_129]
+100.gif        [FACE_130]
+101.gif	       [FACE_131]
+102.gif        [FACE_132]
+103.gif        [FACE_133]
+104.gif        [FACE_134]
+
+
