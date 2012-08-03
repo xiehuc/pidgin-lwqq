@@ -31,6 +31,8 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
 static int msg_send_back(LwqqHttpRequest* req,void* data);
+static int upload_cface_back(LwqqHttpRequest *req,void* data);
+static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
@@ -131,7 +133,8 @@ static void lwqq_msg_message_free(void *opaque)
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 s_free(c->data.img.file_path);
-                s_free(c->data.img.file);
+                s_free(c->data.img.name);
+                s_free(c->data.img.data);
                 break;
             case LWQQ_CONTENT_CFACE:
                 s_free(c->data.cface.data);
@@ -233,7 +236,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     } else if (!strncmp(msg_type, "buddies_status_change",
                         strlen("buddies_status_change"))) {
         type = LWQQ_MT_STATUS_CHANGE;
-    }
+    } else if(!strcmp(msg_type,"kick_message"))
+        type = LWQQ_MT_KICK_MESSAGE;
     return type;
 }
 static char* parse_escape(char* str)
@@ -490,7 +494,7 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
         }
     }
 
-    c->data.img.file = req->response;
+    c->data.img.data = req->response;
     c->data.img.size = req->resp_len;
     req->response = NULL;
     
@@ -782,7 +786,7 @@ static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
             case LWQQ_CONTENT_OFFPIC:
                 format_append(buf,"["KEY("offpic")","KEY("%s")","KEY("%s")",%ld],",
                         c->data.img.file_path,
-                        c->data.img.file,
+                        c->data.img.name,
                         c->data.img.size);
                 break;
             case LWQQ_CONTENT_CFACE:
@@ -812,11 +816,16 @@ static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
     return buf;
 }
 
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* filename,const char* buffer,size_t size,const char* extension)
+LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMsgContent* c)
 {
+    if(c->type != LWQQ_CONTENT_OFFPIC) return NULL;
+    if(!c->data.img.data || !c->data.img.name || !c->data.img.size) return NULL;
+
     LwqqHttpRequest *req;
     LwqqErrorCode err;
-    LwqqMsgContent* c = NULL;
+    const char* filename = c->data.img.name;
+    const char* buffer = c->data.img.data;
+    size_t size = c->data.img.size;
     char url[512];
     char *cookies;
     int ret;
@@ -838,15 +847,22 @@ LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const 
     req->add_form(req,LWQQ_FORM_CONTENT,"skey",lc->cookies->skey);
     req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
     req->add_form(req,LWQQ_FORM_CONTENT,"peeruin","593023668");///<what this means?
-    //req->add_form(req,LWQQ_FORM_FILE,"file",pic_path);
-    req->add_file_content(req,"file",filename,buffer,size,extension);
+    req->add_file_content(req,"file",filename,buffer,size,NULL);
     req->add_form(req,LWQQ_FORM_CONTENT,"field","1");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
-    ret = req->do_request(req,0,NULL);
 
-    if(ret||req->http_code!=200){
+    return req->do_request_async(req,0,NULL,upload_offline_pic_back,c);
+
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
+{
+    LwqqMsgContent* c = data;
+    if(req->http_code!=200){
         goto done;
     }
 
@@ -857,17 +873,17 @@ LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const 
     if(strcmp(json_parse_simple_value(json,"retcode"),"0")!=0){
         goto done;
     }
-    c = s_malloc0(sizeof(*c));
     c->type = LWQQ_CONTENT_OFFPIC;
     c->data.img.size = atol(json_parse_simple_value(json,"filesize"));
     c->data.img.file_path = s_strdup(json_parse_simple_value(json,"filepath"));
-    c->data.img.file = s_strdup(json_parse_simple_value(json,"filename"));
-
+    s_free(c->data.img.name);
+    c->data.img.name = s_strdup(json_parse_simple_value(json,"filename"));
+    c->data.img.data = NULL;
 done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return c;
+    return 0;
 }
 static int query_gface_sig(LwqqClient* lc)
 {
@@ -909,14 +925,20 @@ done:
     lwqq_http_request_free(req);
     return succ;
 }
-LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,const char* extension)
+LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
 {
+    if(c->type != LWQQ_CONTENT_CFACE) return NULL;
+    if(!c->data.cface.name || !c->data.cface.data || !c->data.cface.size) return NULL;
+    const char *filename = c->data.cface.name;
+    const char *buffer = c->data.cface.data;
+    size_t size = c->data.cface.size;
     LwqqHttpRequest *req;
     LwqqErrorCode err;
-    LwqqMsgContent* c = NULL;
     char url[512];
     char *cookies;
     int ret;
+    static int fileid = 1;
+    char fileid_str[20];
 
     snprintf(url,sizeof(url),"http://up.web2.qq.com/cgi-bin/cface_upload?time=%ld",
             time(NULL));
@@ -932,13 +954,29 @@ LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const 
     req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
     req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
-    req->add_file_content(req,"custom_face",filename,buffer,size,extension);
+    req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
+    snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
 
-    ret = req->do_request(req,0,NULL);
+    void **data = s_malloc0(sizeof(void*)*2);
+    data[0] = lc;
+    data[1] = c;
+    return req->do_request_async(req,0,NULL,upload_cface_back,data);
 
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static int upload_cface_back(LwqqHttpRequest *req,void* data)
+{
+    void **d = data;
+    LwqqClient* lc = d[0];
+    LwqqMsgContent *c = d[1];
+    s_free(data);
     json_t* json = NULL;
-    if(ret||req->http_code!=200){
+    int ret;
+
+    if(req->http_code!=200){
         goto done;
     }
     char *ptr = strchr(req->response,'}');
@@ -951,7 +989,6 @@ LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const 
     if(ret !=0 && ret !=4){
         goto done;
     }
-    c = s_malloc0(sizeof(*c));
     c->type = LWQQ_CONTENT_CFACE;
     char *file = json_parse_simple_value(json,"msg");
     char *pos;
@@ -959,15 +996,20 @@ LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const 
     if((pos = strchr(file,' '))){
         *pos = '\0';
     }
+    s_free(c->data.cface.name);
     c->data.cface.name = s_strdup(file);
+    c->data.cface.data = NULL;
 
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mutex);
     if(!lc->gface_sig)
         query_gface_sig(lc);
+    pthread_mutex_unlock(&mutex);
 done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return c;
+    return 0;
 }
 /** 
  * 

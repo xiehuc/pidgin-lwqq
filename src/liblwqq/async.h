@@ -61,8 +61,6 @@ do{\
 }while(0)
 #define lwqq_async_event_get_result(ev) (*((int*)ev))
 
-
-
 #define LWQQ_SYNC(ev) \
     do{\
         LwqqAsyncEvset* evset = lwqq_async_evset_new();\

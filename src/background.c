@@ -4,8 +4,10 @@
 #include <async.h>
 #include <info.h>
 #include <msg.h>
-//#include <regex.h>
+#include <smemory.h>
 #include <string.h>
+
+#include "translate.h"
 
 #define START_THREAD(thread,data)\
 do{pthread_t th;\
@@ -133,3 +135,60 @@ void background_group_detail(qq_account* ac,LwqqGroup* group)
     START_THREAD(_background_group_detail,data);
 }
 
+static void send_back(LwqqAsyncEvent* event,void* data)
+{
+    static char buf[1024];
+    void **d = data;
+    LwqqMsg* msg = d[0];
+    PurpleConversation* conv = d[1];
+    char* what = d[2];
+    int succ = lwqq_async_event_get_result(event);
+    s_free(data);
+    if(!succ){
+        snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
+        purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
+    }
+
+    LwqqMsgMessage* mmsg = msg->opaque;
+    mmsg->f_name = NULL;
+    mmsg->f_color = NULL;
+    mmsg->to = NULL;
+    mmsg->group_code = NULL;
+    s_free(what);
+    lwqq_msg_free(msg);
+}
+void* _background_send_msg(void* data)
+{
+    void **d = data;
+    LwqqMsg* msg = d[0];
+    LwqqMsgMessage* mmsg = msg->opaque;
+    const char* to = mmsg->to;
+    PurpleConversation* conv = d[1];
+    const char* what = d[2];
+    LwqqClient* lc = d[3];
+    int use_cface = (msg->type == LWQQ_MT_GROUP_MSG);
+
+    translate_message_to_struct(lc,to,what,mmsg,use_cface);
+    purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
+    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
+    return NULL;
+}
+
+void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* what,PurpleConversation* conv)
+{
+
+    void** data = s_malloc0(sizeof(void*)*4);
+    data[0] = msg;
+    data[1] = conv;
+    data[2] = s_strdup(what);
+    data[3] = ac->qq;
+    LwqqMsgMessage* mmsg = msg->opaque;
+    LwqqMsgContent* c;
+
+    int will_upload = 0;
+    will_upload = (strstr(what,"<IMG")!=NULL);
+    if(will_upload)
+        START_THREAD(_background_send_msg,data);
+    else
+        _background_send_msg(data);
+}

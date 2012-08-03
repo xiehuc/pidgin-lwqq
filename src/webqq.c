@@ -5,6 +5,12 @@
 #include <smemory.h>
 #include <request.h>
 #include <signal.h>
+
+#include <type.h>
+#include <async.h>
+#include <msg.h>
+#include <info.h>
+
 #include "internal.h"
 #include "webqq.h"
 #include "qq_types.h"
@@ -12,15 +18,10 @@
 #include "background.h"
 #include "translate.h"
 
-#include <type.h>
-#include <async.h>
-#include <msg.h>
-#include <info.h>
 
 static int group_member_list_come(LwqqClient* lc,void* data);
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(void);
-static void send_back(LwqqAsyncEvent* event,void* data);
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -184,7 +185,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.file,c->data.img.size,NULL);
+                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
                     //"<IMG ID=\"1\">
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
                     strcat(buf,piece);
@@ -236,7 +237,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.file,c->data.img.size,NULL);
+                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
                     //"<IMG ID=\"1\">
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
                     strcat(buf,piece);
@@ -445,39 +446,13 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
-    
-    translate_message_to_struct(lc,buddy->uin,what,mmsg,0);
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
-    void** data = s_malloc0(sizeof(void*)*3);
-    data[0] = msg;
-    data[1] = conv;
-    data[2] = s_strdup(what);
-    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
+
+    background_send_msg(ac,msg,what,conv);
+    
 
     return 1;
-}
-static void send_back(LwqqAsyncEvent* event,void* data)
-{
-    static char buf[1024];
-    void **d = data;
-    LwqqMsg* msg = d[0];
-    PurpleConversation* conv = d[1];
-    char* what = d[2];
-    int succ = lwqq_async_event_get_result(event);
-    s_free(data);
-    if(!succ){
-        snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
-        purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
-    }
-
-    LwqqMsgMessage* mmsg = msg->opaque;
-    mmsg->f_name = NULL;
-    mmsg->f_color = NULL;
-    mmsg->to = NULL;
-    mmsg->group_code = NULL;
-    s_free(what);
-    lwqq_msg_free(msg);
 }
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
@@ -497,16 +472,9 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = "000000";
-    
-    translate_message_to_struct(lc,gid,message,mmsg,1);
-
     PurpleConversation* conv = purple_find_chat(gc,id);
 
-    void** data = s_malloc0(sizeof(void*)*4);
-    data[0] = msg;
-    data[1] = conv;
-    data[2] = s_strdup(message);
-    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
+    background_send_msg(ac,msg,message,conv);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));

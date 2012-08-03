@@ -8,6 +8,7 @@
 //#include <gtksmiley.h>
 #include "translate.h"
 #include "trex.h"
+#include "async.h"
 
 #ifndef INST_PREFIX
 #define INST_PREFIX "/usr"
@@ -65,7 +66,9 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
     TRexMatch m;
     TRex* x = _regex;
     //trex_clear(x);
-    
+
+    LwqqAsyncEvset *set = lwqq_async_evset_new();
+     
     while(*ptr!='\0'){
         c = NULL;
         if(!trex_search(x,ptr,&begin,&end)){
@@ -85,18 +88,19 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
         if(strstr(begin,"<IMG")==begin){
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
             PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
+            c = s_malloc0(sizeof(*c));
             if(using_cface){
-                c = lwqq_msg_upload_cface(lc,
-                        purple_imgstore_get_filename(simg),
-                        purple_imgstore_get_data(simg),
-                        purple_imgstore_get_size(simg),
-                        purple_imgstore_get_extension(simg));
+                c->type = LWQQ_CONTENT_CFACE;
+                c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
+                c->data.cface.data = purple_imgstore_get_data(simg);
+                c->data.cface.size = purple_imgstore_get_size(simg);
+                lwqq_async_evset_add_event(set,lwqq_msg_upload_cface(lc,c));
             }else{
-                c = lwqq_msg_upload_offline_pic(lc,to,
-                        purple_imgstore_get_filename(simg),
-                        purple_imgstore_get_data(simg),
-                        purple_imgstore_get_size(simg),
-                        purple_imgstore_get_extension(simg));
+                c->type = LWQQ_CONTENT_OFFPIC;
+                c->data.img.name = s_strdup(purple_imgstore_get_filename(simg));
+                c->data.img.data = purple_imgstore_get_data(simg);
+                c->data.img.size = purple_imgstore_get_size(simg);
+                lwqq_async_evset_add_event(set,lwqq_msg_upload_offline_pic(lc,to,c));
             }
         }else if(strstr(begin,"[FACE")==begin){
             sscanf(begin,"[FACE_%d]",&img_id);
@@ -109,6 +113,7 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
         if(c!=NULL)
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
     }
+    lwqq_async_wait(set);
 }
 void translate_global_init()
 {

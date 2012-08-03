@@ -31,8 +31,9 @@ typedef struct LwqqMsgContent {
         //this used in offpic format which may replaced by cface (custom face)
         struct {
             int success;
-            char* file_path;
-            char* file;///<on upload this is filename on download this is image content
+            char* file_path;///< on upload this is filename
+            char* name;///<this is image content
+            char* data;
             size_t size;
         }img;
         struct {
@@ -77,6 +78,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
     LWQQ_MT_GROUP_MSG,
     LWQQ_MT_STATUS_CHANGE,
+    LWQQ_MT_KICK_MESSAGE,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 
@@ -170,7 +172,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 
 /************************************************************************/
 /*  LwqqSendMsg API */
-LwqqMsgContent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,const char* pic_path,const char* buffer,size_t size,const char* extension);
-LwqqMsgContent* lwqq_msg_upload_cface(LwqqClient* lc,const char* filename,const char* buffer,size_t size,const char* extension);
+LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMsgContent* c);
+LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c);
 
 #endif  /* LWQQ_MSG_H */
