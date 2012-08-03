@@ -737,6 +737,29 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
     pthread_create(&list->tid, &list->attr, start_poll_msg, list);
 }
 
+static void parse_unescape(char* source,char *buf,int buf_len)
+{
+    char* ptr = source;
+    size_t idx;
+    while(*ptr!='\0'){
+        idx = strcspn(ptr,"\n\t\\");
+        if(ptr[idx] == '\0'){
+            strcpy(buf,ptr);
+            buf+=idx;
+            break;
+        }
+        strncpy(buf,ptr,idx);
+        buf+=idx;
+        switch(ptr[idx]){
+            case '\n': strcat(buf,"\\\\n");break;
+            case '\t': strcat(buf,"\\\\t");break;
+            case '\\': strcat(buf,"\\\\\\\\");break;
+        }
+        ptr+=idx+1;
+        buf+=strlen(buf);
+    }
+    *buf = '\0';
+}
 #define LEFT "\\\""
 #define RIGHT "\\\""
 #define KEY(key) "\\\""key"\\\""
@@ -767,7 +790,10 @@ static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
                 *has_cface = 1;
                 break;
             case LWQQ_CONTENT_STRING:
-                format_append(buf,KEY("%s")",",c->data.str);
+                //format_append(buf,KEY("%s")",",c->data.str);
+                strcat(buf,LEFT);
+                parse_unescape(c->data.str,buf+strlen(buf),sizeof(buf)-strlen(buf));
+                strcat(buf,RIGHT",");
                 break;
         }
     }

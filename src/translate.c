@@ -20,24 +20,6 @@ const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
     ":\\)|:-D|:-\\(|;-\\)|:P|=-O|:-\\*|8-\\)|:-\\[|"
     ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
     //:'( error
-static void translate_escape(char * str)
-{
-    char* ptr;
-    while((ptr = strchr(str,'\\'))){
-        switch(*(ptr+1)){
-            case 'n':
-                *ptr = '\n';
-                break;
-            case 'r':
-                *ptr = ' ';
-                break;
-            default:
-                *ptr = *(ptr+1);
-                break;
-        }
-        *(ptr+1) = ' ';
-    }
-}
 static LwqqMsgContent* build_string_content(const char* from,const char* to)
 {
     LwqqMsgContent* c;
@@ -139,9 +121,10 @@ void translate_global_init()
     if(smily_table ==NULL){
 #define GPOINTER(n) (gpointer)n
         GHashTable *t = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
-        g_hash_table_insert(t,":)",GPOINTER(GPOINTER(14)));
+        g_hash_table_insert(t,":)",GPOINTER(14));
         g_hash_table_insert(t,":-D",GPOINTER(13));
         g_hash_table_insert(t,":-(",GPOINTER(50));
+        g_hash_table_insert(t,":(",GPOINTER(50));
         g_hash_table_insert(t,";-)",GPOINTER(12));
         g_hash_table_insert(t,":P",GPOINTER(12));
         g_hash_table_insert(t,"=-O",GPOINTER(57));
