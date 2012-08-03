@@ -17,9 +17,10 @@
 #include <msg.h>
 #include <info.h>
 
-static void group_member_list_come(LwqqClient* lc,void* data);
+static int group_member_list_come(LwqqClient* lc,void* data);
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(void);
+static void send_back(LwqqAsyncEvent* event,void* data);
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -104,7 +105,7 @@ static void qq_account_free(qq_account* ac)
 {
     g_free(ac);
 }
-static void friend_come(LwqqClient* lc,void* data)
+static int friend_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account=ac->account;
@@ -140,8 +141,9 @@ static void friend_come(LwqqClient* lc,void* data)
     }else{
         purple_buddy_set_icon(purple_find_buddy(account,buddy->qqnumber),icon);
     }
+    return 0;
 }
-static void group_come(LwqqClient* lc,void* data)
+static int group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account=ac->account;
@@ -160,6 +162,7 @@ static void group_come(LwqqClient* lc,void* data)
     chat = purple_blist_find_chat(account,group->account);
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
+    return 0;
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -282,12 +285,12 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 
     purple_prpl_got_user_status(account,buddy->qqnumber,status->status,NULL);
 }
-static void friend_avatar(LwqqClient* lc,void* data)
+static int friend_avatar(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
     LwqqBuddy* buddy = data;
-    if(buddy->avatar_len==0)return;
+    if(buddy->avatar_len==0)return 0;
 
     if(strcmp(buddy->uin,purple_account_get_username(account))==0){
         purple_buddy_icons_set_account_icon(account,(guchar*)buddy->avatar,buddy->avatar_len);
@@ -296,20 +299,22 @@ static void friend_avatar(LwqqClient* lc,void* data)
     }
     //let free by purple;
     buddy->avatar = NULL;
+    return 0;
 }
-static void group_avatar(LwqqClient* lc,void* data)
+static int group_avatar(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
     LwqqGroup* group = data;
     PurpleChat* chat;
-    if(group->avatar_len==0)return;
+    if(group->avatar_len==0)return 0;
 
     chat = purple_blist_find_chat(account,group->account);
-    if(chat==NULL) return;
+    if(chat==NULL) return 0;
     purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     //let free by purple;
     group->avatar = NULL;
+    return 0;
 }
 void qq_msg_check(qq_account* ac)
 {
@@ -374,7 +379,7 @@ static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
     					PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
 				       _("Login Failed."));
 }
-static void verify_come(LwqqClient* lc,void* data)
+static int verify_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
 	PurpleRequestFieldGroup *field_group;
@@ -398,8 +403,9 @@ static void verify_come(LwqqClient* lc,void* data)
 			   	_("Cancel"), G_CALLBACK(pic_cancel_cb),
 			   	ac->account, NULL, NULL, ac);
 
+    return 0;
 }
-static void login_complete(LwqqClient* lc,void* data)
+static int login_complete(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
@@ -416,6 +422,7 @@ static void login_complete(LwqqClient* lc,void* data)
     background_friends_info(ac);
 
     background_msg_poll(ac);
+    return 0;
 }
 
 
@@ -440,17 +447,37 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_color = "000000";
     
     translate_message_to_struct(lc,buddy->uin,what,mmsg,0);
+    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
-    int ret;
-    ret = lwqq_msg_send(lc,msg);
+    void** data = s_malloc0(sizeof(void*)*3);
+    data[0] = msg;
+    data[1] = conv;
+    data[2] = s_strdup(what);
+    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
 
+    return 1;
+}
+static void send_back(LwqqAsyncEvent* event,void* data)
+{
+    static char buf[1024];
+    void **d = data;
+    LwqqMsg* msg = d[0];
+    PurpleConversation* conv = d[1];
+    char* what = d[2];
+    int succ = lwqq_async_event_get_result(event);
+    s_free(data);
+    if(!succ){
+        snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
+        purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
+    }
+
+    LwqqMsgMessage* mmsg = msg->opaque;
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;
     mmsg->to = NULL;
-
+    mmsg->group_code = NULL;
+    s_free(what);
     lwqq_msg_free(msg);
-
-    return ret;
 }
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
@@ -473,16 +500,13 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     
     translate_message_to_struct(lc,gid,message,mmsg,1);
 
-    lwqq_msg_send(lc,msg);
-
-    mmsg->f_name = NULL;
-    mmsg->f_color = NULL;
-    mmsg->to = NULL;
-    mmsg->group_code = NULL;
-
-    lwqq_msg_free(msg);
-
     PurpleConversation* conv = purple_find_chat(gc,id);
+
+    void** data = s_malloc0(sizeof(void*)*4);
+    data[0] = msg;
+    data[1] = conv;
+    data[2] = s_strdup(message);
+    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
@@ -516,7 +540,7 @@ GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
     return defaults;
 }
 
-static void group_member_list_come(LwqqClient* lc,void* data)
+static int group_member_list_come(LwqqClient* lc,void* data)
 {
     LwqqGroup* group = (LwqqGroup*)data;
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -539,6 +563,7 @@ static void group_member_list_come(LwqqClient* lc,void* data)
                     qq_get_cb_real_name(gc,id,member->uin));*/
         }
     }
+    return 0;
 }
 static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 {

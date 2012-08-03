@@ -14,7 +14,7 @@
 #include "type.h"
 
 struct LwqqHttpRequest;
-typedef void (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
+typedef int (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
 
 struct cookie_list {
     char name[32];

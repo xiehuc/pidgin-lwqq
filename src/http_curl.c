@@ -396,6 +396,7 @@ static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
     int have_read_bytes;
+    int res;
     char** resp = &request->response;
 
     have_read_bytes = request->resp_len;
@@ -425,7 +426,8 @@ static void async_complete(D_ITEM* conn)
         have_read_bytes = total;
     }
 failed:
-    conn->callback(request,conn->data);
+    res = conn->callback(request,conn->data);
+    lwqq_async_event_set_result(conn->event,res);
     lwqq_async_event_finish(conn->event);
     return ;
 }
@@ -535,7 +537,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
                                       void *data)
 {
     if (!request->req)
-        return -1;
+        return NULL;
 
     char **resp = &request->response;
 

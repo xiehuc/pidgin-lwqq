@@ -149,7 +149,7 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list);
  * @return 1 means ok
  *         0 means failed or send failed
  */
-int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg);
+LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg);
 
 /**
  * easy way to send message

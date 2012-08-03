@@ -27,7 +27,10 @@ typedef struct _LwqqAsyncEvset{
     int ref_count;
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
+    int result;///<it must put first
     LwqqAsyncEvset* host_lock;
+    EVENT_CALLBACK callback;
+    void* data;
 }_LwqqAsyncEvent;
 
 static gboolean timeout_come(void* p);
@@ -84,6 +87,9 @@ LwqqAsyncEvset* lwqq_async_evset_new()
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
 {
+    if(event->callback){
+        event->callback(event,event->data);
+    }
     if(event->host_lock !=NULL){
         pthread_mutex_lock(&event->host_lock->lock);
         event->host_lock->ref_count--;
@@ -110,4 +116,10 @@ void lwqq_async_wait(LwqqAsyncEvset* host)
     }
     pthread_mutex_unlock(&host->lock);
     s_free(host);
+}
+
+void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data)
+{
+    event->callback = callback;
+    event->data = data;
 }

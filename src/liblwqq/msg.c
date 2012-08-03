@@ -21,6 +21,7 @@
 #include "msg.h"
 #include "queue.h"
 #include "unicode.h"
+#include "async.h"
 
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
@@ -29,6 +30,7 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
 static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
+static int msg_send_back(LwqqHttpRequest* req,void* data);
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
@@ -976,9 +978,8 @@ done:
  * @return 1 means ok
  *         0 means failed or send failed
  */
-int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
+LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
-    int ret;
     LwqqHttpRequest *req = NULL;  
     char *cookies;
     char *content = NULL;
@@ -987,7 +988,6 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     const char *tonam;
     const char *apistr;
     int has_cface = 0;
-    json_t *root = NULL;
 
     if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
                  msg->type != LWQQ_MT_GROUP_MSG)) {
@@ -1038,29 +1038,35 @@ int lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         s_free(cookies);
     }
     
-    ret = req->do_request(req, 1, data);
-    if (ret || req->http_code != 200) {
+    return req->do_request_async(req, 1, data,msg_send_back,lc);
+
+failed:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+static int msg_send_back(LwqqHttpRequest* req,void* data)
+{
+    json_t *root = NULL;
+    LwqqClient* lc = data;
+    int ret;
+    int succ = 0;
+    if (req->http_code != 200) {
         goto failed;
     }
-
     puts(req->response);
 
     //we check result if ok return 1,fail return 0;
     json_t *res;
     ret = json_parse_document(&root,req->response);
     res = get_result_json_object(root);
-    if(!res){
+    if(!res)
         goto failed;
-    }
-    return 1;
-
+    succ = 1;
 failed:
     if(root)
         json_free_value(&root);
-    return 0;
-}
-static void msg_send_back(LwqqHttpRequest* request,void* data)
-{
+    lwqq_http_request_free(req);
+    return succ;
 }
 
 int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)
@@ -1080,7 +1086,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     c->data.str = s_strdup(message);
     TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
-    ret = lwqq_msg_send(lc,msg);
+    LWQQ_SYNC(lwqq_msg_send(lc,msg));
 
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;

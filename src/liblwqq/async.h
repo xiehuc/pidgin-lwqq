@@ -11,7 +11,7 @@
 #define LWQQ_ASYNC_H
 #include "type.h"
 
-typedef void (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
+typedef int (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
     FRIEND_COME,///< after get friend qqnumber
@@ -28,7 +28,6 @@ typedef struct _LwqqAsync {
     LwqqErrorCode err[ListenerTypeLength];
     void* data[ListenerTypeLength];
 } _LwqqAsync;
-typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 void lwqq_async_set(LwqqClient* client,int enabled);
 #define lwqq_async_enabled(lc) (lc->async!=NULL)
 #define lwqq_async_add_listener(lc,type,callback) \
@@ -47,12 +46,23 @@ void lwqq_async_set(LwqqClient* client,int enabled);
 void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* extradata);
 
 /**===================EVSET API==========================================**/
+typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
+typedef void (*EVENT_CALLBACK)(LwqqAsyncEvent* event,void* data);
 LwqqAsyncEvset* lwqq_async_evset_new();
 LwqqAsyncEvent* lwqq_async_event_new();
 void lwqq_async_event_finish(LwqqAsyncEvent* event);
 #define lwqq_async_event_emit(event) lwqq_async_event_finish(event)
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
 void lwqq_async_wait(LwqqAsyncEvset* host);
+void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
+#define lwqq_async_event_set_result(ev,res)\
+do{\
+    *((int*)ev) = res;\
+}while(0)
+#define lwqq_async_event_get_result(ev) (*((int*)ev))
+
+
+
 #define LWQQ_SYNC(ev) \
     do{\
         LwqqAsyncEvset* evset = lwqq_async_evset_new();\
