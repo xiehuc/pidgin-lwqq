@@ -259,10 +259,17 @@ void translate_global_init()
         purple_smiley_new_from_file("[FACE_134]",FACE_DIR"104.gif");
     }
 }
+void remove_all_smiley(void* data,void* userdata)
+{
+    purple_smiley_delete((PurpleSmiley*)data);
+}
 void translate_global_free()
 {
     if(_regex) trex_free(_regex);
     if(smily_table) g_hash_table_remove_all(smily_table);
+    GList* list = purple_smileys_get_all();
+    g_list_foreach(list,remove_all_smiley,NULL);
+    g_list_free(list);
 }
 #define MAP(face,str) \
     case face:\
