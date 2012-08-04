@@ -1,0 +1,8 @@
+pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
+
+master (08/04/2012):
+	* face full support
+	* introduce new async event/evset api
+	* send message async
+	* send picture async
+	* use cface to upload buddy message pictures
