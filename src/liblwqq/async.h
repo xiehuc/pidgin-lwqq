@@ -53,13 +53,19 @@ LwqqAsyncEvent* lwqq_async_event_new();
 void lwqq_async_event_finish(LwqqAsyncEvent* event);
 #define lwqq_async_event_emit(event) lwqq_async_event_finish(event)
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
-void lwqq_async_wait(LwqqAsyncEvset* host);
+/**
+ * @return the error number of evset.
+ * it is one of event error number.
+ * it can only store one error number.
+ */
+int lwqq_async_wait(LwqqAsyncEvset* host);
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
 #define lwqq_async_event_set_result(ev,res)\
 do{\
     *((int*)ev) = res;\
 }while(0)
 #define lwqq_async_event_get_result(ev) (*((int*)ev))
+#define lwqq_async_evset_get_result(ev) (*((int*)ev))
 
 #define LWQQ_SYNC(ev) \
     do{\

@@ -422,8 +422,10 @@ static void async_complete(D_ITEM* conn)
         s_free(*resp);
         /* Update response data to uncompress data */
         *resp = s_strdup(outdata);
+        (*resp)[total] = '\0';
         s_free(outdata);
         have_read_bytes = total;
+        request->resp_len = total;
     }
 failed:
     res = conn->callback(request,conn->data);

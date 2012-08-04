@@ -22,6 +22,7 @@ typedef struct async_dispatch_data {
     void* data;
 } async_dispatch_data;
 typedef struct _LwqqAsyncEvset{
+    int result;///<it must put first
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int ref_count;
@@ -93,6 +94,10 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
     if(event->host_lock !=NULL){
         pthread_mutex_lock(&event->host_lock->lock);
         event->host_lock->ref_count--;
+        //this store evset result.
+        //it can only store one error number.
+        if(event->result != 0)
+            event->host_lock->result = event->result;
         pthread_mutex_unlock(&event->host_lock->lock);
         if(event->host_lock->ref_count==0){
             pthread_cond_signal(&event->host_lock->cond);
@@ -108,14 +113,17 @@ void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
     pthread_mutex_unlock(&host->lock);
 }
 
-void lwqq_async_wait(LwqqAsyncEvset* host)
+int lwqq_async_wait(LwqqAsyncEvset* host)
 {
+    int ret = 0;
     pthread_mutex_lock(&host->lock);
     if(host->ref_count>0){
         pthread_cond_wait(&host->cond,&host->lock);
     }
     pthread_mutex_unlock(&host->lock);
+    ret = host->result;
     s_free(host);
+    return ret;
 }
 
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data)

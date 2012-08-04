@@ -56,7 +56,12 @@ static LwqqMsgContent* build_face_direct(int num)
     c->data.face = num;
     return c;
 }
-void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg,int using_cface)
+static void img_unref(LwqqAsyncEvent* event,void* data)
+{
+    PurpleStoredImage* img = data;
+    purple_imgstore_unref(img);
+}
+int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg,int using_cface)
 {
     const char* ptr = what;
     int img_id;
@@ -67,7 +72,8 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
     TRex* x = _regex;
     //trex_clear(x);
 
-    LwqqAsyncEvset *set = lwqq_async_evset_new();
+    LwqqAsyncEvset* set = lwqq_async_evset_new();
+    LwqqAsyncEvent* event;
      
     while(*ptr!='\0'){
         c = NULL;
@@ -94,14 +100,17 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
                 c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
                 c->data.cface.data = purple_imgstore_get_data(simg);
                 c->data.cface.size = purple_imgstore_get_size(simg);
-                lwqq_async_evset_add_event(set,lwqq_msg_upload_cface(lc,c));
+                event = lwqq_msg_upload_cface(lc,c);
             }else{
                 c->type = LWQQ_CONTENT_OFFPIC;
                 c->data.img.name = s_strdup(purple_imgstore_get_filename(simg));
                 c->data.img.data = purple_imgstore_get_data(simg);
                 c->data.img.size = purple_imgstore_get_size(simg);
-                lwqq_async_evset_add_event(set,lwqq_msg_upload_offline_pic(lc,to,c));
+                event = lwqq_msg_upload_offline_pic(lc,to,c);
             }
+            purple_imgstore_ref(simg);
+            lwqq_async_add_event_listener(event,img_unref,simg);
+            lwqq_async_evset_add_event(set,event);
         }else if(strstr(begin,"[FACE")==begin){
             sscanf(begin,"[FACE_%d]",&img_id);
             c = build_face_direct(img_id);
@@ -113,7 +122,7 @@ void translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,
         if(c!=NULL)
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
     }
-    lwqq_async_wait(set);
+    return lwqq_async_wait(set);
 }
 void translate_global_init()
 {

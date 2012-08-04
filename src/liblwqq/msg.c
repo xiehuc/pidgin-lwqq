@@ -770,7 +770,7 @@ static void parse_unescape(char* source,char *buf,int buf_len)
 #define RIGHT "\\\""
 #define KEY(key) "\\\""key"\\\""
 
-static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
+static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cface)
 {
     //not thread safe. 
     //you need ensure only one thread send msg in one time.
@@ -791,8 +791,12 @@ static char* content_parse_string(LwqqMsgMessage* msg,int *has_cface)
                 break;
             case LWQQ_CONTENT_CFACE:
                 //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
-                format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
-                        c->data.cface.name);
+                if(msg_type == LWQQ_MT_GROUP_MSG)
+                    format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
+                            c->data.cface.name);
+                else if(msg_type == LWQQ_MT_BUDDY_MSG)
+                    format_append(buf,"["KEY("cface")","KEY("%s")"],",
+                            c->data.cface.name);
                 *has_cface = 1;
                 break;
             case LWQQ_CONTENT_STRING:
@@ -825,6 +829,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     LwqqErrorCode err;
     const char* filename = c->data.img.name;
     const char* buffer = c->data.img.data;
+    c->data.img.data = NULL;
     size_t size = c->data.img.size;
     char url[512];
     char *cookies;
@@ -862,11 +867,11 @@ done:
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
 {
     LwqqMsgContent* c = data;
+    json_t* json = NULL;
     if(req->http_code!=200){
         goto done;
     }
 
-    json_t* json = NULL;
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
     json_parse_document(&json,strchr(req->response,'{'));
@@ -931,6 +936,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     if(!c->data.cface.name || !c->data.cface.data || !c->data.cface.size) return NULL;
     const char *filename = c->data.cface.name;
     const char *buffer = c->data.cface.data;
+    c->data.cface.data = NULL;
     size_t size = c->data.cface.size;
     LwqqHttpRequest *req;
     LwqqErrorCode err;
@@ -951,8 +957,8 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
-    req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
+    //req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
+    //req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
@@ -1005,11 +1011,12 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     if(!lc->gface_sig)
         query_gface_sig(lc);
     pthread_mutex_unlock(&mutex);
+    ret = 0;
 done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return ret;
 }
 /** 
  * 
@@ -1043,11 +1050,11 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         apistr = "send_qun_msg2";
     }
     mmsg = msg->opaque;
-    content = content_parse_string(mmsg,&has_cface);
+    content = content_parse_string(mmsg,msg->type,&has_cface);
     format_append(data,"r={"
             "\"%s\":%s,",
             tonam,mmsg->to);
-    if(has_cface){
+    if(has_cface&&msg->type == LWQQ_MT_GROUP_MSG){
         format_append(data,
                 "\"group_code\":%s,"
                 "\"key\":\"%s\","
