@@ -30,20 +30,20 @@ typedef struct LwqqMsgContent {
         //webqq protocol
         //this used in offpic format which may replaced by cface (custom face)
         struct {
-            int success;
-            char* file_path;///< on upload this is filename
-            char* name;///<this is image content
+            char* name;
             char* data;
             size_t size;
+            int success;
+            char* file_path;
         }img;
         struct {
             char* name;
+            char* data;
+            size_t size;
             char* file_id;
             char* key;
             char serv_ip[24];
             char serv_port[8];
-            char* data;
-            size_t size;
         }cface;
     } data;
     TAILQ_ENTRY(LwqqMsgContent) entries;
@@ -147,9 +147,8 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list);
  *
  * @param lc
  * @param sendmsg
+ * @return return a async event. you can wait it or add a event listener.
  *
- * @return 1 means ok
- *         0 means failed or send failed
  */
 LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg);
 
@@ -169,10 +168,31 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 #define lwqq_msg_send_group(lc,group,message) \
     ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : NULL)
 /* LwqqRecvMsg API end */
+/** it upload a picture use offpic mode.
+ * it is slow.recommend cface method.
+ * @param to the buddy uin to send pic.
+ * @param c the content which contain pic data.
+ *          you should ensure c contain follow information:
+ *          c->type is set to LWQQ_CONTENT_OFFPIC
+ *          c->img.name is set to file name (not const).
+ *          c->img.data is set to file content pointer.
+ *          c->img.size is set to file content length.
+ *          you should free picture data by hand.(use event listener)
+ */
+LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMsgContent* c);
+/** it upload a picture use cface mode.
+ * it has a good speed. recommend to use it.
+ * @param c the content which contain picdata.
+ *          you should ensure c contain follow information:
+ *          c->type is set to LWQQ_CONTENT_CFACE
+ *          c->cface.name is set to file name (not const).
+ *          c->cface.data is set to file content pointer.
+ *          c->cface.size is set to file content length.
+ *          you should free picture data by hand.(use event listener)
+ */
+LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c);
 
 /************************************************************************/
 /*  LwqqSendMsg API */
-LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMsgContent* c);
-LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c);
 
 #endif  /* LWQQ_MSG_H */
