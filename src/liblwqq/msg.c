@@ -833,7 +833,6 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     size_t size = c->data.img.size;
     char url[512];
     char *cookies;
-    int ret;
 
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%ld",
             time(NULL));
@@ -859,10 +858,6 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
 
     return req->do_request_async(req,0,NULL,upload_offline_pic_back,c);
-
-done:
-    lwqq_http_request_free(req);
-    return NULL;
 }
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
 {
@@ -942,7 +937,6 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     LwqqErrorCode err;
     char url[512];
     char *cookies;
-    int ret;
     static int fileid = 1;
     char fileid_str[20];
 
@@ -957,8 +951,6 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    //req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
-    //req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
@@ -968,10 +960,6 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     data[0] = lc;
     data[1] = c;
     return req->do_request_async(req,0,NULL,upload_cface_back,data);
-
-done:
-    lwqq_http_request_free(req);
-    return NULL;
 }
 static int upload_cface_back(LwqqHttpRequest *req,void* data)
 {
@@ -981,6 +969,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     s_free(data);
     json_t* json = NULL;
     int ret;
+    int errno = 0;
 
     if(req->http_code!=200){
         goto done;
@@ -993,6 +982,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     json_parse_document(&json,strchr(req->response,'{'));
     ret = atoi(json_parse_simple_value(json,"ret"));
     if(ret !=0 && ret !=4){
+        errno = 1;
         goto done;
     }
     c->type = LWQQ_CONTENT_CFACE;
@@ -1016,7 +1006,7 @@ done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ret;
+    return errno;
 }
 /** 
  * 
@@ -1096,9 +1086,8 @@ failed:
 static int msg_send_back(LwqqHttpRequest* req,void* data)
 {
     json_t *root = NULL;
-    LwqqClient* lc = data;
     int ret;
-    int succ = 0;
+    int errno = 1;
     if (req->http_code != 200) {
         goto failed;
     }
@@ -1107,22 +1096,23 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
     //we check result if ok return 1,fail return 0;
     json_t *res;
     ret = json_parse_document(&root,req->response);
+    if(ret != JSON_OK) goto failed;
     res = get_result_json_object(root);
     if(!res)
         goto failed;
-    succ = 1;
+    errno = 0;
 failed:
     if(root)
         json_free_value(&root);
     lwqq_http_request_free(req);
-    return succ;
+    return errno;
 }
 
 int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)
 {
     if(!lc||!to||!message)
         return 0;
-    int ret;
+    int ret = 0;
     LwqqMsg *msg = lwqq_msg_new(type);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = s_strdup(to);

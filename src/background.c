@@ -154,9 +154,9 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     LwqqMsg* msg = d[0];
     char* what = d[2];
     qq_account* ac = d[3];
-    int succ = lwqq_async_event_get_result(event);
+    int errno = lwqq_async_event_get_result(event);
     s_free(data);
-    if(!succ){
+    if(errno){
         PurpleConversation* conv = find_conversation(msg,ac->account);
         snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
         if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
@@ -179,7 +179,6 @@ void* _background_send_msg(void* data)
     const char* what = d[2];
     qq_account* ac = d[3];
     LwqqClient* lc = ac->qq;
-    int use_cface = (msg->type == LWQQ_MT_GROUP_MSG);
 
     int ret = translate_message_to_struct(lc,to,what,mmsg,1);
     PurpleConversation* conv = find_conversation(msg,ac->account);
@@ -197,8 +196,6 @@ void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* what,PurpleConv
     data[1] = conv;
     data[2] = s_strdup(what);
     data[3] = ac;
-    LwqqMsgMessage* mmsg = msg->opaque;
-    LwqqMsgContent* c;
 
     int will_upload = 0;
     will_upload = (strstr(what,"<IMG")!=NULL);

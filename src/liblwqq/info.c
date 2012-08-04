@@ -29,11 +29,11 @@ static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
 char *get_group_qqnumber(LwqqClient *lc, const char *code);
-static void get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
-static void get_avatar_back(LwqqHttpRequest* req,void* data);
-static void get_friends_info_back(LwqqHttpRequest* req,void* data);
-static void get_online_buddies_back(LwqqHttpRequest* req,void* data);
-static void get_group_name_list_back(LwqqHttpRequest* req,void* data);
+static int get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
+static int get_avatar_back(LwqqHttpRequest* req,void* data);
+static int get_friends_info_back(LwqqHttpRequest* req,void* data);
+static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
+static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -271,7 +271,6 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
 {
     char msg[256] = {0};
     LwqqHttpRequest *req = NULL;
-    int ret;
     char *cookies;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
@@ -303,7 +302,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static void get_friends_info_back(LwqqHttpRequest* req,void* data)
+static int get_friends_info_back(LwqqHttpRequest* req,void* data)
 {
     json_t *json = NULL, *json_tmp;
     int ret;
@@ -353,7 +352,7 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ;
+    return 0;
 
 json_error:
     if (err)
@@ -362,6 +361,7 @@ json_error:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    return 0;
 }
 
 void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
@@ -426,12 +426,10 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
     array[1] = buddy;
     array[2] = group;
     req->do_request_async(req, 0, NULL,get_avatar_back,array);
-    //req->do_request(req,0,NULL);
-    //get_avatar_back(req,array);
 done:
     return;
 }
-static void get_avatar_back(LwqqHttpRequest* req,void* data)
+static int get_avatar_back(LwqqHttpRequest* req,void* data)
 {
     void** array = data;
     LwqqClient* lc = array[0];
@@ -490,7 +488,7 @@ static void get_avatar_back(LwqqHttpRequest* req,void* data)
         lwqq_http_request_free(req);
         if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
         else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
-        return;
+        return 0;
     }
 
 done:
@@ -505,6 +503,7 @@ done:
     }
     if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
     else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
+    return 0;
 }
 
 /**
@@ -604,8 +603,6 @@ LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err
     char msg[256];
     char url[512];
     LwqqHttpRequest *req = NULL;
-    int ret;
-    json_t *json = NULL, *json_tmp;
     char *cookies;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
@@ -630,7 +627,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static void get_group_name_list_back(LwqqHttpRequest* req,void* data)
+static int get_group_name_list_back(LwqqHttpRequest* req,void* data)
 {
     json_t *json = NULL, *json_tmp;
     int ret;
@@ -685,7 +682,7 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ;
+    return 0;
 
 json_error:
     if (err)
@@ -694,6 +691,7 @@ json_error:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    return 0;
 }
 
 
@@ -1061,7 +1059,7 @@ done:
     lwqq_http_request_free(req);
     return 0;
 }
-static void get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
+static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
     LwqqClient* lc = data;
     char* uin;
@@ -1100,7 +1098,7 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return;
+    return 0;
 }
 
 /**
@@ -1291,7 +1289,6 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 {
     char url[512];
     LwqqHttpRequest *req = NULL;
-    int ret;
     char *cookies;
 
     if (!lc) {
@@ -1319,7 +1316,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static void get_online_buddies_back(LwqqHttpRequest* req,void* data)
+static int get_online_buddies_back(LwqqHttpRequest* req,void* data)
 {
     json_t *json = NULL, *json_tmp;
     int ret;
@@ -1362,7 +1359,7 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ;
+    return 0;
 
 json_error:
     if (err)
@@ -1371,4 +1368,5 @@ json_error:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    return 0;
 }

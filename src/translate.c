@@ -98,13 +98,13 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             if(using_cface){
                 c->type = LWQQ_CONTENT_CFACE;
                 c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
-                c->data.cface.data = purple_imgstore_get_data(simg);
+                c->data.cface.data = (char*)purple_imgstore_get_data(simg);
                 c->data.cface.size = purple_imgstore_get_size(simg);
                 event = lwqq_msg_upload_cface(lc,c);
             }else{
                 c->type = LWQQ_CONTENT_OFFPIC;
                 c->data.img.name = s_strdup(purple_imgstore_get_filename(simg));
-                c->data.img.data = purple_imgstore_get_data(simg);
+                c->data.img.data = (char*)purple_imgstore_get_data(simg);
                 c->data.img.size = purple_imgstore_get_size(simg);
                 event = lwqq_msg_upload_offline_pic(lc,to,c);
             }

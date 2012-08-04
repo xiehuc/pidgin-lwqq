@@ -80,10 +80,9 @@ LwqqAsyncEvent* lwqq_async_event_new()
 }
 LwqqAsyncEvset* lwqq_async_evset_new()
 {
-    LwqqAsyncEvset* l = s_malloc(sizeof(*l));
+    LwqqAsyncEvset* l = s_malloc0(sizeof(*l));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
-    l->ref_count = 0;
     return l;
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
