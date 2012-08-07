@@ -381,12 +381,14 @@ void qq_msg_check(qq_account* ac)
 
 }
 
-void qq_set_basic_info(qq_account* ac)
+void qq_set_basic_info(int result,void* data)
 {
+    qq_account* ac = data;
     LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
         lwqq_info_get_friend_avatar(lc,lc->myself);
+    background_msg_poll(ac);
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
@@ -444,8 +446,6 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     background_friends_info(ac);
-
-    background_msg_poll(ac);
     return 0;
 }
 

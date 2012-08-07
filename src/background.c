@@ -59,14 +59,19 @@ static void* _background_friends_info(void* data)
     lwqq_info_get_friend_detail_info(lc,lc->myself,&err);
 
 
-    lwqq_info_get_all_friend_qqnumbers(lc,&err);
-
+    //lwqq_info_get_all_friend_qqnumbers(lc,&err);
+    lock = lwqq_async_evset_new();
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&ac->qq->friends,entries){
+        event = lwqq_info_get_friend_qqnumber(lc,buddy->uin);
+        lwqq_async_evset_add_event(lock,event);
+    }
     LwqqGroup* group;
     LIST_FOREACH(group,&ac->qq->groups,entries) {
-        lwqq_info_get_friend_qqnumber(lc,group->gid);
+        event = lwqq_info_get_friend_qqnumber(lc,group->code);
+        lwqq_async_evset_add_event(lock,event);
     }
-
-    qq_set_basic_info(ac);
+    lwqq_async_add_evset_listener(lock,qq_set_basic_info,ac);
 
     return NULL;
 }
@@ -109,31 +114,6 @@ void background_msg_drain(qq_account* ac)
     tid = 0;
 }
 
-static void* _background_group_detail(void* d)
-{
-    void** data = (void**)d;
-    qq_account* ac = data[0];
-    LwqqClient* lc = ac->qq;
-    LwqqGroup* group = data[1];
-    free(data);
-    LwqqErrorCode err;
-    lwqq_info_get_group_detail_info(lc,group,&err);
-    lwqq_async_dispatch(lc,GROUP_DETAIL,group);
-
-    return NULL;
-}
-void background_group_detail(qq_account* ac,LwqqGroup* group)
-{
-    if(!LIST_EMPTY(&group->members)) {
-        LwqqClient* lc = ac->qq;
-        lwqq_async_dispatch(lc,GROUP_DETAIL,group);
-        return;
-    }
-    void** data = malloc(sizeof(void*)*2);
-    data[0] = ac;
-    data[1] = group;
-    START_THREAD(_background_group_detail,data);
-}
 
 static PurpleConversation* find_conversation(LwqqMsg* msg,PurpleAccount* account)
 {

@@ -27,8 +27,7 @@
 
 static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
-static char *get_friend_qqnumber(LwqqClient *lc, const char *uin);
-char *get_group_qqnumber(LwqqClient *lc, const char *code);
+static LwqqAsyncEvent* get_friend_qqnumber(LwqqClient *lc, const char *uin);
 static int get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
 static int get_avatar_back(LwqqHttpRequest* req,void* data);
 static int get_friends_info_back(LwqqHttpRequest* req,void* data);
@@ -543,7 +542,7 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
         group->code = s_strdup(json_parse_simple_value(cur, "code"));
 
         /* we got the 'code', so we can get the qq group number now */
-        group->account = get_group_qqnumber(lc, group->code);
+        //group->account = get_group_qqnumber(lc, group->code);
 
         /* Add to groups list */
         LIST_INSERT_HEAD(&lc->groups, group, entries);
@@ -714,7 +713,7 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
             /** If qqnumber hasnt been fetched(NB: lc->myself has qqnumber),
              * fetch it
              */
-            buddy->qqnumber = get_friend_qqnumber(lc, buddy->uin);
+            get_friend_qqnumber(lc, buddy->uin);
             //lwqq_log(LOG_DEBUG, "Get buddy qqnumber: %s\n", buddy->qqnumber);
         }
     }
@@ -733,7 +732,7 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
  * @return qqnumber on sucessful, NB: caller is responsible for freeing
  * the memory returned by this function
  */
-char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
+LwqqAsyncEvent* lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
 {
     return get_friend_qqnumber(lc, uin);
 }
@@ -1030,7 +1029,7 @@ json_error:
  *
  * @return
  */
-static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
+static LwqqAsyncEvent* get_friend_qqnumber(LwqqClient *lc, const char *uin)
 {
     if (!lc || !uin) {
         return NULL;
@@ -1064,15 +1063,13 @@ static char *get_friend_qqnumber(LwqqClient *lc, const char *uin)
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    req->do_request_async(req, 0, NULL,get_friend_qqnumber_back,lc);
-    return 0;
-
+    return req->do_request_async(req, 0, NULL,get_friend_qqnumber_back,lc);
 done:
     /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return NULL;
 }
 static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
@@ -1103,7 +1100,12 @@ static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
         buddy->qqnumber = s_strdup(account);
         lwqq_async_dispatch(lc,FRIEND_COME,buddy);
     }
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,uin);
+    LwqqGroup* group = NULL;
+    LwqqGroup* gp;
+    LIST_FOREACH(gp,&lc->groups,entries){
+        if(strcmp(gp->code,uin)==0)
+            group = gp;
+    }
     if(group){
         group->account = s_strdup(account);
         lwqq_async_dispatch(lc,GROUP_COME,group);
@@ -1116,18 +1118,6 @@ done:
     return 0;
 }
 
-/**
- * Get QQ group number
- *
- * @param lc
- * @param code is group‘s code
- *
- * @return
- */
-char *get_group_qqnumber(LwqqClient *lc, const char *code)
-{
-    return get_friend_qqnumber(lc, code);
-}
 
 /**
  * Get detail information of QQ friend(NB: include myself)

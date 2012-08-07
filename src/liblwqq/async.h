@@ -68,6 +68,7 @@ void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* extradata);
  */
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef void (*EVENT_CALLBACK)(LwqqAsyncEvent* event,void* data);
+typedef void (*EVSET_CALLBACK)(int result,void* data);
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished
  */
@@ -102,6 +103,8 @@ int lwqq_async_wait(LwqqAsyncEvset* host);
  * async listener can only set one data for one ListenerType.
  */
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
+
+void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data);
 /** this set the errno for a event.
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.

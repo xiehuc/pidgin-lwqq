@@ -25,7 +25,10 @@ typedef struct _LwqqAsyncEvset{
     int result;///<it must put first
     pthread_mutex_t lock;
     pthread_cond_t cond;
+    int cond_waiting;
     int ref_count;
+    EVSET_CALLBACK callback;
+    void* data;
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
@@ -90,17 +93,23 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
     if(event->callback){
         event->callback(event,event->data);
     }
-    if(event->host_lock !=NULL){
-        pthread_mutex_lock(&event->host_lock->lock);
-        event->host_lock->ref_count--;
+    LwqqAsyncEvset* evset = event->host_lock;
+    if(evset !=NULL){
+        pthread_mutex_lock(&evset->lock);
+        evset->ref_count--;
         //this store evset result.
         //it can only store one error number.
         if(event->result != 0)
-            event->host_lock->result = event->result;
-        pthread_mutex_unlock(&event->host_lock->lock);
+            evset->result = event->result;
         if(event->host_lock->ref_count==0){
-            pthread_cond_signal(&event->host_lock->cond);
+            if(evset->callback)
+                evset->callback(evset->result,evset->data);
+            if(!evset->cond_waiting)
+                s_free(evset);
+            else
+                pthread_cond_signal(&evset->cond);
         }
+        pthread_mutex_unlock(&event->host_lock->lock);
     }
     s_free(event);
 }
@@ -117,6 +126,7 @@ int lwqq_async_wait(LwqqAsyncEvset* host)
     int ret = 0;
     pthread_mutex_lock(&host->lock);
     if(host->ref_count>0){
+        host->cond_waiting = 1;
         pthread_cond_wait(&host->cond,&host->lock);
     }
     pthread_mutex_unlock(&host->lock);
@@ -129,4 +139,10 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback
 {
     event->callback = callback;
     event->data = data;
+}
+
+void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data)
+{
+    evset->callback = callback;
+    evset->data = data;
 }
