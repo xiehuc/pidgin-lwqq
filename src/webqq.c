@@ -634,6 +634,7 @@ static void qq_close(PurpleConnection *gc)
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
+    lwqq_http_global_free();
 }
 static void
 init_plugin(PurplePlugin *plugin)

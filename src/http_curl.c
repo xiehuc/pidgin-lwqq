@@ -25,6 +25,8 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
 
 typedef struct GLOBAL {
     CURLM* multi;
+    CURLSH* share;
+    pthread_mutex_t share_lock[2];
     //struct ev_loop* loop;
     int still_running;
     int timer_event;
@@ -244,7 +246,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
         lwqq_log(LOG_WARNING, "Invalid uri: %s\n", uri);
         goto failed;
     }
-    
+    if(global.share==NULL) lwqq_http_global_init();
+    curl_easy_setopt(request->req,CURLOPT_SHARE,global.share);
     curl_easy_setopt(request->req,CURLOPT_HEADERFUNCTION,write_header);
     curl_easy_setopt(request->req,CURLOPT_HEADERDATA,request);
     curl_easy_setopt(request->req,CURLOPT_WRITEFUNCTION,write_content);
@@ -648,16 +651,61 @@ failed:
     }
     return 0;
 }
+static void share_lock(CURL* handle,curl_lock_data data,curl_lock_access access,void* userptr)
+{
+    //this is shared access.
+    //no need to lock it.
+    if(access == CURL_LOCK_ACCESS_SHARED) return;
+    GLOBAL* g = userptr;
+    int idx;
+    if(data == CURL_LOCK_DATA_DNS) idx=0;
+    else if(data == CURL_LOCK_DATA_CONNECT) idx=1;
+    else return;
+    pthread_mutex_lock(&g->share_lock[idx]);
+
+}
+static void share_unlock(CURL* handle,curl_lock_data data,void* userptr)
+{
+    GLOBAL* g = userptr;
+    int idx;
+    if(data == CURL_LOCK_DATA_DNS) idx=0;
+    else if(data == CURL_LOCK_DATA_CONNECT) idx=1;
+    else return;
+    pthread_mutex_unlock(&g->share_lock[idx]);
+}
 void lwqq_http_global_init()
 {
-    global.multi = curl_multi_init();
-    curl_multi_setopt(global.multi,CURLMOPT_SOCKETFUNCTION,sock_cb);
-    curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
-    curl_multi_setopt(global.multi, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
-    curl_multi_setopt(global.multi, CURLMOPT_TIMERDATA, &global);
+    if(global.multi==NULL){
+        global.multi = curl_multi_init();
+        curl_multi_setopt(global.multi,CURLMOPT_SOCKETFUNCTION,sock_cb);
+        curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
+        curl_multi_setopt(global.multi, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
+        curl_multi_setopt(global.multi, CURLMOPT_TIMERDATA, &global);
+    }
+    if(global.share==NULL){
+        global.share = curl_share_init();
+        CURLSH* share = global.share;
+        curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_DNS);
+        //curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_CONNECT);
+        curl_share_setopt(share,CURLSHOPT_LOCKFUNC,share_lock);
+        curl_share_setopt(share,CURLSHOPT_UNLOCKFUNC,share_unlock);
+        curl_share_setopt(share,CURLSHOPT_USERDATA,&global);
+        pthread_mutex_init(&global.share_lock[0],NULL);
+        pthread_mutex_init(&global.share_lock[1],NULL);
+    }
 }
 void lwqq_http_global_free()
 {
+    if(global.multi){
+        curl_multi_cleanup(global.multi);
+        global.multi = NULL;
+    }
+    if(global.share){
+        curl_share_cleanup(global.share);
+        global.share = NULL;
+        pthread_mutex_destroy(&global.share_lock[0]);
+        pthread_mutex_destroy(&global.share_lock[1]);
+    }
 }
 
 static void lwqq_http_add_form(LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* value)
