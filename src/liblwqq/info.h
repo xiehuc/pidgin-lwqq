@@ -90,7 +90,7 @@ char *lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin);
  * @param group
  * @param err 
  */
-void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
+LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
                                      LwqqErrorCode *err);
 
 /** 

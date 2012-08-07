@@ -19,9 +19,10 @@
 #include "translate.h"
 
 
-static int group_member_list_come(LwqqClient* lc,void* data);
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(void);
+static void group_member_list_come(LwqqAsyncEvent* event,void* data);
+static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
 
 static void action_about_webqq(PurplePluginAction *action)
 {
@@ -256,26 +257,48 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
         }
     }
     LwqqErrorCode err;
+    void **data = s_malloc0(sizeof(void*)*4);
+    data[0] = ac;
+    data[1] = group;
+    data[2] = s_strdup(msg->send);
+    data[3] = s_strdup(buf);
     //get all member list
     if(LIST_EMPTY(&group->members)) {
         //use block method to get list
-        lwqq_info_get_group_detail_info(lc,group,&err);
+        lwqq_async_add_event_listener(
+                lwqq_info_get_group_detail_info(lc,group,&err),
+                group_message_delay_display,
+                data);
+    }else{
+        group_message_delay_display(NULL,data);
     }
-    group_member_list_come(lc,group);
+}
+static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
+{
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqGroup* group = d[1];
+    char* sender = d[2];
+    char* buf = d[3];
+    LwqqClient* lc = ac->qq;
+    PurpleConnection* pc = ac->gc;
 
     LwqqBuddy* buddy;
-    buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->send);
+    buddy = lwqq_buddy_find_buddy_by_uin(lc,sender);
 
     if(buddy)
         serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
     else{
-        buddy = lwqq_group_find_group_member_by_uin(group,msg->send);
+        buddy = lwqq_group_find_group_member_by_uin(group,sender);
         if(buddy)
             serv_got_chat_in(pc,atoi(group->gid),buddy->nick,PURPLE_MESSAGE_RECV,buf,time(NULL));
         else
             //this means not download all member list;
-            serv_got_chat_in(pc,atoi(group->gid),msg->send,PURPLE_MESSAGE_RECV,buf,time(NULL));
+            serv_got_chat_in(pc,atoi(group->gid),sender,PURPLE_MESSAGE_RECV,buf,time(NULL));
     }
+    s_free(sender);
+    s_free(buf);
+    group_member_list_come(NULL,data);
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
@@ -508,10 +531,13 @@ GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
     return defaults;
 }
 
-static int group_member_list_come(LwqqClient* lc,void* data)
+static void group_member_list_come(LwqqAsyncEvent* event,void* data)
 {
-    LwqqGroup* group = (LwqqGroup*)data;
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    void** d = data;
+    qq_account* ac = d[0];
+    LwqqGroup* group = d[1];
+    s_free(data);
+    LwqqClient* lc = ac->qq;
     LwqqBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
@@ -531,7 +557,7 @@ static int group_member_list_come(LwqqClient* lc,void* data)
                     qq_get_cb_real_name(gc,id,member->uin));*/
         }
     }
-    return 0;
+    return ;
 }
 static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 {
@@ -553,12 +579,16 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
         if(group == NULL) return;
         //this will open chat dialog.
         qq_conv_open(gc,group);
+        void** d = s_malloc0(sizeof(void*)*2);
+        d[0] = ac;
+        d[1] = group;
         if(!LIST_EMPTY(&group->members)) {
-            group_member_list_come(lc,group);
+            group_member_list_come(NULL,d);
         } else {
-            lwqq_async_add_listener(lc,GROUP_DETAIL,group_member_list_come);
-            lwqq_async_set_userdata(lc,GROUP_DETAIL,ac);
-            background_group_detail(ac,group);
+            lwqq_async_add_event_listener(
+                    lwqq_info_get_group_detail_info(lc,group,NULL),
+                    group_member_list_come,
+                    d);
         }
     }
     return;

@@ -34,6 +34,7 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data);
 static int get_friends_info_back(LwqqHttpRequest* req,void* data);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
+static int group_detail_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -899,7 +900,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  * @param group
  * @param err
  */
-void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
+LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
                                      LwqqErrorCode *err)
 {
     lwqq_log(LOG_DEBUG, "in function.");
@@ -907,18 +908,17 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
     char url[512];
     LwqqHttpRequest *req = NULL;
     int ret;
-    json_t *json = NULL, *json_tmp;
     char *cookies;
 
     if (!lc || ! group) {
-        return ;
+        return NULL;
     }
 
     /* Make sure we know code. */
     if (!group->code) {
         if (err)
             *err = LWQQ_EC_NULL_POINTER;
-        return ;
+        return NULL;
     }
 
     /* Create a GET request */
@@ -937,10 +937,26 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 0, NULL);
-    if (ret || req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
+    void **data = s_malloc0(sizeof(void*)*2);
+    data[0] = lc;
+    data[1] = group;
+    return req->do_request_async(req, 0, NULL,group_detail_back,data);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+
+static int group_detail_back(LwqqHttpRequest* req,void* data)
+{
+    void **d = data;
+    LwqqClient* lc = d[0];
+    LwqqGroup* group = d[1];
+    s_free(data);
+    int ret;
+    int errno = 0;
+    json_t *json = NULL, *json_tmp;
+    if (req->http_code != 200) {
+        errno = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
 
@@ -966,8 +982,7 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
-        if (err)
-            *err = LWQQ_EC_ERROR;
+        errno = LWQQ_EC_ERROR;
         goto done;
     }
 
@@ -996,15 +1011,15 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ;
+    return errno;
 
 json_error:
-    if (err)
-        *err = LWQQ_EC_ERROR;
+    errno = LWQQ_EC_ERROR;
     /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    return errno;
 }
 
 /**
