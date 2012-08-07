@@ -309,6 +309,14 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 
     purple_prpl_got_user_status(account,buddy->qqnumber,status->status,NULL);
 }
+static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    char* reason;
+    if(kick->show_reason) reason = kick->reason;
+    else reason = "您被不知道什么东西踢下线了额";
+    purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,reason);
+}
 static int friend_avatar(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -367,6 +375,9 @@ void qq_msg_check(qq_account* ac)
               if(buddy->status!=NULL)s_free(buddy->status);
               buddy->status = s_strdup(msg->msg->status.status);*/
             status_change(lc,(LwqqMsgStatusChange*)msg->msg->opaque);
+            break;
+        case LWQQ_MT_KICK_MESSAGE:
+            kick_message(lc,(LwqqMsgKickMessage*)msg->msg->opaque);
             break;
         default:
             printf("unknow message\n");

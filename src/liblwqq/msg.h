@@ -74,6 +74,12 @@ typedef struct LwqqMsgStatusChange {
     int client_type;
 } LwqqMsgStatusChange;
 
+typedef struct LwqqMsgKickMessage {
+    int show_reason;
+    char *reason;
+    char *way;
+} LwqqMsgKickMessage;
+
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
     LWQQ_MT_GROUP_MSG,

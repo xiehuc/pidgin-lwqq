@@ -98,6 +98,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_STATUS_CHANGE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgStatusChange));
         break;
+    case LWQQ_MT_KICK_MESSAGE:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgKickMessage));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -171,6 +174,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         return;
 
     printf ("type: %d\n", msg->type);
+    LwqqMsgKickMessage* kick;
     switch (msg->type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
@@ -178,6 +182,12 @@ void lwqq_msg_free(LwqqMsg *msg)
         break;
     case LWQQ_MT_STATUS_CHANGE:
         lwqq_msg_status_free(msg->opaque);
+        break;
+    case LWQQ_MT_KICK_MESSAGE:
+        kick = msg->opaque;
+        if(kick)
+            s_free(kick->reason);
+        s_free(kick);
         break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
@@ -236,41 +246,11 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     } else if (!strncmp(msg_type, "buddies_status_change",
                         strlen("buddies_status_change"))) {
         type = LWQQ_MT_STATUS_CHANGE;
-    } else if(!strcmp(msg_type,"kick_message"))
+    } else if(!strncmp(msg_type,"kick_message",strlen("kick_message"))){
         type = LWQQ_MT_KICK_MESSAGE;
+    }
     return type;
 }
-/*static char* parse_escape(char* str)
-{
-    char* ptr = str;
-    char* esc;
-    char* begin = NULL;
-    while(ptr!='\0'){
-        esc = strchr(ptr,'\\');
-        if(begin){
-            memmove(ptr,begin,esc-begin);
-        }
-        if(esc==NULL) break;
-        switch(*(esc+1)){
-            case 'n':
-                *esc = '\n';
-                break;
-            case 'r':
-                *esc = ' ';
-                break;
-            case 't':
-                *esc = '\t';
-                break;
-            case '\\':
-                *esc = '\\';
-                break;
-        }
-        ptr = esc+1;
-        //it is content start.
-        begin = esc+2;
-    }
-    return str;
-}*/
 static char* parse_escape(char* str)
 {
     char* read = str;
@@ -476,10 +456,23 @@ static int parse_status_change(json_t *json, void *opaque)
     if (!msg->status) {
         return -1;
     }
-    c_type = s_strdup(json_parse_simple_value(json, "client_type"));
+    c_type = json_parse_simple_value(json, "client_type");
     c_type = c_type ?: "1";
     msg->client_type = atoi(c_type);
 
+    return 0;
+}
+static int parse_kick_message(json_t *json,void *opaque)
+{
+    LwqqMsgKickMessage *msg = opaque;
+    char* show;
+    show = json_parse_simple_value(json,"show_reason");
+    if(show)msg->show_reason = atoi(show);
+    msg->reason = ucs4toutf8(json_parse_simple_value(json,"reason"));
+    if(!msg->reason){
+        if(!show) msg->show_reason = 0;
+        else return -1;
+    }
     return 0;
 }
 const char* get_host_of_url(const char* url,char* buffer)
@@ -694,6 +687,9 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);
+            break;
+        case LWQQ_MT_KICK_MESSAGE:
+            ret = parse_kick_message(cur,msg->opaque);
             break;
         default:
             ret = -1;

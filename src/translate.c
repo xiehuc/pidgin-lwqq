@@ -265,11 +265,17 @@ void remove_all_smiley(void* data,void* userdata)
 }
 void translate_global_free()
 {
-    if(_regex) trex_free(_regex);
-    if(smily_table) g_hash_table_remove_all(smily_table);
-    GList* list = purple_smileys_get_all();
-    g_list_foreach(list,remove_all_smiley,NULL);
-    g_list_free(list);
+    if(_regex){
+        trex_free(_regex);
+        _regex = NULL;
+    }
+    if(smily_table) {
+        g_hash_table_remove_all(smily_table);
+        smily_table = NULL;
+        GList* list = purple_smileys_get_all();
+        g_list_foreach(list,remove_all_smiley,NULL);
+        g_list_free(list);
+    }
 }
 #define MAP(face,str) \
     case face:\
