@@ -104,12 +104,12 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
         if(event->host_lock->ref_count==0){
             if(evset->callback)
                 evset->callback(evset->result,evset->data);
-            if(!evset->cond_waiting)
-                s_free(evset);
-            else
+            if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
         }
-        pthread_mutex_unlock(&event->host_lock->lock);
+        pthread_mutex_unlock(&evset->lock);
+        if(evset->ref_count == 0 && !evset->cond_waiting)
+            s_free(evset);
     }
     s_free(event);
 }
