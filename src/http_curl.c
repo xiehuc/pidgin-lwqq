@@ -686,7 +686,7 @@ void lwqq_http_global_init()
         global.share = curl_share_init();
         CURLSH* share = global.share;
         curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_DNS);
-        //curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_CONNECT);
+        curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_CONNECT);
         curl_share_setopt(share,CURLSHOPT_LOCKFUNC,share_lock);
         curl_share_setopt(share,CURLSHOPT_UNLOCKFUNC,share_unlock);
         curl_share_setopt(share,CURLSHOPT_USERDATA,&global);

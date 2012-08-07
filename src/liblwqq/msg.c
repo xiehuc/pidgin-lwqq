@@ -240,12 +240,16 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_KICK_MESSAGE;
     return type;
 }
-static char* parse_escape(char* str)
+/*static char* parse_escape(char* str)
 {
     char* ptr = str;
     char* esc;
+    char* begin = NULL;
     while(ptr!='\0'){
         esc = strchr(ptr,'\\');
+        if(begin){
+            memmove(ptr,begin,esc-begin);
+        }
         if(esc==NULL) break;
         switch(*(esc+1)){
             case 'n':
@@ -261,8 +265,42 @@ static char* parse_escape(char* str)
                 *esc = '\\';
                 break;
         }
-        *(esc+1) = ' ';
         ptr = esc+1;
+        //it is content start.
+        begin = esc+2;
+    }
+    return str;
+}*/
+static char* parse_escape(char* str)
+{
+    char* read = str;
+    char* write = str;
+    char* esc = NULL;
+    while(read!='\0'){
+        esc = strchr(read,'\\');
+        if(esc==NULL){
+            esc = strchr(read,'\0');
+            esc++;
+            memmove(write,read,esc-read);
+            break;
+        }
+        memmove(write,read,esc-read);
+        write += esc-read;
+        if(esc == NULL) break;
+        switch(*(esc+1)){
+            case 'n':
+                *(write++) = '\n';
+                break;
+            case 'r':
+                //ignore it.
+                break;
+            case 't':
+                *(write++) = '\t';
+                break;
+            case '\\':
+                *(write++) = '\\';
+        }
+        read = esc+2;
     }
     return str;
 }
