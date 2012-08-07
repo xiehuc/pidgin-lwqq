@@ -560,7 +560,6 @@ static void request_content_cface(LwqqClient* lc,const char* group_code,const ch
         s_free(cookies);
     }
 
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     ret = req->do_request(req,0,NULL);
 
     if(ret||req->http_code!=200){

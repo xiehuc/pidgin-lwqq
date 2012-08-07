@@ -115,17 +115,16 @@ void background_msg_drain(qq_account* ac)
 }
 
 
-static PurpleConversation* find_conversation(LwqqMsg* msg,PurpleAccount* account)
+static PurpleConversation* find_conversation(int msg_type,const char* who,PurpleAccount* account)
 {
     int type;
-    if(msg->type == LWQQ_MT_BUDDY_MSG)
+    if(msg_type == LWQQ_MT_BUDDY_MSG)
         type = PURPLE_CONV_TYPE_IM;
-    else if(msg->type == LWQQ_MT_GROUP_MSG)
+    else if(msg_type == LWQQ_MT_GROUP_MSG)
         type = PURPLE_CONV_TYPE_CHAT;
     else 
         return NULL;
-    LwqqMsgMessage* mmsg = msg->opaque;
-    return purple_find_conversation_with_account(type,mmsg->to,account);
+    return purple_find_conversation_with_account(type,who,account);
 }
 static void send_back(LwqqAsyncEvent* event,void* data)
 {
@@ -134,10 +133,11 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     LwqqMsg* msg = d[0];
     char* what = d[2];
     qq_account* ac = d[3];
+    char* who = d[4];
     int errno = lwqq_async_event_get_result(event);
     s_free(data);
     if(errno){
-        PurpleConversation* conv = find_conversation(msg,ac->account);
+        PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
         snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
         if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
     }
@@ -158,24 +158,29 @@ void* _background_send_msg(void* data)
     const char* to = mmsg->to;
     const char* what = d[2];
     qq_account* ac = d[3];
+    const char* who = d[4];
     LwqqClient* lc = ac->qq;
+    int will_upload = (strstr(what,"<IMG")!=NULL);
 
     int ret = translate_message_to_struct(lc,to,what,mmsg,1);
-    PurpleConversation* conv = find_conversation(msg,ac->account);
-    if(conv)purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
-    //if(conv&&ret) purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_SYSTEM,time(NULL));
+    if(will_upload){
+        PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
+        if(conv)purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
+        //if(conv&&ret) purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_SYSTEM,time(NULL));
+    }
     lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
     return NULL;
 }
 
-void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* what,PurpleConversation* conv)
+void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* who,const char* what,PurpleConversation* conv)
 {
 
-    void** data = s_malloc0(sizeof(void*)*4);
+    void** data = s_malloc0(sizeof(void*)*5);
     data[0] = msg;
     data[1] = conv;
     data[2] = s_strdup(what);
     data[3] = ac;
+    data[4] = s_strdup(who);
 
     int will_upload = 0;
     will_upload = (strstr(what,"<IMG")!=NULL);

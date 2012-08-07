@@ -483,7 +483,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
 
-    background_send_msg(ac,msg,what,conv);
+    background_send_msg(ac,msg,who,what,conv);
     
 
     return 1;
@@ -508,7 +508,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_color = "000000";
     PurpleConversation* conv = purple_find_chat(gc,id);
 
-    background_send_msg(ac,msg,message,conv);
+    background_send_msg(ac,msg,gid,message,conv);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
