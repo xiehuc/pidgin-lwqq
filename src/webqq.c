@@ -746,13 +746,34 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
         lwqq_info_change_group_markname(lc,group,alias);
     }
 }
+void move_buddy_back(void* data)
+{
+    void** d = data;
+    PurpleBuddy* buddy = d[0];
+    PurpleGroup* group = d[1];
+    s_free(data);
+    purple_blist_add_buddy(buddy,NULL,group,NULL);
+}
 static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
     if(buddy==NULL) return;
-    lwqq_info_modify_buddy_category(lc,buddy,new_group);
+    
+    const char* category;
+    if(strcmp(new_group,"QQ好友")==0) 
+        category = "My Friends";
+    else category = new_group;
+    LwqqAsyncEvent* event;
+    event = lwqq_info_modify_buddy_category(lc,buddy,category);
+
+    if(event == NULL){
+        void** data = s_malloc0(sizeof(void*)*2);
+        data[0] = purple_find_buddy(ac->account,who);
+        data[1] = purple_find_group(old_group);
+        purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"info","更改好友分组失败",move_buddy_back,data);
+    }
 }
 static void client_connect_signals(PurpleConnection* gc)
 {
