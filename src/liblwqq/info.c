@@ -34,6 +34,7 @@ static int get_friends_info_back(LwqqHttpRequest* req,void* data);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 static int group_detail_back(LwqqHttpRequest* req,void* data);
+static int change_buddy_markname_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -1374,4 +1375,53 @@ json_error:
         json_free_value(&json);
     lwqq_http_request_free(req);
     return 0;
+}
+
+LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias)
+{
+    if(!lc||!buddy||!alias) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/change_mark_name2","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"tuin=%s&markname=%s&vfwebqq=%s",
+            buddy->uin,alias,lc->vfwebqq
+            );
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,lc);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+
+static int change_buddy_markname_back(LwqqHttpRequest* req,void* data)
+{
+    json_t* root=NULL;
+    int errno;
+    int ret;
+
+    if(req->http_code!=200){
+        errno = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
+    ret = json_parse_document(&root,req->response);
+    if(ret!=JSON_OK){
+        errno = LWQQ_EC_ERROR;
+        goto done;
+    }
+    const char* retcode = json_parse_simple_value(root,"retcode");
+    if(retcode==NULL){
+        errno = 1;
+        goto done;
+    }
+    errno = atoi(retcode);
+done:
+    if(root)
+        json_free_value(&root);
+    lwqq_http_request_free(req);
+    return errno;
 }

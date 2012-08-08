@@ -135,6 +135,14 @@ static int friend_come(LwqqClient* lc,void* data)
         if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
+    //flush new alias
+    const char* alias = purple_buddy_get_alias_only(bu);
+    if(buddy->markname){
+        if(alias==NULL||strcmp(alias,buddy->markname)!=0)
+            purple_blist_alias_buddy(bu,buddy->markname);
+    }else if(alias==NULL||strcmp(alias,buddy->nick)!=0){
+        purple_blist_alias_buddy(bu,buddy->nick);
+    }
     if(buddy->status)
         purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
     PurpleBuddyIcon* icon;
@@ -695,6 +703,24 @@ static void client_connect_signals(void)
     purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
             PURPLE_CALLBACK(on_create),NULL);
 }
+static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if(strcmp(buddy->qqnumber,qqnum)==0)
+            return buddy;
+    }
+    return NULL;
+}
+static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    if(buddy == NULL) return;
+    lwqq_info_change_buddy_markname(lc,buddy,alias);
+}
+//send change markname to server.
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,
@@ -715,6 +741,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
     .offline_message=   qq_offline_message,
+    .alias_buddy=       qq_change_markname /* change buddy alias on server */,
     NULL,//twitter_set_status,/* set_status */
     NULL,                   /* set_idle */
     NULL,                   /* change_passwd */
