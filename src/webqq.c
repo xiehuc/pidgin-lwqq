@@ -118,18 +118,18 @@ static int friend_come(LwqqClient* lc,void* data)
     int cate_index;
 
     bu = purple_find_buddy(account,buddy->qqnumber);
-    if(bu == NULL){
-        LIST_FOREACH(cate,&lc->categories,entries){
-            cate_index = atoi(buddy->cate_index);
-            if(cate_index == 0){
-                group = purple_group_new("QQ好友");
-                break;
-            }
-            if(cate->index==cate_index){
-                group = purple_group_new(cate->name);
-                break;
-            }
+    LIST_FOREACH(cate,&lc->categories,entries){
+        cate_index = atoi(buddy->cate_index);
+        if(cate_index == 0){
+            group = purple_group_new("QQ好友");
+            break;
         }
+        if(cate->index==cate_index){
+            group = purple_group_new(cate->name);
+            break;
+        }
+    }
+    if(bu == NULL){
 
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         //if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
@@ -142,6 +142,9 @@ static int friend_come(LwqqClient* lc,void* data)
             purple_blist_alias_buddy(bu,buddy->markname);
     }else if(alias==NULL||strcmp(alias,buddy->nick)!=0){
         purple_blist_alias_buddy(bu,buddy->nick);
+    }
+    if(purple_buddy_get_group(bu)!=group){
+        purple_blist_add_buddy(bu,NULL,group,NULL);
     }
     if(buddy->status)
         purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
@@ -743,6 +746,14 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
         lwqq_info_change_group_markname(lc,group,alias);
     }
 }
+static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    if(buddy==NULL) return;
+    lwqq_info_modify_buddy_category(lc,buddy,new_group);
+}
 static void client_connect_signals(PurpleConnection* gc)
 {
     static int handle;
@@ -773,7 +784,8 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
     .offline_message=   qq_offline_message,
-    .alias_buddy=       qq_change_markname /* change buddy alias on server */,
+    .alias_buddy=       qq_change_markname, /* change buddy alias on server */
+    .group_buddy=       qq_change_category  /* change buddy category on server */,
     NULL,//twitter_set_status,/* set_status */
     NULL,                   /* set_idle */
     NULL,                   /* change_passwd */

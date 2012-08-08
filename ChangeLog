@@ -3,6 +3,7 @@ pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 dev (08/08/2012):
 	* new feature: support change buddy markname
 	* new feature: support change group markname
+	* new feature: support change buddy category
 
 master (08/04/2012):
 	* face full support

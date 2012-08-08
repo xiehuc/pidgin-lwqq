@@ -1449,3 +1449,32 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
+LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate)
+{
+    if(!lc||!buddy||!new_cate) return NULL;
+    int cate_idx = -1;
+    LwqqFriendCategory *c;
+    LIST_FOREACH(c,&lc->categories,entries){
+        if(strcmp(c->name,new_cate)==0){
+            cate_idx = c->index;
+            break;
+        }
+    }
+    if(cate_idx==-1) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/modify_friend_group","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"tuin=%s&newid=%d&vfwebqq=%s",
+            buddy->uin,cate_idx,lc->vfwebqq );
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,lc);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
