@@ -743,7 +743,7 @@ static void change_group_markname_back(LwqqAsyncEvent* event,void* data)
         qq_account* ac = d[0];
         PurpleChat* chat = d[1];
 
-        purple_notify_error(gc,NULL,"更改组备注失败","服务器返回错误");
+        purple_notify_error(ac->gc,NULL,"更改组备注失败","服务器返回错误");
         ac->disable_send_server = 1;
         purple_blist_alias_chat(chat,old_alias);
         ac->disable_send_server = 0;
@@ -770,7 +770,7 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
         data[1] = chat;
         data[2] = s_strdup(old_alias);
         lwqq_async_add_event_listener(
-                lwqq_info_change_group_markname(lc,group,alias)
+                lwqq_info_change_group_markname(lc,group,alias),
                 change_group_markname_back,
                 data);
     }
@@ -810,11 +810,11 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     LwqqAsyncEvent* event;
     event = lwqq_info_modify_buddy_category(lc,buddy,category);
 
+    void** data = s_malloc0(sizeof(void*)*3);
+    data[0] = purple_find_buddy(ac->account,who);
+    data[1] = purple_find_group(old_group);
+    data[2] = ac;
     if(event == NULL){
-        void** data = s_malloc0(sizeof(void*)*3);
-        data[0] = purple_find_buddy(ac->account,who);
-        data[1] = purple_find_group(old_group);
-        data[2] = ac;
         purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
     }else
         lwqq_async_add_event_listener(event,change_category_back,data);
