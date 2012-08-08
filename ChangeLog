@@ -4,6 +4,7 @@ dev (08/08/2012):
 	* new feature: support change buddy markname
 	* new feature: support change group markname
 	* new feature: support change buddy category
+	* new feature: support confirm buddy request
 
 master (08/04/2012):
 	* face full support
