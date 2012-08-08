@@ -106,6 +106,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_BLIST_CHANGE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgBlistChange));
         break;
+    case LWQQ_MT_SYS_G_MSG:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgSysGMsg));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -179,28 +182,19 @@ void lwqq_msg_free(LwqqMsg *msg)
         return;
 
     printf ("type: %d\n", msg->type);
-    LwqqMsgKickMessage* kick;
-    LwqqMsgSystem* system;
-    LwqqMsgBlistChange* blist;
-    LwqqBuddy* buddy;
-    LwqqBuddy* next;
-    LwqqSimpleBuddy* simple;
-    LwqqSimpleBuddy* simple_next;
-    switch (msg->type) {
-    case LWQQ_MT_BUDDY_MSG:
-    case LWQQ_MT_GROUP_MSG:
+    if(msg->type==LWQQ_MT_GROUP_MSG||msg->type==LWQQ_MT_BUDDY_MSG)
         lwqq_msg_message_free(msg->opaque);
-        break;
-    case LWQQ_MT_STATUS_CHANGE:
+    else if(msg->type==LWQQ_MT_STATUS_CHANGE)
         lwqq_msg_status_free(msg->opaque);
-        break;
-    case LWQQ_MT_KICK_MESSAGE:
+    else if(msg->type==LWQQ_MT_KICK_MESSAGE){
+        LwqqMsgKickMessage* kick;
         kick = msg->opaque;
         if(kick)
             s_free(kick->reason);
         s_free(kick);
-        break;
-    case LWQQ_MT_SYSTEM:
+    }
+    else if(msg->type==LWQQ_MT_SYSTEM){
+        LwqqMsgSystem* system;
         system = msg->opaque;
         if(system){
             s_free(system->seq);
@@ -212,8 +206,13 @@ void lwqq_msg_free(LwqqMsg *msg)
             s_free(system->client_type);
         }
         s_free(system);
-        break;
-    case LWQQ_MT_BLIST_CHANGE:
+    }
+    else if(msg->type==LWQQ_MT_BLIST_CHANGE){
+        LwqqMsgBlistChange* blist;
+        LwqqBuddy* buddy;
+        LwqqBuddy* next;
+        LwqqSimpleBuddy* simple;
+        LwqqSimpleBuddy* simple_next;
         blist = msg->opaque;
         if(blist){
             simple = LIST_FIRST(&blist->added_friends);
@@ -230,11 +229,15 @@ void lwqq_msg_free(LwqqMsg *msg)
             }
         }
         s_free(blist);
-
-        break;
-    default:
+    }
+    else if(msg->type==LWQQ_MT_SYS_G_MSG){
+        LwqqMsgSysGMsg* msg = msg->opaque;
+        if(msg){
+            s_free(msg->gcode);
+        }
+        s_free(msg);
+    }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
-        break;
     }
 
     s_free(msg);
@@ -295,6 +298,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_SYSTEM;
     }else if(!strncmp(msg_type,"buddylist_change",strlen("buddylist_change"))){
         type = LWQQ_MT_BLIST_CHANGE;
+    }else if(!strncmp(msg_type,"sys_g_msg",strlen("sys_g_msg"))){
+        type = LWQQ_MT_SYS_G_MSG;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -575,6 +580,26 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
     }
     return 0;
 }
+static int parse_sys_g_msg(json_t *json,void* opaque)
+{
+    /*group create
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":39194,"from_uin":1528509098,"to_uin":350512021,"msg_id2":539171,"msg_type":38,"reply_ip":176752410,"type":"group_create","gcode":2676780935,"t_gcode":249818602,"owner_uin":350512021}}]}
+
+      group join
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":5940,"from_uin":370154409,"to_uin":2501542492,"msg_id2":979390,"msg_type":33,"reply_ip":176498394,"type":"group_join","gcode":2570026216,"t_gcode":249818602,"op_type":3,"new_member":2501542492,"t_new_member":"","admin_uin":1448380605,"admin_nick":"\u521B\u5EFA\u8005"}}]}
+
+      group leave
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":51488,"from_uin":1528509098,"to_uin":350512021,"msg_id2":180256,"msg_type":34,"reply_ip":176882139,"type":"group_leave","gcode":2676780935,"t_gcode":249818602,"op_type":2,"old_member":574849996,"t_old_member":""}}]}
+      */
+    LwqqMsgSysGMsg* msg = opaque;
+    const char* type = json_parse_simple_value(json,"type");
+    if(strcmp(type,"group_create")==0)msg->type = GROUP_CREATE;
+    else if(strcmp(type,"group_join")==0)msg->type = GROUP_JOIN;
+    else if(strcmp(type,"group_leave")==0)msg->type = GROUP_LEAVE;
+    else msg->type = GROUP_UNKNOW;
+    msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
+
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -795,6 +820,9 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_BLIST_CHANGE:
             ret = parse_blist_change(cur,msg->opaque,list->lc);
+            break;
+        case LWQQ_MT_SYS_G_MSG:
+            ret = parse_sys_g_msg(cur,msg->opaque);
             break;
         default:
             ret = -1;

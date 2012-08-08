@@ -501,6 +501,23 @@ void qq_set_basic_info(int result,void* data)
     //search buddy list see if alread delete from server
     GSList* list = purple_blist_get_buddies();
     g_slist_foreach(list,check_exist,lc);
+
+    PurpleChat* chat;
+    PurpleGroup* group = purple_find_group("QQ群");
+    PurpleBlistNode* node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(group));
+    while(node){
+        if(PURPLE_BLIST_NODE_IS_CHAT(node)){
+            chat = PURPLE_CHAT(node);
+            GHashTable* table = purple_chat_get_components(chat);
+            const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
+            if(qqnum&&find_group_by_qqnumber(lc,qqnum)==NULL){
+                node = purple_blist_node_next(node,1);
+                purple_blist_remove_chat(chat);
+                continue;
+            }
+        }
+        node = purple_blist_node_next(node,1);
+    }
     background_msg_poll(ac);
 }
 

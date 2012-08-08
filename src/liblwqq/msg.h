@@ -92,6 +92,15 @@ typedef struct LwqqMsgSystem{
     char* stat;
     char* client_type;
 } LwqqMsgSystem;
+typedef struct LwqqMsgSysGMsg{
+    enum {
+        GROUP_CREATE,
+        GROUP_JOIN,
+        GROUP_LEAVE,
+        GROUP_UNKNOW
+    }type;
+    char* gcode;
+}LwqqMsgSysGMsg;
 typedef struct LwqqMsgBlistChange{
     LIST_HEAD(,LwqqSimpleBuddy) added_friends;
     LIST_HEAD(,LwqqBuddy) removed_friends;
@@ -104,6 +113,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_KICK_MESSAGE,
     LWQQ_MT_SYSTEM,
     LWQQ_MT_BLIST_CHANGE,
+    LWQQ_MT_SYS_G_MSG,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 
