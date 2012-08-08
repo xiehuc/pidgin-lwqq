@@ -110,6 +110,7 @@ static void qq_account_free(qq_account* ac)
 static int friend_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy = data;
     PurpleBuddy* bu = NULL;
@@ -154,11 +155,13 @@ static int friend_come(LwqqClient* lc,void* data)
     }else{
         purple_buddy_set_icon(purple_find_buddy(account,buddy->qqnumber),icon);
     }
+    ac->disable_send_server = 0;
     return 0;
 }
 static int group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     LwqqGroup* group = data;
     PurpleGroup* gp = purple_group_new("QQ群");
@@ -180,6 +183,7 @@ static int group_come(LwqqClient* lc,void* data)
         purple_blist_alias_chat(chat,group->name);
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
+    ac->disable_send_server = 0;
     return 0;
 }
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
@@ -725,6 +729,7 @@ static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
     if(buddy == NULL) return;
@@ -735,6 +740,7 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
     PurpleBlistNode* n = node;
     PurpleConnection* gc = _gc;
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     if(PURPLE_BLIST_NODE_IS_CHAT(n)){
         PurpleChat* chat = PURPLE_CHAT(n);
@@ -751,12 +757,16 @@ void move_buddy_back(void* data)
     void** d = data;
     PurpleBuddy* buddy = d[0];
     PurpleGroup* group = d[1];
+    qq_account* ac = d[2];
     s_free(data);
+    ac->disable_send_server = 1;
     purple_blist_add_buddy(buddy,NULL,group,NULL);
+    ac->disable_send_server = 0;
 }
 static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
     if(buddy==NULL) return;
@@ -769,9 +779,10 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     event = lwqq_info_modify_buddy_category(lc,buddy,category);
 
     if(event == NULL){
-        void** data = s_malloc0(sizeof(void*)*2);
+        void** data = s_malloc0(sizeof(void*)*3);
         data[0] = purple_find_buddy(ac->account,who);
         data[1] = purple_find_group(old_group);
+        data[2] = ac;
         purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"info","更改好友分组失败",move_buddy_back,data);
     }
 }
