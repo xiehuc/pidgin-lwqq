@@ -272,7 +272,11 @@ static char* parse_escape(char* str)
                 *(write++) = '\n';
                 break;
             case 'r':
-                //ignore it.
+                *(write++) = '\n';
+                //processing \r\n.
+                //let esc advance 2 then read ptr is set to currectly.
+                if(*(esc+2)=='\\' &&*(esc+3)=='n')
+                    esc=esc+2;
                 break;
             case 't':
                 *(write++) = '\t';
