@@ -20,7 +20,7 @@
 
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
-static void client_connect_signals(void);
+static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(LwqqAsyncEvent* event,void* data);
 static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
 
@@ -132,7 +132,7 @@ static int friend_come(LwqqClient* lc,void* data)
         }
 
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
-        if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
+        //if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
     //flush new alias
@@ -166,10 +166,15 @@ static int group_come(LwqqClient* lc,void* data)
         components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->account));
         chat = purple_chat_new(account,group->account,components);
-        purple_blist_alias_chat(chat,group->name);
         purple_blist_add_chat(chat,gp,NULL);
-    }
-    chat = purple_blist_find_chat(account,group->account);
+    }else
+        chat = purple_blist_find_chat(account,group->account);
+    const char* alias = purple_chat_get_name(chat);
+    if(group->markname){
+        if(alias==NULL||strcmp(alias,group->markname)!=0)
+            purple_blist_alias_chat(chat,group->markname);
+    }else if(alias==NULL||strcmp(alias,group->name)!=0)
+        purple_blist_alias_chat(chat,group->name);
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
     return 0;
@@ -662,7 +667,7 @@ static void qq_login(PurpleAccount *account)
     ac->qq = lwqq_client_new(username,password);
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
-    client_connect_signals();
+    client_connect_signals(ac->gc);
 
     lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
     lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
@@ -695,14 +700,6 @@ init_plugin(PurplePlugin *plugin)
     textdomain(GETTEXT_PACKAGE);
 #endif
 }
-static void client_connect_signals(void)
-{
-    static int handle;
-
-    void* h = &handle;
-    purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
-            PURPLE_CALLBACK(on_create),NULL);
-}
 static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     LwqqBuddy* buddy;
@@ -712,6 +709,16 @@ static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
     }
     return NULL;
 }
+static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqGroup* group;
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(strcmp(group->account,qqnum)==0)
+            return group;
+    }
+    return NULL;
+}
+//send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
@@ -720,7 +727,32 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
-//send change markname to server.
+static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
+{
+    PurpleBlistNode* n = node;
+    PurpleConnection* gc = _gc;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    if(PURPLE_BLIST_NODE_IS_CHAT(n)){
+        PurpleChat* chat = PURPLE_CHAT(n);
+        GHashTable* hash = purple_chat_get_components(chat);
+        const char* qqnum = g_hash_table_lookup(hash,QQ_ROOM_KEY_QUN_ID);
+        LwqqGroup* group = find_group_by_qqnumber(lc,qqnum);
+        const char* alias = purple_chat_get_name(chat);
+        if(group == NULL) return;
+        lwqq_info_change_group_markname(lc,group,alias);
+    }
+}
+static void client_connect_signals(PurpleConnection* gc)
+{
+    static int handle;
+
+    void* h = &handle;
+    purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
+            PURPLE_CALLBACK(on_create),NULL);
+    purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
+            PURPLE_CALLBACK(qq_change_group_markname),gc);
+}
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,

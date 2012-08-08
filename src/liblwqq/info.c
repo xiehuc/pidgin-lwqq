@@ -1408,6 +1408,7 @@ static int change_buddy_markname_back(LwqqHttpRequest* req,void* data)
         errno = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
+    puts(req->response);
     ret = json_parse_document(&root,req->response);
     if(ret!=JSON_OK){
         errno = LWQQ_EC_ERROR;
@@ -1424,4 +1425,27 @@ done:
         json_free_value(&root);
     lwqq_http_request_free(req);
     return errno;
+}
+
+
+LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,const char* alias)
+{
+    if(!lc||!group||!alias) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/update_group_info2","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"r={\"gcode\":%s,\"markname\":\"%s\",\"vfwebqq\":\"%s\"}",
+            group->code,alias,lc->vfwebqq
+            );
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,lc);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
 }

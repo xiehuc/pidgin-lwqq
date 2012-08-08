@@ -9,7 +9,7 @@ see github:https://github.com/mathslinux/lwqq
 * send / recv group messages
 * send / recv qq face (you should use webqq faces theme in settings)
 * avatar
-* change buddy markname;
+* change buddy / group markname;
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -34,7 +34,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持群聊天
 * 支持发送接受表情(在设置中使用webqq表情主题)
 * 支持头像
-* 支持设置好友备注
+* 支持设置好友/QQ群备注
 
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息
