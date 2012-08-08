@@ -40,7 +40,7 @@ typedef struct LwqqBuddy {
     char *constel;
     char *blood;
     char *homepage;
-    char *stat;
+    char *stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
     char *country;
     char *city;
     char *personal;
@@ -268,6 +268,9 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
  * @return A LwqqBuddy instance 
  */
 LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
+
+#define format_append(str,format...)\
+snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 /************************************************************************/
 

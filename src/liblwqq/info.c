@@ -1223,6 +1223,12 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(blood, "blood");
         SET_BUDDY_INFO(homepage, "homepage");
         SET_BUDDY_INFO(stat, "stat");
+        if(buddy->status) s_free(buddy->status);
+        buddy->status = NULL;
+        if(strcmp(buddy->stat,"10")==0)buddy->status = s_strdup("online");
+        else if(strcmp(buddy->stat,"20")==0) buddy->status = s_strdup("offline");
+        else if(strcmp(buddy->stat,"30")==0) buddy->status = s_strdup("busy");
+        else if(strcmp(buddy->stat,"50")==0) buddy->status = s_strdup("away");
         SET_BUDDY_INFO(vip_info, "vip_info");
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
@@ -1424,7 +1430,7 @@ static int change_buddy_markname_back(LwqqHttpRequest* req,void* data)
         goto done;
     }
     errno = atoi(retcode);
-    if(errno==0){
+    if(errno==0&&data!=NULL){
         void** d = data;
         long type = (long)d[0];
         if(type == CHANGE_BUDDY_MARKNAME){
@@ -1514,6 +1520,94 @@ done:
     return NULL;
 }
 
-LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,int del_type)
+LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LWQQ_DEL_FRIEND_TYPE del_type)
 {
+    if(!lc||!buddy) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/delete_friend","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"tuin=%s&delType=%d&vfwebqq=%s",
+            buddy->uin,del_type,lc->vfwebqq );
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+
+//account is qqnumber
+LwqqAsyncEvent* lwqq_info_allow_added_request(LwqqClient* lc,const char* account)
+{
+    if(!lc||!account) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/allow_added_request2","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"}",
+            account,lc->vfwebqq );
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+
+LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,const char* reason)
+{
+    if(!lc||!account) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/deny_added_request2","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"",
+            account,lc->vfwebqq );
+    if(reason){
+        format_append(post,",\"msg\":\"%s\"",reason);
+    }
+    format_append(post,"}");
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
+}
+LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const char* markname)
+{
+    if(!lc||!account) return NULL;
+    char url[512];
+    char post[256];
+    snprintf(url,sizeof(url),"%s/api/allow_and_add2","http://s.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"r={\"account\":%s,\"gid\":0,\"vfwebqq\":\"%s\"",
+            account,lc->vfwebqq );
+    if(markname){
+        format_append(post,",\"mname\":\"%s\"",markname);
+    }
+    format_append(post,"}");
+    puts(post);
+    req->set_header(req,"Origin","http://s.web2.qq.com");
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+done:
+    lwqq_http_request_free(req);
+    return NULL;
 }

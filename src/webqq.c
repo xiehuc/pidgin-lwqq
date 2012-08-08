@@ -24,6 +24,24 @@ static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(LwqqAsyncEvent* event,void* data);
 static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
 
+static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if(strcmp(buddy->qqnumber,qqnum)==0)
+            return buddy;
+    }
+    return NULL;
+}
+static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqGroup* group;
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(strcmp(group->account,qqnum)==0)
+            return group;
+    }
+    return NULL;
+}
 static void action_about_webqq(PurplePluginAction *action)
 {
     PurpleConnection *gc = (PurpleConnection *) action->context;
@@ -337,6 +355,54 @@ static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
     else reason = "您被不知道什么东西踢下线了额";
     purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,reason);
 }
+static void verify_required_confirm(void* data,PurpleRequestFields* root)
+{
+    void** d = data;
+    qq_account* ac = d[0];
+    char* account = d[1];
+    s_free(data);
+    LwqqClient* lc = ac->qq;
+    int answer = purple_request_fields_get_choice(root,"answer");
+    if(answer == 0){
+        lwqq_info_allow_and_add(lc,account,NULL);
+    }else if(answer == 1){
+        lwqq_info_allow_added_request(lc,account);
+    }else if(answer == 2){
+        lwqq_info_deny_added_request(lc,account,"no reason");
+    }
+    s_free(account);
+}
+static void verify_required_cancel(void* data,PurpleRequestFields* root)
+{
+}
+static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
+{
+    if(system->type != VERIFY_REQUIRED) return;
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+
+    PurpleRequestFields* root = purple_request_fields_new();
+    PurpleRequestFieldGroup *container = purple_request_field_group_new("好友确认");
+    purple_request_fields_add_group(root,container);
+    char buf1[128];
+    char buf2[128];
+    snprintf(buf1,sizeof(buf1),"%s请求加您为好友",system->account);
+    snprintf(buf2,sizeof(buf2),"附加信息:%s",system->msg);
+
+    PurpleRequestField* choice = purple_request_field_choice_new("answer","请选择",0);
+    purple_request_field_choice_add(choice,"同意并加为好友");
+    purple_request_field_choice_add(choice,"同意");
+    purple_request_field_choice_add(choice,"拒绝");
+    purple_request_field_group_add_field(container,choice);
+
+    void** data = s_malloc(sizeof(void*)*2);
+    data[0] = ac;
+    data[1] = s_strdup(system->account);
+    purple_request_fields(ac->gc,NULL,buf1,buf2,root,
+            "确认",(GCallback)verify_required_confirm,
+            "取消",(GCallback)verify_required_cancel,
+            ac->account,NULL,NULL,data);
+
+}
 static int friend_avatar(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -399,6 +465,9 @@ void qq_msg_check(qq_account* ac)
         case LWQQ_MT_KICK_MESSAGE:
             kick_message(lc,(LwqqMsgKickMessage*)msg->msg->opaque);
             break;
+        case LWQQ_MT_SYSTEM:
+            system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
+            break;
         default:
             printf("unknow message\n");
             break;
@@ -411,7 +480,14 @@ void qq_msg_check(qq_account* ac)
     s_free(msg);
 
 }
-
+static void check_exist(void* data,void* userdata)
+{
+    PurpleBuddy* bu = data;
+    LwqqClient* lc = userdata;
+    if(find_buddy_by_qqnumber(lc,purple_buddy_get_name(bu))==NULL){
+        purple_blist_remove_buddy(bu);
+    }
+}
 void qq_set_basic_info(int result,void* data)
 {
     qq_account* ac = data;
@@ -419,6 +495,9 @@ void qq_set_basic_info(int result,void* data)
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
         lwqq_info_get_friend_avatar(lc,lc->myself);
+    //search buddy list see if alread delete from server
+    GSList* list = purple_blist_get_buddies();
+    g_slist_foreach(list,check_exist,lc);
     background_msg_poll(ac);
 }
 
@@ -707,24 +786,6 @@ init_plugin(PurplePlugin *plugin)
     textdomain(GETTEXT_PACKAGE);
 #endif
 }
-static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        if(strcmp(buddy->qqnumber,qqnum)==0)
-            return buddy;
-    }
-    return NULL;
-}
-static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
-    LwqqGroup* group;
-    LIST_FOREACH(group,&lc->groups,entries){
-        if(strcmp(group->account,qqnum)==0)
-            return group;
-    }
-    return NULL;
-}
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
 {
@@ -819,6 +880,16 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     }else
         lwqq_async_add_event_listener(event,change_category_back,data);
 }
+static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup* group)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    const char* qqnum = purple_buddy_get_name(buddy);
+    LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
+    if(friend==NULL) return;
+    lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
+
+}
 static void client_connect_signals(PurpleConnection* gc)
 {
     static int handle;
@@ -851,6 +922,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
     .group_buddy=       qq_change_category  /* change buddy category on server */,
+    .remove_buddy=      qq_remove_buddy,
     NULL,//twitter_set_status,/* set_status */
     NULL,                   /* set_idle */
     NULL,                   /* change_passwd */

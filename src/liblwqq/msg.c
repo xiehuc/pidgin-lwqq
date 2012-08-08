@@ -22,6 +22,7 @@
 #include "queue.h"
 #include "unicode.h"
 #include "async.h"
+#include "info.h"
 
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
@@ -34,8 +35,6 @@ static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_cface_back(LwqqHttpRequest *req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 
-#define format_append(str,format...)\
-snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -100,6 +99,12 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
         break;
     case LWQQ_MT_KICK_MESSAGE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgKickMessage));
+        break;
+    case LWQQ_MT_SYSTEM:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgSystem));
+        break;
+    case LWQQ_MT_BLIST_CHANGE:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgBlistChange));
         break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
@@ -175,6 +180,10 @@ void lwqq_msg_free(LwqqMsg *msg)
 
     printf ("type: %d\n", msg->type);
     LwqqMsgKickMessage* kick;
+    LwqqMsgSystem* system;
+    LwqqMsgBlistChange* blist;
+    LwqqBuddy* buddy;
+    LwqqBuddy* next;
     switch (msg->type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
@@ -188,6 +197,38 @@ void lwqq_msg_free(LwqqMsg *msg)
         if(kick)
             s_free(kick->reason);
         s_free(kick);
+        break;
+    case LWQQ_MT_SYSTEM:
+        system = msg->opaque;
+        if(system){
+            s_free(system->seq);
+            s_free(system->from_uin);
+            s_free(system->account);
+            s_free(system->msg);
+            s_free(system->allow);
+            s_free(system->stat);
+            s_free(system->client_type);
+        }
+        s_free(system);
+        break;
+    case LWQQ_MT_BLIST_CHANGE:
+        blist = msg->opaque;
+        if(blist){
+            buddy = LIST_FIRST(&blist->added_friends);
+            while(buddy){
+                next = LIST_NEXT(buddy,entries);
+                lwqq_buddy_free(buddy);
+                buddy = next;
+            }
+            buddy = LIST_FIRST(&blist->removed_friends);
+            while(buddy){
+                next = LIST_NEXT(buddy,entries);
+                lwqq_buddy_free(buddy);
+                buddy = next;
+            }
+        }
+        s_free(blist);
+
         break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
@@ -248,7 +289,12 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_STATUS_CHANGE;
     } else if(!strncmp(msg_type,"kick_message",strlen("kick_message"))){
         type = LWQQ_MT_KICK_MESSAGE;
-    }
+    } else if(!strncmp(msg_type,"system_message",strlen("system_message"))){
+        type = LWQQ_MT_SYSTEM;
+    }else if(!strncmp(msg_type,"buddylist_change",strlen("buddylist_change"))){
+        type = LWQQ_MT_BLIST_CHANGE;
+    }else
+        type = LWQQ_MT_UNKNOWN;
     return type;
 }
 static char* parse_escape(char* str)
@@ -478,6 +524,51 @@ static int parse_kick_message(json_t *json,void *opaque)
     }
     return 0;
 }
+static int parse_system_message(json_t *json,void* opaque)
+{
+    LwqqMsgSystem* system = opaque;
+    system->seq = s_strdup(json_parse_simple_value(json,"seq"));
+    const char* type = json_parse_simple_value(json,"type");
+    if(strcmp(type,"verify_required")==0) system->type = VERIFY_REQUIRED;
+    else system->type = SYSTEM_TYPE_UNKNOW;
+    system->from_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
+    system->account = s_strdup(json_parse_simple_value(json,"account"));
+    system->msg = s_strdup(json_parse_simple_value(json,"msg"));
+    system->allow = s_strdup(json_parse_simple_value(json,"allow"));
+    system->stat = s_strdup(json_parse_simple_value(json,"stat"));
+    system->client_type = s_strdup(json_parse_simple_value(json,"client_type"));
+    return 0;
+}
+static int parse_blist_change(json_t* json,void* opaque,void* _lc)
+{
+    LwqqClient* lc = _lc;
+    LwqqMsgBlistChange* change = opaque;
+    LwqqBuddy* buddy;
+    json_t* ptr = json_find_first_label_all(json,"added_friends");
+    ptr = ptr->child->child;
+    while(ptr!=NULL){
+        buddy = lwqq_buddy_new();
+        buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
+        buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
+        LIST_INSERT_HEAD(&change->added_friends,buddy,entries);
+        buddy = lwqq_buddy_new();
+        buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
+        buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
+        lwqq_info_get_friend_detail_info(lc,buddy,NULL);
+        LIST_INSERT_HEAD(&lc->friends,buddy,entries);
+        lwqq_info_get_friend_qqnumber(lc,buddy->uin);
+        ptr = ptr->next;
+    }
+    ptr = json_find_first_label_all(json,"removed_friends");
+    ptr = ptr->child->child;
+    while(ptr!=NULL){
+        buddy = lwqq_buddy_new();
+        buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
+        LIST_INSERT_HEAD(&change->removed_friends,buddy,entries);
+        ptr = ptr->next;
+    }
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -692,6 +783,12 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_KICK_MESSAGE:
             ret = parse_kick_message(cur,msg->opaque);
+            break;
+        case LWQQ_MT_SYSTEM:
+            ret = parse_system_message(cur,msg->opaque);
+            break;
+        case LWQQ_MT_BLIST_CHANGE:
+            ret = parse_blist_change(cur,msg->opaque,list->lc);
             break;
         default:
             ret = -1;

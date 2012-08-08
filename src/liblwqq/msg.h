@@ -79,12 +79,31 @@ typedef struct LwqqMsgKickMessage {
     char *reason;
     char *way;
 } LwqqMsgKickMessage;
+typedef struct LwqqMsgSystem{
+    char* seq;
+    enum {
+        VERIFY_REQUIRED,
+        SYSTEM_TYPE_UNKNOW
+    }type;
+    char* from_uin;
+    char* account;
+    char* msg;
+    char* allow;
+    char* stat;
+    char* client_type;
+} LwqqMsgSystem;
+typedef struct LwqqMsgBlistChange{
+    LIST_HEAD(,LwqqBuddy) added_friends;
+    LIST_HEAD(,LwqqBuddy) removed_friends;
+} LwqqMsgBlistChange;
 
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
     LWQQ_MT_GROUP_MSG,
     LWQQ_MT_STATUS_CHANGE,
     LWQQ_MT_KICK_MESSAGE,
+    LWQQ_MT_SYSTEM,
+    LWQQ_MT_BLIST_CHANGE,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 

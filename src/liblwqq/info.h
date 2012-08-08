@@ -106,5 +106,13 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias);
 LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,const char* alias);
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate);
+typedef enum {
+    LWQQ_DEL_FROM_OTHER = 2/* delete buddy and remove myself from other buddy list */
+}LWQQ_DEL_FRIEND_TYPE;
+LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LWQQ_DEL_FRIEND_TYPE del_type);
+LwqqAsyncEvent* lwqq_info_allow_added_request(LwqqClient* lc,const char* account);
+LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,const char* reason);
+LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const char* markname);
+
 
 #endif  /* LWQQ_INFO_H */
