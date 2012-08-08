@@ -32,6 +32,22 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
     }else{
         c->data.str = s_strdup(from);
     }
+    char* read = c->data.str;
+    char* write = c->data.str;
+    char* ptr;
+    while(*read!='\0'){
+        ptr = strstr(read,"<br>");
+        if(ptr==NULL){
+            ptr = strchr(read,'\0');
+            ptr++;
+            memmove(write,read,ptr-read);
+            break;
+        }
+        memmove(write,read,ptr-read);
+        write += ptr-read;
+        *(write++) = '\n';
+        read = ptr+strlen("<br>");
+    }
     return c;
 }
 static LwqqMsgContent* build_face_content(const char* face,int len)
@@ -92,6 +108,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
         trex_getsubexp(x,0,&m);
         puts(m.begin);
         if(strstr(begin,"<IMG")==begin){
+            //process ing img.
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
             PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
             c = s_malloc0(sizeof(*c));
@@ -112,6 +129,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             lwqq_async_add_event_listener(event,img_unref,simg);
             lwqq_async_evset_add_event(set,event);
         }else if(strstr(begin,"[FACE")==begin){
+            //processing face
             sscanf(begin,"[FACE_%d]",&img_id);
             c = build_face_direct(img_id);
         }else{

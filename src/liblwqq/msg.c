@@ -266,7 +266,6 @@ static char* parse_escape(char* str)
         }
         memmove(write,read,esc-read);
         write += esc-read;
-        if(esc == NULL) break;
         switch(*(esc+1)){
             case 'n':
                 *(write++) = '\n';
@@ -794,9 +793,10 @@ static void parse_unescape(char* source,char *buf,int buf_len)
         strncpy(buf,ptr,idx);
         buf+=idx;
         switch(ptr[idx]){
-            case '\n': strcat(buf,"\\\\n");break;
-            case '\t': strcat(buf,"\\\\t");break;
-            case '\\': strcat(buf,"\\\\\\\\");break;
+            //note buf point the end position
+            case '\n': strcpy(buf,"\\\\n");break;
+            case '\t': strcpy(buf,"\\\\t");break;
+            case '\\': strcpy(buf,"\\\\\\\\");break;
         }
         ptr+=idx+1;
         buf+=strlen(buf);
