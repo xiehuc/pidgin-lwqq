@@ -93,7 +93,7 @@ typedef struct LwqqMsgSystem{
     char* client_type;
 } LwqqMsgSystem;
 typedef struct LwqqMsgBlistChange{
-    LIST_HEAD(,LwqqBuddy) added_friends;
+    LIST_HEAD(,LwqqSimpleBuddy) added_friends;
     LIST_HEAD(,LwqqBuddy) removed_friends;
 } LwqqMsgBlistChange;
 

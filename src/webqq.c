@@ -468,6 +468,9 @@ void qq_msg_check(qq_account* ac)
         case LWQQ_MT_SYSTEM:
             system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
             break;
+        case LWQQ_MT_BLIST_CHANGE:
+            //do no thing. it will raise friend_come
+            break;
         default:
             printf("unknow message\n");
             break;

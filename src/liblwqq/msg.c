@@ -184,6 +184,8 @@ void lwqq_msg_free(LwqqMsg *msg)
     LwqqMsgBlistChange* blist;
     LwqqBuddy* buddy;
     LwqqBuddy* next;
+    LwqqSimpleBuddy* simple;
+    LwqqSimpleBuddy* simple_next;
     switch (msg->type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
@@ -214,11 +216,11 @@ void lwqq_msg_free(LwqqMsg *msg)
     case LWQQ_MT_BLIST_CHANGE:
         blist = msg->opaque;
         if(blist){
-            buddy = LIST_FIRST(&blist->added_friends);
-            while(buddy){
-                next = LIST_NEXT(buddy,entries);
-                lwqq_buddy_free(buddy);
-                buddy = next;
+            simple = LIST_FIRST(&blist->added_friends);
+            while(simple){
+                simple_next = LIST_NEXT(simple,entries);
+                lwqq_simple_buddy_free(simple);
+                simple = simple_next;
             }
             buddy = LIST_FIRST(&blist->removed_friends);
             while(buddy){
@@ -544,13 +546,14 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
     LwqqClient* lc = _lc;
     LwqqMsgBlistChange* change = opaque;
     LwqqBuddy* buddy;
+    LwqqSimpleBuddy* simple;
     json_t* ptr = json_find_first_label_all(json,"added_friends");
     ptr = ptr->child->child;
     while(ptr!=NULL){
-        buddy = lwqq_buddy_new();
-        buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
-        buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
-        LIST_INSERT_HEAD(&change->added_friends,buddy,entries);
+        simple = lwqq_simple_buddy_new();
+        simple->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
+        simple->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
+        LIST_INSERT_HEAD(&change->added_friends,simple,entries);
         buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
         buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
@@ -562,10 +565,13 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
     ptr = json_find_first_label_all(json,"removed_friends");
     ptr = ptr->child->child;
     while(ptr!=NULL){
-        buddy = lwqq_buddy_new();
-        buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
-        LIST_INSERT_HEAD(&change->removed_friends,buddy,entries);
+        const char* uin = json_parse_simple_value(ptr,"uin");
         ptr = ptr->next;
+
+        buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
+        if(buddy == NULL) continue;
+        LIST_REMOVE(buddy,entries);
+        LIST_INSERT_HEAD(&change->removed_friends,buddy,entries);
     }
     return 0;
 }

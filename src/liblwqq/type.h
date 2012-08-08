@@ -74,6 +74,12 @@ typedef struct LwqqBuddy {
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
 
+typedef struct LwqqSimpleBuddy{
+    char* uin;
+    char* cate_index;
+    LIST_ENTRY(LwqqSimpleBuddy) entries;
+}LwqqSimpleBuddy;
+
 /* QQ group */
 typedef struct LwqqGroup {
     char *name;                  /**< QQ Group name */
@@ -209,6 +215,7 @@ void lwqq_client_free(LwqqClient *client);
  * @return A LwqqBuddy instance
  */
 LwqqBuddy *lwqq_buddy_new();
+#define lwqq_simple_buddy_new() ((LwqqSimpleBuddy*)s_malloc0(sizeof(LwqqSimpleBuddy)))
 
 //add the ref count of buddy.
 //that means only ref count down to zero.
@@ -220,6 +227,7 @@ LwqqBuddy *lwqq_buddy_new();
  * @param buddy 
  */
 void lwqq_buddy_free(LwqqBuddy *buddy);
+void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy);
 
 /** 
  * Find buddy object by buddy's uin member
