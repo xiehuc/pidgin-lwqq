@@ -430,8 +430,9 @@ static int parse_content(json_t *json, void *opaque)
         } else if (ctent->type == JSON_STRING) {
             LwqqMsgContent *c = s_malloc0(sizeof(*c));
             c->type = LWQQ_CONTENT_STRING;
-            c->data.str = ucs4toutf8(ctent->text);
-            c->data.str = parse_escape(c->data.str);
+            c->data.str = json_unescape(ctent->text);
+            //c->data.str = ucs4toutf8(ctent->text);
+            //c->data.str = parse_escape(c->data.str);
             TAILQ_INSERT_TAIL(&msg->content, c, entries);
         }
     }

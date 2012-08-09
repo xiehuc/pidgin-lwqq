@@ -10,7 +10,7 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
-    const int magic;//0x4153
+    int magic;//0x4153
 } qq_account;
 void qq_msg_check(qq_account* ac);
 void qq_set_basic_info(int result,void* data);
