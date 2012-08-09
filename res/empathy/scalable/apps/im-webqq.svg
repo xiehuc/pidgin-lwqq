@@ -15,7 +15,10 @@
    id="svg2985"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
-   sodipodi:docname="webqq.svg">
+   sodipodi:docname="webqq.svg"
+   inkscape:export-filename="/home/xiehuc/PROJECT/pidgin-lwqq/res/pidgin/scalable/webqq.png"
+   inkscape:export-xdpi="22.5"
+   inkscape:export-ydpi="22.5">
   <defs
      id="defs2987">
     <linearGradient
@@ -41,11 +44,11 @@
     <linearGradient
        id="linearGradient3797">
       <stop
-         style="stop-color:#000000;stop-opacity:1;"
+         style="stop-color:#196ad0;stop-opacity:1;"
          offset="0"
          id="stop3799" />
       <stop
-         style="stop-color:#2d2d2d;stop-opacity:1;"
+         style="stop-color:#14329e;stop-opacity:1;"
          offset="1"
          id="stop3801" />
     </linearGradient>
@@ -157,15 +160,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.48613591"
-     inkscape:cx="185.72839"
-     inkscape:cy="349.13381"
+     inkscape:zoom="3.8890873"
+     inkscape:cx="-3.6757902"
+     inkscape:cy="52.167951"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:document-units="px"
      inkscape:grid-bbox="true"
      inkscape:window-width="1366"
-     inkscape:window-height="712"
+     inkscape:window-height="716"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1" />
@@ -186,7 +189,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer">
     <path
-       style="fill:url(#linearGradient4350);fill-opacity:1;color:#000000;fill-rule:nonzero;stroke:#e2e2e2;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+       style="fill:url(#linearGradient4350);fill-opacity:1.0;color:#000000;fill-rule:nonzero;stroke:#e2e2e2;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        d="m 19.151739,61.222266 c -5.083306,-0.962306 -7.114073,-2.864921 -7.114073,-6.665146 0,-1.517538 0.398408,-2.393796 1.561227,-3.433755 1.280431,-1.145146 1.466838,-1.621108 1.036421,-2.64635 -0.519023,-1.2363 -0.537375,-1.237631 -1.665191,-0.120854 -2.23809,2.216183 -4.3303663,1.025259 -5.3635572,-3.05294 -0.987438,-3.897603 0.8252804,-10.432387 3.8317352,-13.813268 0.632894,-0.711716 1.150717,-2.040415 1.150717,-2.952666 0,-0.912251 0.480149,-2.659631 1.066999,-3.883067 0.586849,-1.223435 1.329305,-3.524412 1.649901,-5.11328 0.890665,-4.414118 1.941385,-6.650231 4.524335,-9.6285656 3.390641,-3.9096613 6.964367,-5.6809586 12.125906,-6.0101362 4.990723,-0.3182842 8.322836,0.6813815 12.104549,3.6314816 2.928842,2.2847772 5.787162,6.5875382 6.633685,9.9859932 0.324958,1.304577 1.214991,4.118424 1.977851,6.252994 0.880449,2.463594 1.246485,4.351654 1.00223,5.169618 -0.246057,0.823991 -0.08227,1.643879 0.454268,2.274021 0.461481,0.541989 1.473854,2.434961 2.249716,4.206605 2.265146,5.172348 1.824407,11.88608 -0.898947,13.693574 -0.727758,0.483015 -1.306762,0.338572 -2.545839,-0.63511 l -1.603841,-1.260317 -0.670338,1.331282 c -0.593622,1.178926 -0.475789,1.538064 1.029621,3.138114 1.789371,1.901865 2.165116,3.980313 1.101453,6.092732 -1.774482,3.524094 -11.913432,4.893433 -17.295945,2.335939 l -2.732269,-1.298235 -2.505576,1.138235 c -3.043139,1.382436 -7.685422,1.910458 -11.105038,1.263101 z"
        id="path3028"
        inkscape:connector-curvature="0"
