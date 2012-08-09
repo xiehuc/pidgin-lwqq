@@ -231,11 +231,11 @@ void lwqq_msg_free(LwqqMsg *msg)
         s_free(blist);
     }
     else if(msg->type==LWQQ_MT_SYS_G_MSG){
-        LwqqMsgSysGMsg* msg = msg->opaque;
-        if(msg){
-            s_free(msg->gcode);
+        LwqqMsgSysGMsg* gmsg = msg->opaque;
+        if(gmsg){
+            s_free(gmsg->gcode);
         }
-        s_free(msg);
+        s_free(gmsg);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }

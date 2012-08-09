@@ -485,9 +485,11 @@ void qq_msg_check(qq_account* ac)
 }
 static void check_exist(void* data,void* userdata)
 {
+    qq_account* ac = userdata;
     PurpleBuddy* bu = data;
-    LwqqClient* lc = userdata;
-    if(find_buddy_by_qqnumber(lc,purple_buddy_get_name(bu))==NULL){
+    LwqqClient* lc = ac->qq;
+    if(purple_buddy_get_account(bu)==ac->account&&
+            find_buddy_by_qqnumber(lc,purple_buddy_get_name(bu))==NULL){
         purple_blist_remove_buddy(bu);
     }
 }
@@ -500,7 +502,7 @@ void qq_set_basic_info(int result,void* data)
         lwqq_info_get_friend_avatar(lc,lc->myself);
     //search buddy list see if alread delete from server
     GSList* list = purple_blist_get_buddies();
-    g_slist_foreach(list,check_exist,lc);
+    g_slist_foreach(list,check_exist,ac);
 
     PurpleChat* chat;
     PurpleGroup* group = purple_find_group("QQ群");
@@ -510,7 +512,9 @@ void qq_set_basic_info(int result,void* data)
             chat = PURPLE_CHAT(node);
             GHashTable* table = purple_chat_get_components(chat);
             const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
-            if(qqnum&&find_group_by_qqnumber(lc,qqnum)==NULL){
+            if(purple_chat_get_account(chat)==ac->account&&
+                    qqnum&&
+                    find_group_by_qqnumber(lc,qqnum)==NULL){
                 node = purple_blist_node_next(node,1);
                 purple_blist_remove_chat(chat);
                 continue;
