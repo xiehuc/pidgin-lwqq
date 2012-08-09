@@ -842,6 +842,7 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
     PurpleBlistNode* n = node;
     PurpleConnection* gc = _gc;
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    if(ac==NULL) return;
     //verify this is qq_account
     if(ac->magic != QQ_MAGIC) return;
     if(ac->disable_send_server) return;

@@ -1123,6 +1123,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
+    //cface 上传是会占用自定义表情的空间的.这里的fileid是几就是占用第几个格子.
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
 
     void **data = s_malloc0(sizeof(void*)*2);
