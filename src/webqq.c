@@ -774,6 +774,10 @@ static void qq_login(PurpleAccount *account)
     qq_account* ac = qq_account_new(account);
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
+    if(password==NULL||strcmp(password,"")==0){
+        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
+        return;
+    }
     ac->gc = pc;
     ac->qq = lwqq_client_new(username,password);
     lwqq_async_set(ac->qq,1);
@@ -821,6 +825,7 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
+#if 0
 static void change_group_markname_back(LwqqAsyncEvent* event,void* data)
 {
     void **d = data;
@@ -864,6 +869,7 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
                 data);
     }
 }
+#endif
 void move_buddy_back(void* data)
 {
     void** d = data;
@@ -925,8 +931,8 @@ static void client_connect_signals(PurpleConnection* gc)
     void* h = &handle;
     purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
             PURPLE_CALLBACK(on_create),NULL);
-    purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
-            PURPLE_CALLBACK(qq_change_group_markname),gc);
+    //purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
+    //        PURPLE_CALLBACK(qq_change_group_markname),gc);
 }
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
