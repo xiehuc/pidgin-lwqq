@@ -1257,8 +1257,9 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
 {
     json_t *root = NULL;
     int ret;
-    int errno = 1;
+    int errno = 0;
     if (req->http_code != 200) {
+        errno = 1;
         goto failed;
     }
     puts(req->response);
@@ -1267,10 +1268,12 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
     json_t *res;
     ret = json_parse_document(&root,req->response);
     if(ret != JSON_OK) goto failed;
-    res = get_result_json_object(root);
-    if(!res)
+    const char* retcode = json_parse_simple_value(root,"retcode");
+    if(!retcode){
+        errno = 1;
         goto failed;
-    errno = 0;
+    }
+    errno = atoi(retcode);
 failed:
     if(root)
         json_free_value(&root);

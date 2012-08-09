@@ -72,12 +72,14 @@ typedef void (*EVSET_CALLBACK)(int result,void* data);
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished
  */
-LwqqAsyncEvset* lwqq_async_evset_new();
+#define lwqq_async_evset_new() lwqq_async_evset_new_with_debug(__FILE__,__LINE__)
+LwqqAsyncEvent* lwqq_async_event_new_with_debug(const char* file,int line);
 /** return a new event. 
  * you can wait a event by use evset or LWQQ_SYNC macro simply.
  * you can also add a event listener
  */
-LwqqAsyncEvent* lwqq_async_event_new();
+#define lwqq_async_event_new() lwqq_async_event_new_with_debug(__FILE__,__LINE__)
+LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line);
 /** this would remove a event.
  * and call a event listener if is set.
  * and try to wake up a evset if all events of evset are finished

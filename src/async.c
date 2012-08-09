@@ -29,12 +29,20 @@ typedef struct _LwqqAsyncEvset{
     int ref_count;
     EVSET_CALLBACK callback;
     void* data;
+    struct{
+        const char* __file;
+        int __line;
+    }debug;
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
     LwqqAsyncEvset* host_lock;
     EVENT_CALLBACK callback;
     void* data;
+    struct{
+        const char* __file;
+        int __line;
+    }debug;
 }_LwqqAsyncEvent;
 
 static gboolean timeout_come(void* p);
@@ -77,15 +85,19 @@ void lwqq_async_set(LwqqClient* client,int enabled)
     }
 
 }
-LwqqAsyncEvent* lwqq_async_event_new()
+LwqqAsyncEvent* lwqq_async_event_new_with_debug(const char* file,int line)
 {
-    return s_malloc0(sizeof(LwqqAsyncEvent));
+    LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
+    event->debug.__file = file;
+    event->debug.__line = line;
 }
-LwqqAsyncEvset* lwqq_async_evset_new()
+LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line)
 {
     LwqqAsyncEvset* l = s_malloc0(sizeof(*l));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
+    l->debug.__file = file;
+    l->debug.__line = line;
     return l;
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)

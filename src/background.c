@@ -23,9 +23,14 @@ static void* _background_login(void* data)
 
     lwqq_login(lc, &err);
     lwqq_async_set_error(lc,VERIFY_COME,err);
+
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
         lwqq_async_dispatch(lc,VERIFY_COME,NULL);
-    } else {
+    } else if(err != LWQQ_EC_OK){
+        if(err == LWQQ_EC_NETWORK_ERROR)
+            purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,NULL);
+        else purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,NULL);
+    }else{
         lwqq_async_dispatch(lc,LOGIN_COMPLETE,NULL);
     }
     return NULL;
@@ -119,12 +124,11 @@ static PurpleConversation* find_conversation(int msg_type,const char* who,Purple
 {
     int type;
     if(msg_type == LWQQ_MT_BUDDY_MSG)
-        type = PURPLE_CONV_TYPE_IM;
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
     else if(msg_type == LWQQ_MT_GROUP_MSG)
-        type = PURPLE_CONV_TYPE_CHAT;
+        return purple_find_chat(purple_account_get_connection(account),atol(who));
     else 
         return NULL;
-    return purple_find_conversation_with_account(type,who,account);
 }
 static void send_back(LwqqAsyncEvent* event,void* data)
 {
@@ -138,8 +142,10 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     s_free(data);
     if(errno){
         PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
-        snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
-        if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_DELAYED,time(NULL));
+        if(errno==108) snprintf(buf,sizeof(buf),"您发送的速度过快:\n%s",what);
+        else 
+            snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
+        if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_ERROR,time(NULL));
     }
 
     LwqqMsgMessage* mmsg = msg->opaque;
@@ -161,11 +167,15 @@ void* _background_send_msg(void* data)
     const char* who = d[4];
     LwqqClient* lc = ac->qq;
     int will_upload = (strstr(what,"<IMG")!=NULL);
+    const char* text;
 
     int ret = translate_message_to_struct(lc,to,what,mmsg,1);
     if(will_upload){
+        //group msg 'who' is gid.
         PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
-        if(conv)purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
+        if(ret==0) text = "图片上传完成";
+        else text = "图片上传失败";
+        if(conv)purple_conversation_write(conv,NULL,text,PURPLE_MESSAGE_SYSTEM,time(NULL));
         //if(conv&&ret) purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_SYSTEM,time(NULL));
     }
     lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);

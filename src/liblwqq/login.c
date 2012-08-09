@@ -539,11 +539,15 @@ static void get_version(LwqqClient *lc, LwqqErrorCode *err)
     /* Send request */
     lwqq_log(LOG_DEBUG, "Get webqq version from %s\n", LWQQ_URL_VERSION);
     ret = req->do_request(req, 0, NULL);
-    if (ret) {
+    if (ret || req->http_code!=200) {
         *err = LWQQ_EC_NETWORK_ERROR;
         goto done;
     }
     response = req->response;
+    if(response == NULL){
+        *err = LWQQ_EC_NETWORK_ERROR;
+        goto done;
+    }
     if (strstr(response, "ptuiV")) {
         char *s, *t;
         char *v;
