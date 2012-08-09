@@ -119,6 +119,7 @@ static qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
+    ac->magic = QQ_MAGIC;
     return ac;
 }
 static void qq_account_free(qq_account* ac)
@@ -841,6 +842,8 @@ static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
     PurpleBlistNode* n = node;
     PurpleConnection* gc = _gc;
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    //verify this is qq_account
+    if(ac->magic != QQ_MAGIC) return;
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     if(PURPLE_BLIST_NODE_IS_CHAT(n)){
