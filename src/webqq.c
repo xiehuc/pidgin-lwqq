@@ -28,6 +28,8 @@ static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries){
+        //this may caused by qqnumber not loaded successful.
+        if(!buddy->qqnumber) continue;
         if(strcmp(buddy->qqnumber,qqnum)==0)
             return buddy;
     }
@@ -37,6 +39,7 @@ static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries){
+        if(!group->account) continue;
         if(strcmp(group->account,qqnum)==0)
             return group;
     }
@@ -597,11 +600,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        if(strcmp(buddy->qqnumber,who)==0)
-            break;
-    }
+    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
     LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = buddy->uin;

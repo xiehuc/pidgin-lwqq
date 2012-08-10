@@ -1079,7 +1079,9 @@ static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
     char* account;
     int ret;
     json_t* json=NULL;
+    int succ = 0;
     if (req->http_code != 200) {
+        lwqq_log(LOG_ERROR, "qqnumber response error: %s\n", req->response);
         goto done;
     }
 
@@ -1099,7 +1101,9 @@ static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
     LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
     if(buddy){
         buddy->qqnumber = s_strdup(account);
+        succ = 1;
         lwqq_async_dispatch(lc,FRIEND_COME,buddy);
+        goto done;
     }
     LwqqGroup* group = NULL;
     LwqqGroup* gp;
@@ -1108,10 +1112,16 @@ static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
             group = gp;
     }
     if(group){
+        succ = 1;
         group->account = s_strdup(account);
         lwqq_async_dispatch(lc,GROUP_COME,group);
+        goto done;
     }
 done:
+    if(succ==0){
+        lwqq_log(LOG_ERROR,"fetch qqnumber error",req->response);
+    }
+
     /* Free temporary string */
     if (json)
         json_free_value(&json);
