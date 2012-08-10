@@ -573,8 +573,10 @@ static int login_complete(LwqqClient* lc,void* data)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
-    if(err!=LWQQ_EC_OK)
+    if(err!=LWQQ_EC_OK){
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
+        return;
+    }
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;

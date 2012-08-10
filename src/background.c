@@ -22,15 +22,16 @@ static void* _background_login(void* data)
     LwqqErrorCode err;
 
     lwqq_login(lc, &err);
-    lwqq_async_set_error(lc,VERIFY_COME,err);
 
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
+        lwqq_async_set_error(lc,VERIFY_COME,err);
         lwqq_async_dispatch(lc,VERIFY_COME,NULL);
-    } else if(err != LWQQ_EC_OK){
+    /*} else if(err != LWQQ_EC_OK){
         if(err == LWQQ_EC_NETWORK_ERROR)
             purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,NULL);
-        else purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,NULL);
+        else purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,NULL);*/
     }else{
+        lwqq_async_set_error(lc,LOGIN_COMPLETE,err);
         lwqq_async_dispatch(lc,LOGIN_COMPLETE,NULL);
     }
     return NULL;

@@ -90,6 +90,7 @@ LwqqAsyncEvent* lwqq_async_event_new_with_debug(const char* file,int line)
     LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
     event->debug.__file = file;
     event->debug.__line = line;
+    return event;
 }
 LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line)
 {
