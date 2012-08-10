@@ -924,6 +924,22 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 
 }
+static void qq_visit_qzone(PurpleBlistNode* node)
+{
+    PurpleBuddy* buddy = PURPLE_BUDDY(node);
+    char url[256];
+    snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
+    system(url);
+}
+static GList* qq_blist_node_menu(PurpleBlistNode* node)
+{
+    GList* act = NULL;
+    if(PURPLE_BLIST_NODE_IS_BUDDY(node)){
+        PurpleMenuAction* action = purple_menu_action_new("访问空间",qq_visit_qzone,node,NULL);
+        act = g_list_append(act,action);
+    }
+    return act;
+}
 static void client_connect_signals(PurpleConnection* gc)
 {
     static int handle;
@@ -944,7 +960,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     //NULL,//twitter_status_text, /* status_text */
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
-    //NULL,                   /* blist_node_menu */
+    .blist_node_menu=   qq_blist_node_menu,                   /* blist_node_menu */
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */

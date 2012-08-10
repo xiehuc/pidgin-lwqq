@@ -1,5 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 
+dev (08/10/2012):
+	* disable change group markname
+	* new feature: visit buddy qqzone
+
 dev (08/08/2012):
 	* new feature: support change buddy markname
 	* new feature: support change group markname
