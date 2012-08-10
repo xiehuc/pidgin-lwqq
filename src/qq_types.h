@@ -10,6 +10,11 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
+    enum {
+        DISCONNECT,
+        CONNECTED,
+        LOAD_COMPLETED
+    }state;
     int magic;//0x4153
 } qq_account;
 void qq_msg_check(qq_account* ac);

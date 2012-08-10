@@ -523,6 +523,8 @@ void qq_set_basic_info(int result,void* data)
         }
         node = purple_blist_node_next(node,1);
     }
+
+    ac->state = LOAD_COMPLETED;
     background_msg_poll(ac);
 }
 
@@ -575,6 +577,7 @@ static int login_complete(LwqqClient* lc,void* data)
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
+    ac->state = CONNECTED;
 
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
@@ -700,31 +703,28 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     LwqqClient* lc = ac->qq;
     char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
     LwqqGroup* group = NULL,*gp;
-    if(account!=NULL) {
-        LIST_FOREACH(gp,&lc->groups,entries){
-            if(gp->account==NULL){
-                group = NULL;
-                break;
-            }
-            if(strcmp(account,gp->account)==0){
-                group = gp;
-                break;
-            }
-        }
-        if(group == NULL) return;
-        //this will open chat dialog.
-        qq_conv_open(gc,group);
-        void** d = s_malloc0(sizeof(void*)*2);
-        d[0] = ac;
-        d[1] = group;
-        if(!LIST_EMPTY(&group->members)) {
-            group_member_list_come(NULL,d);
-        } else {
-            lwqq_async_add_event_listener(
-                    lwqq_info_get_group_detail_info(lc,group,NULL),
-                    group_member_list_come,
-                    d);
-        }
+    if(account==NULL) return;
+
+    if(ac->state != LOAD_COMPLETED){
+        purple_notify_warning(gc,"加载尚未完成","请稍后重新尝试打开",NULL);
+        return;
+    }
+
+    group = find_group_by_qqnumber(lc,account);
+    if(group == NULL) return;
+
+    //this will open chat dialog.
+    qq_conv_open(gc,group);
+    void** d = s_malloc0(sizeof(void*)*2);
+    d[0] = ac;
+    d[1] = group;
+    if(!LIST_EMPTY(&group->members)) {
+        group_member_list_come(NULL,d);
+    } else {
+        lwqq_async_add_event_listener(
+                lwqq_info_get_group_detail_info(lc,group,NULL),
+                group_member_list_come,
+                d);
     }
     return;
 }
@@ -935,7 +935,7 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
     if(PURPLE_BLIST_NODE_IS_BUDDY(node)){
-        PurpleMenuAction* action = purple_menu_action_new("访问空间",qq_visit_qzone,node,NULL);
+        PurpleMenuAction* action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
     }
     return act;
