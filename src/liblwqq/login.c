@@ -873,3 +873,32 @@ done:
         json_free_value(&json);
     lwqq_http_request_free(req);    
 }
+
+/*void lwqq_relogin(LwqqClient* lc)
+{
+    char url[128];
+    char post[1024];
+    int ret;
+    snprintf(url,sizeof(url),"%s/channel/login2","http://d.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    snprintf(post,sizeof(post),"r={"
+            "\"status\":\"online\","
+            "\"ptwebqq\":\"%s\","
+            "\"passwd_sig\":\"\","
+            "\"clientid\":\"%s\","
+            "\"psessionid\":\"%s\"}"
+            "&clientid=%s"
+            "&psessionid=%s",
+            lc->ptwebqq,lc->clientid,lc->psessionid,
+            lc->clientid,lc->psessionid);
+    req->set_header(req,"Origin","http://d.web2.qq.com");
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002callback=0&id=2");
+    ret = req->do_request(req,1,post);
+    if(ret || req->http_code!=200){
+        goto done;
+    }
+
+}*/

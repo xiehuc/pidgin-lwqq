@@ -769,9 +769,10 @@ static void request_msg_offpic(LwqqClient* lc,int type,LwqqMsgMessage* msg)
  * @param list 
  * @param response 
  */
-static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
+static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
 {
     int ret;
+    int retcode = 0;
     json_t *json = NULL, *json_tmp, *cur;
 
     ret = json_parse_document(&json, (char *)str);
@@ -780,6 +781,9 @@ static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", str);
         goto done;
     }
+    const char* retcode_str = json_parse_simple_value(json,"retcode");
+    if(retcode_str)
+        retcode = atoi(retcode_str);
 
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
@@ -847,6 +851,7 @@ done:
     if (json) {
         json_free_value(&json);
     }
+    return retcode;
 }
 
 /**
@@ -861,6 +866,7 @@ static void *start_poll_msg(void *msg_list)
     int ret;
     char *cookies;
     char *s;
+    int retcode;
     char msg[1024];
     LwqqRecvMsgList *list;
 
@@ -896,7 +902,9 @@ static void *start_poll_msg(void *msg_list)
         if (ret || req->http_code != 200) {
             continue;
         }
-        parse_recvmsg_from_json(list, req->response);
+        retcode = parse_recvmsg_from_json(list, req->response);
+        //if(retcode==121)
+        //    lwqq_relogin(lc);
     }
 failed:
     pthread_exit(NULL);
