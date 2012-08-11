@@ -121,13 +121,18 @@ void background_msg_drain(qq_account* ac)
 }
 
 
-static PurpleConversation* find_conversation(int msg_type,const char* who,PurpleAccount* account)
+static PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac)
 {
     int type;
+    PurpleAccount* account = ac->account;
+    LwqqClient* lc = ac->qq;
     if(msg_type == LWQQ_MT_BUDDY_MSG)
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
     else if(msg_type == LWQQ_MT_GROUP_MSG)
-        return purple_find_chat(purple_account_get_connection(account),atol(who));
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
+        /*return purple_find_chat(purple_account_get_connection(account),
+                (long)lwqq_group_find_group_by_gid(lc,who)
+                );*/
     else 
         return NULL;
 }
@@ -142,7 +147,7 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     int errno = lwqq_async_event_get_result(event);
     s_free(data);
     if(errno){
-        PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
+        PurpleConversation* conv = find_conversation(msg->type,who,ac);
         if(errno==108) snprintf(buf,sizeof(buf),"您发送的速度过快:\n%s",what);
         else 
             snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
@@ -173,7 +178,7 @@ void* _background_send_msg(void* data)
     int ret = translate_message_to_struct(lc,to,what,mmsg,1);
     if(will_upload){
         //group msg 'who' is gid.
-        PurpleConversation* conv = find_conversation(msg->type,who,ac->account);
+        PurpleConversation* conv = find_conversation(msg->type,who,ac);
         if(ret==0) text = "图片上传完成";
         else text = "图片上传失败";
         if(conv)purple_conversation_write(conv,NULL,text,PURPLE_MESSAGE_SYSTEM,time(NULL));
@@ -185,7 +190,6 @@ void* _background_send_msg(void* data)
 
 void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* who,const char* what,PurpleConversation* conv)
 {
-
     void** data = s_malloc0(sizeof(void*)*5);
     data[0] = msg;
     data[1] = conv;

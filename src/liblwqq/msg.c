@@ -27,7 +27,7 @@
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
-static void parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
+static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
 static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
@@ -599,6 +599,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque)
     else if(strcmp(type,"group_leave")==0)msg->type = GROUP_LEAVE;
     else msg->type = GROUP_UNKNOW;
     msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
+    return 0;
 
 }
 const char* get_host_of_url(const char* url,char* buffer)

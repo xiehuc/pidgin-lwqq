@@ -118,17 +118,6 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     return types;
 }
 
-static qq_account* qq_account_new(PurpleAccount* account)
-{
-    qq_account* ac = g_malloc0(sizeof(qq_account));
-    ac->account = account;
-    ac->magic = QQ_MAGIC;
-    return ac;
-}
-static void qq_account_free(qq_account* ac)
-{
-    g_free(ac);
-}
 static int friend_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -253,9 +242,11 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
     g_return_if_fail(group);
     g_return_if_fail(group->gid);
-    int id = atoi(group->gid);
-    PurpleConversation *conv = purple_find_chat(gc,id);
-    if(conv == NULL) serv_got_joined_chat(gc,id,group->account);
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    PurpleConversation *conv = purple_find_chat(gc,opend_chat_search(ac,group));
+    if(conv == NULL&&group->account){
+        serv_got_joined_chat(gc,open_new_chat(ac,group),group->account);
+    }
 }
 static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
@@ -324,20 +315,23 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     char* buf = d[3];
     LwqqClient* lc = ac->qq;
     PurpleConnection* pc = ac->gc;
+    const char* who;
 
     LwqqBuddy* buddy;
     buddy = lwqq_buddy_find_buddy_by_uin(lc,sender);
 
     if(buddy)
-        serv_got_chat_in(pc,atoi(group->gid),buddy->qqnumber,PURPLE_MESSAGE_RECV,buf,time(NULL));
+        who = buddy->qqnumber;
     else{
         buddy = lwqq_group_find_group_member_by_uin(group,sender);
         if(buddy)
-            serv_got_chat_in(pc,atoi(group->gid),buddy->nick,PURPLE_MESSAGE_RECV,buf,time(NULL));
+            who = buddy->nick;
         else
             //this means not download all member list;
-            serv_got_chat_in(pc,atoi(group->gid),sender,PURPLE_MESSAGE_RECV,buf,time(NULL));
+            who = sender;
+
     }
+    serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,time(NULL));
     s_free(sender);
     s_free(buf);
     group_member_list_come(NULL,data);
@@ -578,7 +572,7 @@ static int login_complete(LwqqClient* lc,void* data)
     LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
     if(err!=LWQQ_EC_OK){
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
-        return;
+        return 0;
     }
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
@@ -619,12 +613,10 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
 {
-    char gid[32];
-    snprintf(gid,32,"%u",id);
-    printf("%s\n",gid);
+    char id_str[32];
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    LwqqGroup *group = lwqq_group_find_group_by_gid(lc,gid);
+    LwqqGroup* group = opend_chat_index(ac,id);
 
     LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
     LwqqMsgMessage *mmsg = msg->opaque;
@@ -636,7 +628,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_color = "000000";
     PurpleConversation* conv = purple_find_chat(gc,id);
 
-    background_send_msg(ac,msg,gid,message,conv);
+    background_send_msg(ac,msg,group->account,message,conv);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
@@ -682,7 +674,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     PurpleConvChatBuddyFlags flag;
 
     PurpleConversation* conv = purple_find_chat(
-            purple_account_get_connection(ac->account),atoi(group->gid));
+            purple_account_get_connection(ac->account),opend_chat_search(ac,group));
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {

@@ -5,6 +5,7 @@ set(SRC_LIST
   webqq.c
   translate.c
   http_curl.c
+  qq_types.c
   )
 
 set(LWQQ_LIST
