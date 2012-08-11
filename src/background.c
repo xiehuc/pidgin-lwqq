@@ -152,6 +152,10 @@ static void send_back(LwqqAsyncEvent* event,void* data)
         else 
             snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
         if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_ERROR,time(NULL));
+        if(errno==121){
+            puts("msg send back lost connection");
+            lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
+        }
     }
 
     LwqqMsgMessage* mmsg = msg->opaque;

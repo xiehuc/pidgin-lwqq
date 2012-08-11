@@ -463,6 +463,7 @@ static int timer_cb(void* data)
     //这个表示有超时任务出现.
     GLOBAL* g = data;
 
+    if(!g->multi) return 0;
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
     check_multi_info(g);
     return 0;
@@ -484,6 +485,7 @@ static void event_cb(void* data,int fd,PurpleInputCondition revents)
 
     int action = (revents&PURPLE_INPUT_READ?CURL_POLL_IN:0)|
                  (revents&PURPLE_INPUT_WRITE?CURL_POLL_OUT:0);
+    if(!g->multi) return;
     curl_multi_socket_action(g->multi, fd, action, &g->still_running);
     check_multi_info(g);
     if ( g->still_running <= 0 ) {
