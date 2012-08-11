@@ -70,8 +70,16 @@ static void action_about_webqq(PurplePluginAction *action)
     g_free(title);
     g_string_free(info, TRUE);
 }
+static void visit_self_infocenter(PurplePluginAction *action)
+{
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    char url[256];
+    snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
+    system(url);
+}
 
-static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer UNUSED(context))
+static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
 {
 
     GList *m;
@@ -83,6 +91,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer UNUSED(conte
     m = g_list_append(m, NULL);
 
     act = purple_plugin_action_new(_("About WebQQ"), action_about_webqq);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
     m = g_list_append(m, act);
 
     return m;
@@ -924,12 +934,25 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
     system(url);
 }
+static void qq_visit_qun_air(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    GHashTable* table = purple_chat_get_components(chat);
+    const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
+    char url[256];
+    snprintf(url,sizeof(url),"gnome-open 'http://qun.qq.com/air/%s'",qqnum);
+    system(url);
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
+    PurpleMenuAction* action;
     if(PURPLE_BLIST_NODE_IS_BUDDY(node)){
-        PurpleMenuAction* action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
+        action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
+    }else if(PURPLE_BLIST_NODE_IS_CHAT(node)){
+        //action = purple_menu_action_new("访问群社区",(PurpleCallback)qq_visit_qun_air,node,NULL);
+        //act = g_list_append(act,action);
     }
     return act;
 }

@@ -720,7 +720,6 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
         goto done;
     }
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
-    //curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,1);
     req->set_header(req, "Referer", "http://web2.qq.com/");
     ///this is very important!!!!!!!!!
     //req->set_header(req, "Host", "d.web2.qq.com");
@@ -1146,26 +1145,28 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     LwqqClient* lc = d[0];
     LwqqMsgContent *c = d[1];
     s_free(data);
-    json_t* json = NULL;
     int ret;
     int errno = 0;
+    char msg[256];
 
     if(req->http_code!=200){
+        errno = 1;
         goto done;
     }
-    char *ptr = strchr(req->response,'}');
+    /*char *ptr = strchr(req->response,'}');
     *(ptr+1) = '\0';
     while((ptr = strchr(req->response,'\''))){
         *ptr = '"';
-    }
-    json_parse_document(&json,strchr(req->response,'{'));
-    ret = atoi(json_parse_simple_value(json,"ret"));
+    }*/
+    //json_parse_document(&json,strchr(req->response,'{'));
+    //ret = atoi(json_parse_simple_value(json,"ret"));
+    sscanf(req->response,"[^({]({\"ret\":%d,\"msg\":\"%[^\"]\"",&ret,msg);
     if(ret !=0 && ret !=4){
         errno = 1;
         goto done;
     }
     c->type = LWQQ_CONTENT_CFACE;
-    char *file = json_parse_simple_value(json,"msg");
+    char *file = msg;
     char *pos;
     //force to cut down the filename
     if((pos = strchr(file,' '))){
@@ -1180,10 +1181,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     if(!lc->gface_sig)
         query_gface_sig(lc);
     pthread_mutex_unlock(&mutex);
-    ret = 0;
 done:
-    if(json)
-        json_free_value(&json);
     lwqq_http_request_free(req);
     return errno;
 }
