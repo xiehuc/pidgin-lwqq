@@ -1290,7 +1290,6 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
     puts(req->response);
 
     //we check result if ok return 1,fail return 0;
-    json_t *res;
     ret = json_parse_document(&root,req->response);
     if(ret != JSON_OK) goto failed;
     const char* retcode = json_parse_simple_value(root,"retcode");

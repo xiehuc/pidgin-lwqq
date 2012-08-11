@@ -12,7 +12,7 @@ endif(NOT PURPLE_MAJOR_VERSION)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PURPLE REQUIRED  purple)
 pkg_check_modules(GLIB REQUIRED  glib-2.0)
-pkg_check_modules(CURL REQUIRED libcurl>=7.22)
+pkg_check_modules(CURL REQUIRED libcurl>=7.22.0)
 
 
 SET(PURPLE_LIB_INSTALL_DIR

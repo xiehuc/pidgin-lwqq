@@ -631,9 +631,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
 {
-    char id_str[32];
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    LwqqClient* lc = ac->qq;
     LwqqGroup* group = opend_chat_index(ac,id);
 
     LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
@@ -713,7 +711,7 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
     char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
-    LwqqGroup* group = NULL,*gp;
+    LwqqGroup* group = NULL;
     if(account==NULL) return;
 
     if(ac->state != LOAD_COMPLETED){

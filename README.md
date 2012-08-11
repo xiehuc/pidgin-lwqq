@@ -1,6 +1,7 @@
 # pidgin-lwqq
 a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
 see github:https://github.com/mathslinux/lwqq
+*need libcurl >=7.22.0*
 
 # support
 ## pidgin support
@@ -29,6 +30,7 @@ so never want to enjoy a good speed
 一个基于lwqq库的pidgin插件.
 lwqq库是一个非常安全有效的webqq协议的库.
 见github:https://github.com/mathslinux/lwqq
+*libcurl 版本需要高于等于 7.22*
 
 # support
 ## pidgin

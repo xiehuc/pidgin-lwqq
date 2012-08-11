@@ -123,16 +123,11 @@ void background_msg_drain(qq_account* ac)
 
 static PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac)
 {
-    int type;
     PurpleAccount* account = ac->account;
-    LwqqClient* lc = ac->qq;
     if(msg_type == LWQQ_MT_BUDDY_MSG)
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
     else if(msg_type == LWQQ_MT_GROUP_MSG)
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
-        /*return purple_find_chat(purple_account_get_connection(account),
-                (long)lwqq_group_find_group_by_gid(lc,who)
-                );*/
     else 
         return NULL;
 }
@@ -177,7 +172,6 @@ void* _background_send_msg(void* data)
     const char* who = d[4];
     LwqqClient* lc = ac->qq;
     int will_upload = (strstr(what,"<IMG")!=NULL);
-    const char* text;
 
     int ret = translate_message_to_struct(lc,to,what,msg,1);
     if(will_upload){
