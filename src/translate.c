@@ -77,7 +77,7 @@ static void img_unref(LwqqAsyncEvent* event,void* data)
     PurpleStoredImage* img = data;
     purple_imgstore_unref(img);
 }
-int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsgMessage* mmsg,int using_cface)
+int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsg* msg,int using_cface)
 {
     const char* ptr = what;
     int img_id;
@@ -86,6 +86,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     const char* begin,*end;
     TRexMatch m;
     TRex* x = _regex;
+    LwqqMsgMessage* mmsg = msg->opaque;
     //trex_clear(x);
 
     LwqqAsyncEvset* set = lwqq_async_evset_new();
@@ -117,7 +118,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
                 c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
                 c->data.cface.data = (char*)purple_imgstore_get_data(simg);
                 c->data.cface.size = purple_imgstore_get_size(simg);
-                event = lwqq_msg_upload_cface(lc,c);
+                event = lwqq_msg_upload_cface(lc,msg->type,c);
             }else{
                 c->type = LWQQ_CONTENT_OFFPIC;
                 c->data.img.name = s_strdup(purple_imgstore_get_filename(simg));

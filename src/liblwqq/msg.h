@@ -225,7 +225,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
  *          c->cface.size is set to file content length.
  *          you should free picture data by hand.(use event listener)
  */
-LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c);
+LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

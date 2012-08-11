@@ -717,7 +717,7 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     if(account==NULL) return;
 
     if(ac->state != LOAD_COMPLETED){
-        purple_notify_warning(gc,"加载尚未完成","请稍后重新尝试打开",NULL);
+        purple_notify_warning(gc,NULL,"加载尚未完成","请稍后重新尝试打开");
         return;
     }
 

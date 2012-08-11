@@ -1106,7 +1106,7 @@ done:
     lwqq_http_request_free(req);
     return succ;
 }
-LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
+LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgContent* c)
 {
     if(c->type != LWQQ_CONTENT_CFACE) return NULL;
     if(!c->data.cface.name || !c->data.cface.data || !c->data.cface.size) return NULL;
@@ -1127,13 +1127,18 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
-    req->set_header(req,"Host","up.web2.qq.com");
+    //req->set_header(req,"Host","up.web2.qq.com");
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
+    //this is special for group msg.it can upload over 250K
+    req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
+    if(type == LWQQ_MT_GROUP_MSG){
+        req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
+    }
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
     //cface 上传是会占用自定义表情的空间的.这里的fileid是几就是占用第几个格子.
@@ -1166,7 +1171,12 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     }*/
     //json_parse_document(&json,strchr(req->response,'{'));
     //ret = atoi(json_parse_simple_value(json,"ret"));
-    sscanf(req->response,"[^({]({\"ret\":%d,\"msg\":\"%[^\"]\"",&ret,msg);
+    char* ptr = strstr(req->response,"({");
+    if(ptr==NULL){
+        errno = 1;
+        goto done;
+    }
+    sscanf(ptr,"({'ret':%d,'msg':'%[^\']'",&ret,msg);
     if(ret !=0 && ret !=4){
         errno = 1;
         goto done;

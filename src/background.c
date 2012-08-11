@@ -179,14 +179,14 @@ void* _background_send_msg(void* data)
     int will_upload = (strstr(what,"<IMG")!=NULL);
     const char* text;
 
-    int ret = translate_message_to_struct(lc,to,what,mmsg,1);
+    int ret = translate_message_to_struct(lc,to,what,msg,1);
     if(will_upload){
         //group msg 'who' is gid.
         PurpleConversation* conv = find_conversation(msg->type,who,ac);
-        if(ret==0) text = "图片上传完成";
-        else text = "图片上传失败";
-        if(conv)purple_conversation_write(conv,NULL,text,PURPLE_MESSAGE_SYSTEM,time(NULL));
-        //if(conv&&ret) purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_SYSTEM,time(NULL));
+        if(ret==0&&conv)
+            purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
+        else if(ret!=0&&conv)
+            purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_ERROR,time(NULL));
     }
     lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
     return NULL;
