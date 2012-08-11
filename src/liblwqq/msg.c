@@ -1124,6 +1124,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgContent* c)
     snprintf(url,sizeof(url),"http://up.web2.qq.com/cgi-bin/cface_upload?time=%ld",
             time(NULL));
     req = lwqq_http_create_default_request(url,&err);
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Host","up.web2.qq.com");
@@ -1153,6 +1154,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     int errno = 0;
     char msg[256];
 
+    if(req->response)puts(req->response);
     if(req->http_code!=200){
         errno = 1;
         goto done;
