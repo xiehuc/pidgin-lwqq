@@ -442,6 +442,13 @@ static int group_avatar(LwqqClient* lc,void* data)
     group->avatar = NULL;
     return 0;
 }
+static int lost_connection(LwqqClient* lc,void* data)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* gc = ac->gc;
+    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
+    return 0;
+}
 void qq_msg_check(qq_account* ac)
 {
     LwqqClient* lc = ac->qq;
@@ -592,6 +599,7 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
+    lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
     background_friends_info(ac);
     return 0;
 }
@@ -682,6 +690,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     LwqqBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
+    const char* who;
 
     PurpleConversation* conv = purple_find_chat(
             purple_account_get_connection(ac->account),opend_chat_search(ac,group));
@@ -689,13 +698,12 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             flag |= PURPLE_CBFLAGS_TYPING;
-            if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))){
-                purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),buddy->qqnumber,NULL,flag,FALSE);
+            if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))&&buddy->qqnumber){
+                who = buddy->qqnumber;
             }else{
-                purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),member->nick,NULL,flag,FALSE);
+                who = member->nick;
             }
-            /*purple_conv_chat_rename_user(PURPLE_CONV_CHAT(conv),member->uin,
-                    qq_get_cb_real_name(gc,id,member->uin));*/
+            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),who,NULL,flag,FALSE);
         }
     }
     return ;

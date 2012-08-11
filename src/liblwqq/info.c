@@ -441,14 +441,11 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     char** avatar = (isgroup)?&group->avatar:&buddy->avatar;
     size_t* len = (isgroup)?&group->avatar_len:&buddy->avatar_len;
-
-    if((req->http_code!=200 && req->http_code!=304)){
-        goto done;
-    }
-
     char path[32];
     int hasfile=0;
     size_t filesize=0;
+    FILE* f;
+
     if(qqnumber) {
         snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
         struct stat st = {0};
@@ -456,7 +453,11 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
         hasfile = !stat(path,&st);
         filesize = st.st_size;
     }
-    FILE* f;
+
+    if((req->http_code!=200 && req->http_code!=304)){
+        goto done;
+    }
+
     //ok we need update our cache because 
     //our cache outdate
     if(req->http_code != 304) {
@@ -493,7 +494,6 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     }
 
 done:
-    lwqq_http_request_free(req);
     //failed or we do not need update
     //we read from file
     if(hasfile){
@@ -502,6 +502,7 @@ done:
         fread(*avatar,1,filesize,f);
         *len = filesize;
     }
+    lwqq_http_request_free(req);
     if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
     else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
     return 0;

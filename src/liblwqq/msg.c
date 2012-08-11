@@ -903,6 +903,10 @@ static void *start_poll_msg(void *msg_list)
             continue;
         }
         retcode = parse_recvmsg_from_json(list, req->response);
+        if(retcode == 121){
+            lwqq_async_dispatch(lc,POLL_LOST_CONNECTION,NULL);
+            break;
+        }
         //if(retcode==121)
         //    lwqq_relogin(lc);
     }

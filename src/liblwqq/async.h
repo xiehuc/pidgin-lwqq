@@ -25,9 +25,8 @@ typedef enum ListenerType {
     GROUP_COME,///< after get group qqnumber
     FRIEND_AVATAR,///<after get_friend_avatar
     GROUP_AVATAR,///<after get_group_avatar
-    GROUP_DETAIL,
+    POLL_LOST_CONNECTION,///
     VERIFY_COME,
-    IM_SEND_FAILED,
     ListenerTypeLength
 } ListenerType;
 typedef struct _LwqqAsync {
