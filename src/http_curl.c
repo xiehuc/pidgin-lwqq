@@ -754,7 +754,8 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
                 CURLFORM_BUFFERLENGTH,size,
                 CURLFORM_END);
     }else{
-        curl_formadd(post,last,
+        CURLFORMcode rc;
+        rc = curl_formadd(post,last,
                 CURLFORM_COPYNAME,name,
                 CURLFORM_BUFFER,filename,
                 CURLFORM_BUFFERPTR,data,

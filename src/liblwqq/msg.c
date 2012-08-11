@@ -1033,7 +1033,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
     req->add_form(req,LWQQ_FORM_CONTENT,"peeruin","593023668");///<what this means?
     req->add_file_content(req,"file",filename,buffer,size,NULL);
-    req->add_form(req,LWQQ_FORM_CONTENT,"field","1");
+    req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
@@ -1138,6 +1138,8 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
     if(type == LWQQ_MT_GROUP_MSG){
         req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
+    } else if(type == LWQQ_MT_BUDDY_MSG){
+        req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPic");
     }
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
