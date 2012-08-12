@@ -10,6 +10,7 @@
 #include <async.h>
 #include <msg.h>
 #include <info.h>
+#include <http.h>
 
 #include "internal.h"
 #include "webqq.h"
@@ -756,12 +757,9 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     LwqqSimpleBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
-    const char* who;
     GList* users = NULL;
     GList* flags = NULL;
     GList* extra_msgs = NULL;
-    char** alias_ptr;
-    char uinatgid[64];
 
 
     PurpleConversation* conv = purple_find_chat(
@@ -774,20 +772,15 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
             flag |= PURPLE_CBFLAGS_TYPING;
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
             if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))&&buddy->qqnumber){
-                who = buddy->qqnumber;
-                purple_conv_chat_add_user(chat,buddy->qqnumber,NULL,flag,FALSE);
+                users = g_list_append(users,buddy->qqnumber);
             }else{
-                snprintf(uinatgid,sizeof(uinatgid),"%s@%s",member->uin,group->gid);
-                purple_conv_chat_add_user(chat,uinatgid,NULL,flag,FALSE);
-                //PurpleConnection* cb = purple_conv_chat_cb_find(chat,uinatgid);
-                alias_ptr = purple_conv_chat_cb_find(chat,uinatgid);
-                ++alias_ptr;
-                puts(*alias_ptr);
-                s_free(*alias_ptr);
-                *alias_ptr = s_strdup(member->nick);
-                purple_conversation_get_ui_ops(conv)->chat_rename_user(conv,uinatgid,uinatgid,member->nick);
+                users = g_list_append(users,member->nick);
             }
         }
+        purple_conv_chat_add_users(chat,users,extra_msgs,flags,FALSE);
+        g_list_free(users);
+        g_list_free(flags);
+        g_list_free(extra_msgs);
     }
     return ;
 }
@@ -837,19 +830,14 @@ static gboolean qq_can_receive_file(PurpleConnection* gc,const char* who)
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    LwqqClient* lc = ac->qq;
-    char uin[32],gid[32];
     char conv_name[70];
-
-    if(sscanf(who,"%[0-9]@%[0-9]",uin,gid)==2){
-        LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
-        LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,uin);
+    if(purple_find_buddy(ac->account,who)!=NULL)
+        return NULL;
+    else{
+        LwqqGroup* group = opend_chat_index(ac,id);
+        LwqqSimpleBuddy* sb = find_group_member_by_nick(group,who);
         snprintf(conv_name,sizeof(conv_name),"%s ### %s",sb->nick,group->name);
         return s_strdup(conv_name);
-    }else{
-        LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
-        if(buddy&&buddy->markname) return s_strdup(buddy->markname);
-        else if(buddy&&buddy->nick) return s_strdup(buddy->nick);
     }
     return NULL;
 }

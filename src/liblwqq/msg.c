@@ -1227,7 +1227,6 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     char *content = NULL;
     char data[1024] = {0};
     LwqqMsgMessage *mmsg;
-    const char *tonam;
     const char *apistr;
     int has_cface = 0;
 
