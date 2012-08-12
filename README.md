@@ -1,6 +1,7 @@
 # pidgin-lwqq
 a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
-see github:https://github.com/mathslinux/lwqq
+see github:https://github.com/mathslinux/lwqq.
+
 *need libcurl >=7.22.0*
 
 # support
@@ -15,6 +16,7 @@ see github:https://github.com/mathslinux/lwqq
 * confirm buddy added request.
 * visit buddy qzone
 * group whisper message
+* change status
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -44,7 +46,8 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持更改好友分组
 * 支持确认添加好友请求
 * 支持群的临时会话
-* 访问QQ空间
+* 支持访问QQ空间
+* 支持更改在线状态
 
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息

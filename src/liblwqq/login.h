@@ -19,7 +19,7 @@
  * @param client Lwqq Client 
  * @param err Error code
  */
-void lwqq_login(LwqqClient *client, LwqqErrorCode *err);
+void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err);
 
 /** 
  * WebQQ logout function

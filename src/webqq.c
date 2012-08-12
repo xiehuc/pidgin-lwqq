@@ -131,22 +131,33 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     GList *types = NULL;
 
     status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE,
-                                         "online", _("Online"), FALSE, TRUE, FALSE);
+            "online", _("我在线上"), FALSE, TRUE, FALSE);
+    types = g_list_append(types, status);
+    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE,
+            "callme",_("Q我吧"),FALSE,TRUE,FALSE);
     types = g_list_append(types, status);
     status = purple_status_type_new_full(PURPLE_STATUS_AWAY,
-                                         "away", _("Away"), FALSE, TRUE, FALSE);
-    types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_INVISIBLE,
-                                         "hidden", _("Invisible"), FALSE, TRUE, FALSE);
-    types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE,
-                                         "offline", _("Offline"), FALSE, TRUE, FALSE);
+            "away", _("离开"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
     status = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE,
-                                         "busy", _("Busy"), FALSE, TRUE, FALSE);
+            "busy", _("忙碌"), FALSE, TRUE, FALSE);
+    types = g_list_append(types, status);
+    status = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE,
+            "slience", _("请勿打扰"), FALSE, TRUE, FALSE);
+    types = g_list_append(types, status);
+    status = purple_status_type_new_full(PURPLE_STATUS_INVISIBLE,
+            "hidden", _("隐身"), FALSE, TRUE, FALSE);
+    types = g_list_append(types, status);
+    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE,
+            "offline", _("离线"), FALSE, TRUE, FALSE);
     types = g_list_append(types, status);
 
     return types;
+}
+static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
+{
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    lwqq_info_change_status(ac->qq,lwqq_status_from_str(purple_status_get_id(status)));
 }
 
 static int friend_come(LwqqClient* lc,void* data)
@@ -1054,6 +1065,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     //NULL,//twitter_status_text, /* status_text */
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
+    .set_status=        qq_set_status,
     .blist_node_menu=   qq_blist_node_menu,                   /* blist_node_menu */
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/

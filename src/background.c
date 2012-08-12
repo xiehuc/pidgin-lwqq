@@ -20,8 +20,9 @@ static void* _background_login(void* data)
     qq_account* ac=(qq_account*)data;
     LwqqClient* lc = ac->qq;
     LwqqErrorCode err;
+    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
 
-    lwqq_login(lc, &err);
+    lwqq_login(lc,lwqq_status_from_str(status), &err);
 
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
         lwqq_async_set_error(lc,VERIFY_COME,err);

@@ -3,6 +3,7 @@ author : xiehuc@gmail.com
 
 dev (08/12/2012):
 	* new feature: support group whisper message
+	* new feature: support change status
 
 dev (08/10/2012):
 	* disable change group markname

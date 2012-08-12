@@ -34,7 +34,7 @@ typedef enum LWQQ_STATUS{
     LWQQ_STATUS_HIDDEN = 40,
     LWQQ_STATUS_BUSY = 50,
     LWQQ_STATUS_CALLME = 60,
-    LWQQ_STATUS_SLIENCE = 70
+    LWQQ_STATUS_SLIENT = 70
 }LWQQ_STATUS;
 /* QQ buddy */
 typedef struct LwqqBuddy {
@@ -155,13 +155,13 @@ typedef struct LwqqClient {
     char *cip;
     char *index;
     char *port;
-    char *status;
     char *vfwebqq;
     char *psessionid;
     char *gface_key;                  /**< use at cface */
     char *gface_sig;                  /**<use at cfage */
     LwqqAsync* async;
     LwqqCookies *cookies;
+    const char *status;
     LWQQ_STATUS stat;
 
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
@@ -299,4 +299,6 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 /************************************************************************/
 
+const char* lwqq_status_to_str(LWQQ_STATUS status);
+LWQQ_STATUS lwqq_status_from_str(const char* str);
 #endif  /* LWQQ_TYPE_H */

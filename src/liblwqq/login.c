@@ -41,7 +41,7 @@
 /* URL for get webqq version */
 #define LWQQ_URL_VERSION "http://ui.ptlogin2.qq.com/cgi-bin/ver"
 
-static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err);
+static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *err);
 
 /** 
  * Update the cookies needed by webqq
@@ -418,11 +418,11 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
     int ret;
     
     snprintf(url, sizeof(url), "%s/login?u=%s&p=%s&verifycode=%s&"
-             "webqq_type=10&remember_uin=1&aid=1003903&login2qq=1&"
+             "webqq_type=%d&remember_uin=1&aid=1003903&login2qq=1&"
              "u1=http%%3A%%2F%%2Fweb.qq.com%%2Floginproxy.html"
              "%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&"
              "ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&"
-             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str);
+             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
 
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
@@ -510,7 +510,7 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
         goto done;
     }
 
-    set_online_status(lc, "online", err);
+    set_online_status(lc, lwqq_status_to_str(lc->stat), err);
 done:
     lwqq_http_request_free(req);
 }
@@ -593,7 +593,7 @@ static char *generate_clientid()
  * @param err
  * @param lc 
  */
-static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err)
+static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *err)
 {
     char msg[1024] ={0};
     char *buf;
@@ -690,8 +690,7 @@ static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err)
     }
 
     if ((value = json_parse_simple_value(json, "status"))) {
-        /* This really need? */
-        lc->status = s_strdup(value);
+        lc->status = lwqq_status_to_str(lc->stat);
     }
 
     if ((value = json_parse_simple_value(json, "vfwebqq"))) {
@@ -722,9 +721,9 @@ done:
  * @param client Lwqq Client 
  * @param err Error code
  */
-void lwqq_login(LwqqClient *client, LwqqErrorCode *err)
+void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err)
 {
-    if (!client || !err) {
+    if (!client || !err|| !status) {
         lwqq_log(LOG_ERROR, "Invalid pointer\n");
         return ;
     }
@@ -771,6 +770,7 @@ void lwqq_login(LwqqClient *client, LwqqErrorCode *err)
     /* Third: calculate the md5 */
     char *md5 = lwqq_enc_pwd(client->password, client->vc->str, client->vc->uin);
 
+    client->stat = status;
     /* Last: do real login */
     do_login(client, md5, err);
     s_free(md5);

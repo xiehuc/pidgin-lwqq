@@ -141,7 +141,6 @@ void lwqq_client_free(LwqqClient *client)
     s_free(client->cip);
     s_free(client->index);
     s_free(client->port);
-    s_free(client->status);
     s_free(client->vfwebqq);
     s_free(client->psessionid);
     lwqq_buddy_free(client->myself);
@@ -370,7 +369,7 @@ const char* lwqq_status_to_str(LWQQ_STATUS status)
         case LWQQ_STATUS_HIDDEN: return "hidden";break;
         case LWQQ_STATUS_BUSY: return "busy";break;
         case LWQQ_STATUS_CALLME: return "callme";break;
-        case LWQQ_STATUS_SLIENCE: return "slience";break;
+        case LWQQ_STATUS_SLIENT: return "slient";break;
         default: return "unknow";break;
     }
 }
@@ -382,6 +381,6 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else if(strcmp(str,"hidden")==0) return LWQQ_STATUS_HIDDEN;
     else if(strcmp(str,"busy")==0) return LWQQ_STATUS_BUSY;
     else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
-    else if(strcmp(str,"slience")==0) return LWQQ_STATUS_SLIENCE;
+    else if(strcmp(str,"slient")==0) return LWQQ_STATUS_SLIENT;
     else return LWQQ_STATUS_UNKNOW;
 }

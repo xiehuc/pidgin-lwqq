@@ -34,7 +34,7 @@ static int get_friends_info_back(LwqqHttpRequest* req,void* data);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 static int group_detail_back(LwqqHttpRequest* req,void* data);
-static int change_buddy_markname_back(LwqqHttpRequest* req,void* data);
+static int info_commom_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -1236,10 +1236,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(stat, "stat");
         if(buddy->status) s_free(buddy->status);
         buddy->status = NULL;
-        if(strcmp(buddy->stat,"10")==0)buddy->status = s_strdup("online");
-        else if(strcmp(buddy->stat,"20")==0) buddy->status = s_strdup("offline");
-        else if(strcmp(buddy->stat,"30")==0) buddy->status = s_strdup("busy");
-        else if(strcmp(buddy->stat,"50")==0) buddy->status = s_strdup("away");
+        buddy->status = s_strdup(lwqq_status_to_str(atoi(buddy->stat)));
         SET_BUDDY_INFO(vip_info, "vip_info");
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
@@ -1393,7 +1390,7 @@ json_error:
     lwqq_http_request_free(req);
     return 0;
 }
-enum CHANGE{CHANGE_BUDDY_MARKNAME,CHANGE_GROUP_MARKNAME,MODIFY_BUDDY_CATEGORY};
+enum CHANGE{CHANGE_BUDDY_MARKNAME,CHANGE_GROUP_MARKNAME,MODIFY_BUDDY_CATEGORY,CHANGE_STATUS};
 LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias)
 {
     if(!lc||!buddy||!alias) return NULL;
@@ -1413,13 +1410,13 @@ LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,
     data[0] = (void*)CHANGE_BUDDY_MARKNAME;
     data[1] = buddy;
     data[2] = s_strdup(alias);
-    return req->do_request_async(req,1,post,change_buddy_markname_back,data);
+    return req->do_request_async(req,1,post,info_commom_back,data);
 done:
     lwqq_http_request_free(req);
     return NULL;
 }
 
-static int change_buddy_markname_back(LwqqHttpRequest* req,void* data)
+static int info_commom_back(LwqqHttpRequest* req,void* data)
 {
     json_t* root=NULL;
     int errno;
@@ -1459,6 +1456,11 @@ static int change_buddy_markname_back(LwqqHttpRequest* req,void* data)
             char* cate_idx = d[2];
             if(buddy->cate_index) s_free(buddy->cate_index);
             buddy->cate_index = cate_idx;
+        }else if(type == CHANGE_STATUS){
+            LwqqClient* lc = d[1];
+            const char* status = d[2];
+            lc->stat = lwqq_status_from_str(status);
+            lc->status = lwqq_status_to_str(lc->stat);
         }
     }
 done:
@@ -1490,7 +1492,7 @@ LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,
     data[0] = (void*)CHANGE_GROUP_MARKNAME;
     data[1] = group;
     data[2] = s_strdup(alias);
-    return req->do_request_async(req,1,post,change_buddy_markname_back,data);
+    return req->do_request_async(req,1,post,info_commom_back,data);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1525,7 +1527,7 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     char* cate_index = s_malloc0(11);
     snprintf(cate_index,11,"%d",cate_idx);
     data[2] = cate_index;
-    return req->do_request_async(req,1,post,change_buddy_markname_back,data);
+    return req->do_request_async(req,1,post,info_commom_back,data);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1546,7 +1548,7 @@ LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LWQQ_DEL
     puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+    return req->do_request_async(req,1,post,info_commom_back,NULL);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1568,7 +1570,7 @@ LwqqAsyncEvent* lwqq_info_allow_added_request(LwqqClient* lc,const char* account
     puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+    return req->do_request_async(req,1,post,info_commom_back,NULL);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1593,7 +1595,7 @@ LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,
     puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+    return req->do_request_async(req,1,post,info_commom_back,NULL);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1617,7 +1619,7 @@ LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const
     puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,change_buddy_markname_back,NULL);
+    return req->do_request_async(req,1,post,info_commom_back,NULL);
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -1666,4 +1668,31 @@ done:
     if(root)
         json_free_value(&root);
     lwqq_http_request_free(req);
+}
+
+LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
+{
+    if(!lc||!status) return NULL;
+    char url[512];
+    int ret;
+    snprintf(url,sizeof(url),"%s/channel/change_status2?"
+            "newstatus=%s&"
+            "clientid=%s&"
+            "psessionid=%s&"
+            "t=%ld",
+            "http://d.web2.qq.com",lwqq_status_to_str(status),lc->clientid,lc->psessionid,time(NULL));
+    puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
+    void **data = s_malloc(sizeof(void*)*3);
+    data[0] = (void*)CHANGE_STATUS;
+    data[1] = lc;
+    data[2] = (char*)lwqq_status_to_str(status);
+    return req->do_request_async(req,0,NULL,info_commom_back,data);
 }

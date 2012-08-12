@@ -114,6 +114,7 @@ LwqqAsyncEvent* lwqq_info_allow_added_request(LwqqClient* lc,const char* account
 LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,const char* reason);
 LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const char* markname);
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin);
+LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status);
 
 
 #endif  /* LWQQ_INFO_H */
