@@ -746,7 +746,7 @@ GList *qq_chat_info(PurpleConnection *gc)
 
     return m;
 }
-GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
+static GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
 {
     GHashTable *defaults;
 
@@ -756,6 +756,23 @@ GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
         g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
 
     return defaults;
+}
+static PurpleRoomlist* qq_get_all_group_list(PurpleConnection* gc)
+{
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    PurpleAccount* account = ac->account;
+    PurpleRoomlist* list = purple_roomlist_new(account);
+    GList* fields = NULL;
+    PurpleRoomlistField* field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_QUN_ID,FALSE);
+    fields = g_list_append(fields,field);
+    purple_roomlist_set_fields(list,fields);
+    LwqqGroup* group;
+    LIST_FOREACH(group,&ac->qq->groups,entries){
+        PurpleRoomlistRoom* room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM,group->name,NULL);
+        purple_roomlist_room_add_field(list,room,group->account);
+        purple_roomlist_room_add(list,room);
+    }
+    return list;
 }
 
 static void group_member_list_come(LwqqAsyncEvent* event,void* data)
@@ -1070,6 +1087,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
+    .roomlist_get_list =qq_get_all_group_list,
     .join_chat=         qq_group_join,
     .get_cb_real_name=  qq_get_cb_real_name,
     /**group part end*/
