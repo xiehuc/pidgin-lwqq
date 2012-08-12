@@ -26,7 +26,16 @@ typedef struct LwqqFriendCategory {
     int count;
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
-
+typedef enum LWQQ_STATUS{
+    LWQQ_STATUS_UNKNOW = 0,
+    LWQQ_STATUS_ONLINE = 10,
+    LWQQ_STATUS_OFFLINE = 20,
+    LWQQ_STATUS_AWAY = 30,
+    LWQQ_STATUS_HIDDEN = 40,
+    LWQQ_STATUS_BUSY = 50,
+    LWQQ_STATUS_CALLME = 60,
+    LWQQ_STATUS_SLIENCE = 70
+}LWQQ_STATUS;
 /* QQ buddy */
 typedef struct LwqqBuddy {
     char *uin;                  /**< Uin. Change every login */
@@ -153,6 +162,8 @@ typedef struct LwqqClient {
     char *gface_sig;                  /**<use at cfage */
     LwqqAsync* async;
     LwqqCookies *cookies;
+    LWQQ_STATUS stat;
+
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */

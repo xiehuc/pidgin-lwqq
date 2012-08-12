@@ -361,3 +361,27 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
 
     return NULL;
 }
+const char* lwqq_status_to_str(LWQQ_STATUS status)
+{
+    switch(status){
+        case LWQQ_STATUS_ONLINE: return "online";break;
+        case LWQQ_STATUS_OFFLINE: return "offline";break;
+        case LWQQ_STATUS_AWAY: return "away";break;
+        case LWQQ_STATUS_HIDDEN: return "hidden";break;
+        case LWQQ_STATUS_BUSY: return "busy";break;
+        case LWQQ_STATUS_CALLME: return "callme";break;
+        case LWQQ_STATUS_SLIENCE: return "slience";break;
+        default: return "unknow";break;
+    }
+}
+LWQQ_STATUS lwqq_status_from_str(const char* str)
+{
+    if(strcmp(str,"online")==0) return LWQQ_STATUS_ONLINE;
+    else if(strcmp(str,"offline")==0) return LWQQ_STATUS_OFFLINE;
+    else if(strcmp(str,"away")==0) return LWQQ_STATUS_AWAY;
+    else if(strcmp(str,"hidden")==0) return LWQQ_STATUS_HIDDEN;
+    else if(strcmp(str,"busy")==0) return LWQQ_STATUS_BUSY;
+    else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
+    else if(strcmp(str,"slience")==0) return LWQQ_STATUS_SLIENCE;
+    else return LWQQ_STATUS_UNKNOW;
+}
