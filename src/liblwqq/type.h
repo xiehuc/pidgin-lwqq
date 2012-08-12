@@ -76,7 +76,11 @@ typedef struct LwqqBuddy {
 
 typedef struct LwqqSimpleBuddy{
     char* uin;
+    char* nick;
+    char* client_type;
+    char* stat;
     char* cate_index;
+    char* group_sig;            /* only use at sess message */
     LIST_ENTRY(LwqqSimpleBuddy) entries;
 }LwqqSimpleBuddy;
 
@@ -99,11 +103,13 @@ typedef struct LwqqGroup {
     char *flag;
     char *option;
 
+    char *group_sig;            /** < use in sess msg */
+
     char *avatar;
     size_t avatar_len;
 
     LIST_ENTRY(LwqqGroup) entries;
-    LIST_HEAD(, LwqqBuddy) members; /** < QQ Group members */
+    LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
 } LwqqGroup;
 
 typedef struct LwqqVerifyCode {
@@ -275,7 +281,7 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
  * 
  * @return A LwqqBuddy instance 
  */
-LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
+LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)

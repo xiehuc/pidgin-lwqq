@@ -183,7 +183,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         return;
 
     printf ("type: %d\n", msg->type);
-    if(msg->type==LWQQ_MT_GROUP_MSG||msg->type==LWQQ_MT_BUDDY_MSG)
+    if(msg->type==LWQQ_MT_GROUP_MSG||msg->type==LWQQ_MT_BUDDY_MSG||msg->type==LWQQ_MT_SESS_MSG)
         lwqq_msg_message_free(msg->opaque);
     else if(msg->type==LWQQ_MT_STATUS_CHANGE)
         lwqq_msg_status_free(msg->opaque);
@@ -476,11 +476,15 @@ static int parse_new_msg(json_t *json, void *opaque)
     msg->to = s_strdup(json_parse_simple_value(json, "to_uin"));
     msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
 
+    char* value;
     //if it failed means it is not group message.
     //so it equ NULL.
-    msg->send = s_strdup(json_parse_simple_value(json, "send_uin"));
-    msg->group_code = s_strdup(json_parse_simple_value(json,"group_code"));
-    msg->id = s_strdup(json_parse_simple_value(json,"id"));
+    value = s_strdup(json_parse_simple_value(json, "send_uin"));
+    if(value!=NULL) msg->send = value;
+    value = s_strdup(json_parse_simple_value(json,"group_code"));
+    if(value!=NULL) msg->group_code = value;
+    value = s_strdup(json_parse_simple_value(json,"id"));
+    if(value!=NULL) msg->id = value;
 
     if (!msg->to) {
         return -1;
@@ -1233,20 +1237,20 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     }
     format_append(data,"r={");
     mmsg = msg->opaque;
+    content = content_parse_string(mmsg,msg->type,&has_cface);
     if(msg->type == LWQQ_MT_BUDDY_MSG){
         format_append(data,"\"to\":%s,",mmsg->to);
         apistr = "send_buddy_msg2";
     }else if(msg->type == LWQQ_MT_GROUP_MSG){
         format_append(data,"\"group_uin\":%s,",mmsg->to);
+        if(has_cface){
+            format_append(data,"\"group_code\":%s,\"key\":\"%s\",\"sig\":\"%s\",",
+                    mmsg->group_code,lc->gface_key,lc->gface_sig);
+        }
         apistr = "send_qun_msg2";
-    }
-    content = content_parse_string(mmsg,msg->type,&has_cface);
-    if(has_cface&&msg->type == LWQQ_MT_GROUP_MSG){
-        format_append(data,
-                "\"group_code\":%s,"
-                "\"key\":\"%s\","
-                "\"sig\":\"%s\",",
-                mmsg->group_code,lc->gface_key,lc->gface_sig);
+    }else if(msg->type == LWQQ_MT_SESS_MSG){
+        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->to,mmsg->group_sig);
+        apistr = "send_sess_msg2";
     }
     format_append(data,
             "\"face\":0,"

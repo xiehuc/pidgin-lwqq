@@ -52,9 +52,14 @@ typedef struct LwqqMsgContent {
 typedef struct LwqqMsgMessage {
     char *from;
     char *to;
+    union{
     char *send; /* only group use it to identify who send the group message */
-    char *group_code; /* only avaliable in group message */
     char *id;   /* only sess msg use it.means gid */
+    };
+    union{
+    char *group_code; /* only avaliable in group message */
+    char *group_sig;
+    };
     char *msg_id;
     time_t time;
 

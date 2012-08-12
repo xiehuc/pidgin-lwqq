@@ -277,9 +277,9 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     if(buddy)
         who = buddy->qqnumber;
     else{
-        buddy = lwqq_group_find_group_member_by_uin(group,sender);
-        if(buddy)
-            who = buddy->nick;
+        LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
+        if(sb)
+            who = sb->nick;
         else
             //this means not download all member list;
             who = sender;
@@ -304,14 +304,14 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 
     const char* gid = mmsg->id;
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
-    buddy = lwqq_group_find_group_member_by_uin(group,from);
+    LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,from);
     if(group==NULL)
         return;
     char buf[1024] = {0};
 
     translate_struct_to_message(mmsg,buf);
 
-    serv_got_im(pc,buddy->nick,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_WHISPER,time(NULL));
+    serv_got_im(pc,sb->nick,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_WHISPER,time(NULL));
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
@@ -622,9 +622,50 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     return 1;
 }
 
+LwqqSimpleBuddy* find_group_member_by_nick(LwqqGroup* group,const char* nick)
+{
+    LwqqSimpleBuddy* sb;
+    LIST_FOREACH(sb,&group->members,entries){
+        if(sb->nick&&strcmp(sb->nick,nick)==0)
+            return sb;
+    }
+    return NULL;
+}
+
+#if 0
+//pidgin not use send_whisper .
+//may use it in v 3.0.0
 static void qq_send_whisper(PurpleConnection* gc,int id,const char* who,const char* message)
 {
+    qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group = opend_chat_index(ac,id);
+
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
+    if(buddy!=NULL){
+        qq_send_im(gc,who,message,PURPLE_MESSAGE_WHISPER);
+        return;
+    }
+
+    LwqqSimpleBuddy* sb = find_group_member_by_nick(group,who);
+    if(sb==NULL)
+        return;
+
+    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_SESS_MSG);
+    LwqqMsgMessage *mmsg = msg->opaque;
+    mmsg->to = sb->uin;
+    if(!sb->group_sig)
+        lwqq_info_get_group_sig(lc,group,sb->uin);
+    mmsg->group_sig = sb->group_sig;
+    mmsg->f_name = "宋体";
+    mmsg->f_size = 13;
+    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_color = "000000";
+
+    lwqq_msg_send(lc,msg);
+
 }
+#endif
 
 GList *qq_chat_info(PurpleConnection *gc)
 {
@@ -659,7 +700,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     LwqqGroup* group = d[1];
     s_free(data);
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* member;
+    LwqqSimpleBuddy* member;
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
     const char* who;
@@ -746,8 +787,8 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
     snprintf(gid,sizeof(gid),"%d",id);
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
     if(group){
-        buddy = lwqq_group_find_group_member_by_uin(group,who);
-        if(buddy && buddy->nick) return buddy->nick;
+        LwqqSimpleBuddy* sb= lwqq_group_find_group_member_by_uin(group,who);
+        if(sb&& sb->nick) return sb->nick;
     }
     return NULL;
 }
@@ -973,7 +1014,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
-    .chat_whisper=      qq_send_whisper,
+    //.chat_whisper=      qq_send_whisper,
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
     .group_buddy=       qq_change_category  /* change buddy category on server */,

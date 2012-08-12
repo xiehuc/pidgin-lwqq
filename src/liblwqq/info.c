@@ -815,7 +815,7 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  */
 static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
 {
-    LwqqBuddy *member;
+    LwqqSimpleBuddy *member;
     json_t *cur;
     char *uin;
     char *nick;
@@ -839,7 +839,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         if (!uin || !nick)
             continue;
 
-        member = lwqq_buddy_new();
+        member = lwqq_simple_buddy_new();
 
         member->uin = s_strdup(uin);
         member->nick = s_strdup(nick);
@@ -864,7 +864,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  */
 static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
 {
-    LwqqBuddy *member;
+    LwqqSimpleBuddy *member;
     json_t *cur;
     char *uin;
 
@@ -1621,4 +1621,48 @@ LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const
 done:
     lwqq_http_request_free(req);
     return NULL;
+}
+
+void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
+{
+    if(!lc||!group||!to_uin) return;
+    if(group->group_sig) return;
+    LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,to_uin);
+    if(sb==NULL) return;
+    char url[512];
+    int ret;
+    snprintf(url,sizeof(url),"%s/api/get_c2cmsg_sig2?"
+            "id=%s&"
+            "to_uin=%s&"
+            "service_type=0&"
+            "clientid=%s&"
+            "psessionid=%s",
+            "http://d.web2.qq.com",
+            group->gid,to_uin,lc->clientid,lc->psessionid);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    if(req==NULL){
+        goto done;
+    }
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20010321002&callback=0&id=2");
+    ret = req->do_request(req,0,NULL);
+    if(!ret||req->http_code!=200){
+        goto done;
+    }
+    json_t* root = NULL;
+    ret = json_parse_document(&root,req->response);
+    if(ret!=JSON_OK){
+        goto done;
+    }
+    sb->group_sig = s_strdup(json_parse_simple_value(root,"value"));
+
+done:
+    if(root)
+        json_free_value(&root);
+    lwqq_http_request_free(req);
 }
