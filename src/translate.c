@@ -143,6 +143,39 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     }
     return lwqq_async_wait(set);
 }
+void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
+{
+    LwqqMsgContent* c;
+    char piece[24] = {0};
+    TAILQ_FOREACH(c, &msg->content, entries) {
+        switch(c->type){
+            case LWQQ_CONTENT_STRING:
+                strcat(buf,c->data.str);
+                break;
+            case LWQQ_CONTENT_FACE:
+                strcat(buf,translate_smile(c->data.face));
+                break;
+            case LWQQ_CONTENT_OFFPIC:
+                if(c->data.img.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    //"<IMG ID=\"1\">
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else{
+                    strcat(buf,"【图片】");
+                }
+                break;
+            case LWQQ_CONTENT_CFACE:
+                if(c->data.cface.size>0){
+                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
+                    strcat(buf,piece);
+                }else
+                    strcat(buf,"【图片】");
+                break;
+        }
+    }
+}
 void translate_global_init()
 {
     if(_regex==NULL){

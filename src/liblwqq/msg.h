@@ -54,6 +54,7 @@ typedef struct LwqqMsgMessage {
     char *to;
     char *send; /* only group use it to identify who send the group message */
     char *group_code; /* only avaliable in group message */
+    char *id;   /* only sess msg use it.means gid */
     char *msg_id;
     time_t time;
 
@@ -109,6 +110,7 @@ typedef struct LwqqMsgBlistChange{
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
     LWQQ_MT_GROUP_MSG,
+    LWQQ_MT_SESS_MSG, //group whisper message
     LWQQ_MT_STATUS_CHANGE,
     LWQQ_MT_KICK_MESSAGE,
     LWQQ_MT_SYSTEM,

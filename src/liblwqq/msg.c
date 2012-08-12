@@ -90,6 +90,7 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     switch (type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
+    case LWQQ_MT_SESS_MSG:
         mmsg = s_malloc0(sizeof(LwqqMsgMessage));
         TAILQ_INIT(&mmsg->content);
         msg->opaque = mmsg;
@@ -289,6 +290,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_BUDDY_MSG;
     } else if (!strncmp(msg_type, "group_message", strlen("group_message"))) {
         type = LWQQ_MT_GROUP_MSG;
+    }else if(!strncmp(msg_type,"sess_message",strlen("sess_message"))){
+        type = LWQQ_MT_SESS_MSG;
     } else if (!strncmp(msg_type, "buddies_status_change",
                         strlen("buddies_status_change"))) {
         type = LWQQ_MT_STATUS_CHANGE;
@@ -431,8 +434,6 @@ static int parse_content(json_t *json, void *opaque)
             LwqqMsgContent *c = s_malloc0(sizeof(*c));
             c->type = LWQQ_CONTENT_STRING;
             c->data.str = json_unescape(ctent->text);
-            //c->data.str = ucs4toutf8(ctent->text);
-            //c->data.str = parse_escape(c->data.str);
             TAILQ_INSERT_TAIL(&msg->content, c, entries);
         }
     }
@@ -479,6 +480,7 @@ static int parse_new_msg(json_t *json, void *opaque)
     //so it equ NULL.
     msg->send = s_strdup(json_parse_simple_value(json, "send_uin"));
     msg->group_code = s_strdup(json_parse_simple_value(json,"group_code"));
+    msg->id = s_strdup(json_parse_simple_value(json,"id"));
 
     if (!msg->to) {
         return -1;
@@ -811,6 +813,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         switch (msg_type) {
         case LWQQ_MT_BUDDY_MSG:
         case LWQQ_MT_GROUP_MSG:
+        case LWQQ_MT_SESS_MSG:
             ret = parse_new_msg(cur, msg->opaque);
             request_msg_offpic(list->lc,msg->type,msg->opaque);
             break;
@@ -1208,6 +1211,7 @@ done:
  * 
  * @param lc 
  * @param sendmsg 
+ * @note sess message can not send picture
  * 
  * @return 1 means ok
  *         0 means failed or send failed
@@ -1227,18 +1231,16 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
                  msg->type != LWQQ_MT_GROUP_MSG)) {
         goto failed;
     }
+    format_append(data,"r={");
+    mmsg = msg->opaque;
     if(msg->type == LWQQ_MT_BUDDY_MSG){
-        tonam = "to";
+        format_append(data,"\"to\":%s,",mmsg->to);
         apistr = "send_buddy_msg2";
     }else if(msg->type == LWQQ_MT_GROUP_MSG){
-        tonam = "group_uin";
+        format_append(data,"\"group_uin\":%s,",mmsg->to);
         apistr = "send_qun_msg2";
     }
-    mmsg = msg->opaque;
     content = content_parse_string(mmsg,msg->type,&has_cface);
-    format_append(data,"r={"
-            "\"%s\":%s,",
-            tonam,mmsg->to);
     if(has_cface&&msg->type == LWQQ_MT_GROUP_MSG){
         format_append(data,
                 "\"group_code\":%s,"

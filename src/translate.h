@@ -7,4 +7,5 @@ void translate_global_free();
 int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsg*,int using_cface);
 void translate_add_smiley_to_conversation(PurpleConversation* conv);
 const char* translate_smile(int face);
+void translate_struct_to_message(LwqqMsgMessage* c,char* buf);
 #endif

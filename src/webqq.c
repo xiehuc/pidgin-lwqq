@@ -212,39 +212,10 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     char buf[1024] = {0};
-    char piece[24] = {0};
-    LwqqMsgContent *c;
     LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
     if(buddy==NULL) return;
 
-    TAILQ_FOREACH(c, &msg->content, entries) {
-        switch(c->type){
-            case LWQQ_CONTENT_STRING:
-                strcat(buf,c->data.str);
-                break;
-            case LWQQ_CONTENT_FACE:
-                strcat(buf,translate_smile(c->data.face));
-                break;
-            case LWQQ_CONTENT_OFFPIC:
-                if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
-                    //"<IMG ID=\"1\">
-                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
-                    strcat(buf,piece);
-                }else{
-                    strcat(buf,"【图片】");
-                }
-                break;
-            case LWQQ_CONTENT_CFACE:
-                if(c->data.cface.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
-                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
-                    strcat(buf,piece);
-                }else
-                    strcat(buf,"【图片】");
-                break;
-        }
-    }
+    translate_struct_to_message(msg,buf);
     serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
 }
 //open chat conversation dialog
@@ -269,36 +240,9 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     //force open dialog
     qq_conv_open(pc,group);
     char buf[1024] = {0};
-    char piece[24] = {0};
-    LwqqMsgContent *c;
-    TAILQ_FOREACH(c, &msg->content, entries) {
-        switch(c->type){
-            case LWQQ_CONTENT_STRING:
-                strcat(buf,c->data.str);
-                break;
-            case LWQQ_CONTENT_FACE:
-                strcat(buf,translate_smile(c->data.face));
-                break;
-            case LWQQ_CONTENT_OFFPIC:
-                if(c->data.img.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
-                    //"<IMG ID=\"1\">
-                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
-                    strcat(buf,piece);
-                }else{
-                    strcat(buf,"【图片】");
-                }
-                break;
-            case LWQQ_CONTENT_CFACE:
-                if(c->data.cface.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
-                    snprintf(piece,sizeof(piece),"<IMG ID=\"%d\">",img_id);
-                    strcat(buf,piece);
-                }else
-                    strcat(buf,"【图片】");
-                break;
-        }
-    }
+    
+    translate_struct_to_message(msg,buf);
+    
     LwqqErrorCode err;
     void **data = s_malloc0(sizeof(void*)*4);
     data[0] = ac;
@@ -345,6 +289,29 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     s_free(sender);
     s_free(buf);
     group_member_list_come(NULL,data);
+}
+static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* pc = ac->gc;
+
+    const char* from = mmsg->from;
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,from);
+    if(buddy!=NULL){
+        buddy_message(lc,mmsg);
+        return;
+    }
+
+    const char* gid = mmsg->id;
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    buddy = lwqq_group_find_group_member_by_uin(group,from);
+    if(group==NULL)
+        return;
+    char buf[1024] = {0};
+
+    translate_struct_to_message(mmsg,buf);
+
+    serv_got_im(pc,buddy->nick,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_WHISPER,time(NULL));
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
@@ -470,6 +437,9 @@ void qq_msg_check(qq_account* ac)
             break;
         case LWQQ_MT_GROUP_MSG:
             group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+            break;
+        case LWQQ_MT_SESS_MSG:
+            whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
             /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
@@ -652,6 +622,10 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     return 1;
 }
 
+static void qq_send_whisper(PurpleConnection* gc,int id,const char* who,const char* message)
+{
+}
+
 GList *qq_chat_info(PurpleConnection *gc)
 {
     GList *m;
@@ -689,20 +663,28 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
     const char* who;
+    GList* users = NULL;
+    GList* flags = NULL;
+    GList* extra_msgs = NULL;
+
 
     PurpleConversation* conv = purple_find_chat(
             purple_account_get_connection(ac->account),opend_chat_search(ac,group));
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
+            extra_msgs = g_list_append(extra_msgs,NULL);
             flag |= PURPLE_CBFLAGS_TYPING;
+            flags = g_list_append(flags,GINT_TO_POINTER(flag));
             if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))&&buddy->qqnumber){
-                who = buddy->qqnumber;
+                users = g_list_append(users,buddy->qqnumber);
+                //who = buddy->qqnumber;
             }else{
-                who = member->nick;
+                users = g_list_append(users,member->nick);
+                //who = member->nick;
             }
-            purple_conv_chat_add_user(PURPLE_CONV_CHAT(conv),who,NULL,flag,FALSE);
         }
+        purple_conv_chat_add_users(PURPLE_CONV_CHAT(conv),users,extra_msgs,flags,FALSE);
     }
     return ;
 }
@@ -991,6 +973,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
+    .chat_whisper=      qq_send_whisper,
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
     .group_buddy=       qq_change_category  /* change buddy category on server */,
