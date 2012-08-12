@@ -14,6 +14,7 @@ see github:https://github.com/mathslinux/lwqq
 * change buddy category;
 * confirm buddy added request.
 * visit buddy qzone
+* group whisper message
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -42,6 +43,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持设置好友备注
 * 支持更改好友分组
 * 支持确认添加好友请求
+* 支持群的临时会话
 * 访问QQ空间
 
 ## empathy support (via telepathy-haze)

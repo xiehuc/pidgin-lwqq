@@ -1631,14 +1631,15 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     if(sb==NULL) return;
     char url[512];
     int ret;
-    snprintf(url,sizeof(url),"%s/api/get_c2cmsg_sig2?"
+    snprintf(url,sizeof(url),"%s/channel/get_c2cmsg_sig2?"
             "id=%s&"
             "to_uin=%s&"
             "service_type=0&"
             "clientid=%s&"
-            "psessionid=%s",
+            "psessionid=%s&"
+            "t=%ld",
             "http://d.web2.qq.com",
-            group->gid,to_uin,lc->clientid,lc->psessionid);
+            group->gid,to_uin,lc->clientid,lc->psessionid,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     if(req==NULL){
         goto done;
@@ -1651,7 +1652,7 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     }
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20010321002&callback=0&id=2");
     ret = req->do_request(req,0,NULL);
-    if(!ret||req->http_code!=200){
+    if(req->http_code!=200){
         goto done;
     }
     json_t* root = NULL;

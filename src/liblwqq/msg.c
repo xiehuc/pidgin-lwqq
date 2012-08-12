@@ -982,7 +982,7 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
                 if(msg_type == LWQQ_MT_GROUP_MSG)
                     format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
                             c->data.cface.name);
-                else if(msg_type == LWQQ_MT_BUDDY_MSG)
+                else if(msg_type == LWQQ_MT_BUDDY_MSG || msg_type == LWQQ_MT_SESS_MSG)
                     format_append(buf,"["KEY("cface")","KEY("%s")"],",
                             c->data.cface.name);
                 *has_cface = 1;
@@ -1232,7 +1232,8 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     int has_cface = 0;
 
     if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
-                 msg->type != LWQQ_MT_GROUP_MSG)) {
+                 msg->type != LWQQ_MT_GROUP_MSG &&
+                 msg->type != LWQQ_MT_SESS_MSG)) {
         goto failed;
     }
     format_append(data,"r={");

@@ -1,4 +1,8 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
+author : xiehuc@gmail.com
+
+dev (08/12/2012):
+	* new feature: support group whisper message
 
 dev (08/10/2012):
 	* disable change group markname
