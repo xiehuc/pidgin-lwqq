@@ -641,6 +641,7 @@ static int verify_come(LwqqClient* lc,void* data)
 
 	code_entry = purple_request_field_string_new("code_entry", _("Please input the code"), "", FALSE);
 	purple_request_field_group_add_field(field_group, code_entry);
+    purple_request_field_set_required(code_entry,TRUE);
 
 	purple_request_fields(ac->account, NULL,
 		   		"验证码", (gchar*)0,
