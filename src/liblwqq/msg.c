@@ -899,7 +899,7 @@ static void parse_unescape(char* source,char *buf,int buf_len)
     char* ptr = source;
     size_t idx;
     while(*ptr!='\0'){
-        idx = strcspn(ptr,"\n\t\\");
+        idx = strcspn(ptr,"\n\t\\;");
         if(ptr[idx] == '\0'){
             strcpy(buf,ptr);
             buf+=idx;
@@ -912,6 +912,8 @@ static void parse_unescape(char* source,char *buf,int buf_len)
             case '\n': strcpy(buf,"\\\\n");break;
             case '\t': strcpy(buf,"\\\\t");break;
             case '\\': strcpy(buf,"\\\\\\\\");break;
+            //i dont know why ; is not worked.so we use another expression
+            case ';' : strcpy(buf,"\\u003B");break;
         }
         ptr+=idx+1;
         buf+=strlen(buf);
