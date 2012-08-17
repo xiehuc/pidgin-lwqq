@@ -307,42 +307,6 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_UNKNOWN;
     return type;
 }
-static char* parse_escape(char* str)
-{
-    char* read = str;
-    char* write = str;
-    char* esc = NULL;
-    while(read!='\0'){
-        esc = strchr(read,'\\');
-        if(esc==NULL){
-            esc = strchr(read,'\0');
-            esc++;
-            memmove(write,read,esc-read);
-            break;
-        }
-        memmove(write,read,esc-read);
-        write += esc-read;
-        switch(*(esc+1)){
-            case 'n':
-                *(write++) = '\n';
-                break;
-            case 'r':
-                *(write++) = '\n';
-                //processing \r\n.
-                //let esc advance 2 then read ptr is set to currectly.
-                if(*(esc+2)=='\\' &&*(esc+3)=='n')
-                    esc=esc+2;
-                break;
-            case 't':
-                *(write++) = '\t';
-                break;
-            case '\\':
-                *(write++) = '\\';
-        }
-        read = esc+2;
-    }
-    return str;
-}
 static int parse_content(json_t *json, void *opaque)
 {
     json_t *tmp, *ctent;
@@ -988,7 +952,6 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
                 *has_cface = 1;
                 break;
             case LWQQ_CONTENT_STRING:
-                //format_append(buf,KEY("%s")",",c->data.str);
                 strcat(buf,LEFT);
                 parse_unescape(c->data.str,buf+strlen(buf),sizeof(buf)-strlen(buf));
                 strcat(buf,RIGHT",");

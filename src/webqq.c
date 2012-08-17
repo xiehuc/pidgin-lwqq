@@ -203,24 +203,22 @@ static int friend_come(LwqqClient* lc,void* data)
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy = data;
     PurpleBuddy* bu = NULL;
-    PurpleGroup* group;
     LwqqFriendCategory* cate;
-    int cate_index;
 
-    bu = purple_find_buddy(account,buddy->qqnumber);
-    LIST_FOREACH(cate,&lc->categories,entries){
-        cate_index = atoi(buddy->cate_index);
-        if(cate_index == 0){
-            group = purple_group_new("QQ好友");
-            break;
-        }
-        if(cate->index==cate_index){
-            group = purple_group_new(cate->name);
-            break;
+    int cate_index;
+    cate_index = (buddy->cate_index) ? atoi(buddy->cate_index) : 0;
+    PurpleGroup* group = purple_group_new("QQ好友");
+    if(cate_index != 0){
+        LIST_FOREACH(cate,&lc->categories,entries){
+            if(cate->index==cate_index){
+                group = purple_group_new(cate->name);
+                break;
+            }
         }
     }
-    if(bu == NULL){
 
+    bu = purple_find_buddy(account,buddy->qqnumber);
+    if(bu == NULL){
         bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
         //if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
         purple_blist_add_buddy(bu,NULL,group,NULL);
