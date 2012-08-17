@@ -161,27 +161,31 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 {
     PurpleStatusType *status;
     GList *types = NULL;
+#define WEBQQ_STATUS_TYPE_ATTR \
+    TRUE,TRUE,FALSE,\
+    "nick","nick",purple_value_new(PURPLE_TYPE_STRING),\
+    "mark","mark",purple_value_new(PURPLE_TYPE_STRING),NULL
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE,
-            "online", _("我在线上"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
+            "online", _("我在线上"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE,
-            "callme",_("Q我吧"),FALSE,TRUE,FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
+            "callme",_("Q我吧"),WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_AWAY,
-            "away", _("离开"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY,
+            "away", _("离开"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE,
-            "busy", _("忙碌"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE,
+            "busy", _("忙碌"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE,
-            "slience", _("请勿打扰"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE,
+            "slience", _("请勿打扰"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_INVISIBLE,
-            "hidden", _("隐身"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_INVISIBLE,
+            "hidden", _("隐身"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
-    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE,
-            "offline", _("离线"), FALSE, TRUE, FALSE);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_OFFLINE,
+            "offline", _("离线"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
 
     return types;
@@ -232,8 +236,15 @@ static int friend_come(LwqqClient* lc,void* data)
     if(purple_buddy_get_group(bu)!=group){
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
+    ////
+    PurpleStatus* stat = purple_presence_get_active_status(purple_buddy_get_presence(bu));
+    const char* nick = purple_status_get_attr_string(stat,"nick");
+    if(nick!=NULL) puts(nick);
+    const char* mark = purple_status_get_attr_string(stat,"mark");
+    if(mark!=NULL) puts(mark);
+    ////
     if(buddy->status)
-        purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, NULL);
+        purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, "nick",buddy->nick,"mark",buddy->markname,NULL);
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,buddy->qqnumber))==0){
         lwqq_info_get_friend_avatar(lc,buddy);

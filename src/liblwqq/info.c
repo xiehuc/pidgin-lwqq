@@ -25,10 +25,10 @@
 #include "json.h"
 #include "async.h"
 
+
 static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
-static LwqqAsyncEvent* get_friend_qqnumber(LwqqClient *lc, const char *uin);
-static int get_friend_qqnumber_back(LwqqHttpRequest* request,void* data);
+static int get_qqnumber_back(LwqqHttpRequest* request,void* data);
 static int get_avatar_back(LwqqHttpRequest* req,void* data);
 static int get_friends_info_back(LwqqHttpRequest* req,void* data);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
@@ -715,7 +715,7 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
             /** If qqnumber hasnt been fetched(NB: lc->myself has qqnumber),
              * fetch it
              */
-            get_friend_qqnumber(lc, buddy->uin);
+            lwqq_info_get_friend_qqnumber(lc,buddy);
             //lwqq_log(LOG_DEBUG, "Get buddy qqnumber: %s\n", buddy->qqnumber);
         }
     }
@@ -725,19 +725,6 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
     }
 }
 
-/**
- * Get friend qqnumber
- *
- * @param lc
- * @param uin
- *
- * @return qqnumber on sucessful, NB: caller is responsible for freeing
- * the memory returned by this function
- */
-LwqqAsyncEvent* lwqq_info_get_friend_qqnumber(LwqqClient *lc, const char *uin)
-{
-    return get_friend_qqnumber(lc, uin);
-}
 
 /**
  * Parse group info like this
@@ -1022,67 +1009,65 @@ json_error:
     lwqq_http_request_free(req);
     return errno;
 }
-
-/**
- * Get QQ friend number
- *
- * @param lc
- * @param uin Friend's uin
- *
- * @return
- */
-static LwqqAsyncEvent* get_friend_qqnumber(LwqqClient *lc, const char *uin)
+LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporbuddy)
 {
-    if (!lc || !uin) {
+    if (!lc || !grouporbuddy) {
         return NULL;
     }
+    LwqqBuddy* buddy = NULL;
+    LwqqGroup* group = NULL;
+    const char* uin = NULL;
+    if(isgroup){
+        group = grouporbuddy;
+        uin = group->code;
+    }else{
+        buddy = grouporbuddy;
+        uin = buddy->uin;
+    }
+
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    json_t *json = NULL;
-    //char *qqnumber = NULL;
     char *cookies;
-
-    if (!lc || ! uin) {
-        return NULL;
-    }
-
-    /* Create a GET request */
-    /*     g_sprintf(params, GETQQNUM"?tuin=%s&verifysession=&type=1&code="
-           "&vfwebqq=%s&t=%ld", uin */
     snprintf(url, sizeof(url),
-             "%s/api/get_friend_uin2?tuin=%s&verifysession=&type=1&code=&vfwebqq=%s",
-             "http://s.web2.qq.com", uin, lc->vfwebqq);
+             "%s/api/get_friend_uin2?tuin=%s&verifysession=&type=1&code=&vfwebqq=%s&t=%ld",
+             "http://s.web2.qq.com", uin, lc->vfwebqq,time(NULL));
     req = lwqq_http_create_default_request(url, NULL);
     if (!req) {
         goto done;
     }
-    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
-    req->set_header(req, "Content-Transfer-Encoding", "binary");
-    req->set_header(req, "Content-type", "utf-8");
+    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    return req->do_request_async(req, 0, NULL,get_friend_qqnumber_back,lc);
+    void ** data = s_malloc0(sizeof(void*)*3);
+    data[0] = lc;
+    data[1] = group;
+    data[2] = buddy;
+    return req->do_request_async(req, 0, NULL,get_qqnumber_back,data);
 done:
-    /* Free temporary string */
-    if (json)
-        json_free_value(&json);
     lwqq_http_request_free(req);
     return NULL;
 }
-static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
+static int get_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
-    LwqqClient* lc = data;
-    char* uin;
+    void **d = data;
+    LwqqClient* lc = d[0];
+    LwqqGroup* group = d[1];
+    LwqqBuddy* buddy = d[2];
+    s_free(data);
+    int isgroup = (group!=NULL);
+
     char* account;
     int ret;
     json_t* json=NULL;
-    int succ = 0;
+    int errno = 0;
+    const char* retcode;
     if (req->http_code != 200) {
         lwqq_log(LOG_ERROR, "qqnumber response error: %s\n", req->response);
+        errno = 1;
         goto done;
     }
 
@@ -1094,40 +1079,31 @@ static int get_friend_qqnumber_back(LwqqHttpRequest* req,void* data)
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
+        errno = 1;
         goto done;
     }
-    uin = json_parse_simple_value(json,"uin");
+    retcode = json_parse_simple_value(json,"retcode");
+    errno = atoi(retcode);
+    if(errno!=0){
+        lwqq_log(LOG_ERROR," qqnumber fetch error: retcode %s\n",retcode);
+        goto done;
+    }
+    //uin = json_parse_simple_value(json,"uin");
     account = json_parse_simple_value(json,"account");
 
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
-    if(buddy){
-        buddy->qqnumber = s_strdup(account);
-        succ = 1;
-        lwqq_async_dispatch(lc,FRIEND_COME,buddy);
-        goto done;
-    }
-    LwqqGroup* group = NULL;
-    LwqqGroup* gp;
-    LIST_FOREACH(gp,&lc->groups,entries){
-        if(strcmp(gp->code,uin)==0)
-            group = gp;
-    }
-    if(group){
-        succ = 1;
+    if(isgroup){
         group->account = s_strdup(account);
         lwqq_async_dispatch(lc,GROUP_COME,group);
-        goto done;
+    }else{ 
+        buddy->qqnumber = s_strdup(account);
+        lwqq_async_dispatch(lc,FRIEND_COME,buddy);
     }
 done:
-    if(succ==0){
-        lwqq_log(LOG_ERROR,"fetch qqnumber error",req->response);
-    }
-
     /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return errno;
 }
 
 

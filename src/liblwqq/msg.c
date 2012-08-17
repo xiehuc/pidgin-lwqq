@@ -571,7 +571,7 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
         buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
         lwqq_info_get_friend_detail_info(lc,buddy,NULL);
         LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-        lwqq_info_get_friend_qqnumber(lc,buddy->uin);
+        lwqq_info_get_friend_qqnumber(lc,buddy);
         ptr = ptr->next;
     }
     ptr = json_find_first_label_all(json,"removed_friends");

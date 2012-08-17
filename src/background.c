@@ -70,12 +70,13 @@ static void* _background_friends_info(void* data)
     lock = lwqq_async_evset_new();
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&ac->qq->friends,entries){
-        event = lwqq_info_get_friend_qqnumber(lc,buddy->uin);
+        event = lwqq_info_get_friend_qqnumber(lc,buddy);
+        //lwqq_async_add_event_listener(event,friend_come,buddy);
         lwqq_async_evset_add_event(lock,event);
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&ac->qq->groups,entries) {
-        event = lwqq_info_get_friend_qqnumber(lc,group->code);
+        event = lwqq_info_get_group_qqnumber(lc,group);
         lwqq_async_evset_add_event(lock,event);
     }
     lwqq_async_add_evset_listener(lock,qq_set_basic_info,ac);
