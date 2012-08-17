@@ -99,6 +99,36 @@ static void visit_self_infocenter(PurplePluginAction *action)
     snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
     system(url);
 }
+static void buddies_all_remove(void* data,void* userdata)
+{
+    PurpleBuddy* buddy = data;
+    qq_account* ac = userdata;
+    if(purple_buddy_get_account(buddy) == ac->account){
+        purple_blist_remove_buddy(buddy);
+    }
+}
+static void all_reset(PurplePluginAction* action)
+{
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    GSList* buddies = purple_blist_get_buddies();
+    g_slist_foreach(buddies,buddies_all_remove,ac);
+
+    PurpleGroup* group = purple_find_group("QQ群");
+    PurpleBlistNode* node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(group));
+    while(node!=NULL){
+        if(PURPLE_BLIST_NODE_IS_CHAT(node)){
+            PurpleChat* chat = PURPLE_CHAT(node);
+            if(purple_chat_get_account(chat)!=ac->account){
+                node = purple_blist_node_next(node,1);
+                continue;
+            }
+            purple_blist_remove_chat(chat);
+        }
+        node = purple_blist_node_next(node,1);
+    }
+    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"全部重载,请重新登录");
+}
 
 static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
 {
@@ -114,6 +144,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     act = purple_plugin_action_new(_("About WebQQ"), action_about_webqq);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("全部重载",all_reset);
     m = g_list_append(m, act);
 
     return m;
