@@ -531,12 +531,15 @@ void qq_msg_check(qq_account* ac)
     msg = SIMPLEQ_FIRST(&l->head);
     switch(msg->msg->type){
         case LWQQ_MT_BUDDY_MSG:
+            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_GROUP_MSG:
+            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_SESS_MSG:
+            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
@@ -656,7 +659,15 @@ static int login_complete(LwqqClient* lc,void* data)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
-    if(err!=LWQQ_EC_OK){
+    if(err==LWQQ_EC_LOGIN_ABNORMAL){
+        //browser cookie may not be pidgin account
+        /*char buf[512];
+        snprintf(buf,sizeof(buf),"gnome-open '%s'",lc->error_description);
+        puts(buf);
+        system(buf);*/
+        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
+        return 0;
+    }else if(err!=LWQQ_EC_OK){
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
         return 0;
     }

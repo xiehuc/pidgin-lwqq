@@ -163,6 +163,7 @@ typedef struct LwqqClient {
     LwqqCookies *cookies;
     const char *status;
     LWQQ_STATUS stat;
+    char *error_description;
 
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
@@ -178,6 +179,7 @@ typedef enum {
     LWQQ_EC_NULL_POINTER,
     LWQQ_EC_FILE_NOT_EXIST,
     LWQQ_EC_LOGIN_NEED_VC = 10,
+    LWQQ_EC_LOGIN_ABNORMAL = 60,///<登录需要解禁
     LWQQ_EC_NETWORK_ERROR = 20,
     LWQQ_EC_HTTP_ERROR = 30,
     LWQQ_EC_DB_EXEC_FAIELD = 50,

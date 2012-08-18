@@ -138,7 +138,8 @@ static void lwqq_msg_message_free(void *opaque)
     s_free(msg->msg_id);
 
     LwqqMsgContent *c;
-    TAILQ_FOREACH(c, &msg->content, entries) {
+    LwqqMsgContent *t;
+    TAILQ_FOREACH_SAFE(c, &msg->content, entries,t) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
                 s_free(c->data.str);
@@ -679,20 +680,19 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
     LwqqErrorCode *err = &error;
     char* cookies;
     int ret;
-    char url[512];
+    char url[1024];
 /*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
     snprintf(url, sizeof(url),
-             "%s/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
-             "http://d.web2.qq.com/channel",
+             "%s/channel/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
+             "http://d.web2.qq.com",
              msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
     req = lwqq_http_create_default_request(url, err);
+    puts(url);
     if (!req) {
         goto done;
     }
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req, "Referer", "http://web2.qq.com/");
-    ///this is very important!!!!!!!!!
-    //req->set_header(req, "Host", "d.web2.qq.com");
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
@@ -705,7 +705,6 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
         goto done;
     }
 
-
     c->data.cface.data = req->response;
     c->data.cface.size = req->resp_len;
     req->response = NULL;
@@ -713,7 +712,7 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
 done:
     lwqq_http_request_free(req);
 }
-static void request_msg_offpic(LwqqClient* lc,int type,LwqqMsgMessage* msg)
+void lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
     TAILQ_FOREACH(c,&msg->content,entries){
@@ -783,7 +782,6 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         case LWQQ_MT_GROUP_MSG:
         case LWQQ_MT_SESS_MSG:
             ret = parse_new_msg(cur, msg->opaque);
-            request_msg_offpic(list->lc,msg->type,msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);
@@ -1116,7 +1114,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
     //cface 上传是会占用自定义表情的空间的.这里的fileid是几就是占用第几个格子.
-    req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
+    //req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
 
     void **data = s_malloc0(sizeof(void*)*2);
     data[0] = lc;

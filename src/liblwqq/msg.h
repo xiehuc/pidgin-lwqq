@@ -233,6 +233,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
  *          you should free picture data by hand.(use event listener)
  */
 LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
+void lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

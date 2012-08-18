@@ -38,6 +38,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
     LwqqClient *lc = s_malloc0(sizeof(*lc));
     lc->username = s_strdup(username);
     lc->password = s_strdup(password);
+    lc->error_description = s_malloc0(512);
     lc->myself = lwqq_buddy_new();
     if (!lc->myself) {
         goto failed;
@@ -134,6 +135,7 @@ void lwqq_client_free(LwqqClient *client)
     s_free(client->username);
     s_free(client->password);
     s_free(client->version);
+    s_free(client->error_description);
     lwqq_vc_free(client->vc);
     cookies_free(client->cookies);
     s_free(client->clientid);

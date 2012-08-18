@@ -445,6 +445,12 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
         *err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
+    if (strstr(req->response,"aq.qq.com")!=NULL){
+        *err = LWQQ_EC_LOGIN_ABNORMAL;
+        const char* beg = strstr(req->response,"http://aq.qq.com");
+        sscanf(beg,"%[^']",lc->error_description);
+        goto done;
+    }
 
     response = req->response;
     char *p = strstr(response, "\'");

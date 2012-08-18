@@ -44,12 +44,6 @@ void *s_realloc(void *ptr, size_t size)
     return realloc(ptr, size);
 }
 
-void s_free(void *ptr)
-{
-    if (ptr)
-        free(ptr);
-}
-
 char *s_strdup(const char *s1)
 {
     if (!s1)
