@@ -282,7 +282,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    static char buf[9000];
+    static char buf[8192];
     //clean buffer
     strcpy(buf,"");
 
@@ -310,7 +310,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 
     //force open dialog
     qq_conv_open(pc,group);
-    static char buf[9000] ;
+    static char buf[8192] ;
     strcpy(buf,"");
     
     translate_struct_to_message(msg,buf);
@@ -364,7 +364,8 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     const char* from = mmsg->from;
     const char* gid = mmsg->id;
     char name[70];
-    char buf[1024] = {0};
+    static char buf[8192];
+    strcpy(buf,"");
 
     translate_struct_to_message(mmsg,buf);
 
