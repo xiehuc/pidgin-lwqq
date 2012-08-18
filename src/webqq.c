@@ -520,15 +520,12 @@ int qq_msg_check(LwqqClient* lc,void* data)
     msg = SIMPLEQ_FIRST(&l->head);
     switch(msg->msg->type){
         case LWQQ_MT_BUDDY_MSG:
-            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_GROUP_MSG:
-            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_SESS_MSG:
-            lwqq_msg_request_picture(lc,msg->msg->type,(LwqqMsgMessage*)msg->msg->opaque);
             whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:

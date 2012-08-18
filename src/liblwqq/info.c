@@ -831,6 +831,7 @@ static char* ibmpc_ascii_character_convert(char *str)
         write+=strlen(write);
         ptr++;
     }
+    *write = '\0';
     s_free(str);
     return s_strdup(buf);
 }
@@ -876,6 +877,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 
         member->uin = s_strdup(uin);
         member->nick = ibmpc_ascii_character_convert(json_unescape(nick));
+        //member->nick = s_strdup(nick);
 
         // FIX ME: should we get group members qqnumber here ? 
         // we can get the members' qq number by uin 

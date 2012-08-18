@@ -782,6 +782,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         case LWQQ_MT_GROUP_MSG:
         case LWQQ_MT_SESS_MSG:
             ret = parse_new_msg(cur, msg->opaque);
+            lwqq_msg_request_picture(list->lc,msg->type,(LwqqMsgMessage*)msg->opaque);
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);

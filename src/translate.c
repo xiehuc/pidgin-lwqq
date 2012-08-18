@@ -196,7 +196,7 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
     TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
-                paste_content_string(c->data.str,buf);
+                paste_content_string(c->data.str,buf+strlen(buf));
                 break;
             case LWQQ_CONTENT_FACE:
                 strcat(buf,translate_smile(c->data.face));
@@ -375,7 +375,7 @@ void translate_global_free()
     }
     if(hs_regex){
         trex_free(hs_regex);
-        _regex = NULL;
+        hs_regex = NULL;
     }
     if(smily_table) {
         g_hash_table_remove_all(smily_table);
