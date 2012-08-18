@@ -787,7 +787,53 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 #undef SET_GINFO
 
 }
-
+static char* ibmpc_ascii_character_convert(char *str)
+{
+    static char buf[256];
+    char *ptr = str;
+    char *write = buf;
+    const char* spec;
+    while(*ptr!='\0'){
+        switch(*ptr){
+            case 0x01:spec="☺";break;
+            case 0x02:spec="☻";break;
+            case 0x03:spec="♥";break;
+            case 0x04:spec="◆";break;
+            case 0x05:spec="♣";break;
+            case 0x06:spec="♠";break;
+            case 0x0B:spec="♂";break;
+            case 0x0C:spec="♁";break;
+            case 0x0E:spec="♬";break;
+            case 0x0F:spec="☼";break;
+            case 0x10:spec="▶";break;
+            case 0x11:spec="◀";break; 
+            case 0x12:spec="↕";break;
+            case 0x13:spec="‼";break;
+            case 0x14:spec="¶";break;
+            case 0x15:spec="§";break;
+            case 0x16:spec="▁";break;
+            case 0x17:spec="↨";break;
+            case 0x18:spec="↑";break;
+            case 0x19:spec="↓";break;
+            case 0x1A:spec="→";break;
+            case 0x1B:spec="←";break;
+            case 0x1C:spec="∟";break;
+            case 0x1D:spec="↔";break;
+            case 0x1E:spec="▲";break;
+            case 0x1F:spec="▼";break;
+            default:
+                *write++ = *ptr;
+                ptr++;
+                continue;
+                break;
+        }
+        strcpy(write,spec);
+        write+=strlen(write);
+        ptr++;
+    }
+    s_free(str);
+    return s_strdup(buf);
+}
 /**
  * Parse group members info
  * we only get the "nick" and the "uin", and get the members' qq number.
@@ -829,7 +875,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_simple_buddy_new();
 
         member->uin = s_strdup(uin);
-        member->nick = json_unescape(nick);
+        member->nick = ibmpc_ascii_character_convert(json_unescape(nick));
 
         // FIX ME: should we get group members qqnumber here ? 
         // we can get the members' qq number by uin 
