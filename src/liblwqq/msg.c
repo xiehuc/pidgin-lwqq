@@ -980,9 +980,11 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     LwqqErrorCode err;
     const char* filename = c->data.img.name;
     const char* buffer = c->data.img.data;
+    static int fileid = 1;
     c->data.img.data = NULL;
     size_t size = c->data.img.size;
     char url[512];
+    char piece[22];
     char *cookies;
 
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%ld",
@@ -995,6 +997,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendPic");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
@@ -1003,12 +1006,15 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
     req->add_form(req,LWQQ_FORM_CONTENT,"peeruin","593023668");///<what this means?
     req->add_file_content(req,"file",filename,buffer,size,NULL);
-    req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
+    snprintf(piece,sizeof(piece),"%d",fileid++);
+    req->add_form(req,LWQQ_FORM_CONTENT,"fileid",piece);
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
 
-    return req->do_request_async(req,0,NULL,upload_offline_pic_back,c);
+    req->do_request(req,0,NULL);
+    upload_offline_pic_back(req,c);
+    return NULL;
 }
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
 {
@@ -1017,6 +1023,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
     if(req->http_code!=200){
         goto done;
     }
+    puts(req->response);
 
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
@@ -1114,7 +1121,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
     snprintf(fileid_str,sizeof(fileid_str),"%d",fileid++);
     //cface 上传是会占用自定义表情的空间的.这里的fileid是几就是占用第几个格子.
-    //req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
+    req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
 
     void **data = s_malloc0(sizeof(void*)*2);
     data[0] = lc;

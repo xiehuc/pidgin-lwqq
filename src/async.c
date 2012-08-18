@@ -128,6 +128,7 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
 }
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
 {
+    if(handle==NULL) return;
     pthread_mutex_lock(&host->lock);
     handle->host_lock = host;
     host->ref_count++;
@@ -150,6 +151,10 @@ int lwqq_async_wait(LwqqAsyncEvset* host)
 
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data)
 {
+    if(event == NULL){
+        callback(NULL,data);
+        return ;
+    }
     event->callback = callback;
     event->data = data;
 }

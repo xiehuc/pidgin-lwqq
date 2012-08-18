@@ -171,7 +171,7 @@ void* _background_send_msg(void* data)
     LwqqClient* lc = ac->qq;
     int will_upload = (strstr(what,"<IMG")!=NULL);
 
-    int ret = translate_message_to_struct(lc,to,what,msg,1);
+    int ret = translate_message_to_struct(lc,to,what,msg,0);
     if(will_upload){
         //group msg 'who' is gid.
         PurpleConversation* conv = find_conversation(msg->type,who,ac);

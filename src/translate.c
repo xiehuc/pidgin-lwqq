@@ -87,7 +87,6 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     TRexMatch m;
     TRex* x = _regex;
     LwqqMsgMessage* mmsg = msg->opaque;
-    //trex_clear(x);
 
     LwqqAsyncEvset* set = lwqq_async_evset_new();
     LwqqAsyncEvent* event;
@@ -113,7 +112,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
             PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
             c = s_malloc0(sizeof(*c));
-            if(using_cface){
+            if(using_cface||msg->type == LWQQ_MT_GROUP_MSG){
                 c->type = LWQQ_CONTENT_CFACE;
                 c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
                 c->data.cface.data = (char*)purple_imgstore_get_data(simg);
