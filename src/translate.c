@@ -67,26 +67,6 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
         }
         read = end;
     }
-    /*char* read = c->data.str;
-    char* write = c->data.str;
-    char* ptr;
-    int delta;
-    while(*read!='\0'){
-        ptr = strstr(read,"<br>");
-        if(ptr!=NULL){
-            delta = 2;
-        }
-        if(ptr==NULL){
-            ptr = strchr(read,'\0');
-            ptr++;
-            memmove(write,read,ptr-read);
-            break;
-        }
-        memmove(write,read,ptr-read);
-        write += ptr-read;
-        *(write++) = '\n';
-        read = ptr+strlen("<br>");
-    }*/
     return c;
 }
 static LwqqMsgContent* build_face_content(const char* face,int len)
@@ -184,6 +164,31 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     }
     return lwqq_async_wait(set);
 }
+static void paste_content_string(const char* from,char* to)
+{
+    const char* read = from;
+    char* write = to;
+    size_t idx;
+    while(*read!='\0'){
+        idx = strcspn(read,"<>");
+        if(read[idx]=='\0'){
+            strcpy(write,read);
+            write+=idx;
+            break;
+        }
+        strncpy(write,read,idx);
+        write+=idx;
+        switch(read[idx]){
+            case '<' : strcpy(write,"&lt;");break;
+            case '>' : strcpy(write,"&gt;");break;
+            case '&' : strcpy(write,"&amp;");break;
+            case '"' : strcpy(write,"&quote;");break;
+        }
+        read+=idx+1;
+        write+=strlen(write);
+    }
+    *write='\0';
+}
 void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
 {
     LwqqMsgContent* c;
@@ -191,7 +196,7 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
     TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
-                strcat(buf,c->data.str);
+                paste_content_string(c->data.str,buf);
                 break;
             case LWQQ_CONTENT_FACE:
                 strcat(buf,translate_smile(c->data.face));
