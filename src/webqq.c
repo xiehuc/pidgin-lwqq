@@ -282,9 +282,9 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    char buf[1024] = {0};
-    //LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
-    //if(buddy==NULL) return;
+    static char buf[9000];
+    //clean buffer
+    strcpy(buf,"");
 
     translate_struct_to_message(msg,buf);
     serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, time(NULL));
@@ -310,7 +310,8 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 
     //force open dialog
     qq_conv_open(pc,group);
-    char buf[1024] = {0};
+    static char buf[9000] ;
+    strcpy(buf,"");
     
     translate_struct_to_message(msg,buf);
     
@@ -319,6 +320,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     data[0] = ac;
     data[1] = group;
     data[2] = s_strdup(msg->send);
+    //because buf is not always too long .so it is not slowdown performance.
     data[3] = s_strdup(buf);
     //get all member list
     if(LIST_EMPTY(&group->members)) {

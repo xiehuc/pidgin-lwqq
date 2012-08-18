@@ -167,7 +167,7 @@ static void parse_info_child(LwqqClient *lc, json_t *json)
         buddy = lwqq_buddy_new();
         buddy->face = s_strdup(json_parse_simple_value(cur, "face"));
         buddy->flag = s_strdup(json_parse_simple_value(cur, "flag"));
-        buddy->nick = s_strdup(json_parse_simple_value(cur, "nick"));
+        buddy->nick = json_unescape(json_parse_simple_value(cur, "nick"));
         buddy->uin = s_strdup(json_parse_simple_value(cur, "uin"));
 
         /* Add to buddies list */
@@ -212,7 +212,7 @@ static void parse_marknames_child(LwqqClient *lc, json_t *json)
         /* Free old markname */
         if (buddy->markname)
             s_free(buddy->markname);
-        buddy->markname = s_strdup(markname);
+        buddy->markname = json_unescape(markname);
     }
 }
 
@@ -829,7 +829,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_simple_buddy_new();
 
         member->uin = s_strdup(uin);
-        member->nick = s_strdup(nick);
+        member->nick = json_unescape(nick);
 
         // FIX ME: should we get group members qqnumber here ? 
         // we can get the members' qq number by uin 
