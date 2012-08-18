@@ -17,6 +17,7 @@ see github:https://github.com/mathslinux/lwqq.
 * visit buddy qzone
 * group whisper message
 * change status
+* support multi webqq account
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -48,6 +49,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持群的临时会话
 * 支持访问QQ空间
 * 支持更改在线状态
+* 支持多账户登录
 
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息
