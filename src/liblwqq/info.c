@@ -539,7 +539,7 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
     for (cur = json->child; cur != NULL; cur = cur->next) {
         group = lwqq_group_new();
         group->flag = s_strdup(json_parse_simple_value(cur, "flag"));
-        group->name = s_strdup(json_parse_simple_value(cur, "name"));
+        group->name = json_unescape(json_parse_simple_value(cur, "name"));
         group->gid = s_strdup(json_parse_simple_value(cur, "gid"));
         group->code = s_strdup(json_parse_simple_value(cur, "code"));
 

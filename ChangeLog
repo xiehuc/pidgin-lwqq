@@ -1,6 +1,11 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+dev (08/18/2012):
+	* new feature: support multi account
+	* enhancement: not use qqnumber.use uin.big speed up
+	* bug fix:     use offpic instead of cface. stable.
+
 dev (08/12/2012):
 	* new feature: support group whisper message
 	* new feature: support change status
