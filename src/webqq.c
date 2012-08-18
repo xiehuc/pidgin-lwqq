@@ -245,7 +245,7 @@ static int friend_come(LwqqClient* lc,void* data)
     if((icon = purple_buddy_icons_find(account,buddy->uin))==0){
         lwqq_info_get_friend_avatar(lc,buddy);
     }else{
-        purple_buddy_set_icon(purple_find_buddy(account,buddy->qqnumber),icon);
+        purple_buddy_set_icon(purple_find_buddy(account,buddy->uin),icon);
     }
     ac->disable_send_server = 0;
     return 0;
@@ -851,8 +851,8 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
             extra_msgs = g_list_append(extra_msgs,NULL);
             flag |= PURPLE_CBFLAGS_TYPING;
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
-            if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))&&buddy->qqnumber){
-                users = g_list_append(users,buddy->qqnumber);
+            if(lwqq_buddy_find_buddy_by_uin(lc,member->uin)){
+                users = g_list_append(users,member->uin);
             }else{
                 users = g_list_append(users,member->nick);
             }
