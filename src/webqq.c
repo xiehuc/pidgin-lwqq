@@ -931,7 +931,6 @@ static void on_create(void *data,PurpleConnection* gc)
 }
 static void qq_login(PurpleAccount *account)
 {
-    translate_global_init();
     PurpleConnection* pc= purple_account_get_connection(account);
     qq_account* ac = qq_account_new(account);
     const char* username = purple_account_get_username(account);

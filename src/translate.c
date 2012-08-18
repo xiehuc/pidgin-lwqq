@@ -56,6 +56,7 @@ static LwqqMsgContent* build_face_content(const char* face,int len)
     memcpy(buf,face,len);
     buf[len]= '\0';
     LwqqMsgContent* c;
+    if(smily_table==NULL) translate_global_init();
     int num = (long)g_hash_table_lookup(smily_table,buf);
     if(num==0) return NULL;
     c = s_malloc0(sizeof(*c));
@@ -85,6 +86,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     puts(what);
     const char* begin,*end;
     TRexMatch m;
+    if(_regex==NULL) translate_global_init();
     TRex* x = _regex;
     LwqqMsgMessage* mmsg = msg->opaque;
 
