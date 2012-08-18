@@ -17,10 +17,12 @@
 #define FACE_DIR INST_PREFIX"/share/pixmaps/pidgin/emotes/webqq/"
 static GHashTable* smily_table;
 static TRex* _regex;
+static TRex* hs_regex;
 const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
     ":\\)|:-D|:-\\(|;-\\)|:P|=-O|:-\\*|8-\\)|:-\\[|"
     ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
     //:'( error
+const char* HTML_SYMBOL = "<br>|&amp;|&quot;|&gt;|&lt;";
 static LwqqMsgContent* build_string_content(const char* from,const char* to)
 {
     LwqqMsgContent* c;
@@ -32,11 +34,48 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
     }else{
         c->data.str = s_strdup(from);
     }
-    char* read = c->data.str;
+    const char *begin,*end;
+    const char *read = c->data.str;
+    char *write = c->data.str;
+    const char *ptr;
+    while(*read!='\0'){
+        if(!trex_search(hs_regex,read,&begin,&end)){
+            ptr = strchr(read,'\0');
+            ptr++;
+            memmove(write,read,ptr-read);
+            break;
+        }
+        if(begin>read){
+            memmove(write,read,begin-read);
+            write+=(begin-read);
+        }
+        if(strncmp(begin,"<br>",strlen("<br>"))==0){
+            strcpy(write,"\n");
+            write++;
+        }else if(strncmp(begin,"&amp;",strlen("&amp;"))==0){
+            strcpy(write,"&");
+            write++;
+        }else if(strncmp(begin,"&quot;",strlen("&quot;"))==0){
+            strcpy(write,"\"");
+            write++;
+        }else if(strncmp(begin,"&lt;",strlen("&lt;"))==0){
+            strcpy(write,"<");
+            write++;
+        }else if(strncmp(begin,"&gt;",strlen("&gt;"))==0){
+            strcpy(write,">");
+            write++;
+        }
+        read = end;
+    }
+    /*char* read = c->data.str;
     char* write = c->data.str;
     char* ptr;
+    int delta;
     while(*read!='\0'){
         ptr = strstr(read,"<br>");
+        if(ptr!=NULL){
+            delta = 2;
+        }
         if(ptr==NULL){
             ptr = strchr(read,'\0');
             ptr++;
@@ -47,7 +86,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
         write += ptr-read;
         *(write++) = '\n';
         read = ptr+strlen("<br>");
-    }
+    }*/
     return c;
 }
 static LwqqMsgContent* build_face_content(const char* face,int len)
@@ -134,6 +173,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //processing face
             sscanf(begin,"[FACE_%d]",&img_id);
             c = build_face_direct(img_id);
+        }else if(begin[0]=='&'){
         }else{
             //other face
             c = build_face_content(m.begin,m.len);
@@ -183,6 +223,12 @@ void translate_global_init()
         const char* err = NULL;
         _regex = trex_compile(_TREXC(SMILY_EXP),&err);
         if(err) {puts(err);assert(0);}
+        assert(_regex!=NULL);
+    }
+    if(hs_regex==NULL){
+        const char* err = NULL;
+        hs_regex = trex_compile(_TREXC(HTML_SYMBOL),&err);
+        if(err){puts(err);assert(0);}
         assert(_regex!=NULL);
     }
     if(smily_table ==NULL){
@@ -320,6 +366,10 @@ void translate_global_free()
 {
     if(_regex){
         trex_free(_regex);
+        _regex = NULL;
+    }
+    if(hs_regex){
+        trex_free(hs_regex);
         _regex = NULL;
     }
     if(smily_table) {
