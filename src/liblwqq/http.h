@@ -32,6 +32,7 @@ typedef enum {
  */
 typedef struct LwqqHttpRequest {
     void *req;
+    void *lc;
     void *header;// read and write.
     void *recv_head;
     struct cookie_list* cookie;

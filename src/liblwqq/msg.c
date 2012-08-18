@@ -875,6 +875,8 @@ static void *start_poll_msg(void *msg_list)
         if(retcode == 121){
             lwqq_async_dispatch(lc,POLL_LOST_CONNECTION,NULL);
             break;
+        }else{
+            lwqq_async_dispatch(lc,POLL_MSG_COME,NULL);
         }
         //if(retcode==121)
         //    lwqq_relogin(lc);

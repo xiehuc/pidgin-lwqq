@@ -17,7 +17,7 @@ static void lwqq_http_set_default_header(LwqqHttpRequest *request);
 static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name);
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name);
 
-typedef struct GLOBAL {
+typedef struct _LWQQ_HTTP_HANDLE{
     CURLM* multi;
     struct ev_loop* loop;
     int still_running;
@@ -25,8 +25,7 @@ typedef struct GLOBAL {
     pthread_t tid;
     pthread_cond_t cond ;
     int async_running ;
-}GLOBAL;
-GLOBAL global;
+}_LWQQ_HTTP_HANDLE;
 
 typedef struct S_ITEM {
     /**@brief 全局事件循环*/

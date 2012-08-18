@@ -86,7 +86,7 @@ void background_friends_info(qq_account* ac)
 static int msg_check_repeat = 1;
 static gboolean msg_check(void* data)
 {
-    qq_msg_check((qq_account*)data);
+    //qq_msg_check((qq_account*)data);
     //repeat for ever;
     return msg_check_repeat;
 }
@@ -100,7 +100,7 @@ static void* _background_msg_poll(void* data)
     /* Poll to receive message */
     l->poll_msg(l);
 
-    msg_check_handle = purple_timeout_add(200,msg_check,ac);
+    //msg_check_handle = purple_timeout_add(200,msg_check,ac);
 
     return NULL;
 }

@@ -514,10 +514,8 @@ static int lost_connection(LwqqClient* lc,void* data)
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
     return 0;
 }
-void qq_msg_check(qq_account* ac)
+void qq_msg_check(LwqqClient* lc,void* data)
 {
-    LwqqClient* lc = ac->qq;
-    if(lc==NULL)return;
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
 
@@ -680,6 +678,7 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
+    lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     background_friends_info(ac);
     return 0;
 }

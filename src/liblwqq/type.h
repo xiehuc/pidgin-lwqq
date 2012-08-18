@@ -16,6 +16,8 @@
 
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
+typedef struct _LwqqAsync LwqqAsync;
+typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 /************************************************************************/
 /* Struct defination */
 
@@ -142,7 +144,6 @@ typedef struct LwqqCookies {
     char *verifysession;
     char *lwcookies;
 } LwqqCookies;
-typedef struct _LwqqAsync LwqqAsync;
 /* LwqqClient API */
 typedef struct LwqqClient {
     char *username;             /**< Username */
@@ -164,6 +165,7 @@ typedef struct LwqqClient {
     const char *status;
     LWQQ_STATUS stat;
     char *error_description;
+    //LWQQ_HTTP_HANDLE* http_handle;
 
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
