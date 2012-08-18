@@ -556,7 +556,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
     return 0;
 
 }
-static void check_exist(void* data,void* userdata)
+/*static void check_exist(void* data,void* userdata)
 {
     qq_account* ac = userdata;
     PurpleBuddy* bu = data;
@@ -565,7 +565,7 @@ static void check_exist(void* data,void* userdata)
             find_buddy_by_qqnumber(lc,purple_buddy_get_name(bu))==NULL){
         purple_blist_remove_buddy(bu);
     }
-}
+}*/
 int qq_set_basic_info(LwqqClient* lc,void* data)
 {
     qq_account* ac = data;
@@ -984,7 +984,8 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
@@ -1058,7 +1059,8 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
     if(buddy==NULL) return;
     
     const char* category;
@@ -1081,8 +1083,10 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    const char* qqnum = purple_buddy_get_name(buddy);
-    LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
+    //const char* qqnum = purple_buddy_get_name(buddy);
+    const char* uin = purple_buddy_get_name(buddy);
+    //LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
+    LwqqBuddy* friend = lwqq_buddy_find_buddy_by_uin(lc,uin);
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 
