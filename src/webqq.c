@@ -107,10 +107,8 @@ static void buddies_all_remove(void* data,void* userdata)
         purple_blist_remove_buddy(buddy);
     }
 }
-static void all_reset(PurplePluginAction* action)
+static void all_reset(qq_account* ac)
 {
-    PurpleConnection* gc = action->context;
-    qq_account* ac = purple_connection_get_protocol_data(gc);
     GSList* buddies = purple_blist_get_buddies();
     g_slist_foreach(buddies,buddies_all_remove,ac);
 
@@ -127,6 +125,14 @@ static void all_reset(PurplePluginAction* action)
         }
         node = purple_blist_node_next(node,1);
     }
+}
+static void all_reset_action(PurplePluginAction* action)
+{
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+
+    all_reset(ac);
+
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"全部重载,请重新登录");
 }
 
@@ -145,7 +151,7 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     m = g_list_append(m, act);
     act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("全部重载",all_reset);
+    act = purple_plugin_action_new("全部重载",all_reset_action);
     m = g_list_append(m, act);
 
     return m;
@@ -217,10 +223,9 @@ static int friend_come(LwqqClient* lc,void* data)
         }
     }
 
-    bu = purple_find_buddy(account,buddy->qqnumber);
+    bu = purple_find_buddy(account,buddy->uin);
     if(bu == NULL){
-        bu = purple_buddy_new(ac->account,buddy->qqnumber,buddy->nick);
-        //if(buddy->markname) purple_blist_alias_buddy(bu,buddy->markname);
+        bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
     //flush new alias
@@ -234,17 +239,10 @@ static int friend_come(LwqqClient* lc,void* data)
     if(purple_buddy_get_group(bu)!=group){
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
-    ////
-    PurpleStatus* stat = purple_presence_get_active_status(purple_buddy_get_presence(bu));
-    const char* nick = purple_status_get_attr_string(stat,"nick");
-    if(nick!=NULL) puts(nick);
-    const char* mark = purple_status_get_attr_string(stat,"mark");
-    if(mark!=NULL) puts(mark);
-    ////
     if(buddy->status)
-        purple_prpl_got_user_status(account, buddy->qqnumber, buddy->status, "nick",buddy->nick,"mark",buddy->markname,NULL);
+        purple_prpl_got_user_status(account, buddy->uin, buddy->status, "nick",buddy->nick,"mark",buddy->markname,NULL);
     PurpleBuddyIcon* icon;
-    if((icon = purple_buddy_icons_find(account,buddy->qqnumber))==0){
+    if((icon = purple_buddy_icons_find(account,buddy->uin))==0){
         lwqq_info_get_friend_avatar(lc,buddy);
     }else{
         purple_buddy_set_icon(purple_find_buddy(account,buddy->qqnumber),icon);
@@ -262,13 +260,13 @@ static int group_come(LwqqClient* lc,void* data)
     GHashTable* components;
     PurpleChat* chat;
 
-    if(purple_blist_find_chat(account,group->account) == NULL){
+    if(purple_blist_find_chat(account,group->gid) == NULL){
         components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_QUN_ID),g_strdup(group->account));
-        chat = purple_chat_new(account,group->account,components);
+        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_GID),g_strdup(group->gid));
+        chat = purple_chat_new(account,group->gid,components);
         purple_blist_add_chat(chat,gp,NULL);
     }else
-        chat = purple_blist_find_chat(account,group->account);
+        chat = purple_blist_find_chat(account,group->gid);
     const char* alias = purple_chat_get_name(chat);
     if(group->markname){
         if(alias==NULL||strcmp(alias,group->markname)!=0)
@@ -285,11 +283,11 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     char buf[1024] = {0};
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
-    if(buddy==NULL) return;
+    //LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->from);
+    //if(buddy==NULL) return;
 
     translate_struct_to_message(msg,buf);
-    serv_got_im(pc, buddy->qqnumber, buf, PURPLE_MESSAGE_RECV, time(NULL));
+    serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, time(NULL));
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -298,8 +296,8 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
     g_return_if_fail(group->gid);
     qq_account* ac = purple_connection_get_protocol_data(gc);
     PurpleConversation *conv = purple_find_chat(gc,opend_chat_search(ac,group));
-    if(conv == NULL&&group->account){
-        serv_got_joined_chat(gc,open_new_chat(ac,group),group->account);
+    if(conv == NULL&&group->gid){
+        serv_got_joined_chat(gc,open_new_chat(ac,group),group->gid);
     }
 }
 static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
@@ -344,20 +342,13 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     PurpleConnection* pc = ac->gc;
     const char* who;
 
-    LwqqBuddy* buddy;
-    buddy = lwqq_buddy_find_buddy_by_uin(lc,sender);
+    LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
+    if(sb)
+        who = sb->nick;
+    else
+        //this means it is uin indeed. or we dont know it else .
+        who = sender;
 
-    if(buddy)
-        who = buddy->qqnumber;
-    else{
-        LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
-        if(sb)
-            who = sb->nick;
-        else
-            //this means not download all member list;
-            who = sender;
-
-    }
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,time(NULL));
     s_free(sender);
     s_free(buf);
@@ -415,10 +406,7 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,status->who);
-    if(buddy==NULL) return;
-
-    purple_prpl_got_user_status(account,buddy->qqnumber,status->status,NULL);
+    purple_prpl_got_user_status(account,status->who,status->status,NULL);
 }
 static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
 {
@@ -486,7 +474,7 @@ static int friend_avatar(LwqqClient* lc,void* data)
     if(strcmp(buddy->uin,purple_account_get_username(account))==0){
         purple_buddy_icons_set_account_icon(account,(guchar*)buddy->avatar,buddy->avatar_len);
     }else{
-        purple_buddy_icons_set_for_user(account,buddy->qqnumber,(guchar*)buddy->avatar,buddy->avatar_len,NULL);
+        purple_buddy_icons_set_for_user(account,buddy->uin,(guchar*)buddy->avatar,buddy->avatar_len,NULL);
     }
     //let free by purple;
     buddy->avatar = NULL;
@@ -500,7 +488,7 @@ static int group_avatar(LwqqClient* lc,void* data)
     PurpleChat* chat;
     if(group->avatar_len==0)return 0;
 
-    chat = purple_blist_find_chat(account,group->account);
+    chat = purple_blist_find_chat(account,group->gid);
     if(chat==NULL) return 0;
     purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     //let free by purple;
@@ -514,7 +502,7 @@ static int lost_connection(LwqqClient* lc,void* data)
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
     return 0;
 }
-void qq_msg_check(LwqqClient* lc,void* data)
+int qq_msg_check(LwqqClient* lc,void* data)
 {
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
@@ -523,7 +511,7 @@ void qq_msg_check(LwqqClient* lc,void* data)
     if (SIMPLEQ_EMPTY(&l->head)) {
         /* No message now, wait 100ms */
         pthread_mutex_unlock(&l->mutex);
-        return ;
+        return 0;
     }
 
     msg = SIMPLEQ_FIRST(&l->head);
@@ -565,6 +553,7 @@ void qq_msg_check(LwqqClient* lc,void* data)
     pthread_mutex_unlock(&l->mutex);
     lwqq_msg_free(msg->msg);
     s_free(msg);
+    return 0;
 
 }
 static void check_exist(void* data,void* userdata)
@@ -577,18 +566,18 @@ static void check_exist(void* data,void* userdata)
         purple_blist_remove_buddy(bu);
     }
 }
-void qq_set_basic_info(int result,void* data)
+int qq_set_basic_info(LwqqClient* lc,void* data)
 {
     qq_account* ac = data;
-    LwqqClient* lc = ac->qq;
+    //LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
         lwqq_info_get_friend_avatar(lc,lc->myself);
     //search buddy list see if alread delete from server
-    GSList* list = purple_blist_get_buddies();
-    g_slist_foreach(list,check_exist,ac);
+    //GSList* list = purple_blist_get_buddies();
+    //g_slist_foreach(list,check_exist,ac);
 
-    PurpleChat* chat;
+    /*PurpleChat* chat;
     PurpleGroup* group = purple_find_group("QQ群");
     PurpleBlistNode* node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(group));
     while(node){
@@ -605,10 +594,19 @@ void qq_set_basic_info(int result,void* data)
             }
         }
         node = purple_blist_node_next(node,1);
+    }*/
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        friend_come(lc,buddy);
+    }
+    LwqqGroup* group;
+    LIST_FOREACH(group,&lc->groups,entries){
+        group_come(lc,group);
     }
 
     ac->state = LOAD_COMPLETED;
     background_msg_poll(ac);
+    return 0;
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
@@ -672,8 +670,10 @@ static int login_complete(LwqqClient* lc,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
+    purple_buddy_icons_set_caching(0);
 
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
+    lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
@@ -708,10 +708,10 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
             lwqq_info_get_group_sig(lc,group,sb->uin);
         mmsg->group_sig = s_strdup(sb->group_sig);
     }else{
-        LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+        //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
         msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
         mmsg = msg->opaque;
-        mmsg->to = buddy->uin;
+        mmsg->to = s_strdup(who);
     }
     mmsg->f_name = "宋体";
     mmsg->f_size = 13;
@@ -741,7 +741,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_color = "000000";
     PurpleConversation* conv = purple_find_chat(gc,id);
 
-    background_send_msg(ac,msg,group->account,message,conv);
+    background_send_msg(ac,msg,group->gid,message,conv);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
@@ -793,7 +793,7 @@ GList *qq_chat_info(PurpleConnection *gc)
 
     pce = g_new0(struct proto_chat_entry, 1);
     pce->label = "ID: ";
-    pce->identifier = QQ_ROOM_KEY_QUN_ID;
+    pce->identifier = QQ_ROOM_KEY_GID;
     m = g_list_append(m, pce);
 
     return m;
@@ -805,7 +805,7 @@ static GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat
     defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 
     if (chat_name != NULL)
-        g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
+        g_hash_table_insert(defaults, QQ_ROOM_KEY_GID, g_strdup(chat_name));
 
     return defaults;
 }
@@ -815,13 +815,13 @@ static PurpleRoomlist* qq_get_all_group_list(PurpleConnection* gc)
     PurpleAccount* account = ac->account;
     PurpleRoomlist* list = purple_roomlist_new(account);
     GList* fields = NULL;
-    PurpleRoomlistField* field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_QUN_ID,FALSE);
+    PurpleRoomlistField* field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_GID,FALSE);
     fields = g_list_append(fields,field);
     purple_roomlist_set_fields(list,fields);
     LwqqGroup* group;
     LIST_FOREACH(group,&ac->qq->groups,entries){
         PurpleRoomlistRoom* room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM,group->name,NULL);
-        purple_roomlist_room_add_field(list,room,group->account);
+        purple_roomlist_room_add_field(list,room,group->gid);
         purple_roomlist_room_add(list,room);
     }
     return list;
@@ -868,16 +868,17 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    char* account = g_hash_table_lookup(data,QQ_ROOM_KEY_QUN_ID);
+    char* gid = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     LwqqGroup* group = NULL;
-    if(account==NULL) return;
+    if(gid==NULL) return;
 
     if(ac->state != LOAD_COMPLETED){
         purple_notify_warning(gc,NULL,"加载尚未完成","请稍后重新尝试打开");
         return;
     }
 
-    group = find_group_by_qqnumber(lc,account);
+    //group = find_group_by_qqnumber(lc,account);
+    group = lwqq_group_find_group_by_gid(lc,gid);
     if(group == NULL) return;
 
     //this will open chat dialog.
@@ -941,6 +942,7 @@ static void qq_login(PurpleAccount *account)
     }
     ac->gc = pc;
     ac->qq = lwqq_client_new(username,password);
+    all_reset(ac);
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);

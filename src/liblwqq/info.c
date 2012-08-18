@@ -375,7 +375,7 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
     LwqqErrorCode error;
     if(isgroup) group = grouporbuddy;
     else buddy = grouporbuddy;
-    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    const char* qqnumber = (isgroup)?group->code:buddy->uin;
     const char* uin = (isgroup)?group->code:buddy->uin;
 
     //to avoid chinese character
@@ -438,7 +438,7 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     LwqqGroup* group = array[2];
     s_free(data);
     int isgroup = (group !=NULL);
-    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    const char* qqnumber = (isgroup)?group->code:buddy->uin;
     char** avatar = (isgroup)?&group->avatar:&buddy->avatar;
     size_t* len = (isgroup)?&group->avatar_len:&buddy->avatar_len;
     char path[32];

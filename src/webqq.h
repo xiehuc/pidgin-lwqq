@@ -12,5 +12,6 @@
 #define DBGID   "webqq"
 //this is qqnumber of a group
 #define QQ_ROOM_KEY_QUN_ID "account"
+#define QQ_ROOM_KEY_GID "gid"
 
 #endif

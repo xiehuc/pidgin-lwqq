@@ -28,5 +28,5 @@ int open_new_chat(qq_account* ac,LwqqGroup* group);
 
 
 //void qq_msg_check(qq_account* ac);
-void qq_set_basic_info(int result,void* data);
+//void qq_set_basic_info(int result,void* data);
 #endif

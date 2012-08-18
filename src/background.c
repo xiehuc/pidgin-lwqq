@@ -58,12 +58,14 @@ static void* _background_friends_info(void* data)
     lwqq_async_evset_add_event(lock,event);
     lwqq_async_wait(lock);
 
+    lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
 
-    lwqq_info_get_friend_detail_info(lc,lc->myself,&err);
+    lwqq_async_dispatch(lc,FRIEND_COMPLETE,ac);
+    //qq_set_basic_info(0,ac);
 
 
     //lwqq_info_get_all_friend_qqnumbers(lc,&err);
-    lock = lwqq_async_evset_new();
+    /*lock = lwqq_async_evset_new();
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&ac->qq->friends,entries){
         event = lwqq_info_get_friend_qqnumber(lc,buddy);
@@ -75,7 +77,7 @@ static void* _background_friends_info(void* data)
         event = lwqq_info_get_group_qqnumber(lc,group);
         lwqq_async_evset_add_event(lock,event);
     }
-    lwqq_async_add_evset_listener(lock,qq_set_basic_info,ac);
+    lwqq_async_add_evset_listener(lock,qq_set_basic_info,ac);*/
 
     return NULL;
 }
