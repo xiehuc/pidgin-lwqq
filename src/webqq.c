@@ -98,7 +98,7 @@ static void visit_self_infocenter(PurplePluginAction *action)
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
     char url[256];
-    snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
+    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
     system(url);
 }
 static void buddies_all_remove(void* data,void* userdata)
@@ -666,7 +666,7 @@ static int login_complete(LwqqClient* lc,void* data)
     if(err==LWQQ_EC_LOGIN_ABNORMAL){
         //browser cookie may not be pidgin account
         /*char buf[512];
-        snprintf(buf,sizeof(buf),"gnome-open '%s'",lc->error_description);
+        snprintf(buf,sizeof(buf),"xdg-open '%s'",lc->error_description);
         puts(buf);
         system(buf);*/
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
@@ -1104,7 +1104,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
 {
     PurpleBuddy* buddy = PURPLE_BUDDY(node);
     char url[256];
-    snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
+    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
     system(url);
 }
 #if 0
@@ -1114,7 +1114,7 @@ static void qq_visit_qun_air(PurpleBlistNode* node)
     GHashTable* table = purple_chat_get_components(chat);
     const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
     char url[256];
-    snprintf(url,sizeof(url),"gnome-open 'http://qun.qq.com/air/%s'",qqnum);
+    snprintf(url,sizeof(url),"xdg-open 'http://qun.qq.com/air/%s'",qqnum);
     system(url);
 }
 #endif
