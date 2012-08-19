@@ -35,11 +35,13 @@ typedef struct _LwqqAsync {
     ASYNC_CALLBACK listener[ListenerTypeLength];
     LwqqErrorCode err[ListenerTypeLength];
     void* data[ListenerTypeLength];
+    int _enabled;
 } _LwqqAsync;
 /**set async enabled or disabled*/
 void lwqq_async_set(LwqqClient* client,int enabled);
 /** check if async enabled*/
-#define lwqq_async_enabled(lc) (lc->async!=NULL)
+//#define lwqq_async_enabled(lc) (lc->async!=NULL)
+#define lwqq_async_enabled(lc) (lc->async->_enabled)
 /** add a ASYNC_CALLBACK type listener.*/
 #define lwqq_async_add_listener(lc,type,callback) \
     ((lwqq_async_enabled(lc))?lc->async->listener[type] = callback:0)

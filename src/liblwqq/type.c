@@ -36,6 +36,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
     }
 
     LwqqClient *lc = s_malloc0(sizeof(*lc));
+    lc->magic = LWQQ_MAGIC;
     lc->username = s_strdup(username);
     lc->password = s_strdup(password);
     lc->error_description = s_malloc0(512);

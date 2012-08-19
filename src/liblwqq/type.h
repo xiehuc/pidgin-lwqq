@@ -13,7 +13,7 @@
 
 #include <pthread.h>
 #include "queue.h"
-
+#define LWQQ_MAGIC 0x4153
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsync LwqqAsync;
@@ -172,6 +172,7 @@ typedef struct LwqqClient {
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
+    int magic;          /**< 0x4153 **/
 } LwqqClient;
 
 /* Lwqq Error Code */
@@ -201,6 +202,8 @@ typedef enum {
  * @return A new LwqqClient instance, or NULL failed
  */
 LwqqClient *lwqq_client_new(const char *username, const char *password);
+
+#define lwqq_client_valid(lc) (lc->magic==LWQQ_MAGIC)
 
 /** 
  * Get cookies needby by webqq server

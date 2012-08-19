@@ -966,7 +966,7 @@ static void qq_close(PurpleConnection *gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
 
-    //lwqq_async_set(ac->qq,0);
+    lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
         background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);

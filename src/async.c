@@ -64,10 +64,10 @@ static gboolean timeout_come(void* p)
     async_dispatch_data* data = (async_dispatch_data*)p;
     LwqqClient* lc = data->client;
     ListenerType type = data->type;
-    if(!lwqq_async_enabled(lc)) return 0;
-    if(lc->async->listener[type]!=NULL)
-        lc->async->listener[type](lc,data->data);
-
+    if(lwqq_client_valid(lc)&&lwqq_async_enabled(lc)){
+        if(lc->async->listener[type]!=NULL)
+            lc->async->listener[type](lc,data->data);
+    }
     free(data);
     //remote handle;
     return 0;
@@ -76,12 +76,13 @@ static gboolean timeout_come(void* p)
 
 void lwqq_async_set(LwqqClient* client,int enabled)
 {
-    if(enabled&&!lwqq_async_enabled(client)) {
-        client->async = malloc(sizeof(LwqqAsync));
-        memset(client->async,0,sizeof(LwqqAsync));
+    if(enabled&&client->async==NULL) {
+        client->async = s_malloc0(sizeof(LwqqAsync));
+        client->async->_enabled=1;
     } else if(!enabled&&lwqq_async_enabled(client)) {
-        free(client->async);
-        client->async=NULL;
+        client->async->_enabled=0;
+        /*free(client->async);
+        client->async=NULL;*/
     }
 
 }
