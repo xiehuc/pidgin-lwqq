@@ -346,18 +346,15 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     PurpleConnection* pc = ac->gc;
     const char* who;
 
-    /*LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
-    if(sb)
-        who = sb->nick;
-    else
-        //this means it is uin indeed. or we dont know it else .
+    if(purple_find_buddy(ac->account,sender)!=NULL){
         who = sender;
-
-        */
-    /*if(lwqq_buddy_find_buddy_by_uin(lc,sender)){
-        who = sender->uin;
-    }*/
-    who = sender;
+    }else{
+        LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
+        if(sb)
+            who = sb->nick;
+        else
+            who = sender;
+    }
 
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,time(NULL));
     s_free(sender);
