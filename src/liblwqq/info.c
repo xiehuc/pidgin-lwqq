@@ -498,9 +498,13 @@ done:
     //we read from file
     if(hasfile){
         f = fopen(path,"r");
-        *avatar = s_malloc(filesize);
-        fread(*avatar,1,filesize,f);
-        *len = filesize;
+        if(f!=NULL){
+            *avatar = s_malloc(filesize);
+            fread(*avatar,1,filesize,f);
+            *len = filesize;
+        }else{
+            perror("打开头像文件失败");
+        }
     }
     lwqq_http_request_free(req);
     if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
