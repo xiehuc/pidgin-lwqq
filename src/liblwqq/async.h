@@ -107,7 +107,7 @@ int lwqq_async_wait(LwqqAsyncEvset* host);
  */
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
 
-void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data);
+//void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data);
 /** this set the errno for a event.
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.

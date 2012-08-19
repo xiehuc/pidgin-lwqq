@@ -85,15 +85,6 @@ void background_friends_info(qq_account* ac)
 {
     START_THREAD(_background_friends_info,ac);
 }
-static int msg_check_repeat = 1;
-static gboolean msg_check(void* data)
-{
-    //qq_msg_check((qq_account*)data);
-    //repeat for ever;
-    return msg_check_repeat;
-}
-static int msg_check_handle;
-static pthread_t tid = 0;
 static void* _background_msg_poll(void* data)
 {
     qq_account* ac = (qq_account*)data;
@@ -102,22 +93,20 @@ static void* _background_msg_poll(void* data)
     /* Poll to receive message */
     l->poll_msg(l);
 
-    //msg_check_handle = purple_timeout_add(200,msg_check,ac);
-
     return NULL;
 }
-static pthread_t msg_th;
 void background_msg_poll(qq_account* ac)
 {
-    pthread_create(&msg_th,NULL,_background_msg_poll,ac);
+    //pthread_create(&msg_th,NULL,_background_msg_poll,ac);
+    _background_msg_poll(ac);
 }
 void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    purple_timeout_remove(msg_check_handle);
-    pthread_cancel(l->tid);
     l->tid = 0;
-    tid = 0;
+    pthread_cancel(l->tid);
+    /*purple_timeout_remove(msg_check_handle);
+    tid = 0;*/
 }
 
 

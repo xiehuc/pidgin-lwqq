@@ -943,7 +943,6 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    int ret;
     char *cookies;
 
     if (!lc || ! group) {
@@ -1698,7 +1697,6 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
 {
     if(!lc||!status) return NULL;
     char url[512];
-    int ret;
     snprintf(url,sizeof(url),"%s/channel/change_status2?"
             "newstatus=%s&"
             "clientid=%s&"

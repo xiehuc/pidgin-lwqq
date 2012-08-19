@@ -26,6 +26,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data);
 static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
 
+#if 0
 static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     LwqqBuddy* buddy;
@@ -47,6 +48,7 @@ static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
     }
     return NULL;
 }
+#endif
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 {
     LwqqGroup* group;
@@ -340,16 +342,22 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     LwqqGroup* group = d[1];
     char* sender = d[2];
     char* buf = d[3];
-    LwqqClient* lc = ac->qq;
+    //LwqqClient* lc = ac->qq;
     PurpleConnection* pc = ac->gc;
     const char* who;
 
-    LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
+    /*LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
     if(sb)
         who = sb->nick;
     else
         //this means it is uin indeed. or we dont know it else .
         who = sender;
+
+        */
+    /*if(lwqq_buddy_find_buddy_by_uin(lc,sender)){
+        who = sender->uin;
+    }*/
+    who = sender;
 
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,time(NULL));
     s_free(sender);
@@ -835,7 +843,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     s_free(data);
     LwqqClient* lc = ac->qq;
     LwqqSimpleBuddy* member;
-    LwqqBuddy* buddy;
+    //LwqqBuddy* buddy;
     PurpleConvChatBuddyFlags flag;
     GList* users = NULL;
     GList* flags = NULL;
@@ -901,11 +909,13 @@ static gboolean qq_offline_message(const PurpleBuddy *buddy)
     //webqq support offline message indeed
     return TRUE;
 }
+#if 0
 static gboolean qq_can_receive_file(PurpleConnection* gc,const char* who)
 {
     //webqq support send recv file indeed.
     return TRUE;
 }
+#endif
 //this return the member of group 's real name
 //it is only used when create dialog;
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
@@ -1097,6 +1107,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     snprintf(url,sizeof(url),"gnome-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
     system(url);
 }
+#if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
 {
     PurpleChat* chat = PURPLE_CHAT(node);
@@ -1106,6 +1117,7 @@ static void qq_visit_qun_air(PurpleBlistNode* node)
     snprintf(url,sizeof(url),"gnome-open 'http://qun.qq.com/air/%s'",qqnum);
     system(url);
 }
+#endif
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
