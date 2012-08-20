@@ -546,6 +546,12 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     if (!request->req)
         return NULL;
 
+    if(LWQQ_SYNC_ENABLED()){
+        lwqq_http_do_request(request,method,body);
+        if(callback) callback(request,data);
+        return NULL;
+    }
+
     char **resp = &request->response;
 
     /* Clear off last response */

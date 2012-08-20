@@ -136,5 +136,11 @@ do{\
         lwqq_async_wait(evset);\
     }while(0)
 
+extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
+#define LWQQ_SYNC_BEGIN() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1)
+
+#define LWQQ_SYNC_END() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0)
+
+#define LWQQ_SYNC_ENABLED() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED == 1)
 
 #endif

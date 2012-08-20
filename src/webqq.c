@@ -1097,12 +1097,34 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 
 }
+static void visit_qqzone(LwqqAsyncEvent* event,void* data)
+{
+    LwqqBuddy* buddy = data;
+    char url[256];
+    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
+    system(url);
+}
 static void qq_visit_qzone(PurpleBlistNode* node)
 {
     PurpleBuddy* buddy = PURPLE_BUDDY(node);
-    char url[256];
-    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",purple_buddy_get_name(buddy));
-    system(url);
+    PurpleAccount* account = purple_buddy_get_account(buddy);
+    qq_account* ac = purple_connection_get_protocol_data(
+            purple_account_get_connection(account));
+    const char* uin = purple_buddy_get_name(buddy);
+    LwqqBuddy* friend = lwqq_buddy_find_buddy_by_uin(ac->qq,uin);
+    if(friend==NULL) return;
+    if(!friend->qqnumber){
+        lwqq_async_add_event_listener(
+                lwqq_info_get_friend_qqnumber(ac->qq,friend),
+                visit_qqzone,friend);
+    }else{
+        visit_qqzone(NULL,friend);
+    }
+}
+static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
+{
+    qq_account* ac = purple_connection_get_protocol_data(pc);
+    LwqqVerifyCode* code = lwqq_info_add_friend_get_image(ac->qq);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
@@ -1164,14 +1186,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
     .group_buddy=       qq_change_category  /* change buddy category on server */,
     .remove_buddy=      qq_remove_buddy,
-    NULL,//twitter_set_status,/* set_status */
-    NULL,                   /* set_idle */
-    NULL,                   /* change_passwd */
-//	twitterim_add_buddy,   /* add_buddy */
-    NULL,
-    NULL,                   /* add_buddies */
-//	twitterim_remove_buddy,/* remove_buddy */
-    NULL,
+    .add_buddy_with_invite=qq_add_buddy_with_invite,
     .struct_size=           sizeof(PurplePluginProtocolInfo)
 };
 

@@ -22,6 +22,8 @@ typedef struct async_dispatch_data {
 
 static gboolean timeout_come(void* p);
 
+int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
+
 void lwqq_async_add_listener(LwqqClient* lc,ListenerType type,ASYNC_CALLBACK callback)
 {
     LwqqAsync* async = lc->async;

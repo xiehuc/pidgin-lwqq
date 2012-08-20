@@ -1722,3 +1722,36 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
     data[2] = (char*)lwqq_status_to_str(status);
     return req->do_request_async(req,0,NULL,info_commom_back,data);
 }
+LwqqVerifyCode* lwqq_info_add_friend_get_image(LwqqClient* lc)
+{
+    char url[512];
+
+    LwqqVerifyCode* ret = NULL;
+    double random = drand48();
+    snprintf(url,sizeof(url),"%s/get_image?"
+            "aid=1003901&%.14lf",
+            "http://captcha.qq.com",random);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    req->do_request(req,0,NULL);
+    if(req->http_code!=200){
+        goto done;
+    }
+    ret = s_malloc(sizeof(*ret));
+    ret->data = req->response;
+    ret->size = req->resp_len;
+    req->response = NULL;
+done:
+    lwqq_http_request_free(req);
+    return ret;
+}
+LwqqAsyncEvent* lwqq_info_add_friend_need_verify(LwqqClient* lc,LwqqGroup* group)
+{
+    return NULL;
+}
