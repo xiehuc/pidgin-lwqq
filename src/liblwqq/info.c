@@ -877,18 +877,17 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         if (!uin || !nick)
             continue;
 
-        member = lwqq_simple_buddy_new();
+        //may solve group member duplicated problem
+        if(lwqq_group_find_group_member_by_uin(group,uin)==NULL){
 
-        member->uin = s_strdup(uin);
-        member->nick = ibmpc_ascii_character_convert(json_unescape(nick));
-        //member->nick = s_strdup(nick);
+            member = lwqq_simple_buddy_new();
 
-        // FIX ME: should we get group members qqnumber here ? 
-        // we can get the members' qq number by uin 
-        //member->qqnumber = get_friend_qqnumber(lc, member->uin);
+            member->uin = s_strdup(uin);
+            member->nick = ibmpc_ascii_character_convert(json_unescape(nick));
 
-        /* Add to members list */
-        LIST_INSERT_HEAD(&group->members, member, entries);
+            /* Add to members list */
+            LIST_INSERT_HEAD(&group->members, member, entries);
+        }
     }
 }
 
