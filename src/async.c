@@ -118,13 +118,17 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
             evset->result = event->result;
         if(event->host_lock->ref_count==0){
             if(evset->callback)
-                evset->callback(evset->result,evset->data);
+                evset->callback(evset,evset->data);
             if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
+            else{
+                pthread_mutex_unlock(&evset->lock);
+                s_free(evset);
+                s_free(event);
+                return;
+            }
         }
         pthread_mutex_unlock(&evset->lock);
-        //if(evset->ref_count == 0 && !evset->cond_waiting)
-        //    s_free(evset);
     }
     s_free(event);
 }
@@ -161,8 +165,9 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback
     event->data = data;
 }
 
-/*void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data)
+void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data)
 {
+    if(!evset) return;
     evset->callback = callback;
     evset->data = data;
-}*/
+}

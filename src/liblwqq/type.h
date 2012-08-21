@@ -16,6 +16,7 @@
 #define LWQQ_MAGIC 0x4153
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
+typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsync LwqqAsync;
 typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 /************************************************************************/

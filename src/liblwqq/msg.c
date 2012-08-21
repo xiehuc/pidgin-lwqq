@@ -587,7 +587,30 @@ const char* get_host_of_url(const char* url,char* buffer)
         strncpy(buffer,ptr,end-ptr);
     return buffer;
 }
-static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgContent* c)
+static int set_content_picture_data(LwqqHttpRequest* req,void* data)
+{
+    LwqqMsgContent* c = data;
+    int errno = 0;
+    if((req->http_code!=200)){
+        errno = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
+    switch(c->type){
+        case LWQQ_CONTENT_OFFPIC:
+            c->data.img.data = req->response;
+            c->data.img.size = req->resp_len;
+        break;
+        case LWQQ_CONTENT_CFACE:
+            c->data.cface.data = req->response;
+            c->data.cface.size = req->resp_len;
+        break;
+    }
+    req->response = NULL;
+done:
+    lwqq_http_request_free(req);
+    return errno;
+}
+static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
     LwqqErrorCode error;
@@ -614,24 +637,12 @@ static void request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgConte
         req->set_header(req, "Cookie", cookies);
         s_free(cookies);
     }
-    ret = req->do_request(req, 0, NULL);
-
-    if(ret||(req->http_code!=200)){
-        if(err){
-            *err = LWQQ_EC_HTTP_ERROR;
-            goto done;
-        }
-    }
-
-    c->data.img.data = req->response;
-    c->data.img.size = req->resp_len;
-    req->response = NULL;
-    
+    return req->do_request_async(req, 0, NULL,set_content_picture_data,c);
 done:
     lwqq_http_request_free(req);
-    return;
+    return NULL;
 }
-static void request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
+static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
     LwqqErrorCode error;
@@ -658,22 +669,12 @@ static void request_content_cface(LwqqClient* lc,const char* group_code,const ch
         s_free(cookies);
     }
 
-    ret = req->do_request(req,0,NULL);
-
-    if(ret||req->http_code!=200){
-        if(err){
-            *err = LWQQ_EC_HTTP_ERROR;
-            goto done;
-        }
-    }
-
-    c->data.cface.data = req->response;
-    c->data.cface.size = req->resp_len;
-    req->response = NULL;
+    return req->do_request_async(req,0,NULL,set_content_picture_data,c);
 done:
     lwqq_http_request_free(req);
+    return NULL;
 }
-static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char* from_uin,LwqqMsgContent* c)
+static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,const char* from_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
     LwqqErrorCode error;
@@ -699,32 +700,31 @@ static void request_content_cface2(LwqqClient* lc,const char* msg_id,const char*
         s_free(cookies);
     }
 
-    ret = req->do_request(req,0,NULL);
-
-    if(ret||(req->http_code!=302&&req->http_code!=200)){
-        goto done;
-    }
-
-    c->data.cface.data = req->response;
-    c->data.cface.size = req->resp_len;
-    req->response = NULL;
-
+    return req->do_request_async(req,0,NULL,set_content_picture_data,c);
 done:
     lwqq_http_request_free(req);
+    return NULL;
 }
-void lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
+LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
+    LwqqAsyncEvset* ret = NULL;
+    LwqqAsyncEvent* event;
     TAILQ_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
-            request_content_offpic(lc,msg->from,c);
+            if(ret == NULL) ret = lwqq_async_evset_new();
+            event = request_content_offpic(lc,msg->from,c);
+            lwqq_async_evset_add_event(ret,event);
         }else if(c->type == LWQQ_CONTENT_CFACE){
+            if(ret == NULL) ret = lwqq_async_evset_new();
             if(type == LWQQ_MT_BUDDY_MSG)
-                request_content_cface2(lc,msg->msg_id,msg->from,c);
+                event = request_content_cface2(lc,msg->msg_id,msg->from,c);
             else
-                request_content_cface(lc,msg->group_code,msg->send,c);
+                event = request_content_cface(lc,msg->group_code,msg->send,c);
+            lwqq_async_evset_add_event(ret,event);
         }
     }
+    return ret;
 }
 /**
  * Parse message received from server

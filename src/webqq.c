@@ -510,10 +510,32 @@ static int lost_connection(LwqqClient* lc,void* data)
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
     return 0;
 }
+static void msg_delaied_by_download_picture(LwqqAsyncEvset* evset,void* data)
+{
+    void** d = data;
+    LwqqClient* lc = d[0];
+    LwqqMsg* msg = d[1];
+    s_free(data);
+    switch(msg->type){
+        case LWQQ_MT_BUDDY_MSG:
+            buddy_message(lc,(LwqqMsgMessage*)msg->opaque);
+            break;
+        case LWQQ_MT_GROUP_MSG:
+            group_message(lc,(LwqqMsgMessage*)msg->opaque);
+            break;
+        case LWQQ_MT_SESS_MSG:
+            whisper_message(lc,(LwqqMsgMessage*)msg->opaque);
+            break;
+        default:
+            break;
+    }
+    lwqq_msg_free(msg);
+}
 int qq_msg_check(LwqqClient* lc,void* data)
 {
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
+    LwqqAsyncEvset* picset = NULL;
 
     pthread_mutex_lock(&l->mutex);
     if (SIMPLEQ_EMPTY(&l->head)) {
@@ -523,34 +545,46 @@ int qq_msg_check(LwqqClient* lc,void* data)
     }
 
     msg = SIMPLEQ_FIRST(&l->head);
-    switch(msg->msg->type){
-        case LWQQ_MT_BUDDY_MSG:
-            buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_GROUP_MSG:
-            group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_SESS_MSG:
-            whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_STATUS_CHANGE:
-            /*LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,msg->msg->status.who);
-              if(buddy->status!=NULL)s_free(buddy->status);
-              buddy->status = s_strdup(msg->msg->status.status);*/
-            status_change(lc,(LwqqMsgStatusChange*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_KICK_MESSAGE:
-            kick_message(lc,(LwqqMsgKickMessage*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_SYSTEM:
-            system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
-            break;
-        case LWQQ_MT_BLIST_CHANGE:
-            //do no thing. it will raise friend_come
-            break;
-        default:
-            printf("unknow message\n");
-            break;
+    picset = NULL;
+    if(msg->msg->type <= LWQQ_MT_SESS_MSG){
+        LwqqAsyncEvset* picset;
+        picset = lwqq_msg_request_picture(lc,msg->msg->type,msg->msg->opaque);
+        if(picset != NULL){
+            void** data = s_malloc0(sizeof(void*)*2);
+            data[0] = lc;
+            data[1] = msg->msg;
+            lwqq_async_add_evset_listener(picset,msg_delaied_by_download_picture,data);
+            //clean msg pointer to delay delete.
+            msg->msg = NULL;
+        }
+    }
+    if(msg->msg){
+        switch(msg->msg->type){
+            case LWQQ_MT_BUDDY_MSG:
+                buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_GROUP_MSG:
+                group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_SESS_MSG:
+                whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_STATUS_CHANGE:
+                status_change(lc,(LwqqMsgStatusChange*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_KICK_MESSAGE:
+                kick_message(lc,(LwqqMsgKickMessage*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_SYSTEM:
+                system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_BLIST_CHANGE:
+                //do no thing. it will raise friend_come
+                break;
+            default:
+                printf("unknow message\n");
+                break;
+        }
     }
 
     SIMPLEQ_REMOVE_HEAD(&l->head, entries);
