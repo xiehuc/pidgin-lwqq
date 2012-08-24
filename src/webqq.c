@@ -289,7 +289,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     strcpy(buf,"");
 
     translate_struct_to_message(msg,buf);
-    serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, time(NULL));
+    serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -318,12 +318,13 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     translate_struct_to_message(msg,buf);
     
     LwqqErrorCode err;
-    void **data = s_malloc0(sizeof(void*)*4);
+    void **data = s_malloc0(sizeof(void*)*5);
     data[0] = ac;
     data[1] = group;
     data[2] = s_strdup(msg->send);
     //because buf is not always too long .so it is not slowdown performance.
     data[3] = s_strdup(buf);
+    data[4] = (void*)msg->time;
     //get all member list
     if(LIST_EMPTY(&group->members)) {
         //use block method to get list
@@ -342,6 +343,7 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     LwqqGroup* group = d[1];
     char* sender = d[2];
     char* buf = d[3];
+    time_t t = (time_t)d[4];
     //LwqqClient* lc = ac->qq;
     PurpleConnection* pc = ac->gc;
     const char* who;
@@ -356,7 +358,7 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
             who = sender;
     }
 
-    serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,time(NULL));
+    serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
     s_free(sender);
     s_free(buf);
     group_member_list_come(NULL,data);
@@ -377,14 +379,15 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
     if(group == NULL){
         snprintf(name,sizeof(name),"%s #(broken)# %s",from,gid);
-        serv_got_im(pc,name,buf,PURPLE_MESSAGE_RECV,time(NULL));
+        serv_got_im(pc,name,buf,PURPLE_MESSAGE_RECV,mmsg->time);
         return;
     }
-    void** data = s_malloc0(sizeof(void*)*4);
+    void** data = s_malloc0(sizeof(void*)*5);
     data[0] = pc;
     data[1] = group;
     data[2] = s_strdup(from);
     data[3] = s_strdup(buf);
+    data[4] = (void*)mmsg->time;
     if(LIST_EMPTY(&group->members)){
         lwqq_async_add_event_listener(
                 lwqq_info_get_group_detail_info(lc,group,NULL),
@@ -400,6 +403,7 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data)
     LwqqGroup* group = d[1];
     char* from = d[2];
     char* msg = d[3];
+    time_t t = (time_t)d[4];
     s_free(data);
     char name[70];
     LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,from);
@@ -408,7 +412,7 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data)
     }else{
         snprintf(name,sizeof(name),"%s ### %s",sb->nick,group->name);
     }
-    serv_got_im(pc,name,msg,PURPLE_MESSAGE_RECV,time(NULL));
+    serv_got_im(pc,name,msg,PURPLE_MESSAGE_RECV,t);
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
