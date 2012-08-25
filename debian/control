@@ -1,0 +1,14 @@
+Source: pidgin-lwqq
+Section: net
+Priority: extra
+Maintainer: lainme <lainme993@gmail.com>
+Build-Depends: debhelper (>= 7.0.0), cmake, cdbs, libpurple-dev, libcurl-ocaml-dev
+Standards-Version: 3.9.2
+Homepage: https://github.com/xiehuc/pidgin-lwqq
+
+Package: pidgin-lwqq
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: pidgin
+Description: A pidgin plugin for QQ protocol support, based on lwqq
+ pidgin-lwqq is a pidgin plugin for QQ protocol support. It's based on the lwqq library which uses the webqq.
