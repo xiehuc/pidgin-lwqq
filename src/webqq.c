@@ -293,6 +293,18 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     translate_struct_to_message(msg,buf);
     serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
+static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* pc = ac->gc;
+    static char buf[2048];
+    static char url[1024];
+    snprintf(buf,sizeof(buf),"您收到一个离线文件:%s\n"
+            "到期时间:%s"
+            "<a href=\"%s\">点此下载</a>",
+            msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
+    serv_got_im(pc,msg->from,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+}
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
@@ -587,6 +599,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 break;
             case LWQQ_MT_BLIST_CHANGE:
                 //do no thing. it will raise friend_come
+                break;
+            case LWQQ_MT_OFFFILE:
+                offline_file(lc,(LwqqMsgOffFile*)msg->msg->opaque);
                 break;
             default:
                 printf("unknow message\n");

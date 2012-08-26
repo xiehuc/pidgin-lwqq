@@ -237,6 +237,7 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
     s_free(buddy->uin);
     s_free(buddy->cate_index);
     s_free(buddy->nick);
+    s_free(buddy->card);
     s_free(buddy->stat);
     s_free(buddy->client_type);
     s_free(buddy->group_sig);

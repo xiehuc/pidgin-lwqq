@@ -111,6 +111,17 @@ typedef struct LwqqMsgBlistChange{
     LIST_HEAD(,LwqqSimpleBuddy) added_friends;
     LIST_HEAD(,LwqqBuddy) removed_friends;
 } LwqqMsgBlistChange;
+typedef struct LwqqMsgOffFile{
+    char* msg_id;
+    char* rkey;
+    char ip[24];
+    char port[8];
+    char* from;
+    size_t size;
+    char* name;
+    time_t expire_time;
+    time_t time;
+}LwqqMsgOffFile;
 
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
@@ -121,6 +132,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_SYSTEM,
     LWQQ_MT_BLIST_CHANGE,
     LWQQ_MT_SYS_G_MSG,
+    LWQQ_MT_OFFFILE,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 
@@ -234,6 +246,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
  */
 LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
 LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
+const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

@@ -110,6 +110,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_SYS_G_MSG:
         msg->opaque = s_malloc0(sizeof(LwqqMsgSysGMsg));
         break;
+    case LWQQ_MT_OFFFILE:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgOffFile));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -238,6 +241,15 @@ void lwqq_msg_free(LwqqMsg *msg)
             s_free(gmsg->gcode);
         }
         s_free(gmsg);
+    }else if(msg->type==LWQQ_MT_OFFFILE){
+        LwqqMsgOffFile* of = msg->opaque;
+        if(of){
+            s_free(of->msg_id);
+            s_free(of->rkey);
+            s_free(of->from);
+            s_free(of->name);
+        }
+        s_free(of);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }
@@ -304,6 +316,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_BLIST_CHANGE;
     }else if(!strncmp(msg_type,"sys_g_msg",strlen("sys_g_msg"))){
         type = LWQQ_MT_SYS_G_MSG;
+    }else if(!strncmp(msg_type,"push_offfile",strlen("push_offfile"))){
+        type = LWQQ_MT_OFFFILE;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -573,6 +587,20 @@ static int parse_sys_g_msg(json_t *json,void* opaque)
     return 0;
 
 }
+static int parse_push_offfile(json_t* json,void* opaque)
+{
+    LwqqMsgOffFile * off = opaque;
+    off->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
+    off->rkey = s_strdup(json_parse_simple_value(json,"rkey"));
+    strncpy(off->ip,json_parse_simple_value(json,"ip"),24);
+    strncpy(off->port,json_parse_simple_value(json,"port"),8);
+    off->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    off->size = atol(json_parse_simple_value(json,"size"));
+    off->name = json_unescape(json_parse_simple_value(json,"name"));
+    off->expire_time = atol(json_parse_simple_value(json,"expire_time"));
+    off->time = atol(json_parse_simple_value(json,"time"));
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -797,6 +825,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_SYS_G_MSG:
             ret = parse_sys_g_msg(cur,msg->opaque);
+            break;
+        case LWQQ_MT_OFFFILE:
+            ret = parse_push_offfile(cur,msg->opaque);
             break;
         default:
             ret = -1;
@@ -1310,5 +1341,14 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     lwqq_msg_free(msg);
 
     return ret;
+}
+const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg)
+{
+    static char url[1024];
+    char* file_name = url_encode(msg->name);
+    snprintf(url,sizeof(url),"http://%s:%s/%s?ver=2173&rkey=%s&range=0",
+            msg->ip,msg->port,file_name,msg->rkey);
+    s_free(file_name);
+    return url;
 }
 

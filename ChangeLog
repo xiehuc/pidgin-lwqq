@@ -1,6 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+dev (08/26/2012):
+	* new feature: not official support for offline file.
+
 dev (08/18/2012):
 	* new feature: support multi account
 	* enhancement: not use qqnumber.use uin.big speed up
