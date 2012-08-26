@@ -113,6 +113,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_OFFFILE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgOffFile));
         break;
+    case LWQQ_MT_FILETRANS:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgFileTrans));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -250,6 +253,23 @@ void lwqq_msg_free(LwqqMsg *msg)
             s_free(of->name);
         }
         s_free(of);
+    }else if(msg->type==LWQQ_MT_FILETRANS){
+        LwqqMsgFileTrans* trans = msg->opaque;
+        FileTransItem* item;
+        FileTransItem* item_next;
+        if(trans){
+            s_free(trans->from);
+            s_free(trans->to);
+            s_free(trans->lc_id);
+            item = LIST_FIRST(&trans->file_infos);
+            while(item!=NULL){
+                item_next = LIST_NEXT(item,entries);
+                s_free(item->file_name);
+                s_free(item);
+                item = item_next;
+            }
+        }
+        s_free(trans);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }
@@ -318,6 +338,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_SYS_G_MSG;
     }else if(!strncmp(msg_type,"push_offfile",strlen("push_offfile"))){
         type = LWQQ_MT_OFFFILE;
+    }else if(!strncmp(msg_type,"filesrv_transfer",strlen("filesrv_transfer"))){
+        type = LWQQ_MT_FILETRANS;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -601,6 +623,27 @@ static int parse_push_offfile(json_t* json,void* opaque)
     off->time = atol(json_parse_simple_value(json,"time"));
     return 0;
 }
+static int parse_file_transfer(json_t* json,void* opaque)
+{
+    LwqqMsgFileTrans* trans = opaque;
+    trans->file_count = atoi(json_parse_simple_value(json,"file_count"));
+    trans->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    trans->to = s_strdup(json_parse_simple_value(json,"to_uin"));
+    trans->lc_id = s_strdup(json_parse_simple_value(json,"lc_id"));
+    trans->now = atol(json_parse_simple_value(json,"now"));
+    trans->operation = atoi(json_parse_simple_value(json,"operation"));
+    trans->type = atoi(json_parse_simple_value(json,"type"));
+    json_t* ptr = json_find_first_label_all(json,"file_infos");
+    ptr = ptr->child->child;
+    while(ptr!=NULL){
+        FileTransItem *item = s_malloc0(sizeof(*item));
+        item->file_name = json_unescape(json_parse_simple_value(ptr,"file_name"));
+        item->file_status = atoi(json_parse_simple_value(ptr,"file_status"));
+        item->pro_id = atoi(json_parse_simple_value(ptr,"pro_id"));
+        LIST_INSERT_HEAD(&trans->file_infos,item,entries);
+        ptr = ptr->next;
+    }
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -828,6 +871,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_OFFFILE:
             ret = parse_push_offfile(cur,msg->opaque);
+            break;
+        case LWQQ_MT_FILETRANS:
+            ret = parse_file_transfer(cur,msg->opaque);
             break;
         default:
             ret = -1;

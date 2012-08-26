@@ -298,7 +298,6 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     static char buf[2048];
-    static char url[1024];
     snprintf(buf,sizeof(buf),"您收到一个离线文件:%s\n"
             "到期时间:%s"
             "<a href=\"%s\">点此下载</a>",

@@ -122,6 +122,22 @@ typedef struct LwqqMsgOffFile{
     time_t expire_time;
     time_t time;
 }LwqqMsgOffFile;
+typedef struct FileTransItem{
+    char* file_name;
+    int file_status;
+    int pro_id;
+    LIST_ENTRY(FileTransItem) entries;
+}FileTransItem;
+typedef struct LwqqMsgFileTrans{
+    int file_count;
+    char* from;
+    char* to;
+    char* lc_id;
+    size_t now;
+    int operation;
+    int type;
+    LIST_HEAD(,FileTransItem) file_infos;
+}LwqqMsgFileTrans;
 
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
@@ -133,6 +149,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_BLIST_CHANGE,
     LWQQ_MT_SYS_G_MSG,
     LWQQ_MT_OFFFILE,
+    LWQQ_MT_FILETRANS,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 
