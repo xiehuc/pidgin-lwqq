@@ -890,6 +890,38 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         }
     }
 }
+static void parse_groups_cards_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    LwqqSimpleBuddy *member;
+    json_t *cur;
+    char *uin;
+    char *card;
+
+    /* Make json point "minfo" reference */
+    while (json) {
+        if (json->text && !strcmp(json->text, "cards")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+
+    json = json->child;    //point to the array.[]
+    for (cur = json->child; cur != NULL; cur = cur->next) {
+        uin = json_parse_simple_value(cur, "muin");
+        card = json_parse_simple_value(cur, "card");
+
+        if (!uin || !card)
+            continue;
+
+        member = lwqq_group_find_group_member_by_uin(group,uin);
+        if(member != NULL){
+            member->card = ibmpc_ascii_character_convert(json_unescape(card));
+        }
+    }
+}
 
 /**
  * mark qq group's online members
@@ -961,15 +993,15 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
 
     /* Create a GET request */
     snprintf(url, sizeof(url),
-             "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s",
-             "http://s.web2.qq.com", group->code, lc->vfwebqq);
+             "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s&t=%ld",
+             "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
     }
-    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
-    req->set_header(req, "Content-Transfer-Encoding", "binary");
-    req->set_header(req, "Content-type", "utf-8");
+    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    //req->set_header(req, "Content-Transfer-Encoding", "binary");
+    //req->set_header(req, "Content-type", "utf-8");
     cookies = lwqq_get_cookies(lc);
     if (cookies) {
         req->set_header(req, "Cookie", cookies);
@@ -1040,6 +1072,7 @@ static int group_detail_back(LwqqHttpRequest* req,void* data)
         parse_groups_ginfo_child(lc, group, json_tmp);
         /* second , get group members */
         parse_groups_minfo_child(lc, group, json_tmp);
+        parse_groups_cards_child(lc, group, json_tmp);
         /* third , mark group's online members */
         parse_groups_stats_child(lc, group, json_tmp);
 

@@ -58,11 +58,13 @@ static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
     }
     return NULL;
 }
-static LwqqSimpleBuddy* find_group_member_by_nick(LwqqGroup* group,const char* nick)
+static LwqqSimpleBuddy* find_group_member_by_nick_or_card(LwqqGroup* group,const char* who)
 {
     LwqqSimpleBuddy* sb;
     LIST_FOREACH(sb,&group->members,entries){
-        if(sb->nick&&strcmp(sb->nick,nick)==0)
+        if(sb->nick&&strcmp(sb->nick,who)==0)
+            return sb;
+        if(sb->card&&strcmp(sb->card,who)==0)
             return sb;
     }
     return NULL;
@@ -353,7 +355,7 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     }else{
         LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
         if(sb)
-            who = sb->nick;
+            who = sb->card?sb->card:sb->nick;
         else
             who = sender;
     }
@@ -410,7 +412,7 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data)
     if(sb == NULL){
         snprintf(name,sizeof(name),"%s #(broken)# %s",from,group->name);
     }else{
-        snprintf(name,sizeof(name),"%s ### %s",sb->nick,group->name);
+        snprintf(name,sizeof(name),"%s ### %s",(sb->card)?sb->card:sb->nick,group->name);
     }
     serv_got_im(pc,name,msg,PURPLE_MESSAGE_RECV,t);
 }
@@ -547,6 +549,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
         pthread_mutex_unlock(&l->mutex);
         return 0;
     }
+    while(!SIMPLEQ_EMPTY(&l->head)){
 
     msg = SIMPLEQ_FIRST(&l->head);
     picset = NULL;
@@ -592,10 +595,11 @@ int qq_msg_check(LwqqClient* lc,void* data)
     }
 
     SIMPLEQ_REMOVE_HEAD(&l->head, entries);
-
-    pthread_mutex_unlock(&l->mutex);
     lwqq_msg_free(msg->msg);
     s_free(msg);
+
+    }
+    pthread_mutex_unlock(&l->mutex);
     return 0;
 
 }
@@ -745,7 +749,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         msg = lwqq_msg_new(LWQQ_MT_SESS_MSG);
         mmsg = msg->opaque;
         LwqqGroup* group = find_group_by_name(lc,gname);
-        LwqqSimpleBuddy* sb = find_group_member_by_nick(group,nick);
+        LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,nick);
         mmsg->to = sb->uin;
         if(!sb->group_sig)
             lwqq_info_get_group_sig(lc,group,sb->uin);
@@ -897,7 +901,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
             if(lwqq_buddy_find_buddy_by_uin(lc,member->uin)){
                 users = g_list_append(users,member->uin);
             }else{
-                users = g_list_append(users,member->nick);
+                users = (member->card)?g_list_append(users,member->card):g_list_append(users,member->nick);
             }
         }
         purple_conv_chat_add_users(chat,users,extra_msgs,flags,FALSE);
@@ -961,8 +965,8 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
         return NULL;
     else{
         LwqqGroup* group = opend_chat_index(ac,id);
-        LwqqSimpleBuddy* sb = find_group_member_by_nick(group,who);
-        snprintf(conv_name,sizeof(conv_name),"%s ### %s",sb->nick,group->name);
+        LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,who);
+        snprintf(conv_name,sizeof(conv_name),"%s ### %s",(sb->card)?sb->card:sb->nick,group->name);
         return s_strdup(conv_name);
     }
     return NULL;

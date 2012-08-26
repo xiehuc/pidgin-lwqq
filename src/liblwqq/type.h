@@ -89,6 +89,7 @@ typedef struct LwqqBuddy {
 typedef struct LwqqSimpleBuddy{
     char* uin;
     char* nick;
+    char* card;                 /* 群名片 */
     char* client_type;
     char* stat;
     char* cate_index;
