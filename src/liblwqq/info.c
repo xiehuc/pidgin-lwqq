@@ -805,8 +805,13 @@ static char* ibmpc_ascii_character_convert(char *str)
             case 0x04:spec="◆";break;
             case 0x05:spec="♣";break;
             case 0x06:spec="♠";break;
+            case 0x07:spec="⚫";break;
+            case 0x08:spec="⚫";break;
+            case 0x09:spec="⚪";break;
+            case 0x0A:spec="⚪";break;
             case 0x0B:spec="♂";break;
             case 0x0C:spec="♁";break;
+            case 0x0D:spec="♪";break;
             case 0x0E:spec="♬";break;
             case 0x0F:spec="☼";break;
             case 0x10:spec="▶";break;
