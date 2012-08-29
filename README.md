@@ -2,7 +2,7 @@
 a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
 see github:https://github.com/mathslinux/lwqq.
 
-*need libcurl >=7.22.0*
+*recommand libcurl >=7.22.0*
 
 # support
 ## pidgin support
@@ -24,6 +24,9 @@ see github:https://github.com/mathslinux/lwqq.
 * send / recv text messages
 * avatar
 
+## known issue
+* send picture abnormal when libcurl < = 7.22.0
+
 *telepathy-haze itself doesn't support group or picture.*
 
 **NOTE:**
@@ -35,7 +38,7 @@ so never want to enjoy a good speed
 一个基于lwqq库的pidgin插件.
 lwqq库是一个非常安全有效的webqq协议的库.
 见github:https://github.com/mathslinux/lwqq
-*libcurl 版本需要高于等于 7.22*
+*推荐libcurl 版本高于等于 7.22*
 
 # support
 ## pidgin
@@ -56,6 +59,9 @@ lwqq库是一个非常安全有效的webqq协议的库.
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息
 * 支持头像
+
+## 已知问题
+* 当libcurl版本低于7.22.0时可能造成图片发送失败
 
 *telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*
 
