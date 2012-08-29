@@ -548,7 +548,7 @@ static int parse_system_message(json_t *json,void* opaque)
     else system->type = SYSTEM_TYPE_UNKNOW;
     system->from_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
     system->account = s_strdup(json_parse_simple_value(json,"account"));
-    system->msg = s_strdup(json_parse_simple_value(json,"msg"));
+    system->msg = json_unescape(json_parse_simple_value(json,"msg"));
     system->allow = s_strdup(json_parse_simple_value(json,"allow"));
     system->stat = s_strdup(json_parse_simple_value(json,"stat"));
     system->client_type = s_strdup(json_parse_simple_value(json,"client_type"));
