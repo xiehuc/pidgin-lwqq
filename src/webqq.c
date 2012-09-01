@@ -743,6 +743,7 @@ static int login_complete(LwqqClient* lc,void* data)
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
     purple_buddy_icons_set_caching(0);
+    gc->flags |= PURPLE_CONNECTION_HTML;
 
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
