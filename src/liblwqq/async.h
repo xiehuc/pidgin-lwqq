@@ -28,6 +28,7 @@ typedef enum ListenerType {
     GROUP_AVATAR,///<after get_group_avatar
     POLL_LOST_CONNECTION,///
     POLL_MSG_COME,
+    SYS_MSG_COME,//come from inner
     VERIFY_COME,
     ListenerTypeLength
 } ListenerType;

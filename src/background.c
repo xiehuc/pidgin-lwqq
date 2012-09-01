@@ -110,16 +110,6 @@ void background_msg_drain(qq_account* ac)
 }
 
 
-static PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac)
-{
-    PurpleAccount* account = ac->account;
-    if(msg_type == LWQQ_MT_BUDDY_MSG)
-        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
-    else if(msg_type == LWQQ_MT_GROUP_MSG)
-        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
-    else 
-        return NULL;
-}
 static void send_back(LwqqAsyncEvent* event,void* data)
 {
     static char buf[1024];
@@ -135,7 +125,8 @@ static void send_back(LwqqAsyncEvent* event,void* data)
         if(errno==108) snprintf(buf,sizeof(buf),"您发送的速度过快:\n%s",what);
         else 
             snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
-        if(conv)purple_conversation_write(conv,NULL,buf,PURPLE_MESSAGE_ERROR,time(NULL));
+        if(conv)
+            lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
         if(errno==121){
             puts("msg send back lost connection");
             lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
@@ -149,6 +140,9 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     mmsg->group_code = NULL;
     s_free(what);
     lwqq_msg_free(msg);
+}
+void conversation_safe_write(int msg_type,const char* who,qq_account* ac,char* msg,int purple_type,time_t t)
+{
 }
 void* _background_send_msg(void* data)
 {
@@ -167,9 +161,9 @@ void* _background_send_msg(void* data)
         //group msg 'who' is gid.
         PurpleConversation* conv = find_conversation(msg->type,who,ac);
         if(ret==0&&conv)
-            purple_conversation_write(conv,NULL,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL));
+            lwqq_async_dispatch(lc,SYS_MSG_COME,system_msg_new(msg->type,who,ac,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL)));
         else if(ret!=0&&conv)
-            purple_conversation_write(conv,NULL,"图片上传失败",PURPLE_MESSAGE_ERROR,time(NULL));
+            lwqq_async_dispatch(lc,SYS_MSG_COME,system_msg_new(msg->type,who,ac,"图片上传失败",PURPLE_MESSAGE_ERROR,time(NULL)));
     }
     lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
     return NULL;

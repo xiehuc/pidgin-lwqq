@@ -617,6 +617,17 @@ int qq_msg_check(LwqqClient* lc,void* data)
     return 0;
 
 }
+
+int qq_sys_msg_write(LwqqClient* lc,void* data)
+{
+    system_msg* msg = data;
+    PurpleConversation* conv = find_conversation(msg->msg_type,msg->who,msg->ac);
+    if(conv)
+        purple_conversation_write(conv,NULL,msg->msg,msg->type,msg->t);
+    system_msg_free(msg);
+    return 0;
+}
+
 /*static void check_exist(void* data,void* userdata)
 {
     qq_account* ac = userdata;
@@ -740,6 +751,7 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
     lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
+    lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
 }

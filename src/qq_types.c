@@ -1,4 +1,6 @@
 #include "qq_types.h"
+#include "smemory.h"
+#include "msg.h"
 
 qq_account* qq_account_new(PurpleAccount* account)
 {
@@ -24,3 +26,35 @@ int open_new_chat(qq_account* ac,LwqqGroup* group)
     g_ptr_array_add(opend_chat,group);
     return index;
 }
+
+system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
+{
+    system_msg* ret = s_malloc0(sizeof(*ret));
+    ret->msg_type = m_t;
+    ret->who = s_strdup(who);
+    ret->ac = ac;
+    ret->msg = s_strdup(msg);
+    ret->type = type;
+    ret->t = t;
+    return ret;
+}
+void system_msg_free(system_msg* m)
+{
+    if(m){
+        s_free(m->who);
+        s_free(m->msg);
+    }
+    s_free(m);
+}
+
+PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac)
+{
+    PurpleAccount* account = ac->account;
+    if(msg_type == LWQQ_MT_BUDDY_MSG)
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
+    else if(msg_type == LWQQ_MT_GROUP_MSG)
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
+    else 
+        return NULL;
+}
+
