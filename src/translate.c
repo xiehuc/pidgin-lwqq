@@ -217,6 +217,11 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
 {
     LwqqMsgContent* c;
     char piece[24] = {0};
+    if(msg->f_style.b==1) strcat(buf,"<b>");
+    if(msg->f_style.i==1) strcat(buf,"<i>");
+    if(msg->f_style.u==1) strcat(buf,"<u>");
+    snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",msg->f_size,msg->f_name,msg->f_color);
+    
     TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
             case LWQQ_CONTENT_STRING:
@@ -245,6 +250,10 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
                 break;
         }
     }
+    strcat(buf,"</font>");
+    if(msg->f_style.u==1) strcat(buf,"</u>");
+    if(msg->f_style.i==1) strcat(buf,"</i>");
+    if(msg->f_style.b==1) strcat(buf,"</b>");
 }
 void translate_global_init()
 {
