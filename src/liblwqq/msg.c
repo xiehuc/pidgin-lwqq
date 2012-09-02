@@ -836,8 +836,8 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     }
 
     /* make json_tmp point to first child of "result" */
-    json_tmp = json_tmp->child->child;
-    for (cur = json_tmp; cur != NULL; cur = cur->next) {
+    json_tmp = json_tmp->child->child_end;
+    for (cur = json_tmp; cur != NULL; cur = cur->previous) {
         LwqqMsg *msg = NULL;
         LwqqMsgType msg_type;
         int ret;
