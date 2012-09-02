@@ -22,8 +22,8 @@ const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
     ":\\)|:-D|:-\\(|;-\\)|:P|=-O|:-\\*|8-\\)|:-\\[|"
     ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
     //:'( error
-const char* HTML_SYMBOL = "<br>|&amp;|&quot;|&gt;|&lt;";
-static LwqqMsgContent* build_string_content(const char* from,const char* to)
+const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
+static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
     c = s_malloc0(sizeof(*c));
@@ -64,9 +64,33 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to)
         }else if(strncmp(begin,"&gt;",strlen("&gt;"))==0){
             strcpy(write,">");
             write++;
+        }else if(begin[0]=='<'){
+            if(begin[1]!='/'){
+                if(begin[1]=='b')msg->f_style.b = 1;
+                else if(begin[1]=='i')msg->f_style.i = 1;
+                else if(begin[1]=='u')msg->f_style.u = 1;
+                else if(strncmp(begin+1,"font",4)==0){
+                    const char *key = begin+6;
+                    const char *value = strchr(begin,'=')+2;
+                    const char *end = strchr(value,'"');
+                    if(strncmp(key,"size",4)==0){
+                        int size = atoi(value);
+                        msg->f_size = size*9-16;
+                    }else if(strncmp(key,"color",5)==0){
+                        strncpy(msg->f_color,value+1,6);
+                        msg->f_color[6] = '\0';
+                    }else if(strncmp(key,"face",4)==0){
+                        s_free(msg->f_name);
+                        msg->f_name = s_malloc0(end-value+1);
+                        strncpy(msg->f_name,value,end-value);
+                        msg->f_name[end-value]='\0';
+                    }
+                }
+            }
         }
         read = end;
     }
+    *write = '\0';
     return c;
 }
 static LwqqMsgContent* build_face_content(const char* face,int len)
@@ -116,14 +140,14 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
         c = NULL;
         if(!trex_search(x,ptr,&begin,&end)){
             ///last part.
-            c = build_string_content(ptr,NULL);
+            c = build_string_content(ptr,NULL,mmsg);
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
             break;
         }
         if(begin>ptr){
             //note you can not pass c directly. 
             //because insert_tail is a macro.
-            c = build_string_content(ptr,begin);
+            c = build_string_content(ptr,begin,mmsg);
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
         trex_getsubexp(x,0,&m);

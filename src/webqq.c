@@ -552,7 +552,6 @@ int qq_msg_check(LwqqClient* lc,void* data)
 {
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg;
-    LwqqAsyncEvset* picset = NULL;
 
     pthread_mutex_lock(&l->mutex);
     if (SIMPLEQ_EMPTY(&l->head)) {
@@ -563,9 +562,8 @@ int qq_msg_check(LwqqClient* lc,void* data)
     while(!SIMPLEQ_EMPTY(&l->head)){
 
     msg = SIMPLEQ_FIRST(&l->head);
-    picset = NULL;
     if(msg->msg->type <= LWQQ_MT_SESS_MSG){
-        LwqqAsyncEvset* picset;
+        LwqqAsyncEvset* picset = NULL;
         picset = lwqq_msg_request_picture(lc,msg->msg->type,msg->msg->opaque);
         if(picset != NULL){
             void** data = s_malloc0(sizeof(void*)*2);
@@ -787,10 +785,10 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         mmsg = msg->opaque;
         mmsg->to = s_strdup(who);
     }
-    mmsg->f_name = "宋体";
+    mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
-    mmsg->f_color = "000000";
+    mmsg->f_color = s_strdup("000000");
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
 
@@ -809,10 +807,10 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = group->gid;
     mmsg->group_code = group->code;
-    mmsg->f_name = "宋体";
+    mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
-    mmsg->f_color = "000000";
+    mmsg->f_color = s_strdup("000000");
     PurpleConversation* conv = purple_find_chat(gc,id);
 
     background_send_msg(ac,msg,group->gid,message,conv);

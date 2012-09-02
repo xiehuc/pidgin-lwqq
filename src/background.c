@@ -134,8 +134,6 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     }
 
     LwqqMsgMessage* mmsg = msg->opaque;
-    mmsg->f_name = NULL;
-    mmsg->f_color = NULL;
     mmsg->to = NULL;
     mmsg->group_code = NULL;
     s_free(what);
