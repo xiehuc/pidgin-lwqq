@@ -1,6 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+dev (09/02/2012):
+	* new feature: support font style
+
 dev (08/26/2012):
 	* new feature: not official support for offline file.
 

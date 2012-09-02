@@ -43,6 +43,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
             ptr = strchr(read,'\0');
             ptr++;
             memmove(write,read,ptr-read);
+            write+=ptr-read;
             break;
         }
         if(begin>read){

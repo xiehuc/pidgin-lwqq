@@ -19,6 +19,7 @@ see github:https://github.com/mathslinux/lwqq.
 * change status
 * support multi webqq account
 * support offline file (not official).
+* support font style
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -55,6 +56,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持更改在线状态
 * 支持多账户登录
 * 支持离线文件(简易)
+* 支持文本样式
 
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息
