@@ -230,7 +230,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
     if(msg->f_style.u==1) strcat(buf,"<u>");
     size=msg->f_size;
     if(!ac->disable_custom_font_size)
-        size=sizeunmap(size)
+        size=sizeunmap(size);
     
     snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",size,msg->f_name,msg->f_color);
     
