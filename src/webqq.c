@@ -1223,7 +1223,6 @@ static void client_connect_signals(PurpleConnection* gc)
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,
-    .protocol_options=  NULL,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
     .login=             qq_login,       /* login */
@@ -1275,7 +1274,6 @@ init_plugin(PurplePlugin *plugin)
     PurpleAccountOption *option;
     option = purple_account_option_bool_new("禁用自定义接收消息字体大小", "disable_custom_font_size", FALSE);
     webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
-    purple_prefs_add_none("/plugins/prpl/webqq");
     
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
