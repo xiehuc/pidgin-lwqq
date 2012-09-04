@@ -291,7 +291,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     //clean buffer
     strcpy(buf,"");
 
-    translate_struct_to_message(msg,buf);
+    translate_struct_to_message(ac,msg,buf);
     serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
@@ -329,7 +329,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     static char buf[8192] ;
     strcpy(buf,"");
     
-    translate_struct_to_message(msg,buf);
+    translate_struct_to_message(ac,msg,buf);
     
     LwqqErrorCode err;
     void **data = s_malloc0(sizeof(void*)*5);
@@ -388,7 +388,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     static char buf[8192];
     strcpy(buf,"");
 
-    translate_struct_to_message(mmsg,buf);
+    translate_struct_to_message(ac,mmsg,buf);
 
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
     if(group == NULL){
@@ -1016,6 +1016,7 @@ static void qq_login(PurpleAccount *account)
         return;
     }
     ac->gc = pc;
+    ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->qq = lwqq_client_new(username,password);
     all_reset(ac);
     lwqq_async_set(ac->qq,1);

@@ -219,7 +219,7 @@ static void paste_content_string(const char* from,char* to)
     }
     *write='\0';
 }
-void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
+void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
 {
     LwqqMsgContent* c;
     char piece[24] = {0};
@@ -228,7 +228,7 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
     if(msg->f_style.i==1) strcat(buf,"<i>");
     if(msg->f_style.u==1) strcat(buf,"<u>");
     size=msg->f_size;
-    if(!purple_account_get_bool(account, "disable_custom_font_size", FALSE))
+    if(!ac->disable_custom_font_size)
         size=sizeunmap(size)
     
     snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",size,msg->f_name,msg->f_color);
