@@ -1017,6 +1017,7 @@ static void qq_login(PurpleAccount *account)
     }
     ac->gc = pc;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
+    ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->qq = lwqq_client_new(username,password);
     all_reset(ac);
     lwqq_async_set(ac->qq,1);
