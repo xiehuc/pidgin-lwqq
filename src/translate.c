@@ -10,6 +10,7 @@
 #include "translate.h"
 #include "trex.h"
 #include "async.h"
+#include "qq_types.h"
 
 #ifndef INST_PREFIX
 #define INST_PREFIX "/usr"
