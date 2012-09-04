@@ -5,6 +5,7 @@
 #include <smemory.h>
 #include <request.h>
 #include <signal.h>
+#include <accountopt.h>
 
 #include <type.h>
 #include <async.h>
@@ -290,7 +291,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     //clean buffer
     strcpy(buf,"");
 
-    translate_struct_to_message(msg,buf);
+    translate_struct_to_message(ac,msg,buf);
     serv_got_im(pc, msg->from, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
@@ -328,7 +329,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     static char buf[8192] ;
     strcpy(buf,"");
     
-    translate_struct_to_message(msg,buf);
+    translate_struct_to_message(ac,msg,buf);
     
     LwqqErrorCode err;
     void **data = s_malloc0(sizeof(void*)*5);
@@ -387,7 +388,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     static char buf[8192];
     strcpy(buf,"");
 
-    translate_struct_to_message(mmsg,buf);
+    translate_struct_to_message(ac,mmsg,buf);
 
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
     if(group == NULL){
@@ -1015,6 +1016,8 @@ static void qq_login(PurpleAccount *account)
         return;
     }
     ac->gc = pc;
+    ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
+    ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->qq = lwqq_client_new(username,password);
     all_reset(ac);
     lwqq_async_set(ac->qq,1);
@@ -1041,16 +1044,6 @@ static void qq_close(PurpleConnection *gc)
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
     lwqq_http_global_free();
-}
-static void
-init_plugin(PurplePlugin *plugin)
-{
-#ifdef ENABLE_NLS
-    setlocale(LC_ALL, "");
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
-    textdomain(GETTEXT_PACKAGE);
-#endif
 }
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
@@ -1275,5 +1268,22 @@ static PurplePluginInfo info = {
     .extra_info=    &webqq_prpl_info, /* extra_info */
     .actions=       plugin_actions,
 };
+
+static void
+init_plugin(PurplePlugin *plugin)
+{
+    PurpleAccountOption *option;
+    option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
+    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);
+    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    
+#ifdef ENABLE_NLS
+    setlocale(LC_ALL, "");
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
+    textdomain(GETTEXT_PACKAGE);
+#endif
+}
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)
