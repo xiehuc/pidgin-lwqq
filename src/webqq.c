@@ -1272,7 +1272,9 @@ static void
 init_plugin(PurplePlugin *plugin)
 {
     PurpleAccountOption *option;
-    option = purple_account_option_bool_new("禁用自定义接收消息字体大小", "disable_custom_font_size", FALSE);
+    option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
+    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);
     webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
     
 #ifdef ENABLE_NLS

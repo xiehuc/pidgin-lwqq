@@ -17,6 +17,7 @@ typedef struct qq_account {
     }state;
     GPtrArray* opend_chat;
     int magic;//0x4153
+    gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
 } qq_account;
 typedef struct system_msg {
