@@ -6,7 +6,6 @@
 #include <request.h>
 #include <signal.h>
 #include <accountopt.h>
-#include <prefs.h>
 
 #include <type.h>
 #include <async.h>

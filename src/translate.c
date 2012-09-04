@@ -4,6 +4,7 @@
 #include <type.h>
 #include <assert.h>
 #include <smiley.h>
+#include <accountopt.h>
 //#include <gtk/gtk.h>
 //#include <gtksmiley.h>
 #include "translate.h"
