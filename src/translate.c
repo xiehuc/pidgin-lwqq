@@ -268,6 +268,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
     if(msg->f_style.u==1) strcat(buf,"</u>");
     if(msg->f_style.i==1) strcat(buf,"</i>");
     if(msg->f_style.b==1) strcat(buf,"</b>");
+    puts(buf);
 }
 void translate_global_init()
 {
