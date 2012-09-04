@@ -23,6 +23,10 @@ const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
     ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
     //:'( error
 const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
+//font size map space : pidgin:[1,7] to webqq[8:20]
+#define sizemap(num) (6+2*num)
+//font size map space : webqq[8:22] to pidgin [1:8]
+#define sizeunmap(px) ((px-6)/2)
 static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
@@ -76,8 +80,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
                     const char *end = strchr(value,'"');
                     if(strncmp(key,"size",4)==0){
                         int size = atoi(value);
-	                    int sizemap[7] = {0, 9, 13, 16, 18, 24, 32};
-                        msg->f_size = sizemap[size];
+                        msg->f_size = sizemap(size);
                     }else if(strncmp(key,"color",5)==0){
                         strncpy(msg->f_color,value+1,6);
                         msg->f_color[6] = '\0';
@@ -222,7 +225,7 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
     if(msg->f_style.b==1) strcat(buf,"<b>");
     if(msg->f_style.i==1) strcat(buf,"<i>");
     if(msg->f_style.u==1) strcat(buf,"<u>");
-    snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",msg->f_size,msg->f_name,msg->f_color);
+    snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",sizeunmap(msg->f_size),msg->f_name,msg->f_color);
     
     TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){

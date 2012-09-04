@@ -443,8 +443,8 @@ static int parse_content(json_t *json, void *opaque)
     if (!msg->f_name || !msg->f_color || TAILQ_EMPTY(&msg->content)) {
         return -1;
     }
-    if (msg->f_size < 10) {
-        msg->f_size = 10;
+    if (msg->f_size < 8) {
+        msg->f_size = 8;
     }
 
     return 0;
