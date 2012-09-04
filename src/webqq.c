@@ -5,6 +5,8 @@
 #include <smemory.h>
 #include <request.h>
 #include <signal.h>
+#include <accountopt.h>
+#include <prefs.h>
 
 #include <type.h>
 #include <async.h>
@@ -1042,16 +1044,6 @@ static void qq_close(PurpleConnection *gc)
     translate_global_free();
     lwqq_http_global_free();
 }
-static void
-init_plugin(PurplePlugin *plugin)
-{
-#ifdef ENABLE_NLS
-    setlocale(LC_ALL, "");
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
-    textdomain(GETTEXT_PACKAGE);
-#endif
-}
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
 {
@@ -1231,6 +1223,7 @@ static void client_connect_signals(PurpleConnection* gc)
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,
+    .protocol_options=  NULL,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
     .login=             qq_login,       /* login */
@@ -1275,5 +1268,20 @@ static PurplePluginInfo info = {
     .extra_info=    &webqq_prpl_info, /* extra_info */
     .actions=       plugin_actions,
 };
+
+static void
+init_plugin(PurplePlugin *plugin)
+{
+    PurpleAccountOption *option;
+    option = purple_account_option_bool_new("禁用自定义接收消息字体大小", "disable_custom_font_size", FALSE);
+    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    
+#ifdef ENABLE_NLS
+    setlocale(LC_ALL, "");
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
+    textdomain(GETTEXT_PACKAGE);
+#endif
+}
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)

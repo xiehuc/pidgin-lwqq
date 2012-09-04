@@ -222,10 +222,15 @@ void translate_struct_to_message(LwqqMsgMessage* msg,char* buf)
 {
     LwqqMsgContent* c;
     char piece[24] = {0};
+    int size;
     if(msg->f_style.b==1) strcat(buf,"<b>");
     if(msg->f_style.i==1) strcat(buf,"<i>");
     if(msg->f_style.u==1) strcat(buf,"<u>");
-    snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",sizeunmap(msg->f_size),msg->f_name,msg->f_color);
+    size=msg->f_size;
+    if(!purple_account_get_bool(account, "disable_custom_font_size", FALSE))
+        size=sizeunmap(size)
+    
+    snprintf(buf+strlen(buf),300,"<font size=\"%d\" face=\"%s\" color=\"#%s\">",size,msg->f_name,msg->f_color);
     
     TAILQ_FOREACH(c, &msg->content, entries) {
         switch(c->type){
