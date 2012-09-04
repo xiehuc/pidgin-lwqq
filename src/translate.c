@@ -76,7 +76,8 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
                     const char *end = strchr(value,'"');
                     if(strncmp(key,"size",4)==0){
                         int size = atoi(value);
-                        msg->f_size = size*9-16;
+			int sizemap[7] = [0, 9, 13, 16, 18, 24, 32];
+                        msg->f_size = sizemap[size];
                     }else if(strncmp(key,"color",5)==0){
                         strncpy(msg->f_color,value+1,6);
                         msg->f_color[6] = '\0';
