@@ -254,6 +254,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
+    curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -771,5 +772,10 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
     }
     curl_easy_setopt(request->req,CURLOPT_HTTPPOST,request->form_start);
     //curl_easy_setopt(request->req,CURLOPT_VERBOSE,1);
+}
+
+void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
+{
+    curl_easy_setopt(req->req,CURLOPT_TIMEOUT,time_out);
 }
 

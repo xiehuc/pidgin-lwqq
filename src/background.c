@@ -18,6 +18,7 @@ do{pthread_t th;\
 static void* _background_login(void* data)
 {
     qq_account* ac=(qq_account*)data;
+    if(!qq_account_valid(ac)) return NULL;
     LwqqClient* lc = ac->qq;
     LwqqErrorCode err;
     //it would raise a invalid ac when wake up from sleep.

@@ -836,6 +836,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
         s_free(cookies);
     }
     
+    lwqq_http_set_timeout(req,5);
     ret = req->do_request(req, 0, NULL);
     if (ret) {
         lwqq_log(LOG_ERROR, "Send logout request failed\n");
