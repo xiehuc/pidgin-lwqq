@@ -20,6 +20,10 @@ static void* _background_login(void* data)
     qq_account* ac=(qq_account*)data;
     LwqqClient* lc = ac->qq;
     LwqqErrorCode err;
+    //it would raise a invalid ac when wake up from sleep.
+    //it would login twice,why? 
+    //so what i can do is disable the invalid one.
+    if(!lwqq_client_valid(lc)) return NULL;
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
 
     lwqq_login(lc,lwqq_status_from_str(status), &err);
