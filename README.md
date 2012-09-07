@@ -2,6 +2,8 @@
 a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
 see github:https://github.com/mathslinux/lwqq.
 
+License: GPLv3
+
 *recommand libcurl >=7.22.0*
 
 # support

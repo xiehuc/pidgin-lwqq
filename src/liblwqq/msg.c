@@ -643,6 +643,7 @@ static int parse_file_transfer(json_t* json,void* opaque)
         LIST_INSERT_HEAD(&trans->file_infos,item,entries);
         ptr = ptr->next;
     }
+    return 0;
 }
 const char* get_host_of_url(const char* url,char* buffer)
 {
@@ -687,7 +688,6 @@ static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,L
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
     char* cookies;
-    int ret;
     char url[512];
     char *file_path = url_encode(c->data.img.file_path);
     //there are face 1 to face 10 server to accelerate speed.
@@ -719,7 +719,6 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
     char* cookies;
-    int ret;
     char url[512];
 /*http://web2.qq.com/cgi-bin/get_group_pic?type=0&gid=3971957129&uin=4174682545&rip=120.196.211.216&rport=9072&fid=2857831080&pic=71A8E53B7F678D035656FECDA1BD7F31.jpg&vfwebqq=762a8682d17931d0cc647515e570435bd82e3a4e957bd052faa9615192eb7a3c4f1719006a7176c1&t=1343130567*/
     snprintf(url, sizeof(url),
@@ -751,7 +750,6 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
     char* cookies;
-    int ret;
     char url[1024];
 /*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
     snprintf(url, sizeof(url),

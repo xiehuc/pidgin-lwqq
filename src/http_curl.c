@@ -761,8 +761,7 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
                 CURLFORM_BUFFERLENGTH,size,
                 CURLFORM_END);
     }else{
-        CURLFORMcode rc;
-        rc = curl_formadd(post,last,
+        curl_formadd(post,last,
                 CURLFORM_COPYNAME,name,
                 CURLFORM_BUFFER,filename,
                 CURLFORM_BUFFERPTR,data,
@@ -771,7 +770,6 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
                 CURLFORM_END);
     }
     curl_easy_setopt(request->req,CURLOPT_HTTPPOST,request->form_start);
-    //curl_easy_setopt(request->req,CURLOPT_VERBOSE,1);
 }
 
 void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)

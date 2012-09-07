@@ -1184,8 +1184,8 @@ static void qq_visit_qzone(PurpleBlistNode* node)
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
-    qq_account* ac = purple_connection_get_protocol_data(pc);
-    LwqqVerifyCode* code = lwqq_info_add_friend_get_image(ac->qq);
+    //qq_account* ac = purple_connection_get_protocol_data(pc);
+    //LwqqVerifyCode* code = lwqq_info_add_friend_get_image(ac->qq);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
