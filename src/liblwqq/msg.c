@@ -1306,7 +1306,8 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     LwqqHttpRequest *req = NULL;  
     char *cookies;
     char *content = NULL;
-    char data[1024] = {0};
+    static char data[8192];
+    data[0] = '\0';
     LwqqMsgMessage *mmsg;
     const char *apistr;
     int has_cface = 0;
