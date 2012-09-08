@@ -464,31 +464,37 @@ static void verify_required_cancel(void* data,PurpleRequestFields* root)
 }
 static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 {
-    if(system->type != VERIFY_REQUIRED) return;
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-
-    PurpleRequestFields* root = purple_request_fields_new();
-    PurpleRequestFieldGroup *container = purple_request_field_group_new("好友确认");
-    purple_request_fields_add_group(root,container);
     char buf1[128];
     char buf2[128];
-    snprintf(buf1,sizeof(buf1),"%s请求加您为好友",system->account);
-    snprintf(buf2,sizeof(buf2),"附加信息:%s",system->msg);
+    if(system->type == VERIFY_REQUIRED){
 
-    PurpleRequestField* choice = purple_request_field_choice_new("answer","请选择",0);
-    purple_request_field_choice_add(choice,"同意并加为好友");
-    purple_request_field_choice_add(choice,"同意");
-    purple_request_field_choice_add(choice,"拒绝");
-    purple_request_field_group_add_field(container,choice);
+        PurpleRequestFields* root = purple_request_fields_new();
+        PurpleRequestFieldGroup *container = purple_request_field_group_new("好友确认");
+        purple_request_fields_add_group(root,container);
+        snprintf(buf1,sizeof(buf1),"%s请求加您为好友",system->account);
+        snprintf(buf2,sizeof(buf2),"附加信息:%s",system->verify_required.msg);
 
-    void** data = s_malloc(sizeof(void*)*2);
-    data[0] = ac;
-    data[1] = s_strdup(system->account);
-    purple_request_fields(ac->gc,NULL,buf1,buf2,root,
-            "确认",(GCallback)verify_required_confirm,
-            "取消",(GCallback)verify_required_cancel,
-            ac->account,NULL,NULL,data);
+        PurpleRequestField* choice = purple_request_field_choice_new("answer","请选择",0);
+        purple_request_field_choice_add(choice,"同意并加为好友");
+        purple_request_field_choice_add(choice,"同意");
+        purple_request_field_choice_add(choice,"拒绝");
+        purple_request_field_group_add_field(container,choice);
 
+        void** data = s_malloc(sizeof(void*)*2);
+        data[0] = ac;
+        data[1] = s_strdup(system->account);
+        purple_request_fields(ac->gc,NULL,buf1,buf2,root,
+                "确认",(GCallback)verify_required_confirm,
+                "取消",(GCallback)verify_required_cancel,
+                ac->account,NULL,NULL,data);
+    }else if(system->type == VERIFY_PASS_ADD){
+        snprintf(buf1,sizeof(buf1),"%s通过了您的请求,并添加您为好友",system->account);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
+    }else if(system->type == VERIFY_PASS){
+        snprintf(buf1,sizeof(buf1),"%s通过了您的请求",system->account);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
+    }
 }
 static int friend_avatar(LwqqClient* lc,void* data)
 {

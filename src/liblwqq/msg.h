@@ -89,14 +89,27 @@ typedef struct LwqqMsgSystem{
     char* seq;
     enum {
         VERIFY_REQUIRED,
+        VERIFY_PASS_ADD,
+        VERIFY_PASS,
+        ADDED_BUDDY_SIG,
         SYSTEM_TYPE_UNKNOW
     }type;
     char* from_uin;
     char* account;
-    char* msg;
-    char* allow;
     char* stat;
     char* client_type;
+    union{
+        struct{
+            char* sig;
+        }added_buddy_sig;
+        struct{
+            char* msg;
+            char* allow;
+        }verify_required;
+        struct{
+            char* group_id;
+        }verify_pass;
+    };
 } LwqqMsgSystem;
 typedef struct LwqqMsgSysGMsg{
     enum {

@@ -179,6 +179,29 @@ static void lwqq_msg_status_free(void *opaque)
     s_free(s);
 }
 
+static void lwqq_msg_system_free(void* opaque)
+{
+    LwqqMsgSystem* system;
+    system = opaque;
+    if(system){
+        s_free(system->seq);
+        s_free(system->from_uin);
+        s_free(system->account);
+        s_free(system->stat);
+        s_free(system->client_type);
+
+        if(system->type==VERIFY_REQUIRED){
+            s_free(system->verify_required.msg);
+            s_free(system->verify_required.allow);
+        }else if(system->type==ADDED_BUDDY_SIG){
+            s_free(system->added_buddy_sig.sig);
+        }else if(system->type==VERIFY_PASS||system->type==VERIFY_PASS_ADD){
+            s_free(system->verify_pass.group_id);
+        }
+    }
+    s_free(system);
+}
+
 /**
  * Free a LwqqMsg object
  * 
@@ -202,18 +225,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         s_free(kick);
     }
     else if(msg->type==LWQQ_MT_SYSTEM){
-        LwqqMsgSystem* system;
-        system = msg->opaque;
-        if(system){
-            s_free(system->seq);
-            s_free(system->from_uin);
-            s_free(system->account);
-            s_free(system->msg);
-            s_free(system->allow);
-            s_free(system->stat);
-            s_free(system->client_type);
-        }
-        s_free(system);
+        lwqq_msg_system_free(msg->opaque);
     }
     else if(msg->type==LWQQ_MT_BLIST_CHANGE){
         LwqqMsgBlistChange* blist;
@@ -539,19 +551,39 @@ static int parse_kick_message(json_t *json,void *opaque)
     }
     return 0;
 }
-static int parse_system_message(json_t *json,void* opaque)
+static int parse_system_message(json_t *json,void* opaque,void* _lc)
 {
     LwqqMsgSystem* system = opaque;
+    LwqqClient* lc = _lc;
     system->seq = s_strdup(json_parse_simple_value(json,"seq"));
     const char* type = json_parse_simple_value(json,"type");
     if(strcmp(type,"verify_required")==0) system->type = VERIFY_REQUIRED;
+    else if(strcmp(type,"added_buddy_sig")==0) system->type = ADDED_BUDDY_SIG;
+    else if(strcmp(type,"verify_pass_add")==0) system->type = VERIFY_PASS_ADD;
+    else if(strcmp(type,"verify_pass")==0) system->type = VERIFY_PASS;
     else system->type = SYSTEM_TYPE_UNKNOW;
+
+    if(system->type == SYSTEM_TYPE_UNKNOW) return 1;
+
     system->from_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
     system->account = s_strdup(json_parse_simple_value(json,"account"));
-    system->msg = json_unescape(json_parse_simple_value(json,"msg"));
-    system->allow = s_strdup(json_parse_simple_value(json,"allow"));
     system->stat = s_strdup(json_parse_simple_value(json,"stat"));
     system->client_type = s_strdup(json_parse_simple_value(json,"client_type"));
+    if(system->type == VERIFY_REQUIRED){
+        system->verify_required.msg = json_unescape(json_parse_simple_value(json,"msg"));
+        system->verify_required.allow = s_strdup(json_parse_simple_value(json,"allow"));
+    }else if(system->type==ADDED_BUDDY_SIG){
+        system->added_buddy_sig.sig = json_unescape(json_parse_simple_value(json,"sig"));
+    }else if(system->type==VERIFY_PASS||system->type==VERIFY_PASS_ADD){
+        system->verify_pass.group_id = s_strdup(json_parse_simple_value(json,"group_id"));
+        LwqqBuddy* buddy = lwqq_buddy_new();
+        buddy->uin = s_strdup(system->from_uin);
+        buddy->cate_index = s_strdup(system->verify_pass.group_id);
+        lwqq_info_get_friend_detail_info(lc,buddy,NULL);
+        LIST_INSERT_HEAD(&lc->friends,buddy,entries);
+        //this will raise FRIEND_COME and add target to gui level.
+        lwqq_info_get_friend_qqnumber(lc,buddy);
+    }
     return 0;
 }
 static int parse_blist_change(json_t* json,void* opaque,void* _lc)
@@ -859,7 +891,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             ret = parse_kick_message(cur,msg->opaque);
             break;
         case LWQQ_MT_SYSTEM:
-            ret = parse_system_message(cur,msg->opaque);
+            ret = parse_system_message(cur,msg->opaque,list->lc);
             break;
         case LWQQ_MT_BLIST_CHANGE:
             ret = parse_blist_change(cur,msg->opaque,list->lc);
