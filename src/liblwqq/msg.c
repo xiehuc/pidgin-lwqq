@@ -176,6 +176,7 @@ static void lwqq_msg_status_free(void *opaque)
     }
 
     s_free(s->who);
+    s_free(s->status);
     s_free(s);
 }
 

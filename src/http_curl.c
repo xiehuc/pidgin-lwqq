@@ -254,7 +254,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
-    curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
+    //curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -333,7 +333,7 @@ static char *unzlib(const char *source, int len, int *total, int isgzip)
         }
         have = CHUNK - strm.avail_out;
         totalsize += have;
-        dest = s_realloc(dest, totalsize);
+        dest = s_realloc(dest, totalsize+1);
         memcpy(dest + totalsize - have, out, have);
     } while (strm.avail_out == 0);
 
@@ -419,6 +419,7 @@ static void async_complete(D_ITEM* conn)
         int total = 0;
         
         outdata = ungzip(*resp, have_read_bytes, &total);
+        outdata[total] = '\0';
         if (!outdata) {
             goto failed;
         }

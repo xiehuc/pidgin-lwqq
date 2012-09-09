@@ -142,6 +142,7 @@ static void send_back(LwqqAsyncEvent* event,void* data)
     mmsg->to = NULL;
     mmsg->group_code = NULL;
     s_free(what);
+    s_free(who);
     lwqq_msg_free(msg);
 }
 void conversation_safe_write(int msg_type,const char* who,qq_account* ac,char* msg,int purple_type,time_t t)

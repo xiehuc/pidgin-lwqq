@@ -1202,7 +1202,7 @@ json_escape (char *text)
 char *
 json_unescape (char *text)
 {
-	char *result = malloc (strlen (text) + 1);
+	char *result = malloc (strlen (text) + 4);
 	size_t r;		/* read cursor */
 	size_t w;		/* write cursor */
 
@@ -1350,6 +1350,8 @@ json_unescape (char *text)
 		}
 	}
 	result[w] = '\0';
+    result[w+1]='\0';
+    result[w+2]='\0';
 
 	return result;
 }

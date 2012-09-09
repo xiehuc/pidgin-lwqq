@@ -230,22 +230,22 @@ static int friend_come(LwqqClient* lc,void* data)
 
     bu = purple_find_buddy(account,buddy->uin);
     if(bu == NULL){
-        bu = purple_buddy_new(ac->account,buddy->uin,buddy->nick);
+        bu = purple_buddy_new(ac->account,buddy->uin,(buddy->markname)?buddy->markname:buddy->nick);
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
     //flush new alias
-    const char* alias = purple_buddy_get_alias_only(bu);
+    /*const char* alias = purple_buddy_get_alias_only(bu);
     if(buddy->markname){
         if(alias==NULL||strcmp(alias,buddy->markname)!=0)
             purple_blist_alias_buddy(bu,buddy->markname);
     }else if(alias==NULL||strcmp(alias,buddy->nick)!=0){
         purple_blist_alias_buddy(bu,buddy->nick);
-    }
+    }*/
     if(purple_buddy_get_group(bu)!=group){
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
     if(buddy->status)
-        purple_prpl_got_user_status(account, buddy->uin, buddy->status, "nick",buddy->nick,"mark",buddy->markname,NULL);
+        purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,buddy->uin))==0){
         lwqq_info_get_friend_avatar(lc,buddy);

@@ -37,8 +37,10 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
     if(to){
         c->data.str = s_malloc0(to-from+1);
         strncpy(c->data.str,from,to-from);
+        c->data.str[to-from]='\0';
     }else{
-        c->data.str = s_strdup(from);
+        c->data.str = s_malloc(strlen(from)+3);
+        strcpy(c->data.str,from);
     }
     const char *begin,*end;
     const char *read = c->data.str;
