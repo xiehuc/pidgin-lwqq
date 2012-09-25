@@ -122,6 +122,7 @@ LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin);
 LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status);
 LwqqVerifyCode* lwqq_info_add_friend_get_image();
+LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK mask);
 
 
 #endif  /* LWQQ_INFO_H */

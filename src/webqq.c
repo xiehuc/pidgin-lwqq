@@ -50,6 +50,15 @@ static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
     return NULL;
 }
 #endif
+static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
+{
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    GHashTable* table = purple_chat_get_components(chat);
+    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
+    return lwqq_group_find_group_by_gid(lc,gid);
+}
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 {
     LwqqGroup* group;
@@ -1209,6 +1218,29 @@ static void qq_visit_qun_air(PurpleBlistNode* node)
     system(url);
 }
 #endif
+
+static void qq_block_chat(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    GHashTable* table = purple_chat_get_components(chat);
+    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL);
+}
+static void qq_unblock_chat(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    GHashTable* table = purple_chat_get_components(chat);
+    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE);
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -1217,8 +1249,13 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
     }else if(PURPLE_BLIST_NODE_IS_CHAT(node)){
-        //action = purple_menu_action_new("访问群社区",(PurpleCallback)qq_visit_qun_air,node,NULL);
-        //act = g_list_append(act,action);
+        PurpleChat* chat = PURPLE_CHAT(node);
+        LwqqGroup* group = qq_get_group_from_chat(chat);
+        if(group->mask == LWQQ_MASK_NONE)
+            action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
+        else
+            action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
+        act = g_list_append(act,action);
     }
     return act;
 }

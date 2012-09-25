@@ -102,6 +102,11 @@ typedef struct LwqqSimpleBuddy{
     LIST_ENTRY(LwqqSimpleBuddy) entries;
 }LwqqSimpleBuddy;
 
+typedef enum LWQQ_MASK{ 
+    LWQQ_MASK_NONE = 0,
+    LWQQ_MASK_1 = 1,
+    LWQQ_MASK_ALL=2 
+}LWQQ_MASK;
 /* QQ group */
 typedef struct LwqqGroup {
     char *name;                  /**< QQ Group name */
@@ -120,6 +125,7 @@ typedef struct LwqqGroup {
     char *owner;                 /** < owner's QQ number  */
     char *flag;
     char *option;
+    LWQQ_MASK mask;             /** < group mask */
 
     char *group_sig;            /** < use in sess msg */
 

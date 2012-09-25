@@ -555,6 +555,33 @@ static void parse_groups_gnamelist_child(LwqqClient *lc, json_t *json)
     }
 }
 
+static void parse_groups_gmasklist_child(LwqqClient *lc, json_t *json)
+{
+    while (json) {
+        if (json->text && !strcmp(json->text, "gmasklist")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+    json = json->child->child;
+
+    const char* gid;
+    int mask;
+    LwqqGroup* group;
+    while(json){
+        gid = json_parse_simple_value(json,"gid");
+        mask = atoi(json_parse_simple_value(json,"mask"));
+
+        group = lwqq_group_find_group_by_gid(lc,gid);
+        if(group){
+            group->mask = mask;
+        }
+        json = json->next;
+    }
+}
 /**
  * Parse group info like this
  *
@@ -680,6 +707,7 @@ static int get_group_name_list_back(LwqqHttpRequest* req,void* data)
 
         /* Parse friend category information */
         parse_groups_gnamelist_child(lc, json_tmp);
+        parse_groups_gmasklist_child(lc, json_tmp);
         parse_groups_gmarklist_child(lc, json_tmp);
 
     }
@@ -1481,7 +1509,13 @@ json_error:
     lwqq_http_request_free(req);
     return 0;
 }
-enum CHANGE{CHANGE_BUDDY_MARKNAME,CHANGE_GROUP_MARKNAME,MODIFY_BUDDY_CATEGORY,CHANGE_STATUS};
+enum CHANGE{
+    CHANGE_BUDDY_MARKNAME,
+    CHANGE_GROUP_MARKNAME,
+    MODIFY_BUDDY_CATEGORY,
+    CHANGE_STATUS,
+    CHANGE_MASK
+};
 LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias)
 {
     if(!lc||!buddy||!alias) return NULL;
@@ -1552,6 +1586,10 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
             const char* status = d[2];
             lc->stat = lwqq_status_from_str(status);
             lc->status = lwqq_status_to_str(lc->stat);
+        }else if(type == CHANGE_MASK){
+            LwqqGroup* group = d[1];
+            LWQQ_MASK mask = (LWQQ_MASK)d[2];
+            group->mask = mask;
         }
     }
 done:
@@ -1819,3 +1857,29 @@ LwqqAsyncEvent* lwqq_info_add_friend_need_verify(LwqqClient* lc,LwqqGroup* group
 {
     return NULL;
 }
+LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK mask)
+{
+    if(!lc||!group) return NULL;
+    char url[512];
+    char post[512];
+    snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
+    puts(url);
+    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"groupmask\":{"
+            "\"%s\":\"%d\",\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
+            group->gid,mask,lc->index,lc->port,lc->vfwebqq);
+    puts(post);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");
+    void **data = s_malloc(sizeof(void*)*3);
+    data[0] = (void*)CHANGE_MASK;
+    data[1] = group;
+    data[2] = (void*)mask;
+    return req->do_request_async(req,1,post,info_commom_back,data);
+}
+
