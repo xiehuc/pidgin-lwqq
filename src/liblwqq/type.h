@@ -85,13 +85,18 @@ typedef struct LwqqBuddy {
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
-
+enum LWQQ_FLAG_ENUM{
+    LWQQ_MEMBER_IS_ADMIN = 0x1,
+};
+typedef int LWQQ_FLAG;
 typedef struct LwqqSimpleBuddy{
     char* uin;
     char* nick;
     char* card;                 /* 群名片 */
     char* client_type;
-    char* stat;
+    //char* stat;
+    LWQQ_STATUS stat;
+    LWQQ_FLAG mflag;
     char* cate_index;
     char* group_sig;            /* only use at sess message */
     LIST_ENTRY(LwqqSimpleBuddy) entries;
@@ -124,6 +129,7 @@ typedef struct LwqqGroup {
     LIST_ENTRY(LwqqGroup) entries;
     LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
 } LwqqGroup;
+#define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 
 typedef struct LwqqVerifyCode {
     char *str;
@@ -241,7 +247,7 @@ void lwqq_client_free(LwqqClient *client);
  * @return A LwqqBuddy instance
  */
 LwqqBuddy *lwqq_buddy_new();
-#define lwqq_simple_buddy_new() ((LwqqSimpleBuddy*)s_malloc0(sizeof(LwqqSimpleBuddy)))
+LwqqSimpleBuddy* lwqq_simple_buddy_new();
 
 //add the ref count of buddy.
 //that means only ref count down to zero.

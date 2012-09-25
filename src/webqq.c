@@ -929,7 +929,12 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
             extra_msgs = g_list_append(extra_msgs,NULL);
-            flag |= PURPLE_CBFLAGS_TYPING;
+            flag = 0;
+
+            if(lwqq_member_is_founder(member,group)) flag |= PURPLE_CBFLAGS_FOUNDER;
+            if(member->stat != LWQQ_STATUS_OFFLINE) flag |= PURPLE_CBFLAGS_VOICE;
+            if(member->mflag & LWQQ_MEMBER_IS_ADMIN) flag |= PURPLE_CBFLAGS_OP;
+
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
             if(lwqq_buddy_find_buddy_by_uin(lc,member->uin)){
                 users = g_list_append(users,member->uin);

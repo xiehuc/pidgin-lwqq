@@ -895,6 +895,32 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         }
     }
 }
+static void parse_groups_ginfo_members_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    while (json) {
+        if (json->text && !strcmp(json->text, "ginfo")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+    json_t* members = json_find_first_label_all(json,"members");
+    members = members->child->child;
+    const char* uin;
+    int mflag;
+    LwqqSimpleBuddy* sb;
+    while(members){
+        uin = json_parse_simple_value(members,"muin");
+        mflag = atoi(json_parse_simple_value(members,"mflag"));
+        sb = lwqq_group_find_group_member_by_uin(group,uin);
+        if(sb) sb->mflag = mflag;
+
+        members = members->next;
+    }
+
+}
 static void parse_groups_cards_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
 {
     LwqqSimpleBuddy *member;
@@ -964,7 +990,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         if (!member)
             continue;
         member->client_type = s_strdup(json_parse_simple_value(cur, "client_type"));
-        member->stat = s_strdup(json_parse_simple_value(cur, "stat"));
+        member->stat = atoi(json_parse_simple_value(cur, "stat"));
 
     }
 }
@@ -1077,6 +1103,7 @@ static int group_detail_back(LwqqHttpRequest* req,void* data)
         parse_groups_ginfo_child(lc, group, json_tmp);
         /* second , get group members */
         parse_groups_minfo_child(lc, group, json_tmp);
+        parse_groups_ginfo_members_child(lc,group,json_tmp);
         parse_groups_cards_child(lc, group, json_tmp);
         /* third , mark group's online members */
         parse_groups_stats_child(lc, group, json_tmp);

@@ -230,6 +230,12 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     
     s_free(buddy);
 }
+LwqqSimpleBuddy* lwqq_simple_buddy_new()
+{
+    LwqqSimpleBuddy*ret = ((LwqqSimpleBuddy*)s_malloc0(sizeof(LwqqSimpleBuddy)));
+    ret->stat = LWQQ_STATUS_OFFLINE;
+    return ret;
+}
 void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
 {
     if(!buddy) return;
@@ -238,7 +244,7 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
     s_free(buddy->cate_index);
     s_free(buddy->nick);
     s_free(buddy->card);
-    s_free(buddy->stat);
+    //s_free(buddy->stat);
     s_free(buddy->client_type);
     s_free(buddy->group_sig);
     s_free(buddy);
