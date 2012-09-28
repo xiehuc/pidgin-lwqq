@@ -12,6 +12,7 @@
 #define LWQQ_HTTP_H
 
 #include "type.h"
+#include <stdio.h>
 
 struct LwqqHttpRequest;
 typedef int (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
@@ -46,6 +47,7 @@ typedef struct LwqqHttpRequest {
     long http_code;
 
     /* Server response, used when do async request */
+    char *location;
     char *response;
 
     /* Response length, NB: the response may not terminate with '\0' */
@@ -121,7 +123,11 @@ void lwqq_http_set_async(LwqqHttpRequest* request);
 void lwqq_http_global_init();
 void lwqq_http_global_free();
 void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out);
-void lwqq_http_save_file(LwqqHttpRequest* req,const char* filepath);
+void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file);
+void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data);
+void lwqq_http_not_follow(LwqqHttpRequest* req);
+void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url);
+char* lwqq_http_escape(LwqqHttpRequest* req,const char* url);
 
 
 #endif  /* LWQQ_HTTP_H */

@@ -308,12 +308,23 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    static char buf[2048];
+    char buf[512];
     snprintf(buf,sizeof(buf),"您收到一个离线文件:%s\n"
             "到期时间:%s"
             "<a href=\"%s\">点此下载</a>",
             msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
     serv_got_im(pc,msg->from,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+}
+static void complete_file_trans(LwqqClient* lc,LwqqMsgFileTrans* trans)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* pc = ac->gc;
+    char buf[512];
+    FileTransItem* item;
+    LIST_FOREACH(item,&trans->file_infos,entries){
+        snprintf(buf,sizeof(buf),"文件%s传输%s",item->file_name,(item->file_status==0)?"成功":"失败");
+        serv_got_im(pc,trans->to,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    }
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -619,6 +630,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 break;
             case LWQQ_MT_FILE_MSG:
                 file_message(lc,(LwqqMsgFileMessage*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_FILETRANS:
+                //complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
                 break;
             default:
                 printf("unknow message\n");

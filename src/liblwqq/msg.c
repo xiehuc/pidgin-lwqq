@@ -289,11 +289,12 @@ void lwqq_msg_free(LwqqMsg *msg)
     }else if(msg->type==LWQQ_MT_FILE_MSG){
         LwqqMsgFileMessage* file = msg->opaque;
         if(file){
-            s_free(file->mode);
             s_free(file->from);
             s_free(file->to);
             s_free(file->reply_ip);
-            s_free(file->name);
+            if(file->mode == MODE_RECV){
+                s_free(file->recv.name);
+            };
         }
         s_free(file);
     }else{
@@ -697,17 +698,26 @@ static int parse_file_message(json_t* json,void* opaque)
 {
     LwqqMsgFileMessage* file = opaque;
     file->msg_id = atoi(json_parse_simple_value(json,"msg_id"));
-    file->mode = s_strdup(json_parse_simple_value(json,"mode"));
+    const char* mode = json_parse_simple_value(json,"mode");
+    if(strcmp(mode,"recv")==0) file->mode = MODE_RECV;
+    else if(strcmp(mode,"refuse")==0) file->mode = MODE_REFUSE;
     file->from = s_strdup(json_parse_simple_value(json,"from_uin"));
     file->to = s_strdup(json_parse_simple_value(json,"to_uin"));
     file->msg_id2 = atoi(json_parse_simple_value(json,"msg_id2"));
-    file->msg_type = atoi(json_parse_simple_value(json,"msg_type"));
     file->reply_ip = s_strdup(json_parse_simple_value(json,"reply_ip"));
     file->type = atoi(json_parse_simple_value(json,"type"));
-    file->name = s_strdup(json_parse_simple_value(json,"name"));
     file->time = atol(json_parse_simple_value(json,"time"));
     file->session_id = atoi(json_parse_simple_value(json,"session_id"));
-    file->inet_ip = atoi(json_parse_simple_value(json,"inet_ip"));
+    switch(file->mode){
+        case MODE_RECV:
+            file->recv.msg_type = atoi(json_parse_simple_value(json,"msg_type"));
+            file->recv.name = json_unescape(json_parse_simple_value(json,"name"));
+            file->recv.inet_ip = atoi(json_parse_simple_value(json,"inet_ip"));
+            break;
+        case MODE_REFUSE:
+            file->refuse.cancel_type = atoi(json_parse_simple_value(json,"cancel_type"));
+            break;
+    }
     return 0;
 }
 const char* get_host_of_url(const char* url,char* buffer)
@@ -1464,12 +1474,24 @@ const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg)
     s_free(file_name);
     return url;
 }
-void lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto)
+static int lwqq_file_download_finish(LwqqHttpRequest* req,void* data)
+{
+    FILE* f = data;
+    fclose(f);
+    lwqq_http_request_free(req);
+    return 0;
+}
+LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
+        LWQQ_PROGRESS progress_func,void* prog_data)
 {
     char url[512];
+    //char* gbk = to_gbk(msg->recv.name);
+    char* name = url_encode(msg->recv.name);
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_file2?"
             "lcid=%d&guid=%s&to=%s&psessionid=%s&count=1&time=%ld&clientid=%s",
-            msg->session_id,msg->name,msg->from,lc->psessionid,time(NULL),lc->clientid);
+            msg->session_id,name,msg->from,lc->psessionid,time(NULL),lc->clientid);
+    s_free(name);
+    //s_free(gbk);
     puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     char *cookies;
@@ -1479,6 +1501,33 @@ void lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* sav
         s_free(cookies);
     }
     req->set_header(req,"Referer","http://web2.qq.com/");
-    lwqq_http_save_file(req,"/home/xiehuc/a.txt");
+    //followlocation by hand
+    //because curl doesn't escape url after auto follow;
+    lwqq_http_not_follow(req);
     req->do_request(req,0,NULL);
+    if(req->http_code != 302){
+        lwqq_http_request_free(req);
+        return NULL;
+    }
+    char * follow_url = req->location;
+    int len = strlen(follow_url);
+    //remove the last \r\n
+    follow_url[len-1] = 0;
+    follow_url[len-2] = 0;
+    req->location = NULL;
+    name = url_whole_encode(follow_url);
+    s_free(follow_url);
+    lwqq_http_reset_url(req,name);
+    s_free(name);
+
+    FILE* file = fopen(saveto,"w");
+    if(file==NULL){
+        perror("Error:");
+        return NULL;
+    }
+    lwqq_http_save_file(req,file);
+    if(progress_func){
+        lwqq_http_on_progress(req,progress_func,prog_data);
+    }
+    return req->do_request_async(req,0,NULL,lwqq_file_download_finish,file);
 }

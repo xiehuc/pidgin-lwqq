@@ -322,4 +322,5 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LWQQ_STATUS status);
 LWQQ_STATUS lwqq_status_from_str(const char* str);
+typedef void (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 #endif  /* LWQQ_TYPE_H */

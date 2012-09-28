@@ -90,8 +90,8 @@ static void lwqq_http_set_default_header(LwqqHttpRequest *request)
     lwqq_http_set_header(request, "Accept", "*/*,text/html, application/xml;q=0.9, "
                          "application/xhtml+xml, image/png, image/jpeg, "
                          "image/gif, image/x-xbitmap,;q=0.1");
-    lwqq_http_set_header(request, "Accept-Language", "en-US,zh-CN,zh;q=0.9,en;q=0.8");
-    lwqq_http_set_header(request, "Accept-Charset", "GBK, utf-8, utf-16, *;q=0.1");
+    lwqq_http_set_header(request, "Accept-Language", "zh-cn,zh;q=0.9,en;q=0.8");
+    //lwqq_http_set_header(request, "Accept-Charset", "GBK, utf-8, utf-16, *;q=0.1");
     lwqq_http_set_header(request, "Accept-Encoding", "deflate, gzip, x-gzip, "
                          "identity, *;q=0");
     //lwqq_http_set_header(request, "Connection", "Keep-Alive");
@@ -162,6 +162,7 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
     
     if (request) {
         s_free(request->response);
+        s_free(request->location);
         curl_slist_free_all(request->header);
         curl_slist_free_all(request->recv_head);
         slist_free_all(request->cookie);
@@ -181,8 +182,13 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
     long http_code;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
     //this is a redirection. ignore it.
-    if(http_code == 301||http_code == 302)
+    if(http_code == 301||http_code == 302){
+        if(strncmp(str,"Location",strlen("Location"))==0){
+            const char* location = str+strlen("Location: ");
+            request->location = s_strdup(location);
+        }
         return size*nmemb;
+    }
     request->recv_head = curl_slist_append(request->recv_head,(char*)ptr);
     //read cookie from header;
     if(strncmp(str,"Set-Cookie",strlen("Set-Cookie"))==0){
@@ -198,8 +204,9 @@ static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
     long http_code;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
     //this is a redirection. ignore it.
-    if(http_code == 301||http_code == 302)
+    if(http_code == 301||http_code == 302){
         return size*nmemb;
+    }
     int resp_len = request->resp_len;
     if(request->response==NULL){
         const char* content_length = request->get_header(request,"Content-Length");
@@ -778,13 +785,43 @@ void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
     curl_easy_setopt(req->req,CURLOPT_TIMEOUT,time_out);
 }
 
-void lwqq_http_save_file(LwqqHttpRequest* req,const char* filepath)
+void lwqq_http_not_follow(LwqqHttpRequest* req)
 {
-    FILE* file = fopen(filepath,"w");
-    if(file==0){
-        perror("Error:");
-        return ;
-    }
+    curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION, 0L);
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1L);
+}
+void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file)
+{
     curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
     curl_easy_setopt(req->req,CURLOPT_WRITEDATA,file);
+}
+static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
+{
+    void** data = d;
+    LWQQ_PROGRESS progress = (LWQQ_PROGRESS)data[0];
+    void* prog_data = data[1];
+
+    size_t now = dn;
+    size_t total = dt;
+    progress(prog_data,now,total);
+    return 0;
+}
+
+void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data)
+{
+    curl_easy_setopt(req->req,CURLOPT_PROGRESSFUNCTION,lwqq_http_progress_trans);
+    void** data = s_malloc(sizeof(void*)*2);
+    data[0] = progress;
+    data[1] = prog_data;
+    curl_easy_setopt(req->req,CURLOPT_PROGRESSDATA,data);
+    curl_easy_setopt(req->req,CURLOPT_NOPROGRESS,0L);
+}
+
+void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url)
+{
+    curl_easy_setopt(req->req,CURLOPT_URL,url);
+}
+char* lwqq_http_escape(LwqqHttpRequest* req,const char* url)
+{
+    return curl_easy_escape(req->req,url,strlen(url));
 }

@@ -29,5 +29,8 @@ char *url_encode(char *str);
  * @return A url-decoded version of str
  */
 char *url_decode(char *str);
+char *url_whole_encode(char *str);
+
+char* to_gbk(const char* utf8);
 
 #endif  /* LWQQ_URL_H */

@@ -153,17 +153,27 @@ typedef struct LwqqMsgFileTrans{
 }LwqqMsgFileTrans;
 typedef struct LwqqMsgFileMessage{
     int msg_id;
-    char* mode;
+    enum {
+        MODE_RECV,
+        MODE_REFUSE
+    } mode;
     char* from;
     char* to;
     int msg_id2;
-    int msg_type;
-    char* reply_ip;
-    int type;
-    char* name;
-    time_t time;
     int session_id;
-    int inet_ip;
+    time_t time;
+    int type;
+    char* reply_ip;
+    union{
+        struct {
+            int msg_type;
+            char* name;
+            int inet_ip;
+        }recv;
+        struct {
+            int cancel_type;
+        }refuse;
+    };
 }LwqqMsgFileMessage;
 
 typedef enum LwqqMsgType {
@@ -292,7 +302,8 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
 LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
 LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
-void lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto);
+LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
+        LWQQ_PROGRESS progress,void* prog_data);
 
 /************************************************************************/
 /*  LwqqSendMsg API */
