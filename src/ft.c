@@ -63,18 +63,26 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
 static void send_file(LwqqAsyncEvent* event,void* d)
 {
     void** data = d;
-    LwqqClient* lc = data[0];
+    qq_account* ac = data[0];
+    LwqqClient* lc = ac->qq;
     LwqqMsgOffFile* file = data[1];
     PurpleXfer* xfer = data[2];
     s_free(d);
-
+    int errno = lwqq_async_event_get_result(event);
     purple_xfer_set_completed(xfer,1);
-    lwqq_msg_send_offfile(lc,file);
+    if(errno){
+        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,file->to,ac,
+                    "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
+        lwqq_msg_offfile_free(file);
+    }else{
+        lwqq_msg_send_offfile(lc,file);
+    }
 }
 static void upload_file_init(PurpleXfer* xfer)
 {
     void** data = xfer->data;
-    LwqqClient* lc = data[0];
+    qq_account* ac = data[0];
+    LwqqClient* lc = ac->qq;
     LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
     file->from = s_strdup(lc->myself->uin);
     file->to = s_strdup(purple_xfer_get_remote_user(xfer));
@@ -95,7 +103,7 @@ void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
     purple_xfer_set_init_fnc(xfer,upload_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
     void** data = s_malloc(sizeof(void*)*3);
-    data[0] = ac->qq;
+    data[0] = ac;
     xfer->data = data;
     purple_xfer_request(xfer);
 }

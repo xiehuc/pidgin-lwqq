@@ -27,6 +27,7 @@ int open_new_chat(qq_account* ac,LwqqGroup* group)
     return index;
 }
 
+/**m_t == 0 buddy_message m_t == 1 chat_message*/
 system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
 {
     system_msg* ret = s_malloc0(sizeof(*ret));

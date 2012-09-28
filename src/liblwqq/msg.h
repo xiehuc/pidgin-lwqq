@@ -309,6 +309,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
 void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
+void lwqq_msg_offfile_free(void* opaque);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

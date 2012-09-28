@@ -35,6 +35,7 @@ static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_cface_back(LwqqHttpRequest *req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
+static int send_offfile_back(LwqqHttpRequest* req,void* data);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -206,6 +207,18 @@ static void lwqq_msg_system_free(void* opaque)
     }
     s_free(system);
 }
+void lwqq_msg_offfile_free(void* opaque)
+{
+    LwqqMsgOffFile* of = opaque;
+    if(of){
+        s_free(of->msg_id);
+        s_free(of->rkey);
+        s_free(of->from);
+        s_free(of->to);
+        s_free(of->name);
+    }
+    s_free(of);
+}
 
 /**
  * Free a LwqqMsg object
@@ -262,15 +275,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         }
         s_free(gmsg);
     }else if(msg->type==LWQQ_MT_OFFFILE){
-        LwqqMsgOffFile* of = msg->opaque;
-        if(of){
-            s_free(of->msg_id);
-            s_free(of->rkey);
-            s_free(of->from);
-            s_free(of->to);
-            s_free(of->name);
-        }
-        s_free(of);
+        lwqq_msg_offfile_free(msg->opaque);
     }else if(msg->type==LWQQ_MT_FILETRANS){
         LwqqMsgFileTrans* trans = msg->opaque;
         FileTransItem* item;
@@ -1560,8 +1565,8 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     char fileid[128];
     snprintf(fileid,sizeof(fileid),"%s_%ld",file->to,time(NULL));
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
-    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
-    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
+    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","1");
+    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","1");
     if(progress)
         lwqq_http_on_progress(req,progress,prog_data);
     return req->do_request_async(req,0,NULL,upload_offline_file_back,file);
@@ -1571,7 +1576,9 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
 {
     LwqqMsgOffFile* file = data;
     json_t* json = NULL;
+    int errno = 0;
     if(req->http_code!=200){
+        errno = 1;
         goto done;
     }
     puts(req->response);
@@ -1580,6 +1587,7 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
     *(end+1) = '\0';
     json_parse_document(&json,strchr(req->response,'{'));
     if(strcmp(json_parse_simple_value(json,"retcode"),"0")!=0){
+        errno = 1;
         goto done;
     }
     s_free(file->name);
@@ -1589,7 +1597,7 @@ done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return errno;
 }
 
 void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
@@ -1611,5 +1619,12 @@ void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
             "clientid=%s&psessionid=%s",
             file->to,file->path,file->name,file->to,lc->clientid,lc->psessionid,
             lc->clientid,lc->psessionid);
-    req->do_request_async(req,1,post,msg_send_back,NULL);
+    req->do_request_async(req,1,post,send_offfile_back,file);
+}
+
+static int send_offfile_back(LwqqHttpRequest* req,void* data)
+{
+    lwqq_msg_offfile_free(data);
+    lwqq_http_request_free(req);
+    return 0;
 }

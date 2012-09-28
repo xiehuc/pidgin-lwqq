@@ -485,7 +485,7 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
         g->timer_event = purple_timeout_add(timeout_ms,timer_cb,g);
     } else if(timeout_ms==0)
         timer_cb(g);
-    else{}
+    else{timer_cb(g);}
     return 0;
 }
 static void event_cb(void* data,int fd,PurpleInputCondition revents)
@@ -817,8 +817,4 @@ void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* pro
 void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url)
 {
     curl_easy_setopt(req->req,CURLOPT_URL,url);
-}
-char* lwqq_http_escape(LwqqHttpRequest* req,const char* url)
-{
-    return curl_easy_escape(req->req,url,strlen(url));
 }

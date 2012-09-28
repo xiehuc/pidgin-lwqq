@@ -315,6 +315,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
             msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
     serv_got_im(pc,msg->from,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
+#if 0
 static void complete_file_trans(LwqqClient* lc,LwqqMsgFileTrans* trans)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -326,6 +327,7 @@ static void complete_file_trans(LwqqClient* lc,LwqqMsgFileTrans* trans)
         serv_got_im(pc,trans->to,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
     }
 }
+#endif
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
