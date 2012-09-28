@@ -151,6 +151,20 @@ typedef struct LwqqMsgFileTrans{
     int type;
     LIST_HEAD(,FileTransItem) file_infos;
 }LwqqMsgFileTrans;
+typedef struct LwqqMsgFileMessage{
+    int msg_id;
+    char* mode;
+    char* from;
+    char* to;
+    int msg_id2;
+    int msg_type;
+    char* reply_ip;
+    int type;
+    char* name;
+    time_t time;
+    int session_id;
+    int inet_ip;
+}LwqqMsgFileMessage;
 
 typedef enum LwqqMsgType {
     LWQQ_MT_BUDDY_MSG = 0,
@@ -163,6 +177,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_SYS_G_MSG,
     LWQQ_MT_OFFFILE,
     LWQQ_MT_FILETRANS,
+    LWQQ_MT_FILE_MSG,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 
@@ -277,6 +292,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
 LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
 LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
+void lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

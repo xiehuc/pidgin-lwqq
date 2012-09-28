@@ -121,6 +121,7 @@ void lwqq_http_set_async(LwqqHttpRequest* request);
 void lwqq_http_global_init();
 void lwqq_http_global_free();
 void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out);
+void lwqq_http_save_file(LwqqHttpRequest* req,const char* filepath);
 
 
 #endif  /* LWQQ_HTTP_H */

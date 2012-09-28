@@ -6,6 +6,7 @@ set(SRC_LIST
   translate.c
   http_curl.c
   qq_types.c
+  ft.c
   )
 
 set(LWQQ_LIST

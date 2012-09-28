@@ -778,3 +778,13 @@ void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
     curl_easy_setopt(req->req,CURLOPT_TIMEOUT,time_out);
 }
 
+void lwqq_http_save_file(LwqqHttpRequest* req,const char* filepath)
+{
+    FILE* file = fopen(filepath,"w");
+    if(file==0){
+        perror("Error:");
+        return ;
+    }
+    curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
+    curl_easy_setopt(req->req,CURLOPT_WRITEDATA,file);
+}

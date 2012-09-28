@@ -116,6 +116,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_FILETRANS:
         msg->opaque = s_malloc0(sizeof(LwqqMsgFileTrans));
         break;
+    case LWQQ_MT_FILE_MSG:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgFileMessage));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -283,6 +286,16 @@ void lwqq_msg_free(LwqqMsg *msg)
             }
         }
         s_free(trans);
+    }else if(msg->type==LWQQ_MT_FILE_MSG){
+        LwqqMsgFileMessage* file = msg->opaque;
+        if(file){
+            s_free(file->mode);
+            s_free(file->from);
+            s_free(file->to);
+            s_free(file->reply_ip);
+            s_free(file->name);
+        }
+        s_free(file);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }
@@ -353,6 +366,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_OFFFILE;
     }else if(!strncmp(msg_type,"filesrv_transfer",strlen("filesrv_transfer"))){
         type = LWQQ_MT_FILETRANS;
+    }else if(!strncmp(msg_type,"file_message",strlen("file_message"))){
+        type = LWQQ_MT_FILE_MSG;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -678,6 +693,23 @@ static int parse_file_transfer(json_t* json,void* opaque)
     }
     return 0;
 }
+static int parse_file_message(json_t* json,void* opaque)
+{
+    LwqqMsgFileMessage* file = opaque;
+    file->msg_id = atoi(json_parse_simple_value(json,"msg_id"));
+    file->mode = s_strdup(json_parse_simple_value(json,"mode"));
+    file->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    file->to = s_strdup(json_parse_simple_value(json,"to_uin"));
+    file->msg_id2 = atoi(json_parse_simple_value(json,"msg_id2"));
+    file->msg_type = atoi(json_parse_simple_value(json,"msg_type"));
+    file->reply_ip = s_strdup(json_parse_simple_value(json,"reply_ip"));
+    file->type = atoi(json_parse_simple_value(json,"type"));
+    file->name = s_strdup(json_parse_simple_value(json,"name"));
+    file->time = atol(json_parse_simple_value(json,"time"));
+    file->session_id = atoi(json_parse_simple_value(json,"session_id"));
+    file->inet_ip = atoi(json_parse_simple_value(json,"inet_ip"));
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -905,6 +937,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_FILETRANS:
             ret = parse_file_transfer(cur,msg->opaque);
+            break;
+        case LWQQ_MT_FILE_MSG:
+            ret = parse_file_message(cur,msg->opaque);
             break;
         default:
             ret = -1;
@@ -1429,4 +1464,21 @@ const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg)
     s_free(file_name);
     return url;
 }
-
+void lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto)
+{
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_file2?"
+            "lcid=%d&guid=%s&to=%s&psessionid=%s&count=1&time=%ld&clientid=%s",
+            msg->session_id,msg->name,msg->from,lc->psessionid,time(NULL),lc->clientid);
+    puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    lwqq_http_save_file(req,"/home/xiehuc/a.txt");
+    req->do_request(req,0,NULL);
+}

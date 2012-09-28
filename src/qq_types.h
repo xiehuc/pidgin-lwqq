@@ -4,6 +4,7 @@ typedef struct _AsyncListener AsyncListener;
 
 #include <type.h>
 #include <connection.h>
+#include "msg.h"
 #define QQ_MAGIC 0x4153
 typedef struct qq_account {
     LwqqClient* qq;
@@ -37,6 +38,7 @@ int open_new_chat(qq_account* ac,LwqqGroup* group);
 system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t);
 void system_msg_free(system_msg* m);
 PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac);
+void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
 
 
 

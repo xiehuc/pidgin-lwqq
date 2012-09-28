@@ -6,6 +6,7 @@
 #include <request.h>
 #include <signal.h>
 #include <accountopt.h>
+#include <ft.h>
 
 #include <type.h>
 #include <async.h>
@@ -615,6 +616,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 break;
             case LWQQ_MT_OFFFILE:
                 offline_file(lc,(LwqqMsgOffFile*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_FILE_MSG:
+                file_message(lc,(LwqqMsgFileMessage*)msg->msg->opaque);
                 break;
             default:
                 printf("unknow message\n");
