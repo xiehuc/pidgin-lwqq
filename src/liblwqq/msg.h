@@ -130,8 +130,10 @@ typedef struct LwqqMsgOffFile{
     char ip[24];
     char port[8];
     char* from;
+    char* to;
     size_t size;
     char* name;
+    char* path;///< only used when upload
     time_t expire_time;
     time_t time;
 }LwqqMsgOffFile;
@@ -303,6 +305,9 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent*
 LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
 LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
+        LWQQ_PROGRESS progress,void* prog_data);
+void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 
 /************************************************************************/

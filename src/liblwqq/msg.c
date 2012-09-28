@@ -34,6 +34,7 @@ static void lwqq_msg_status_free(void *opaque);
 static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_cface_back(LwqqHttpRequest *req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
+static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -266,6 +267,7 @@ void lwqq_msg_free(LwqqMsg *msg)
             s_free(of->msg_id);
             s_free(of->rkey);
             s_free(of->from);
+            s_free(of->to);
             s_free(of->name);
         }
         s_free(of);
@@ -1530,4 +1532,84 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         lwqq_http_on_progress(req,progress_func,prog_data);
     }
     return req->do_request_async(req,0,NULL,lwqq_file_download_finish,file);
+}
+
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
+        LWQQ_PROGRESS progress,void* prog_data)
+{
+    char url[512];
+    snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://web2.qq.com/");
+
+    req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
+    req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
+    req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
+    req->add_form(req,LWQQ_FORM_CONTENT,"uin",file->from);
+    req->add_form(req,LWQQ_FORM_CONTENT,"skey",lc->cookies->skey);
+    req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
+    req->add_form(req,LWQQ_FORM_CONTENT,"peeruin",file->to);
+    req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
+    req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
+    char fileid[128];
+    snprintf(fileid,sizeof(fileid),"%s_%ld",file->to,time(NULL));
+    req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
+    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
+    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
+    if(progress)
+        lwqq_http_on_progress(req,progress,prog_data);
+    return req->do_request_async(req,0,NULL,upload_offline_file_back,file);
+}
+
+static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
+{
+    LwqqMsgOffFile* file = data;
+    json_t* json = NULL;
+    if(req->http_code!=200){
+        goto done;
+    }
+    puts(req->response);
+
+    char *end = strchr(req->response,'}');
+    *(end+1) = '\0';
+    json_parse_document(&json,strchr(req->response,'{'));
+    if(strcmp(json_parse_simple_value(json,"retcode"),"0")!=0){
+        goto done;
+    }
+    s_free(file->name);
+    file->name = s_strdup(json_parse_simple_value(json,"filename"));
+    file->path = s_strdup(json_parse_simple_value(json,"filepath"));
+done:
+    if(json)
+        json_free_value(&json);
+    lwqq_http_request_free(req);
+    return 0;
+}
+
+void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
+{
+    char url[512];
+    char post[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/send_offfile2");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
+    snprintf(post,sizeof(post),"r={\"to\":\"%s\",\"file_path\":\"%s\","
+            "\"filename\":\"%s\",\"to_uin\":\"%s\","
+            "\"clientid\":\"%s\",\"psessionid\":\"%s\"}&"
+            "clientid=%s&psessionid=%s",
+            file->to,file->path,file->name,file->to,lc->clientid,lc->psessionid,
+            lc->clientid,lc->psessionid);
+    req->do_request_async(req,1,post,msg_send_back,NULL);
 }

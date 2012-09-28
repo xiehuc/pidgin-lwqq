@@ -217,7 +217,7 @@ typedef enum {
  */
 LwqqClient *lwqq_client_new(const char *username, const char *password);
 
-#define lwqq_client_valid(lc) (lc->magic==LWQQ_MAGIC)
+#define lwqq_client_valid(lc) (lc!=0&&lc->magic==LWQQ_MAGIC)
 
 /** 
  * Get cookies needby by webqq server

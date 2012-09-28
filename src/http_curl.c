@@ -788,7 +788,7 @@ void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
 void lwqq_http_not_follow(LwqqHttpRequest* req)
 {
     curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION, 0L);
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1L);
+    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1L);
 }
 void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file)
 {
@@ -797,23 +797,20 @@ void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file)
 }
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
-    void** data = d;
-    LWQQ_PROGRESS progress = (LWQQ_PROGRESS)data[0];
-    void* prog_data = data[1];
+    LwqqHttpRequest* req = d;
 
-    size_t now = dn;
-    size_t total = dt;
-    progress(prog_data,now,total);
+    size_t now = dn+un;
+    size_t total = dt+ut;
+    req->progress_func(req->prog_data,now,total);
     return 0;
 }
 
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data)
 {
     curl_easy_setopt(req->req,CURLOPT_PROGRESSFUNCTION,lwqq_http_progress_trans);
-    void** data = s_malloc(sizeof(void*)*2);
-    data[0] = progress;
-    data[1] = prog_data;
-    curl_easy_setopt(req->req,CURLOPT_PROGRESSDATA,data);
+    req->progress_func = progress;
+    req->prog_data = prog_data;
+    curl_easy_setopt(req->req,CURLOPT_PROGRESSDATA,req);
     curl_easy_setopt(req->req,CURLOPT_NOPROGRESS,0L);
 }
 

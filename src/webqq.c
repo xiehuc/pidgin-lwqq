@@ -1308,6 +1308,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
+    .send_file=         qq_send_file,
     //.chat_whisper=      qq_send_whisper,
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
