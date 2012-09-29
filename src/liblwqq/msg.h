@@ -173,7 +173,10 @@ typedef struct LwqqMsgFileMessage{
             int inet_ip;
         }recv;
         struct {
-            int cancel_type;
+            enum{
+                CANCEL_BY_USER=1,
+                CANCEL_BY_OVERTIME=3
+            } cancel_type;
         }refuse;
     };
 }LwqqMsgFileMessage;

@@ -801,8 +801,7 @@ static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double
 
     size_t now = dn+un;
     size_t total = dt+ut;
-    req->progress_func(req->prog_data,now,total);
-    return 0;
+    return req->progress_func(req->prog_data,now,total);
 }
 
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data)
