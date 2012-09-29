@@ -95,7 +95,7 @@ static void send_file(LwqqAsyncEvent* event,void* d)
         lwqq_msg_send_offfile(lc,file);
     }
 }
-static void upload_file_init(PurpleXfer* xfer)
+static void upload_offline_file_init(PurpleXfer* xfer)
 {
     void** data = xfer->data;
     qq_account* ac = data[0];
@@ -111,11 +111,36 @@ static void upload_file_init(PurpleXfer* xfer)
             send_file,data);
 
 }
+static void upload_file_init(PurpleXfer* xfer)
+{
+    void** data = xfer->data;
+    qq_account* ac = data[0];
+    LwqqClient* lc = ac->qq;
+    LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
+    file->from = s_strdup(lc->myself->uin);
+    file->to = s_strdup(purple_xfer_get_remote_user(xfer));
+    file->name = s_strdup(purple_xfer_get_local_filename(xfer));
+    data[1] = file;
+    data[2] = xfer;
+    //lwqq_async_add_event_listener(
+            background_upload_file(lc,file,file_trans_on_progress,xfer);
+            //send_file,data);
+
+}
 
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     PurpleAccount* account = ac->account;
+    PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
+    //purple_xfer_set_init_fnc(xfer,upload_file_init);
+    purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
+    purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
+    purple_xfer_set_cancel_send_fnc(xfer,file_trans_cancel);
+    void** data = s_malloc(sizeof(void*)*3);
+    data[0] = ac;
+    xfer->data = data;
+    purple_xfer_request(xfer);
 }
 
 void qq_send_offline_file(PurpleBlistNode* node)
@@ -126,7 +151,7 @@ void qq_send_offline_file(PurpleBlistNode* node)
             purple_account_get_connection(account));
     const char* who = purple_buddy_get_name(buddy);
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
-    purple_xfer_set_init_fnc(xfer,upload_file_init);
+    purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,file_trans_cancel);
     void** data = s_malloc(sizeof(void*)*3);

@@ -708,6 +708,7 @@ static int parse_file_message(json_t* json,void* opaque)
     const char* mode = json_parse_simple_value(json,"mode");
     if(strcmp(mode,"recv")==0) file->mode = MODE_RECV;
     else if(strcmp(mode,"refuse")==0) file->mode = MODE_REFUSE;
+    else if(strcmp(mode,"send_ack")==0) file->mode = MODE_SEND_ACK;
     file->from = s_strdup(json_parse_simple_value(json,"from_uin"));
     file->to = s_strdup(json_parse_simple_value(json,"to_uin"));
     file->msg_id2 = atoi(json_parse_simple_value(json,"msg_id2"));
@@ -1627,4 +1628,33 @@ static int send_offfile_back(LwqqHttpRequest* req,void* data)
     lwqq_msg_offfile_free(data);
     lwqq_http_request_free(req);
     return 0;
+}
+#define rand(n) (rand()%9000+1000)
+int dump_resoponse(LwqqHttpRequest* req,void* data)
+{
+    //lwqq_http_request_free(req);
+    //s_free(data);
+    return 0;
+}
+LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
+        LWQQ_PROGRESS progress,void* prog_data)
+{
+    char url[512];
+    snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%4u/%s/%s/1/f/1/0/0?psessionid=%s",
+            file->from,file->to,rand(4),lc->index,lc->port,lc->psessionid
+            );
+    puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    char *cookies;
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
+    req->set_header(req,"Referer","http://web2.qq.com/");
+
+    req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
+    if(progress)
+        lwqq_http_on_progress(req,progress,prog_data);
+    return req->do_request(req,0,NULL);
 }

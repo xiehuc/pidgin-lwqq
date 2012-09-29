@@ -189,3 +189,26 @@ void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* who,const char*
     else
         _background_send_msg(data);
 }
+
+static void* _background_upload_file(void* d)
+{
+    void **data = d;
+    LwqqClient* lc = data[0];
+    LwqqMsgOffFile* file = data[1];
+    LWQQ_PROGRESS progress = data[2];
+    PurpleXfer* xfer = data[3];
+    s_free(d);
+    lwqq_msg_upload_file(lc,file,progress,xfer);
+    printf("quit upload file");
+    return NULL;
+}
+
+void background_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,LWQQ_PROGRESS file_trans_on_progress,PurpleXfer* xfer)
+{
+    void** data = s_malloc(sizeof(void*)*4);
+    data[0] = lc;
+    data[1] = file;
+    data[2] = file_trans_on_progress;
+    data[3] = xfer;
+    START_THREAD(_background_upload_file,data);
+}

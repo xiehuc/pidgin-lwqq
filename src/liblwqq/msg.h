@@ -157,7 +157,8 @@ typedef struct LwqqMsgFileMessage{
     int msg_id;
     enum {
         MODE_RECV,
-        MODE_REFUSE
+        MODE_REFUSE,
+        MODE_SEND_ACK
     } mode;
     char* from;
     char* to;
@@ -313,6 +314,8 @@ void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 void lwqq_msg_offfile_free(void* opaque);
+LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
+        LWQQ_PROGRESS progress,void* prog_data);
 
 /************************************************************************/
 /*  LwqqSendMsg API */
