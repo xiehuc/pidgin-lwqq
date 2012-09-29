@@ -40,6 +40,8 @@ void system_msg_free(system_msg* m);
 PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac);
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
+int qq_sys_msg_write(LwqqClient* lc,void* data);
+void qq_send_offline_file(PurpleBlistNode* node);
 
 
 

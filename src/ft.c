@@ -78,6 +78,7 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
 }
 static void send_file(LwqqAsyncEvent* event,void* d)
 {
+    if(d==NULL) return;
     void** data = d;
     qq_account* ac = data[0];
     LwqqClient* lc = ac->qq;
@@ -115,6 +116,15 @@ void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     PurpleAccount* account = ac->account;
+}
+
+void qq_send_offline_file(PurpleBlistNode* node)
+{
+    PurpleBuddy* buddy = PURPLE_BUDDY(node);
+    PurpleAccount* account = purple_buddy_get_account(buddy);
+    qq_account* ac = purple_connection_get_protocol_data(
+            purple_account_get_connection(account));
+    const char* who = purple_buddy_get_name(buddy);
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
     purple_xfer_set_init_fnc(xfer,upload_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);

@@ -1268,6 +1268,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
     if(PURPLE_BLIST_NODE_IS_BUDDY(node)){
         action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
+        action = purple_menu_action_new("发送离线文件",(PurpleCallback)qq_send_offline_file,node,NULL);
+        act = g_list_append(act,action);
     }else if(PURPLE_BLIST_NODE_IS_CHAT(node)){
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
