@@ -99,6 +99,7 @@ char *url_decode(char *str)
     *pbuf = '\0';
     return buf;
 }
+/*
 char* to_gbk(char* utf8)
 {
     char buf[512];
@@ -115,14 +116,4 @@ char* to_gbk(char* utf8)
     return s_strdup(buf);
 }
 
-#if 0
-int main(int argc, char *argv[])
-{
-    char *buf = url_encode("http://www.-go8ogle. com");
-    if (buf) {
-        lwqq_log(LOG_NOTICE, "Encode data: %s\n", buf);
-    } else 
-    puts(buf);
-    return 0;
-}
-#endif
+*/
