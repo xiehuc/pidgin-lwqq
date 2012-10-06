@@ -150,6 +150,17 @@ static void all_reset_action(PurplePluginAction* action)
 
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"全部重载,请重新登录");
 }
+static void visit_my_qq_center(PurplePluginAction* action)
+{
+    //PurpleConnection* gc = action->context;
+    //qq_account* ac = purple_connection_get_protocol_data(gc);
+    char buf[512];
+    snprintf(buf,sizeof(buf),"xdg-open 'http://ptlogin2.qq.com/login?u=2501542492&p=146FA572EB4E2E1251BB197D7125E630&verifycode=!DGM&aid=1006102&u1=http5%%3A%%2F%%2Fid.qq.com%%2Findex.html%23myfriends&h=1&ptredirect=1&ptlang=2052&from_ui=1&dumy=&fp=loginerroralert&action=2-5-10785&mibao_css=&t=1&g=1'");
+    system(buf);
+
+    //system("xdg-open 'http://id.qq.com/#myfriends'");
+
+}
 
 static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
 {
@@ -165,6 +176,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     act = purple_plugin_action_new(_("About WebQQ"), action_about_webqq);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("好友管理",visit_my_qq_center);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
     m = g_list_append(m, act);
@@ -1145,7 +1158,10 @@ void move_buddy_back(void* data)
 {
     void** d = data;
     PurpleBuddy* buddy = d[0];
-    PurpleGroup* group = d[1];
+    char* group_name = d[1];
+    PurpleGroup* group = purple_find_group(group_name);
+    if(group==NULL) group = purple_group_new(group_name);
+    s_free(group_name);
     qq_account* ac = d[2];
     s_free(data);
     ac->disable_send_server = 1;
@@ -1154,11 +1170,14 @@ void move_buddy_back(void* data)
 }
 static void change_category_back(LwqqAsyncEvent* event,void* data)
 {
-    void** d = data;
+    void**d = data;
     qq_account* ac = d[2];
     if(lwqq_async_event_get_result(event)!=0){
         move_buddy_back(data);
         purple_notify_error(ac->gc,NULL,"更改好友分组失败","服务器返回错误");
+    }else{
+        s_free(d[1]);
+        s_free(data);
     }
 }
 static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
@@ -1179,12 +1198,15 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
 
     void** data = s_malloc0(sizeof(void*)*3);
     data[0] = purple_find_buddy(ac->account,who);
-    data[1] = purple_find_group(old_group);
+    data[1] = s_strdup(old_group);
     data[2] = ac;
     if(event == NULL){
         purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
     }else
         lwqq_async_add_event_listener(event,change_category_back,data);
+}
+static void qq_rename_category(PurpleConnection* gc,const char* old_name,PurpleGroup* group,GList* moved_buddies)
+{
 }
 static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup* group)
 {
@@ -1317,6 +1339,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
     .group_buddy=       qq_change_category  /* change buddy category on server */,
+    .rename_group=      qq_rename_category,
     .remove_buddy=      qq_remove_buddy,
     .add_buddy_with_invite=qq_add_buddy_with_invite,
     .struct_size=           sizeof(PurplePluginProtocolInfo)
