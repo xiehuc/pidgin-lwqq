@@ -618,7 +618,7 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
         group = lwqq_group_find_group_by_gid(lc, uin);
         if (!group)
             continue;
-        group->markname = s_strdup(markname);
+        group->markname = json_unescape(markname);
     }
 }
 
