@@ -1656,5 +1656,8 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
     req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
     if(progress)
         lwqq_http_on_progress(req,progress,prog_data);
-    return req->do_request(req,0,NULL);
+    do{
+        req->do_request(req,0,NULL);
+    }while(req->http_code==204);
+    return NULL;
 }

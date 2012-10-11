@@ -485,7 +485,7 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
         g->timer_event = purple_timeout_add(timeout_ms,timer_cb,g);
     } else if(timeout_ms==0)
         timer_cb(g);
-    else{timer_cb(g);}
+    else{}
     return 0;
 }
 static void event_cb(void* data,int fd,PurpleInputCondition revents)

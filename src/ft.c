@@ -14,7 +14,7 @@ static void file_trans_request_denied(PurpleXfer* xfer)
 static int file_trans_on_progress(void* data,size_t now,size_t total)
 {
     PurpleXfer* xfer = data;
-    if(purple_xfer_is_canceled(xfer)){
+    if(purple_xfer_is_canceled(xfer)) {
         return 1;
     }
     purple_xfer_set_size(xfer,total);
@@ -37,8 +37,8 @@ static void file_trans_init(PurpleXfer* xfer)
     s_free(data);
     const char* filename = purple_xfer_get_local_filename(xfer);
     lwqq_async_add_event_listener(
-            lwqq_msg_accept_file(lc,file,filename,file_trans_on_progress,xfer),
-            file_trans_complete,xfer);
+        lwqq_msg_accept_file(lc,file,filename,file_trans_on_progress,xfer),
+        file_trans_complete,xfer);
 }
 static void file_trans_cancel(PurpleXfer* xfer)
 {
@@ -47,7 +47,7 @@ static void file_trans_cancel(PurpleXfer* xfer)
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
-    if(file->mode == MODE_RECV){
+    if(file->mode == MODE_RECV) {
         PurpleAccount* account = ac->account;
         //for(i=0;i<file->file_count;i++){
         PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,file->from);
@@ -63,17 +63,17 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         data[1] = fmsg;
         xfer->data = data;
         purple_xfer_request(xfer);
-    }else if(file->mode == MODE_REFUSE){
-        if(file->refuse.cancel_type == CANCEL_BY_USER){
+    } else if(file->mode == MODE_REFUSE) {
+        if(file->refuse.cancel_type == CANCEL_BY_USER) {
             qq_sys_msg_write(lc,
-                    system_msg_new(0,file->from,ac,"对方取消文件传输",PURPLE_MESSAGE_SYSTEM,time(NULL))
-                    );
-        }else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME){
+                             system_msg_new(0,file->from,ac,"对方取消文件传输",PURPLE_MESSAGE_SYSTEM,time(NULL))
+                            );
+        } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
             qq_sys_msg_write(lc,
-                    system_msg_new(0,file->from,ac,"文件传输超时",PURPLE_MESSAGE_SYSTEM,time(NULL))
-                    );
+                             system_msg_new(0,file->from,ac,"文件传输超时",PURPLE_MESSAGE_SYSTEM,time(NULL))
+                            );
         }
-        
+
     }
 }
 static void send_file(LwqqAsyncEvent* event,void* d)
@@ -87,11 +87,11 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     s_free(d);
     int errno = lwqq_async_event_get_result(event);
     purple_xfer_set_completed(xfer,1);
-    if(errno){
+    if(errno) {
         lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,file->to,ac,
-                    "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
+                            "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
         lwqq_msg_offfile_free(file);
-    }else{
+    } else {
         lwqq_msg_send_offfile(lc,file);
     }
 }
@@ -107,8 +107,8 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     data[1] = file;
     data[2] = xfer;
     lwqq_async_add_event_listener(
-            lwqq_msg_upload_offline_file(lc,file,file_trans_on_progress,xfer),
-            send_file,data);
+        lwqq_msg_upload_offline_file(lc,file,file_trans_on_progress,xfer),
+        send_file,data);
 
 }
 static void upload_file_init(PurpleXfer* xfer)
@@ -123,8 +123,8 @@ static void upload_file_init(PurpleXfer* xfer)
     data[1] = file;
     data[2] = xfer;
     //lwqq_async_add_event_listener(
-            background_upload_file(lc,file,file_trans_on_progress,xfer);
-            //send_file,data);
+    background_upload_file(lc,file,file_trans_on_progress,xfer);
+    //send_file,data);
 
 }
 
@@ -133,8 +133,8 @@ void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     PurpleAccount* account = ac->account;
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
-    //purple_xfer_set_init_fnc(xfer,upload_file_init);
-    purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
+    purple_xfer_set_init_fnc(xfer,upload_file_init);
+    //purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,file_trans_cancel);
     void** data = s_malloc(sizeof(void*)*3);
@@ -148,7 +148,7 @@ void qq_send_offline_file(PurpleBlistNode* node)
     PurpleBuddy* buddy = PURPLE_BUDDY(node);
     PurpleAccount* account = purple_buddy_get_account(buddy);
     qq_account* ac = purple_connection_get_protocol_data(
-            purple_account_get_connection(account));
+                         purple_account_get_connection(account));
     const char* who = purple_buddy_get_name(buddy);
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
