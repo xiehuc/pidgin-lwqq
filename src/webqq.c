@@ -286,6 +286,17 @@ static int friend_come(LwqqClient* lc,void* data)
     ac->disable_send_server = 0;
     return 0;
 }
+static const char* group_name(LwqqGroup* group)
+{
+    static char gname[128];
+    if(group->markname) {
+        strncpy(gname,group->markname,sizeof(gname));
+    } else 
+        strncpy(gname,group->name,sizeof(gname));
+    if(group->mask)
+        strcat(gname,"(屏蔽)");
+    return gname;
+}
 static int group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -303,12 +314,9 @@ static int group_come(LwqqClient* lc,void* data)
         purple_blist_add_chat(chat,gp,NULL);
     } else
         chat = purple_blist_find_chat(account,group->gid);
-    const char* alias = purple_chat_get_name(chat);
-    if(group->markname) {
-        if(alias==NULL||strcmp(alias,group->markname)!=0)
-            purple_blist_alias_chat(chat,group->markname);
-    } else if(alias==NULL||strcmp(alias,group->name)!=0)
-        purple_blist_alias_chat(chat,group->name);
+
+    purple_blist_alias_chat(chat,group_name(group));
+
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
     ac->disable_send_server = 0;
@@ -1268,6 +1276,22 @@ static void qq_visit_qun_air(PurpleBlistNode* node)
     system(url);
 }
 #endif
+static LwqqGroup* find_group_by_chat(PurpleChat* chat)
+{
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    GHashTable* table = purple_chat_get_components(chat);
+    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
+    return lwqq_group_find_group_by_gid(lc,gid);
+}
+
+static void flush_group_name(LwqqAsyncEvent* event,void* data)
+{
+    PurpleChat* chat = data;
+    LwqqGroup* group = find_group_by_chat(chat);
+    purple_blist_alias_chat(chat,group_name(group));
+}
 
 static void qq_block_chat(PurpleBlistNode* node)
 {
@@ -1278,7 +1302,9 @@ static void qq_block_chat(PurpleBlistNode* node)
     GHashTable* table = purple_chat_get_components(chat);
     const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
-    lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL);
+    lwqq_async_add_event_listener(
+            lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL),
+            flush_group_name,chat);
 }
 static void qq_unblock_chat(PurpleBlistNode* node)
 {
@@ -1289,7 +1315,9 @@ static void qq_unblock_chat(PurpleBlistNode* node)
     GHashTable* table = purple_chat_get_components(chat);
     const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
     LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
-    lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE);
+    lwqq_async_add_event_listener(
+            lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE),
+            flush_group_name,chat);
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
