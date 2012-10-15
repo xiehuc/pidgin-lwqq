@@ -1,4 +1,3 @@
-
 #define PURPLE_PLUGINS
 #include <plugin.h>
 #include <version.h>
@@ -200,7 +199,9 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     "nick","nick",purple_value_new(PURPLE_TYPE_STRING),\
     "mark","mark",purple_value_new(PURPLE_TYPE_STRING),NULL
 
+
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
+    //status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
              "online", _("我在线上"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
@@ -221,7 +222,11 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_OFFLINE,
              "offline", _("离线"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
+             "mobile", _("我在线上"), WEBQQ_STATUS_TYPE_ATTR);
+    types = g_list_append(types, status);
 
+#undef WEBQQ_STATUS_TYPE_ATTR
     return types;
 }
 static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
@@ -229,6 +234,9 @@ static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     lwqq_info_change_status(ac->qq,lwqq_status_from_str(purple_status_get_id(status)));
 }
+
+#define buddy_status(bu) ((bu->stat == LWQQ_STATUS_ONLINE && bu->client_type == LWQQ_CLIENT_MOBILE) \
+        ? "mobile":lwqq_status_to_str(bu->stat))
 
 static int friend_come(LwqqClient* lc,void* data)
 {
@@ -267,8 +275,8 @@ static int friend_come(LwqqClient* lc,void* data)
     if(purple_buddy_get_group(bu)!=group) {
         purple_blist_add_buddy(bu,NULL,group,NULL);
     }
-    if(buddy->status)
-        purple_prpl_got_user_status(account, buddy->uin, buddy->status, NULL);
+    if(buddy->stat)
+        purple_prpl_got_user_status(account, buddy->uin, buddy_status(buddy), NULL);
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,buddy->uin))==0) {
         lwqq_info_get_friend_avatar(lc,buddy);

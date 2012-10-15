@@ -39,6 +39,11 @@ typedef enum LWQQ_STATUS{
     LWQQ_STATUS_CALLME = 60,
     LWQQ_STATUS_SLIENT = 70
 }LWQQ_STATUS;
+typedef enum LWQQ_CTYPE{
+    LWQQ_CLIENT_DESKTOP=1,
+    LWQQ_CLIENT_MOBILE=21,
+    LWQQ_CLIENT_WEBQQ=41,
+}LWQQ_CTYPE;
 /* QQ buddy */
 typedef struct LwqqBuddy {
     char *uin;                  /**< Uin. Change every login */
@@ -52,7 +57,7 @@ typedef struct LwqqBuddy {
     char *constel;
     char *blood;
     char *homepage;
-    char *stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
+    LWQQ_STATUS stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
     char *country;
     char *city;
     char *personal;
@@ -78,9 +83,9 @@ typedef struct LwqqBuddy {
      * 21: Mobile client
      * 41: Web QQ Client
      */
-    char *client_type;
+    LWQQ_CTYPE client_type;
 
-    char *status;               /* Online status */
+    //char *status;               /* Online status */
     int ref;
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
@@ -93,7 +98,7 @@ typedef struct LwqqSimpleBuddy{
     char* uin;
     char* nick;
     char* card;                 /* 群名片 */
-    char* client_type;
+    LWQQ_CTYPE client_type;
     //char* stat;
     LWQQ_STATUS stat;
     LWQQ_FLAG mflag;

@@ -1019,7 +1019,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_group_find_group_member_by_uin(group, uin);
         if (!member)
             continue;
-        member->client_type = s_strdup(json_parse_simple_value(cur, "client_type"));
+        member->client_type = atoi(json_parse_simple_value(cur, "client_type"));
         member->stat = atoi(json_parse_simple_value(cur, "stat"));
 
     }
@@ -1354,10 +1354,11 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(constel, "constel");
         SET_BUDDY_INFO(blood, "blood");
         SET_BUDDY_INFO(homepage, "homepage");
-        SET_BUDDY_INFO(stat, "stat");
-        if(buddy->status) s_free(buddy->status);
+        //SET_BUDDY_INFO(stat, "stat");
+        buddy->stat = atoi(json_parse_simple_value(json,"stat"));
+        /*if(buddy->status) s_free(buddy->status);
         buddy->status = NULL;
-        buddy->status = s_strdup(lwqq_status_to_str(atoi(buddy->stat)));
+        buddy->status = s_strdup(lwqq_status_to_str(atoi(buddy->stat)));*/
         SET_BUDDY_INFO(vip_info, "vip_info");
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
@@ -1365,7 +1366,8 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(nick, "nick");
         SET_BUDDY_INFO(shengxiao, "shengxiao");
         SET_BUDDY_INFO(email, "email");
-        SET_BUDDY_INFO(client_type, "client_type");
+        //SET_BUDDY_INFO(client_type, "client_type");
+        buddy->client_type = atoi(json_parse_simple_value(json,"client_type"));
         SET_BUDDY_INFO(province, "province");
         SET_BUDDY_INFO(gender, "gender");
         SET_BUDDY_INFO(mobile, "mobile");
@@ -1407,11 +1409,9 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
         client_type = json_parse_simple_value(cur, "client_type");
         b = lwqq_buddy_find_buddy_by_uin(lc, uin);
         if (b) {
-            s_free(b->status);
-            b->status = s_strdup(status);
+            b->stat = lwqq_status_from_str(status);
             if (client_type) {
-                s_free(b->client_type);
-                b->client_type = s_strdup(client_type);
+                b->client_type = atoi(client_type);
             }
         }
     }

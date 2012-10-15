@@ -184,6 +184,8 @@ void lwqq_client_free(LwqqClient *client)
 LwqqBuddy *lwqq_buddy_new()
 {
     LwqqBuddy *b = s_malloc0(sizeof(*b));
+    b->stat = LWQQ_STATUS_OFFLINE;
+    b->client_type = LWQQ_CLIENT_DESKTOP;
     return b;
 }
 
@@ -208,7 +210,6 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->constel);
     s_free(buddy->blood);
     s_free(buddy->homepage);
-    s_free(buddy->stat);
     s_free(buddy->country);
     s_free(buddy->city);
     s_free(buddy->personal);
@@ -223,9 +224,7 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->markname);
     s_free(buddy->flag);
     s_free(buddy->cate_index);
-    s_free(buddy->client_type);
     
-    s_free(buddy->status);
     s_free(buddy->avatar);
     
     s_free(buddy);
@@ -245,7 +244,6 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
     s_free(buddy->nick);
     s_free(buddy->card);
     //s_free(buddy->stat);
-    s_free(buddy->client_type);
     s_free(buddy->group_sig);
     s_free(buddy);
 }
