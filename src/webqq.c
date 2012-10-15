@@ -121,23 +121,27 @@ static void buddies_all_remove(void* data,void* userdata)
         purple_blist_remove_buddy(buddy);
     }
 }
+//this remove all buddy and chat.
 static void all_reset(qq_account* ac)
 {
     GSList* buddies = purple_blist_get_buddies();
     g_slist_foreach(buddies,buddies_all_remove,ac);
 
-    PurpleGroup* group = purple_find_group("QQ群");
-    PurpleBlistNode* node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(group));
-    while(node!=NULL) {
-        if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
-            PurpleChat* chat = PURPLE_CHAT(node);
-            if(purple_chat_get_account(chat)!=ac->account) {
-                node = purple_blist_node_next(node,1);
-                continue;
+    //PurpleGroup* group = purple_find_group("QQ群");
+    PurpleBlistNode *group,*node;
+    for(group = purple_get_blist()->root;group!=NULL;group=group->next){
+        node = group->child;
+        while(node!=NULL) {
+            if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
+                PurpleChat* chat = PURPLE_CHAT(node);
+                if(purple_chat_get_account(chat)==ac->account) {
+                    node = purple_blist_node_next(node,1);
+                    purple_blist_remove_chat(chat);
+                    continue;
+                }
             }
-            purple_blist_remove_chat(chat);
+            node = purple_blist_node_next(node,1);
         }
-        node = purple_blist_node_next(node,1);
     }
 }
 static void all_reset_action(PurplePluginAction* action)
@@ -791,11 +795,6 @@ static int login_complete(LwqqClient* lc,void* data)
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
     if(err==LWQQ_EC_LOGIN_ABNORMAL) {
-        //browser cookie may not be pidgin account
-        /*char buf[512];
-        snprintf(buf,sizeof(buf),"xdg-open '%s'",lc->error_description);
-        puts(buf);
-        system(buf);*/
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
         return 0;
     } else if(err!=LWQQ_EC_OK) {
@@ -1088,6 +1087,7 @@ static void qq_login(PurpleAccount *account)
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->qq = lwqq_client_new(username,password);
+    //this remove all buddies
     all_reset(ac);
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
@@ -1221,6 +1221,7 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     } else
         lwqq_async_add_event_listener(event,change_category_back,data);
 }
+//keep this empty to ensure rename category dont crash
 static void qq_rename_category(PurpleConnection* gc,const char* old_name,PurpleGroup* group,GList* moved_buddies)
 {
 }
