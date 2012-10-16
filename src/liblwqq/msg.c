@@ -1540,8 +1540,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     return req->do_request_async(req,0,NULL,lwqq_file_download_finish,file);
 }
 
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
-        LWQQ_PROGRESS progress,void* prog_data)
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file)
 {
     char url[512];
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",time(NULL));
@@ -1568,8 +1567,6 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","1");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","1");
-    if(progress)
-        lwqq_http_on_progress(req,progress,prog_data);
     return req->do_request_async(req,0,NULL,upload_offline_file_back,file);
 }
 

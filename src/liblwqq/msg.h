@@ -312,8 +312,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         LWQQ_PROGRESS progress,void* prog_data);
 //call this function when upload_offfile finished.
 void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,
-        LWQQ_PROGRESS progress,void* prog_data);
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file);
 void lwqq_msg_offfile_free(void* opaque);
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);

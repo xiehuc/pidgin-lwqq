@@ -24,6 +24,11 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     //printf("%d:%d\n",now,total);
     return 0;
 }
+static void file_trans_on_start(LwqqAsyncEvent* event,void* data)
+{
+    PurpleXfer* xfer = data;
+    purple_xfer_start(xfer,lwqq_async_event_get_result(event),NULL,0);
+}
 static void file_trans_complete(LwqqAsyncEvent* event,void* data)
 {
     PurpleXfer* xfer = data;
@@ -106,10 +111,10 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     file->name = s_strdup(purple_xfer_get_local_filename(xfer));
     data[1] = file;
     data[2] = xfer;
-    lwqq_async_add_event_listener(
-        lwqq_msg_upload_offline_file(lc,file,file_trans_on_progress,xfer),
-        send_file,data);
-
+    LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
+    lwqq_async_add_event_listener(ev,send_file,data);
+    //lwqq_async_event_on_start(ev,file_trans_on_start,xfer);
+    lwqq_async_event_set_progress(ev, file_trans_on_progress, xfer);
 }
 static void upload_file_init(PurpleXfer* xfer)
 {
@@ -131,6 +136,10 @@ static void upload_file_init(PurpleXfer* xfer)
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
+    if(!ac->debug_file_send){
+        purple_notify_warning(gc,NULL,"难题尚未攻破,曙光遥遥无期","请先用离线文件传输");
+        return;
+    }
     PurpleAccount* account = ac->account;
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
     purple_xfer_set_init_fnc(xfer,upload_file_init);

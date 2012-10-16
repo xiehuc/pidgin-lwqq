@@ -516,6 +516,7 @@ static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
 {
     S_ITEM *si = (S_ITEM*)sockp;
+    D_ITEM *di;
     GLOBAL* g = cbp;
 
     if(what == CURL_POLL_REMOVE) {
@@ -531,6 +532,8 @@ static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
             si = s_malloc0(sizeof(*si));
             setsock(si,s,e,what,g);
             curl_multi_assign(g->multi, s, si);
+            //curl_easy_getinfo(si->easy,CURLINFO_PRIVATE,&di);
+            //lwqq_async_event_start(di->event,s);
         } else {
             //重新关联socket;
             setsock(si,s,e,what,g);
@@ -591,7 +594,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->callback = callback;
     di->req = request;
     di->data = data;
-    di->event = lwqq_async_event_new();
+    di->event = lwqq_async_event_new(request);
     purple_timeout_add(50,delay_add_handle,di);
     return di->event;
 

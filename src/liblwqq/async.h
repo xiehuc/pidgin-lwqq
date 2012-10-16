@@ -76,13 +76,13 @@ typedef void (*EVSET_CALLBACK)(LwqqAsyncEvset* evset,void* data);
  * you can wait a evset. means it would block ultil all event is finished
  */
 #define lwqq_async_evset_new() lwqq_async_evset_new_with_debug(__FILE__,__LINE__)
-LwqqAsyncEvent* lwqq_async_event_new_with_debug(const char* file,int line);
+LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line);
 /** return a new event. 
  * you can wait a event by use evset or LWQQ_SYNC macro simply.
  * you can also add a event listener
  */
-#define lwqq_async_event_new() lwqq_async_event_new_with_debug(__FILE__,__LINE__)
-LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line);
+#define lwqq_async_event_new(req) lwqq_async_event_new_with_debug(req,__FILE__,__LINE__)
+LwqqAsyncEvent* lwqq_async_event_new_with_debug(void* req,const char* file,int line);
 /** this would remove a event.
  * and call a event listener if is set.
  * and try to wake up a evset if all events of evset are finished
@@ -112,6 +112,9 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback
  * note!! you must free evset in callback function.
  */
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data);
+void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data);
+void lwqq_async_event_start(LwqqAsyncEvent* event,int socket);
+void lwqq_async_event_on_start(LwqqAsyncEvent* event,EVENT_CALLBACK start,void* data);
 /** this set the errno for a event.
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.

@@ -15,6 +15,7 @@
 #include <eventloop.h>
 #include "async.h"
 #include "smemory.h"
+#include "http.h"
 typedef struct async_dispatch_data {
     ListenerType type;
     LwqqClient* client;
@@ -39,6 +40,9 @@ typedef struct _LwqqAsyncEvent {
     LwqqAsyncEvset* host_lock;
     EVENT_CALLBACK callback;
     void* data;
+    EVENT_CALLBACK start;
+    void* start_data;
+    LwqqHttpRequest* req;
     struct{
         const char* __file;
         int __line;
@@ -87,9 +91,10 @@ void lwqq_async_set(LwqqClient* client,int enabled)
     }
 
 }
-LwqqAsyncEvent* lwqq_async_event_new_with_debug(const char* file,int line)
+LwqqAsyncEvent* lwqq_async_event_new_with_debug(void* req,const char* file,int line)
 {
     LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
+    event->req = req;
     event->debug.__file = file;
     event->debug.__line = line;
     return event;
@@ -170,4 +175,20 @@ void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback
     if(!evset) return;
     evset->callback = callback;
     evset->data = data;
+}
+
+void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)
+{
+    lwqq_http_on_progress(event->req,callback,data);
+}
+void lwqq_async_event_on_start(LwqqAsyncEvent* event,EVENT_CALLBACK start,void* data)
+{
+    event->start = start;
+    event->start_data = data;
+}
+void lwqq_async_event_start(LwqqAsyncEvent* event,int socket)
+{
+    event->result = socket;
+    if(event->start)
+        event->start(event,event->start_data);
 }

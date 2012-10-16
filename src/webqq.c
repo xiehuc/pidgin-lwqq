@@ -1086,6 +1086,7 @@ static void qq_login(PurpleAccount *account)
     ac->gc = pc;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
+    ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
     //this remove all buddies
     all_reset(ac);
@@ -1404,10 +1405,14 @@ static void
 init_plugin(PurplePlugin *plugin)
 {
     PurpleAccountOption *option;
+    GList* options = NULL;
     option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
-    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);
-    webqq_prpl_info.protocol_options = g_list_append(webqq_prpl_info.protocol_options, option);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
+    options = g_list_append(options, option);
+    webqq_prpl_info.protocol_options = options;
 
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
