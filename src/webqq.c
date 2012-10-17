@@ -804,8 +804,16 @@ static int login_complete(LwqqClient* lc,void* data)
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
-    purple_buddy_icons_set_caching(0);
-    //purple_buddy_icons_set_caching(1);
+
+    if(ac->compatible_pidgin_conversation_integration){
+        //this is for pidgin-conversation plugin for gnome-shell hot fix
+        purple_buddy_icons_set_caching(1);
+        mkdir("/tmp/lwqq/icon_cache",0777);
+        purple_buddy_icons_set_cache_dir("/tmp/lwqq/icon_cache");
+    }else{
+        purple_buddy_icons_set_caching(0);
+    }
+
     gc->flags |= PURPLE_CONNECTION_HTML;
 
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
@@ -1086,6 +1094,8 @@ static void qq_login(PurpleAccount *account)
     ac->gc = pc;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
+    ac->compatible_pidgin_conversation_integration=
+        purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
     //this remove all buddies
@@ -1406,6 +1416,9 @@ init_plugin(PurplePlugin *plugin)
 {
     PurpleAccountOption *option;
     GList* options = NULL;
+    option = purple_account_option_bool_new("兼容Pidgin Conversation integration", 
+            "compatible_pidgin_conversation_integration", FALSE);
+    options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);

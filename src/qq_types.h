@@ -20,6 +20,7 @@ typedef struct qq_account {
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
     gboolean debug_file_send;
+    gboolean compatible_pidgin_conversation_integration;
     int magic;//0x4153
 } qq_account;
 typedef struct system_msg {
