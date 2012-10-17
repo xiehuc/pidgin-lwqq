@@ -1,6 +1,6 @@
 install(DIRECTORY "pidgin/"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps/pidgin/protocols")
+    DESTINATION "${PURPLE_DATADIR}/pixmaps/pidgin/protocols")
 install(DIRECTORY "empathy/"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/empathy/icons/hicolor")
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/empathy/icons/hicolor")
 install(DIRECTORY "qqfaces/"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps/pidgin/emotes/webqq")
+    DESTINATION "${PURPLE_DATADIR}/pixmaps/pidgin/emotes/webqq")

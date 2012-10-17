@@ -92,6 +92,7 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     s_free(d);
     int errno = lwqq_async_event_get_result(event);
     purple_xfer_set_completed(xfer,1);
+    purple_xfer_unref(xfer);
     if(errno) {
         lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,file->to,ac,
                             "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
@@ -109,6 +110,7 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     file->from = s_strdup(lc->myself->uin);
     file->to = s_strdup(purple_xfer_get_remote_user(xfer));
     file->name = s_strdup(purple_xfer_get_local_filename(xfer));
+    purple_xfer_ref(xfer);
     data[1] = file;
     data[2] = xfer;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
