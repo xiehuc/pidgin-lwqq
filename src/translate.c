@@ -230,7 +230,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
     if(msg->f_style.i==1) strcat(buf,"<i>");
     if(msg->f_style.u==1) strcat(buf,"<u>");
     snprintf(buf+strlen(buf),300,"<font ");
-    if(!ac->dark_theme_fix && !strcmp("000000", msg->f_color))
+    if(ac->dark_theme_fix && !strcmp("000000", msg->f_color))
         snprintf(buf+strlen(buf),300,"\"#ffffff\" ");
     else
         snprintf(buf+strlen(buf),300,"\"#%s\" ",msg->f_color);
