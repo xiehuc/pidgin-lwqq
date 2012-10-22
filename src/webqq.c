@@ -1094,6 +1094,7 @@ static void qq_login(PurpleAccount *account)
     ac->gc = pc;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
+    ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
     ac->compatible_pidgin_conversation_integration=
         purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
@@ -1422,6 +1423,8 @@ init_plugin(PurplePlugin *plugin)
     option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("修复暗色系统主题下的消息显示(将黑色文字转为白色)", "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
     options = g_list_append(options, option);
