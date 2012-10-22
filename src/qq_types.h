@@ -19,6 +19,7 @@ typedef struct qq_account {
     GPtrArray* opend_chat;
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
+    gboolean dark_theme_fix;
     gboolean debug_file_send;
     gboolean compatible_pidgin_conversation_integration;
     int magic;//0x4153
