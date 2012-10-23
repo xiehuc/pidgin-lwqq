@@ -139,7 +139,13 @@ typedef struct LwqqMsgOffFile{
 }LwqqMsgOffFile;
 typedef struct FileTransItem{
     char* file_name;
-    int file_status;
+    enum {
+        TRANS_OK=0,
+        TRANS_ERROR=50,
+        TRANS_TIMEOUT=51,
+        REFUSED_BY_CLIENT=53,
+    }file_status;
+    //int file_status;
     int pro_id;
     LIST_ENTRY(FileTransItem) entries;
 }FileTransItem;

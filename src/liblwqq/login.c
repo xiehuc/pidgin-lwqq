@@ -472,46 +472,55 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
         
     case 1:
         lwqq_log(LOG_WARNING, "Server busy! Please try again\n");
+        lc->last_err = "Server busy! Please try again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 2:
         lwqq_log(LOG_ERROR, "Out of date QQ number\n");
+        lc->last_err = "Out of date QQ number";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 3:
         lwqq_log(LOG_ERROR, "Wrong password\n");
         *err = LWQQ_EC_ERROR;
+        lc->last_err = "Wrong username or password";
         goto done;
 
     case 4:
         lwqq_log(LOG_ERROR, "Wrong verify code\n");
         *err = LWQQ_EC_ERROR;
+        lc->last_err = "Wrong verify code";
         goto done;
 
     case 5:
         lwqq_log(LOG_ERROR, "Verify failed\n");
+        lc->last_err = "Verify failed";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 6:
         lwqq_log(LOG_WARNING, "You may need to try login again\n");
+        lc->last_err = "You may need to try login again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 7:
         lwqq_log(LOG_ERROR, "Wrong input\n");
+        lc->last_err = "Wrong input";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 8:
         lwqq_log(LOG_ERROR, "Too many logins on this IP. Please try again\n");
+        lc->last_err = "Too many logins on this IP.Please try again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     default:
         *err = LWQQ_EC_ERROR;
+        lc->last_err = "Unknow error";
         lwqq_log(LOG_ERROR, "Unknow error");
         goto done;
     }

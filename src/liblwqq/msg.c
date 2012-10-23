@@ -1637,8 +1637,8 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data)
 {
     char url[512];
-    snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%4u/%s/%s/1/f/1/0/0?psessionid=%s",
-            file->from,file->to,rand(4),lc->index,lc->port,lc->psessionid
+    snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%u/%s/%s/1/f/1/0/0?psessionid=%s",
+            file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
     puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
@@ -1653,8 +1653,9 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
     req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
     if(progress)
         lwqq_http_on_progress(req,progress,prog_data);
-    do{
+    //do{
         req->do_request(req,0,NULL);
-    }while(req->http_code==204);
+    //}while(req->http_code==204);
+    //lwqq_http_request_free(req);
     return NULL;
 }

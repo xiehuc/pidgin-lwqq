@@ -177,6 +177,7 @@ typedef struct LwqqClient {
     char *port;
     char *vfwebqq;
     char *psessionid;
+    const char* last_err;
     char *gface_key;                  /**< use at cface */
     char *gface_sig;                  /**<use at cfage */
     LwqqAsync* async;

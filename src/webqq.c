@@ -798,7 +798,7 @@ static int login_complete(LwqqClient* lc,void* data)
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
         return 0;
     } else if(err!=LWQQ_EC_OK) {
-        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"Network Error");
+        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
         return 0;
     }
 
