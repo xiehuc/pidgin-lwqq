@@ -51,7 +51,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     list = s_malloc0(sizeof(*list));
     list->lc = client;
     pthread_mutex_init(&list->mutex, NULL);
-    SIMPLEQ_INIT(&list->head);
+    TAILQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
     
     return list;
@@ -70,8 +70,8 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
         return ;
 
     pthread_mutex_lock(&list->mutex);
-    while ((recvmsg = SIMPLEQ_FIRST(&list->head))) {
-        SIMPLEQ_REMOVE_HEAD(&list->head, entries);
+    while ((recvmsg = TAILQ_FIRST(&list->head))) {
+        TAILQ_REMOVE(&list->head,recvmsg, entries);
         lwqq_msg_free(recvmsg->msg);
         s_free(recvmsg);
     }
@@ -512,6 +512,7 @@ static int parse_new_msg(json_t *json, void *opaque)
     msg->time = (time_t)strtoll(time, NULL, 10);
     msg->to = s_strdup(json_parse_simple_value(json, "to_uin"));
     msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
+    msg->msg_id2 = atoi(json_parse_simple_value(json, "msg_id2"));
 
     char* value;
     //if it failed means it is not group message.
@@ -968,9 +969,29 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         if (ret == 0) {
             LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
             rmsg->msg = msg;
+            LwqqRecvMsg *iter;
             /* Parse a new message successfully, link it to our list */
             pthread_mutex_lock(&list->mutex);
-            SIMPLEQ_INSERT_TAIL(&list->head, rmsg, entries);
+            //re order for messages.
+            if(msg->type <= LWQQ_MT_SESS_MSG){
+                int id2 = ((LwqqMsgMessage*)msg->opaque)->msg_id2;
+                int inserted = 0;
+                TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
+                    if(iter->msg->type>LWQQ_MT_SESS_MSG)
+                        continue;
+                    LwqqMsgMessage* iter_msg = iter->msg->opaque;
+                    if(iter_msg->msg_id2<id2){
+                        TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
+                        inserted = 1;
+                        break;
+                    }
+                }
+                if(!inserted){
+                    TAILQ_INSERT_HEAD(&list->head,rmsg,entries);
+                }
+            }else{
+                TAILQ_INSERT_TAIL(&list->head, rmsg, entries);
+            }
             pthread_mutex_unlock(&list->mutex);
         } else {
             lwqq_msg_free(msg);

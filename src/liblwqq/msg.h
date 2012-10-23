@@ -61,6 +61,7 @@ typedef struct LwqqMsgMessage {
     char *group_sig;
     };
     char *msg_id;
+    int msg_id2;
     time_t time;
 
     /* For font  */
@@ -233,7 +234,7 @@ void lwqq_msg_free(LwqqMsg *msg);
  */
 typedef struct LwqqRecvMsg {
     LwqqMsg *msg;
-    SIMPLEQ_ENTRY(LwqqRecvMsg) entries;
+    TAILQ_ENTRY(LwqqRecvMsg) entries;
 } LwqqRecvMsg;
 
 typedef struct LwqqRecvMsgList {
@@ -241,7 +242,7 @@ typedef struct LwqqRecvMsgList {
     pthread_t tid;
     pthread_attr_t attr;
     pthread_mutex_t mutex;
-    SIMPLEQ_HEAD(, LwqqRecvMsg) head;
+    TAILQ_HEAD(RecvMsgListHead, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
 } LwqqRecvMsgList;

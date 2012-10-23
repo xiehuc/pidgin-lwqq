@@ -617,14 +617,14 @@ int qq_msg_check(LwqqClient* lc,void* data)
     LwqqRecvMsg *msg;
 
     pthread_mutex_lock(&l->mutex);
-    if (SIMPLEQ_EMPTY(&l->head)) {
+    if (TAILQ_EMPTY(&l->head)) {
         /* No message now, wait 100ms */
         pthread_mutex_unlock(&l->mutex);
         return 0;
     }
-    while(!SIMPLEQ_EMPTY(&l->head)) {
+    while(!TAILQ_EMPTY(&l->head)) {
 
-        msg = SIMPLEQ_FIRST(&l->head);
+        msg = TAILQ_FIRST(&l->head);
         if(msg->msg->type <= LWQQ_MT_SESS_MSG) {
             LwqqAsyncEvset* picset = NULL;
             picset = lwqq_msg_request_picture(lc,msg->msg->type,msg->msg->opaque);
@@ -675,7 +675,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
             }
         }
 
-        SIMPLEQ_REMOVE_HEAD(&l->head, entries);
+        TAILQ_REMOVE(&l->head,msg, entries);
         lwqq_msg_free(msg->msg);
         s_free(msg);
 
