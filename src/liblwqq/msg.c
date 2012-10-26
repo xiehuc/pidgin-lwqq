@@ -972,7 +972,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             LwqqRecvMsg *iter;
             /* Parse a new message successfully, link it to our list */
             pthread_mutex_lock(&list->mutex);
-            //re order for messages.
+            //sort the order for messages.
             if(msg->type <= LWQQ_MT_SESS_MSG){
                 int id2 = ((LwqqMsgMessage*)msg->opaque)->msg_id2;
                 int inserted = 0;
@@ -983,6 +983,11 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
                     if(iter_msg->msg_id2<id2){
                         TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
                         inserted = 1;
+                        break;
+                    }else if(iter_msg->msg_id2==id2){
+                        //this is duplicated message. we destroy it.
+                        inserted = 1;
+                        lwqq_msg_free(msg);
                         break;
                     }
                 }
