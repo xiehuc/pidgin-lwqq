@@ -21,7 +21,7 @@ set(LWQQ_LIST
   liblwqq/smemory.c
   liblwqq/info.c)
 
-add_definitions(-g -Wall)
+add_definitions(-Wall)
 ADD_LIBRARY(webqq MODULE
     ${SRC_LIST}
     ${LWQQ_LIST}
