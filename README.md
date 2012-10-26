@@ -13,16 +13,17 @@ License: GPLv3
 * send / recv group messages
 * send / recv qq face (you should use webqq faces theme in settings)
 * avatar
-* change buddy markname;
-* change buddy category;
-* confirm buddy added request.
+* change buddy markname
+* change buddy category
+* confirm buddy added request
 * visit buddy qzone
 * group whisper message
 * change status
 * support multi webqq account
-* support offline file (not official).
+* support send/recv offline file
 * support font style
 * support block group message
+* support recv file trans
 
 ## empathy support (via telepathy-haze)
 * send / recv text messages
@@ -30,6 +31,8 @@ License: GPLv3
 
 ## known issue
 * send picture abnormal when libcurl < = 7.22.0
+* use pidgin conversation intergrate gnome-shell plugin would cause crash.
+enable "capible pidgin conversation intergrate" option in pidgin account setting to solve it.
 
 *telepathy-haze itself doesn't support group or picture.*
 
@@ -58,9 +61,10 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持访问QQ空间
 * 支持更改在线状态
 * 支持多账户登录
-* 支持离线文件(简易)
+* 支持发送接受离线文件
 * 支持文本样式
 * 支持群消息屏蔽
+* 支持接受文件传输
 
 ## empathy support (via telepathy-haze)
 * 支持发送接受文本消息
@@ -68,6 +72,8 @@ lwqq库是一个非常安全有效的webqq协议的库.
 
 ## 已知问题
 * 当libcurl版本低于7.22.0时可能造成图片发送失败
+* 使用gnome-shell的pidgin conversation intergrate 插件会导致段错误.
+请在pidgin的账户设置中开启"兼容pidgin conversation intergrate"选项.
 
 *telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*
 
