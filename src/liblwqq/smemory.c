@@ -80,12 +80,12 @@ int s_asprintf(char **buf, const char *format, ...)
 int s_atoi(const char* s)
 {
     if(s) return atoi(s);
-    printf("atoi failed:%s\n",s);
+    perror("atoi failed");
     return 0;
 }
 int s_atol(const char* s)
 {
     if(s) return atol(s);
-    printf("atoi failed:%s\n",s);
+    perror("atol failed");
     return 0;
 }
