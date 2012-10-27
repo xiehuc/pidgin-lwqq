@@ -24,11 +24,13 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     //printf("%d:%d\n",now,total);
     return 0;
 }
+#if 0
 static void file_trans_on_start(LwqqAsyncEvent* event,void* data)
 {
     PurpleXfer* xfer = data;
     purple_xfer_start(xfer,lwqq_async_event_get_result(event),NULL,0);
 }
+#endif
 static void file_trans_complete(LwqqAsyncEvent* event,void* data)
 {
     PurpleXfer* xfer = data;

@@ -516,7 +516,7 @@ static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
 {
     S_ITEM *si = (S_ITEM*)sockp;
-    D_ITEM *di;
+    //D_ITEM *di;
     GLOBAL* g = cbp;
 
     if(what == CURL_POLL_REMOVE) {

@@ -273,7 +273,6 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
 {
     char msg[256] = {0};
     LwqqHttpRequest *req = NULL;
-    char *cookies;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
     create_post_data(lc, msg, sizeof(msg));
@@ -288,11 +287,7 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 1, msg,get_friends_info_back,lc);
 
     /**
@@ -396,7 +391,6 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
     //we send request if possible with modify time
     //to reduce download rate
     LwqqHttpRequest* req;
-    char* cookies;
     char url[512];
     char host[32];
     int type = (isgroup)?4:1;
@@ -420,11 +414,7 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
         strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",localtime_r(&modify,&modify_tm) );
         req->set_header(req,"If-Modified-Since",buf);
     }
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     void** array = s_malloc0(sizeof(void*)*4);
     array[0] = lc;
     array[1] = buddy;
@@ -639,7 +629,6 @@ LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err
     char msg[256];
     char url[512];
     LwqqHttpRequest *req = NULL;
-    char *cookies;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
     create_post_data(lc, msg, sizeof(msg));
@@ -653,11 +642,7 @@ LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 1, msg,get_group_name_list_back,lc);
 done:
     lwqq_http_request_free(req);
@@ -733,7 +718,7 @@ json_error:
 
 LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc)
 {
-    if(!lc) return;
+    if(!lc) return NULL;
 
     char url[512];
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_discu_list_new2?clientid=%s&psessionid=%s&vfwebqq=%s&t=%ld",
@@ -1057,7 +1042,6 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    char *cookies;
 
     if (!lc || ! group) {
         return NULL;
@@ -1081,11 +1065,7 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
     //req->set_header(req, "Content-Transfer-Encoding", "binary");
     //req->set_header(req, "Content-type", "utf-8");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     void **data = s_malloc0(sizeof(void*)*2);
     data[0] = lc;
     data[1] = group;
@@ -1191,7 +1171,6 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporb
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    char *cookies;
     snprintf(url, sizeof(url),
              "%s/api/get_friend_uin2?tuin=%s&verifysession=&type=1&code=&vfwebqq=%s&t=%ld",
              "http://s.web2.qq.com", uin, lc->vfwebqq,time(NULL));
@@ -1200,11 +1179,7 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporb
         goto done;
     }
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     void ** data = s_malloc0(sizeof(void*)*3);
     data[0] = lc;
     data[1] = group;
@@ -1288,7 +1263,6 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
     LwqqHttpRequest *req = NULL;
     int ret;
     json_t *json = NULL, *json_tmp;
-    char *cookies;
 
     if (!lc || ! buddy) {
         return ;
@@ -1312,11 +1286,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     ret = req->do_request(req, 0, NULL);
     if (ret || req->http_code != 200) {
         if (err)
@@ -1448,7 +1418,6 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 {
     char url[512];
     LwqqHttpRequest *req = NULL;
-    char *cookies;
 
     if (!lc) {
         return NULL;
@@ -1465,11 +1434,7 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
     req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 0, NULL,get_online_buddies_back,lc);
 done:
     lwqq_http_request_free(req);
@@ -1795,12 +1760,7 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     if(req==NULL){
         goto done;
     }
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20010321002&callback=0&id=2");
     ret = req->do_request(req,0,NULL);
     if(req->http_code!=200){
@@ -1831,12 +1791,7 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
             "http://d.web2.qq.com",lwqq_status_to_str(status),lc->clientid,lc->psessionid,time(NULL));
     puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
     void **data = s_malloc(sizeof(void*)*3);
     data[0] = (void*)CHANGE_STATUS;
@@ -1854,12 +1809,7 @@ LwqqVerifyCode* lwqq_info_add_friend_get_image(LwqqClient* lc)
             "aid=1003901&%.14lf",
             "http://captcha.qq.com",random);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->do_request(req,0,NULL);
     if(req->http_code!=200){
@@ -1889,12 +1839,7 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK m
             group->gid,mask,lc->index,lc->port,lc->vfwebqq);
     puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");
     void **data = s_malloc(sizeof(void*)*3);
     data[0] = (void*)CHANGE_MASK;

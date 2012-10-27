@@ -414,7 +414,6 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
     char url[1024];
     LwqqHttpRequest *req;
     char *response = NULL;
-    char *cookies;
     int ret;
     
     snprintf(url, sizeof(url), "%s/login?u=%s&p=%s&verifycode=%s&"
@@ -429,11 +428,7 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
         goto done;
     }
     /* Setup http header */
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     /* Send request */
     ret = req->do_request(req, 0, NULL);
@@ -614,7 +609,6 @@ static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *
     char *buf;
     LwqqHttpRequest *req = NULL;  
     char *response = NULL;
-    char *cookies;
     int ret;
     json_t *json = NULL;
     char *value;
@@ -651,11 +645,7 @@ static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     
     /* Set http cookie */
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     
     ret = req->do_request(req, 1, msg);
     if (ret) {
@@ -809,7 +799,6 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     json_t *json = NULL;
     char *value;
     struct timeval tv;
-    char *cookies;
     long int re;
 
     if (!client) {
@@ -839,11 +828,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     req->set_header(req, "Referer", "http://ptlogin2.qq.com/proxy.html?v=20101025002");
     
     /* Set http cookie */
-    cookies = lwqq_get_cookies(client);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(client));
     
     lwqq_http_set_timeout(req,5);
     ret = req->do_request(req, 0, NULL);

@@ -72,10 +72,10 @@ failed:
  * 
  * @return Cookies string on success, or null on failure
  */
-char *lwqq_get_cookies(LwqqClient *lc)
+const char *lwqq_get_cookies(LwqqClient *lc)
 {
     if (lc->cookies && lc->cookies->lwcookies) {
-        return s_strdup(lc->cookies->lwcookies);
+        return (lc->cookies->lwcookies);
     }
 
     return NULL;

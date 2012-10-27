@@ -37,8 +37,8 @@ target_link_libraries(webqq
   ${CURL_LIBRARIES}
   )
 
-add_library(webqqa MODULE
-    empathy-accounts-plugin-webqq.c
-    )
+#add_library(webqqa MODULE
+#    empathy-accounts-plugin-webqq.c
+#    )
 
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})

@@ -143,7 +143,7 @@ typedef struct LwqqGroup {
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 
 typedef struct LwqqDiscu{
-    unsigned int64_t did;
+    unsigned long did;
     char* name;
     LIST_ENTRY(LwqqDiscu) entries;
 }LwqqDiscu;
@@ -239,7 +239,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password);
  * 
  * @return Cookies string on success, or null on failure
  */
-char *lwqq_get_cookies(LwqqClient *lc);
+const char *lwqq_get_cookies(LwqqClient *lc);
 
 /** 
  * Free LwqqVerifyCode object

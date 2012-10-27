@@ -771,7 +771,6 @@ static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,L
     LwqqHttpRequest* req;
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
-    char* cookies;
     char url[512];
     char *file_path = url_encode(c->data.img.file_path);
     //there are face 1 to face 10 server to accelerate speed.
@@ -786,12 +785,8 @@ static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,L
     }
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req,"Host","d.web2.qq.com");
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
     return req->do_request_async(req, 0, NULL,set_content_picture_data,c);
 done:
     lwqq_http_request_free(req);
@@ -802,7 +797,6 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     LwqqHttpRequest* req;
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
-    char* cookies;
     char url[512];
 /*http://web2.qq.com/cgi-bin/get_group_pic?type=0&gid=3971957129&uin=4174682545&rip=120.196.211.216&rport=9072&fid=2857831080&pic=71A8E53B7F678D035656FECDA1BD7F31.jpg&vfwebqq=762a8682d17931d0cc647515e570435bd82e3a4e957bd052faa9615192eb7a3c4f1719006a7176c1&t=1343130567*/
     snprintf(url, sizeof(url),
@@ -817,11 +811,7 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     req->set_header(req, "Referer", "http://web2.qq.com/");
     ///this is very important!!!!!!!!!
     req->set_header(req, "Host", "web2.qq.com");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     return req->do_request_async(req,0,NULL,set_content_picture_data,c);
 done:
@@ -833,7 +823,6 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     LwqqHttpRequest* req;
     LwqqErrorCode error;
     LwqqErrorCode *err = &error;
-    char* cookies;
     char url[1024];
 /*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
     snprintf(url, sizeof(url),
@@ -847,11 +836,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     }
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req, "Referer", "http://web2.qq.com/");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     return req->do_request_async(req,0,NULL,set_content_picture_data,c);
 done:
@@ -1020,7 +1005,6 @@ static void *start_poll_msg(void *msg_list)
     LwqqClient *lc;
     LwqqHttpRequest *req = NULL;  
     int ret;
-    char *cookies;
     char *s;
     int retcode;
     char msg[1024];
@@ -1047,11 +1031,7 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     while(1) {
         ret = req->do_request(req, 1, msg);
         printf("%ld\n",req->http_code);
@@ -1176,18 +1156,14 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     size_t size = c->data.img.size;
     char url[512];
     char piece[22];
-    char *cookies;
 
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%ld",
             time(NULL));
     req = lwqq_http_create_default_request(url,&err);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendPic");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
@@ -1239,7 +1215,6 @@ static int query_gface_sig(LwqqClient* lc)
     LwqqHttpRequest *req;
     LwqqErrorCode err;
     char url[512];
-    char *cookies;
     int ret;
     int succ = 0;
     if(lc->gface_key&&lc->gface_sig){
@@ -1252,11 +1227,7 @@ static int query_gface_sig(LwqqClient* lc)
     req = lwqq_http_create_default_request(url,&err);
     req->set_header(req,"Host","d.web2.qq.com");
     req->set_header(req,"Referer","https://d.web2.qq.com/cfproxy.html?v=20110331002&callback=1");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     ret = req->do_request(req,0,NULL);
     if(ret||req->http_code !=200){
@@ -1285,7 +1256,6 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     LwqqHttpRequest *req;
     LwqqErrorCode err;
     char url[512];
-    char *cookies;
     static int fileid = 1;
     char fileid_str[20];
 
@@ -1295,12 +1265,8 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
-    //req->set_header(req,"Host","up.web2.qq.com");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     //this is special for group msg.it can upload over 250K
     req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
@@ -1384,7 +1350,6 @@ done:
 LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
     LwqqHttpRequest *req = NULL;  
-    char *cookies;
     char *content = NULL;
     static char data[8192];
     data[0] = '\0';
@@ -1434,11 +1399,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     
     return req->do_request_async(req, 1, data,msg_send_back,lc);
 
@@ -1528,12 +1489,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     //s_free(gbk);
     puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     //followlocation by hand
     //because curl doesn't escape url after auto follow;
@@ -1571,12 +1527,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     char url[512];
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
 
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
@@ -1630,12 +1581,7 @@ void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
     char post[512];
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/send_offfile2");
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
     snprintf(post,sizeof(post),"r={\"to\":\"%s\",\"file_path\":\"%s\","
             "\"filename\":\"%s\",\"to_uin\":\"%s\","
@@ -1663,17 +1609,12 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data)
 {
     char url[512];
-    snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%u/%s/%s/1/f/1/0/0?psessionid=%s",
+    snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%ld/%s/%s/1/f/1/0/0?psessionid=%s",
             file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
     puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    char *cookies;
-    cookies = lwqq_get_cookies(lc);
-    if (cookies) {
-        req->set_header(req, "Cookie", cookies);
-        s_free(cookies);
-    }
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
 
     req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
