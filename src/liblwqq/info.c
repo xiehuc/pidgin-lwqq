@@ -725,13 +725,54 @@ LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc)
             lc->clientid,lc->psessionid,lc->vfwebqq,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(url, NULL);
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     
-    return req->do_request_async(req,0,NULL,get_discu_list_back,NULL);
+    return req->do_request_async(req,0,NULL,get_discu_list_back,lc);
+}
+
+static void parse_discus_dnamelist_child(LwqqClient* lc,json_t* root)
+{
+    json_t* json = json_find_first_label(root, "dnamelist");
+    const char* did;
+    if(json == NULL) return;
+    json = json->child->child;
+    while(json){
+        LwqqDiscu* discu = lwqq_discu_new();
+        did = json_parse_simple_value(json, "did");
+        discu->did = did?strtoul(did,NULL,10):0;
+        discu->name = s_strdup(json_parse_simple_value(json,"name"));
+        LIST_INSERT_HEAD(&lc->discus, discu, entries);
+        json=json->next;
+    }
 }
 
 static int get_discu_list_back(LwqqHttpRequest* req,void* data)
 {
-    return 0;
+    LwqqClient* lc = data;
+    int errno=0;
+    json_t* root = NULL;
+    json_t* json_temp = NULL;
+    if(req->http_code!=200){
+        errno = 1;
+        goto done;
+    }
+    json_parse_document(&root, req->response);
+    if(!root){ errno = 1; goto done;}
+    json_temp = get_result_json_object(root);
+    if(!json_temp) {errno=1;goto done;}
+
+    if (json_temp->child && json_temp->child->child ) {
+
+        json_temp = json_temp->child;
+        parse_discus_dnamelist_child(lc,json_temp);
+    }
+
+
+done:
+    if(!root)
+        json_free_value(&root);
+    lwqq_http_request_free(req);
+    return errno;
 }
 
 /**

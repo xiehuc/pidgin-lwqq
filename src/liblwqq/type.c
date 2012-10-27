@@ -128,6 +128,7 @@ void lwqq_client_free(LwqqClient *client)
     LwqqBuddy *b_entry, *b_next;
     LwqqFriendCategory *c_entry, *c_next;
     LwqqGroup *g_entry, *g_next;
+    LwqqDiscu* d_entry,* d_next;
 
     if (!client)
         return ;
@@ -165,6 +166,11 @@ void lwqq_client_free(LwqqClient *client)
     LIST_FOREACH_SAFE(g_entry, &client->groups, entries, g_next) {
         LIST_REMOVE(g_entry, entries);
         lwqq_group_free(g_entry);
+    }
+
+    LIST_FOREACH_SAFE(d_entry, &client->discus, entries, d_next) {
+        LIST_REMOVE(d_entry, entries);
+        lwqq_discu_free(d_entry);
     }
 
     /* Free msg_list */

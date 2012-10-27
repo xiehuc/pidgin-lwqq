@@ -61,6 +61,8 @@ static void* _background_friends_info(void* data)
     lock = lwqq_async_evset_new();
     event = lwqq_info_get_online_buddies(ac->qq,&err);
     lwqq_async_evset_add_event(lock,event);
+    event = lwqq_info_get_discu_list(ac->qq);
+    lwqq_async_evset_add_event(lock, event);
     lwqq_async_wait(lock);
 
     lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
