@@ -733,14 +733,12 @@ LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc)
 static void parse_discus_dnamelist_child(LwqqClient* lc,json_t* root)
 {
     json_t* json = json_find_first_label(root, "dnamelist");
-    const char* did;
     if(json == NULL) return;
     json = json->child->child;
     while(json){
         LwqqDiscu* discu = lwqq_discu_new();
-        did = json_parse_simple_value(json, "did");
-        discu->did = did?strtoul(did,NULL,10):0;
-        discu->name = s_strdup(json_parse_simple_value(json,"name"));
+        discu->did = s_strdup(json_parse_simple_value(json,"did"));
+        discu->name = json_unescape(json_parse_simple_value(json,"name"));
         LIST_INSERT_HEAD(&lc->discus, discu, entries);
         json=json->next;
     }

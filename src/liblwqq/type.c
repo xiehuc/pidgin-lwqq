@@ -333,6 +333,7 @@ void lwqq_discu_free(LwqqDiscu* discu)
     if(!discu) return;
 
     s_free(discu->name);
+    s_free(discu->did);
 
     s_free(discu);
 }

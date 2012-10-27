@@ -13,5 +13,8 @@
 //this is qqnumber of a group
 #define QQ_ROOM_KEY_QUN_ID "account"
 #define QQ_ROOM_KEY_GID "gid"
+#define QQ_ROOM_TYPE "type"
+#define QQ_ROOM_TYPE_GROUP "group"
+#define QQ_ROOM_TYPE_DISCU "discu"
 
 #endif

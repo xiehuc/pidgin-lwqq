@@ -143,7 +143,7 @@ typedef struct LwqqGroup {
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 
 typedef struct LwqqDiscu{
-    unsigned long did;
+    char* did;
     char* name;
     LIST_ENTRY(LwqqDiscu) entries;
 }LwqqDiscu;

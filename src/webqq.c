@@ -301,6 +301,15 @@ static const char* group_name(LwqqGroup* group)
         strcat(gname,"(屏蔽)");
     return gname;
 }
+static const char* discu_name(LwqqDiscu* discu)
+{
+    if(strcmp(discu->name,"")==0){
+        return "未命名讨论组";
+    } else{
+        return discu->name;
+    }
+    return discu->name;
+}
 static int group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -312,8 +321,9 @@ static int group_come(LwqqClient* lc,void* data)
     PurpleChat* chat;
 
     if(purple_blist_find_chat(account,group->gid) == NULL) {
-        components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_GID),g_strdup(group->gid));
+        components = g_hash_table_new_full(g_str_hash, g_str_equal, NULL , g_free);
+        g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(group->gid));
+        g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(QQ_ROOM_TYPE_GROUP));
         chat = purple_chat_new(account,group->gid,components);
         purple_blist_add_chat(chat,gp,NULL);
     } else
@@ -323,6 +333,32 @@ static int group_come(LwqqClient* lc,void* data)
 
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
+    ac->disable_send_server = 0;
+    return 0;
+}
+static int discu_come(LwqqClient* lc,void* data)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    ac->disable_send_server = 1;
+    PurpleAccount* account=ac->account;
+    LwqqDiscu* discu = data;
+    PurpleGroup* gp = purple_group_new("讨论组");
+    GHashTable* components;
+    PurpleChat* chat;
+
+    if(purple_blist_find_chat(account,discu->did) == NULL) {
+        components = g_hash_table_new_full(g_str_hash, g_str_equal, NULL , g_free);
+        g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(discu->did));
+        g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(QQ_ROOM_TYPE_DISCU));
+        chat = purple_chat_new(account,discu->did,components);
+        purple_blist_add_chat(chat,gp,NULL);
+    } else
+        chat = purple_blist_find_chat(account,discu->did);
+
+    purple_blist_alias_chat(chat,discu_name(discu));
+
+    /*if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
+        lwqq_info_get_group_avatar(lc,group);*/
     ac->disable_send_server = 0;
     return 0;
 }
@@ -742,6 +778,10 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     LIST_FOREACH(group,&lc->groups,entries) {
         group_come(lc,group);
     }
+    LwqqDiscu* discu;
+    LIST_FOREACH(discu,&lc->discus,entries) {
+        discu_come(lc,discu);
+    }
 
     ac->state = LOAD_COMPLETED;
     background_msg_poll(ac);
@@ -949,8 +989,10 @@ static GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat
 
     defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 
-    if (chat_name != NULL)
+    if (chat_name != NULL){
         g_hash_table_insert(defaults, QQ_ROOM_KEY_GID, g_strdup(chat_name));
+        g_hash_table_insert(defaults, QQ_ROOM_TYPE,g_strdup(QQ_ROOM_TYPE_GROUP));
+    }
 
     return defaults;
 }
