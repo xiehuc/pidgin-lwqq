@@ -36,6 +36,7 @@ static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 static int group_detail_back(LwqqHttpRequest* req,void* data);
 static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
+static int get_discu_detail_info_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -1191,6 +1192,94 @@ json_error:
     lwqq_http_request_free(req);
     return errno;
 }
+
+LwqqAsyncEvent* lwqq_info_get_discu_detail_into(LwqqClient* lc,LwqqDiscu* discu)
+{
+    if(!lc || !discu) return NULL;
+
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_discu_info?"
+            "did=%s&clientid=%s&psessionid=%s&t=%ld",
+            discu->did,lc->clientid,lc->psessionid,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    void ** data = s_malloc0(sizeof(void*)*2);
+    data[0] = lc;
+    data[1] = discu;
+    return req->do_request_async(req,0,NULL,get_discu_detail_info_back,lc);
+}
+
+static void parse_discus_info_child(LwqqClient* lc,LwqqDiscu* discu,json_t* root)
+{
+    json_t* json = json_find_first_label(root,"info");
+
+    discu->owner = s_strdup(json_parse_simple_value(json,"discu_owner"));
+
+    json = json_find_first_label(json,"mem_list");
+    json = json->child->child;
+    while(json){
+        LwqqSimpleBuddy* sb = lwqq_simple_buddy_new();
+        sb->uin = s_strdup(json_parse_simple_value(json,"mem_uin"));
+        sb->qq = s_strdup(json_parse_simple_value(json,"ruin"));
+        LIST_INSERT_HEAD(&discu->members,sb,entries);
+        json = json->next;
+    }
+}
+static void parse_discus_other_child(LwqqClient* lc,LwqqDiscu* discu,json_t* root)
+{
+    json_t* json = json_find_first_label(root,"mem_info");
+
+    json = json->child->child;
+    const char* uin;
+
+    while(json){
+        uin = json_parse_simple_value(json,"uin");
+        LwqqSimpleBuddy* sb = lwqq_discu_find_discu_member_by_uin(discu,uin);
+        sb->nick = json_unescape(json_parse_simple_value(json,"nick"));
+        json = json->next;
+    }
+
+    json = json_find_first_label(root,"mem_status");
+    
+    json = json->child->child;
+
+    while(json){
+        uin = json_parse_simple_value(json,"uin");
+        LwqqSimpleBuddy* sb = lwqq_discu_find_discu_member_by_uin(discu,uin);
+        sb->client_type = atoi(json_parse_simple_value(json,"client_type"));
+        sb->stat = lwqq_status_from_str(json_parse_simple_value(json,"status"));
+        json = json->next;
+    }
+}
+static int get_discu_detail_info_back(LwqqHttpRequest* req,void* data)
+{
+    void **d = data;
+    LwqqClient* lc = d[0];
+    LwqqDiscu* discu = d[1];
+    s_free(data);
+    int errno = 0;
+    json_t* root = NULL,* json = NULL;
+
+    if(req->http_code!=200){
+        errno = 1;
+        goto done;
+    }
+    
+    json_parse_document(&root,req->response);
+    json = get_result_json_object(root);
+    if(json && json->child) {
+        json = json->child;
+
+        parse_discus_info_child(lc,discu,json);
+        parse_discus_other_child(lc,discu,json);
+
+    }
+done:
+    lwqq_http_request_free(req);
+    return errno;
+}
+
 LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporbuddy)
 {
     if (!lc || !grouporbuddy) {

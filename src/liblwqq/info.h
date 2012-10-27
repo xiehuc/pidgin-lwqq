@@ -32,6 +32,8 @@ LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err
 
 LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc);
 
+LwqqAsyncEvent* lwqq_info_get_discu_detail_info(LwqqClient* lc,LwqqDiscu* discu);
+
 /** 
  * Get detail information of QQ friend(NB: include myself)
  * QQ server need us to pass param like:

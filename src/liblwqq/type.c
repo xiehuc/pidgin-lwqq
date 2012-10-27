@@ -246,6 +246,7 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
     if(!buddy) return;
 
     s_free(buddy->uin);
+    s_free(buddy->qq);
     s_free(buddy->cate_index);
     s_free(buddy->nick);
     s_free(buddy->card);
@@ -330,10 +331,17 @@ void lwqq_group_free(LwqqGroup *group)
 
 void lwqq_discu_free(LwqqDiscu* discu)
 {
+    LwqqSimpleBuddy *m_entry, *m_next;
     if(!discu) return;
 
     s_free(discu->name);
     s_free(discu->did);
+    s_free(discu->owner);
+
+    LIST_FOREACH_SAFE(m_entry,&discu->members,entries,m_next){
+        LIST_REMOVE(m_entry, entries);
+        lwqq_simple_buddy_free(m_entry);
+    }
 
     s_free(discu);
 }
@@ -383,6 +391,21 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
 
     return NULL;
 }
+LwqqSimpleBuddy *lwqq_discu_find_discu_member_by_uin(LwqqDiscu* discu, const char *uin)
+{
+    LwqqSimpleBuddy *member;
+    
+    if (!discu || !uin)
+        return NULL;
+
+    LIST_FOREACH(member, &discu->members, entries) {
+        if (member->uin && (strcmp(member->uin, uin) == 0))
+            return member;
+    }
+
+    return NULL;
+}
+
 const char* lwqq_status_to_str(LWQQ_STATUS status)
 {
     switch(status){

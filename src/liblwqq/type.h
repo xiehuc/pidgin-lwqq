@@ -96,6 +96,7 @@ enum LWQQ_FLAG_ENUM{
 typedef int LWQQ_FLAG;
 typedef struct LwqqSimpleBuddy{
     char* uin;
+    char* qq;
     char* nick;
     char* card;                 /* 群名片 */
     LWQQ_CTYPE client_type;
@@ -114,6 +115,10 @@ typedef enum LWQQ_MASK{
 }LWQQ_MASK;
 /* QQ group */
 typedef struct LwqqGroup {
+    enum{
+        LWQQ_GROUP_QUN,
+        LWQQ_GROUP_DISCU,
+    }type;
     char *name;                  /**< QQ Group name */
     char *gid;
     char *code;    
@@ -145,7 +150,9 @@ typedef struct LwqqGroup {
 typedef struct LwqqDiscu{
     char* did;
     char* name;
+    char* owner;
     LIST_ENTRY(LwqqDiscu) entries;
+    LIST_HEAD(,LwqqSimpleBuddy) members;
 }LwqqDiscu;
 
 typedef struct LwqqVerifyCode {
@@ -327,6 +334,7 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
  * @return A LwqqBuddy instance 
  */
 LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
+LwqqSimpleBuddy *lwqq_discu_find_discu_member_by_uin(LwqqDiscu* discu, const char *uin);
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
