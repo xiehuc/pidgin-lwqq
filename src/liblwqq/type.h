@@ -142,6 +142,12 @@ typedef struct LwqqGroup {
 } LwqqGroup;
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 
+typedef struct LwqqDiscu{
+    unsigned int64_t did;
+    char* name;
+    LIST_ENTRY(LwqqDiscu) entries;
+}LwqqDiscu;
+
 typedef struct LwqqVerifyCode {
     char *str;
     char *type;
@@ -190,6 +196,7 @@ typedef struct LwqqClient {
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
+    LIST_HEAD(, LwqqDiscu) discus; /**< QQ discus */
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
     int magic;          /**< 0x4153 **/
@@ -323,6 +330,14 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
+
+
+///////discu api
+
+
+#define lwqq_discu_new() ((LwqqDiscu*)s_malloc0(sizeof(LwqqDiscu)))
+void lwqq_discu_free(LwqqDiscu* dis);
+
 
 /************************************************************************/
 

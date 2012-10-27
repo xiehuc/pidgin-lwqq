@@ -322,6 +322,14 @@ void lwqq_group_free(LwqqGroup *group)
     s_free(group);
 }
 
+void lwqq_discu_free(LwqqDiscu* discu)
+{
+    if(!discu) return;
+
+    s_free(discu->name);
+
+    s_free(discu);
+}
 
 /** 
  * Find group object by group's gid member

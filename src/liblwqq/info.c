@@ -35,6 +35,7 @@ static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 static int group_detail_back(LwqqHttpRequest* req,void* data);
 static int info_commom_back(LwqqHttpRequest* req,void* data);
+static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 
 
 /**
@@ -730,6 +731,23 @@ json_error:
     return 0;
 }
 
+LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc)
+{
+    if(!lc) return;
+
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_discu_list_new2?clientid=%s&psessionid=%s&vfwebqq=%s&t=%ld",
+            lc->clientid,lc->psessionid,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url, NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    
+    return req->do_request_async(req,0,NULL,get_discu_list_back,NULL);
+}
+
+static int get_discu_list_back(LwqqHttpRequest* req,void* data)
+{
+    return 0;
+}
 
 /**
  * Get all friends qqnumbers
