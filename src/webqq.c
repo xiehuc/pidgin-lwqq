@@ -778,10 +778,10 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     LIST_FOREACH(group,&lc->groups,entries) {
         group_come(lc,group);
     }
-    LwqqDiscu* discu;
+    /*LwqqDiscu* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
         discu_come(lc,discu);
-    }
+    }*/
 
     ac->state = LOAD_COMPLETED;
     background_msg_poll(ac);
