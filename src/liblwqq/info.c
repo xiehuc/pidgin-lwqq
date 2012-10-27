@@ -122,10 +122,10 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
         name = json_parse_simple_value(cur, "name");
         cate = s_malloc0(sizeof(*cate));
         if (index) {
-            cate->index = atoi(index);
+            cate->index = s_atoi(index);
         }
         if (sort) {
-            cate->sort = atoi(sort);
+            cate->sort = s_atoi(sort);
         }
         if (name) {
             cate->name = s_strdup(name);
@@ -255,7 +255,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
             continue;
 
         LIST_FOREACH(c_entry, &lc->categories, entries) {
-            if (c_entry->index == atoi(cate_index)) {
+            if (c_entry->index == s_atoi(cate_index)) {
                 c_entry->count++;
             }
         }
@@ -567,7 +567,7 @@ static void parse_groups_gmasklist_child(LwqqClient *lc, json_t *json)
     LwqqGroup* group;
     while(json){
         gid = json_parse_simple_value(json,"gid");
-        mask = atoi(json_parse_simple_value(json,"mask"));
+        mask = s_atoi(json_parse_simple_value(json,"mask"));
 
         group = lwqq_group_find_group_by_gid(lc,gid);
         if(group){
@@ -986,7 +986,7 @@ static void parse_groups_ginfo_members_child(LwqqClient *lc, LwqqGroup *group,  
     LwqqSimpleBuddy* sb;
     while(members){
         uin = json_parse_simple_value(members,"muin");
-        mflag = atoi(json_parse_simple_value(members,"mflag"));
+        mflag = s_atoi(json_parse_simple_value(members,"mflag"));
         sb = lwqq_group_find_group_member_by_uin(group,uin);
         if(sb) sb->mflag = mflag;
 
@@ -1062,8 +1062,8 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_group_find_group_member_by_uin(group, uin);
         if (!member)
             continue;
-        member->client_type = atoi(json_parse_simple_value(cur, "client_type"));
-        member->stat = atoi(json_parse_simple_value(cur, "stat"));
+        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"));
+        member->stat = s_atoi(json_parse_simple_value(cur, "stat"));
 
     }
 }
@@ -1247,7 +1247,7 @@ static void parse_discus_other_child(LwqqClient* lc,LwqqDiscu* discu,json_t* roo
     while(json){
         uin = json_parse_simple_value(json,"uin");
         LwqqSimpleBuddy* sb = lwqq_discu_find_discu_member_by_uin(discu,uin);
-        sb->client_type = atoi(json_parse_simple_value(json,"client_type"));
+        sb->client_type = s_atoi(json_parse_simple_value(json,"client_type"));
         sb->stat = lwqq_status_from_str(json_parse_simple_value(json,"status"));
         json = json->next;
     }
@@ -1349,7 +1349,7 @@ static int get_qqnumber_back(LwqqHttpRequest* req,void* data)
         goto done;
     }
     retcode = json_parse_simple_value(json,"retcode");
-    errno = atoi(retcode);
+    errno = s_atoi(retcode);
     if(errno!=0){
         lwqq_log(LOG_ERROR," qqnumber fetch error: retcode %s\n",retcode);
         goto done;
@@ -1471,10 +1471,10 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(blood, "blood");
         SET_BUDDY_INFO(homepage, "homepage");
         //SET_BUDDY_INFO(stat, "stat");
-        buddy->stat = atoi(json_parse_simple_value(json,"stat"));
+        buddy->stat = s_atoi(json_parse_simple_value(json,"stat"));
         /*if(buddy->status) s_free(buddy->status);
         buddy->status = NULL;
-        buddy->status = s_strdup(lwqq_status_to_str(atoi(buddy->stat)));*/
+        buddy->status = s_strdup(lwqq_status_to_str(s_atoi(buddy->stat)));*/
         SET_BUDDY_INFO(vip_info, "vip_info");
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
@@ -1483,7 +1483,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(shengxiao, "shengxiao");
         SET_BUDDY_INFO(email, "email");
         //SET_BUDDY_INFO(client_type, "client_type");
-        buddy->client_type = atoi(json_parse_simple_value(json,"client_type"));
+        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"));
         SET_BUDDY_INFO(province, "province");
         SET_BUDDY_INFO(gender, "gender");
         SET_BUDDY_INFO(mobile, "mobile");
@@ -1527,7 +1527,7 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
         if (b) {
             b->stat = lwqq_status_from_str(status);
             if (client_type) {
-                b->client_type = atoi(client_type);
+                b->client_type = s_atoi(client_type);
             }
         }
     }
@@ -1675,7 +1675,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    errno = atoi(retcode);
+    errno = s_atoi(retcode);
     if(errno==0&&data!=NULL){
         void** d = data;
         long type = (long)d[0];

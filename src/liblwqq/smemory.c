@@ -77,3 +77,15 @@ int s_asprintf(char **buf, const char *format, ...)
 
     return rv;
 }
+int s_atoi(const char* s)
+{
+    if(s) return atoi(s);
+    printf("atoi failed:%s\n",s);
+    return 0;
+}
+int s_atol(const char* s)
+{
+    if(s) return atol(s);
+    printf("atoi failed:%s\n",s);
+    return 0;
+}
