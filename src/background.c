@@ -142,7 +142,8 @@ static void send_back(LwqqAsyncEvent* event,void* data)
 
     LwqqMsgMessage* mmsg = msg->opaque;
     mmsg->to = NULL;
-    mmsg->group_code = NULL;
+    if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
+    else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
     s_free(what);
     s_free(who);
     lwqq_msg_free(msg);

@@ -92,8 +92,10 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     switch (type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
+    case LWQQ_MT_DISCU_MSG:
     case LWQQ_MT_SESS_MSG:
         mmsg = s_malloc0(sizeof(LwqqMsgMessage));
+        mmsg->type = type;
         TAILQ_INIT(&mmsg->content);
         msg->opaque = mmsg;
         break;
@@ -142,11 +144,19 @@ static void lwqq_msg_message_free(void *opaque)
 
     s_free(msg->from);
     s_free(msg->to);
-    s_free(msg->send);
     s_free(msg->f_name);
     s_free(msg->f_color);
-    s_free(msg->group_code);
     s_free(msg->msg_id);
+    if(msg->type == LWQQ_MT_GROUP_MSG){
+        s_free(msg->group.send);
+        s_free(msg->group.group_code);
+    }else if(msg->type == LWQQ_MT_SESS_MSG){
+        s_free(msg->sess.id);
+        s_free(msg->sess.group_sig);
+    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+        s_free(msg->discu.send);
+        s_free(msg->discu.did);
+    }
 
     LwqqMsgContent *c;
     LwqqMsgContent *t;
@@ -165,6 +175,8 @@ static void lwqq_msg_message_free(void *opaque)
                 s_free(c->data.cface.name);
                 s_free(c->data.cface.file_id);
                 s_free(c->data.cface.key);
+                break;
+            default:
                 break;
         }
         s_free(c);
@@ -357,6 +369,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_BUDDY_MSG;
     } else if (!strncmp(msg_type, "group_message", strlen("group_message"))) {
         type = LWQQ_MT_GROUP_MSG;
+    }else if(!strncmp(msg_type,"discu_message",strlen("discu_message"))){
+        type = LWQQ_MT_DISCU_MSG;
     }else if(!strncmp(msg_type,"sess_message",strlen("sess_message"))){
         type = LWQQ_MT_SESS_MSG;
     } else if (!strncmp(msg_type, "buddies_status_change",
@@ -514,15 +528,17 @@ static int parse_new_msg(json_t *json, void *opaque)
     msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
     msg->msg_id2 = atoi(json_parse_simple_value(json, "msg_id2"));
 
-    char* value;
     //if it failed means it is not group message.
     //so it equ NULL.
-    value = s_strdup(json_parse_simple_value(json, "send_uin"));
-    if(value!=NULL) msg->send = value;
-    value = s_strdup(json_parse_simple_value(json,"group_code"));
-    if(value!=NULL) msg->group_code = value;
-    value = s_strdup(json_parse_simple_value(json,"id"));
-    if(value!=NULL) msg->id = value;
+    if(msg->type == LWQQ_MT_GROUP_MSG){
+        msg->group.send = s_strdup(json_parse_simple_value(json, "send_uin"));
+        msg->group.group_code = s_strdup(json_parse_simple_value(json,"group_code"));
+    }else if(msg->type == LWQQ_MT_SESS_MSG){
+        msg->sess.id = s_strdup(json_parse_simple_value(json,"id"));
+    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+        msg->discu.send = s_strdup(json_parse_simple_value(json, "send_uin"));
+        msg->discu.did = s_strdup(json_parse_simple_value(json,"did"));
+    }
 
     if (!msg->to) {
         return -1;
@@ -760,6 +776,8 @@ static int set_content_picture_data(LwqqHttpRequest* req,void* data)
             c->data.cface.data = req->response;
             c->data.cface.size = req->resp_len;
         break;
+        default:
+        break;
     }
     req->response = NULL;
 done:
@@ -858,7 +876,7 @@ LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage*
             if(type == LWQQ_MT_BUDDY_MSG)
                 event = request_content_cface2(lc,msg->msg_id,msg->from,c);
             else
-                event = request_content_cface(lc,msg->group_code,msg->send,c);
+                event = request_content_cface(lc,msg->group.group_code,msg->group.send,c);
             lwqq_async_evset_add_event(ret,event);
         }
     }
@@ -918,6 +936,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         switch (msg_type) {
         case LWQQ_MT_BUDDY_MSG:
         case LWQQ_MT_GROUP_MSG:
+        case LWQQ_MT_DISCU_MSG:
         case LWQQ_MT_SESS_MSG:
             ret = parse_new_msg(cur, msg->opaque);
             break;
@@ -1357,9 +1376,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     const char *apistr;
     int has_cface = 0;
 
-    if (!msg || (msg->type != LWQQ_MT_BUDDY_MSG &&
-                 msg->type != LWQQ_MT_GROUP_MSG &&
-                 msg->type != LWQQ_MT_SESS_MSG)) {
+    if (!msg || (msg->type > LWQQ_MT_SESS_MSG)){
         goto failed;
     }
     format_append(data,"r={");
@@ -1372,12 +1389,15 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         format_append(data,"\"group_uin\":%s,",mmsg->to);
         if(has_cface){
             format_append(data,"\"group_code\":%s,\"key\":\"%s\",\"sig\":\"%s\",",
-                    mmsg->group_code,lc->gface_key,lc->gface_sig);
+                    mmsg->group.group_code,lc->gface_key,lc->gface_sig);
         }
         apistr = "send_qun_msg2";
     }else if(msg->type == LWQQ_MT_SESS_MSG){
-        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->to,mmsg->group_sig);
+        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->to,mmsg->sess.group_sig);
         apistr = "send_sess_msg2";
+    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+        format_append(data,"\"did\":\"%s\",",mmsg->discu.did);
+        apistr = "send_discu_msg2";
     }
     format_append(data,
             "\"face\":0,"

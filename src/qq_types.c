@@ -53,7 +53,7 @@ PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* a
     PurpleAccount* account = ac->account;
     if(msg_type == LWQQ_MT_BUDDY_MSG)
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
-    else if(msg_type == LWQQ_MT_GROUP_MSG)
+    else if(msg_type == LWQQ_MT_GROUP_MSG || msg_type == LWQQ_MT_DISCU_MSG)
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
     else 
         return NULL;

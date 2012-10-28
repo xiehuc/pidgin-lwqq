@@ -419,7 +419,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,msg->from);
+    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
 
     g_return_if_fail(group);
 
@@ -434,7 +434,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     void **data = s_malloc0(sizeof(void*)*5);
     data[0] = ac;
     data[1] = group;
-    data[2] = s_strdup(msg->send);
+    data[2] = s_strdup(msg->group.send);
     //because buf is not always too long .so it is not slowdown performance.
     data[3] = s_strdup(buf);
     data[4] = (void*)msg->time;
@@ -482,7 +482,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     PurpleConnection* pc = ac->gc;
 
     const char* from = mmsg->from;
-    const char* gid = mmsg->id;
+    const char* gid = mmsg->sess.id;
     char name[70];
     static char buf[8192];
     strcpy(buf,"");
@@ -644,6 +644,7 @@ static void msg_delaied_by_download_picture(LwqqAsyncEvset* evset,void* data)
         buddy_message(lc,(LwqqMsgMessage*)msg->opaque);
         break;
     case LWQQ_MT_GROUP_MSG:
+    case LWQQ_MT_DISCU_MSG:
         group_message(lc,(LwqqMsgMessage*)msg->opaque);
         break;
     case LWQQ_MT_SESS_MSG:
@@ -686,6 +687,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
                 break;
             case LWQQ_MT_GROUP_MSG:
+            case LWQQ_MT_DISCU_MSG:
                 group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
                 break;
             case LWQQ_MT_SESS_MSG:
@@ -877,7 +879,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         mmsg->to = sb->uin;
         if(!sb->group_sig)
             lwqq_info_get_group_sig(lc,group,sb->uin);
-        mmsg->group_sig = s_strdup(sb->group_sig);
+        mmsg->sess.group_sig = s_strdup(sb->group_sig);
     } else {
         //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
         msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
@@ -901,11 +903,19 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     LwqqGroup* group = opend_chat_index(ac,id);
+    LwqqMsg* msg;
 
-    LwqqMsg* msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
+    
+    msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = group->gid;
-    mmsg->group_code = group->code;
+    if(group->type == LWQQ_GROUP_QUN){
+        msg->type = mmsg->type =  LWQQ_MT_GROUP_MSG;
+        mmsg->group.group_code = group->code;
+    }else if(group->type == LWQQ_GROUP_DISCU){
+        msg->type = mmsg->type =  LWQQ_MT_DISCU_MSG;
+        mmsg->discu.did = group->did;
+    }
     mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;

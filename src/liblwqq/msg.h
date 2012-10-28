@@ -15,15 +15,30 @@
 #include "queue.h"
 #include "type.h"
 
-
-#define LWQQ_CONTENT_STRING 0
-#define LWQQ_CONTENT_FACE 1
-#define LWQQ_CONTENT_OFFPIC 2
-//custom face :this can send/recv picture
-#define LWQQ_CONTENT_CFACE 3
+typedef enum LwqqMsgType {
+    LWQQ_MT_BUDDY_MSG = 0,
+    LWQQ_MT_GROUP_MSG,
+    LWQQ_MT_DISCU_MSG,
+    LWQQ_MT_SESS_MSG, //group whisper message
+    LWQQ_MT_STATUS_CHANGE,
+    LWQQ_MT_KICK_MESSAGE,
+    LWQQ_MT_SYSTEM,
+    LWQQ_MT_BLIST_CHANGE,
+    LWQQ_MT_SYS_G_MSG,
+    LWQQ_MT_OFFFILE,
+    LWQQ_MT_FILETRANS,
+    LWQQ_MT_FILE_MSG,
+    LWQQ_MT_UNKNOWN,
+} LwqqMsgType;
 
 typedef struct LwqqMsgContent {
-    int type;
+    enum {
+        LWQQ_CONTENT_STRING,
+        LWQQ_CONTENT_FACE,
+        LWQQ_CONTENT_OFFPIC,
+//custom face :this can send/recv picture
+        LWQQ_CONTENT_CFACE
+    }type;
     union {
         int face;
         char *str;
@@ -50,19 +65,26 @@ typedef struct LwqqMsgContent {
 } LwqqMsgContent ;
 
 typedef struct LwqqMsgMessage {
+    LwqqMsgType type;
     char *from;
     char *to;
-    union{
-    char *send; /* only group use it to identify who send the group message */
-    char *id;   /* only sess msg use it.means gid */
-    };
-    union{
-    char *group_code; /* only avaliable in group message */
-    char *group_sig;
-    };
     char *msg_id;
     int msg_id2;
     time_t time;
+    union{
+        struct {
+            char *send; /* only group use it to identify who send the group message */
+            char *group_code; /* only avaliable in group message */
+        }group;
+        struct {
+            char *id;   /* only sess msg use it.means gid */
+            char *group_sig; /* you should fill it before send */
+        }sess;
+        struct {
+            char *send;
+            char *did;
+        }discu;
+    };
 
     /* For font  */
     char *f_name;
@@ -189,20 +211,6 @@ typedef struct LwqqMsgFileMessage{
     };
 }LwqqMsgFileMessage;
 
-typedef enum LwqqMsgType {
-    LWQQ_MT_BUDDY_MSG = 0,
-    LWQQ_MT_GROUP_MSG,
-    LWQQ_MT_SESS_MSG, //group whisper message
-    LWQQ_MT_STATUS_CHANGE,
-    LWQQ_MT_KICK_MESSAGE,
-    LWQQ_MT_SYSTEM,
-    LWQQ_MT_BLIST_CHANGE,
-    LWQQ_MT_SYS_G_MSG,
-    LWQQ_MT_OFFFILE,
-    LWQQ_MT_FILETRANS,
-    LWQQ_MT_FILE_MSG,
-    LWQQ_MT_UNKNOWN,
-} LwqqMsgType;
 
 typedef struct LwqqMsg {
     /* Message type. e.g. buddy message or group message */
