@@ -921,6 +921,11 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     return 1;
 }
 
+static void qq_leave_chat(PurpleConnection* gc,int id)
+{
+    printf("test\n");
+}
+
 #if 0
 //pidgin not use send_whisper .
 //may use it in v 3.0.0
@@ -1425,6 +1430,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
     .chat_send=         qq_send_chat,
+    //.chat_leave=        qq_leave_chat,
     .send_file=         qq_send_file,
     //.chat_whisper=      qq_send_whisper,
     .offline_message=   qq_offline_message,

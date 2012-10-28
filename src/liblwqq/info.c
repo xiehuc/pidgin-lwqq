@@ -731,7 +731,7 @@ LwqqAsyncEvent* lwqq_info_get_discu_name_list(LwqqClient* lc)
     return req->do_request_async(req,0,NULL,get_discu_list_back,lc);
 }
 
-static void parse_discus_dnamelist_child(LwqqClient* lc,json_t* root)
+static void parse_discus_discu_child(LwqqClient* lc,json_t* root)
 {
     json_t* json = json_find_first_label(root, "dnamelist");
     if(json == NULL) return;
@@ -748,6 +748,20 @@ static void parse_discus_dnamelist_child(LwqqClient* lc,json_t* root)
         LIST_INSERT_HEAD(&lc->discus, discu, entries);
         json=json->next;
     }
+
+    json = json_find_first_label(root,"dmasklist");
+    if(json == NULL) return;
+    json = json->child->child;
+    const char* did;
+    int mask;
+    LwqqGroup* group;
+    while(json){
+        did = json_parse_simple_value(json,"did");
+        mask = s_atoi(json_parse_simple_value(json,"mask"));
+        group = lwqq_group_find_group_by_gid(lc,did);
+        if(group!=NULL) group->mask = mask;
+        json = json->next;
+    }
 }
 
 static int get_discu_list_back(LwqqHttpRequest* req,void* data)
@@ -761,7 +775,6 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
         goto done;
     }
     req->response[req->resp_len] = '\0';
-    puts(req->response);
     json_parse_document(&root, req->response);
     if(!root){ errno = 1; goto done;}
     json_temp = get_result_json_object(root);
@@ -770,7 +783,7 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
     if (json_temp->child && json_temp->child->child ) {
 
         json_temp = json_temp->child;
-        parse_discus_dnamelist_child(lc,json_temp);
+        parse_discus_discu_child(lc,json_temp);
     }
 
 
@@ -1685,30 +1698,41 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
     if(errno==0&&data!=NULL){
         void** d = data;
         long type = (long)d[0];
-        if(type == CHANGE_BUDDY_MARKNAME){
-            LwqqBuddy* buddy = d[1];
-            char* alias = d[2];
-            if(buddy->markname) s_free(buddy->markname);
-            buddy->markname = alias;
-        }else if(type == CHANGE_GROUP_MARKNAME){
-            LwqqGroup* group = d[1];
-            char* alias = d[2];
-            if(group->markname) s_free(group->markname);
-            group->markname = alias;
-        }else if(type == MODIFY_BUDDY_CATEGORY){
-            LwqqBuddy* buddy = d[1];
-            char* cate_idx = d[2];
-            if(buddy->cate_index) s_free(buddy->cate_index);
-            buddy->cate_index = cate_idx;
-        }else if(type == CHANGE_STATUS){
-            LwqqClient* lc = d[1];
-            const char* status = d[2];
-            lc->stat = lwqq_status_from_str(status);
-            lc->status = lwqq_status_to_str(lc->stat);
-        }else if(type == CHANGE_MASK){
-            LwqqGroup* group = d[1];
-            LWQQ_MASK mask = (LWQQ_MASK)d[2];
-            group->mask = mask;
+        switch(type){
+            case CHANGE_BUDDY_MARKNAME:
+                {
+                    LwqqBuddy* buddy = d[1];
+                    char* alias = d[2];
+                    s_free(buddy->markname);
+                    buddy->markname = alias;
+                } break;
+            case CHANGE_GROUP_MARKNAME:
+                {
+                    LwqqGroup* group = d[1];
+                    char* alias = d[2];
+                    s_free(group->markname);
+                    group->markname = alias;
+                } break;
+            case MODIFY_BUDDY_CATEGORY:
+                {
+                    LwqqBuddy* buddy = d[1];
+                    char* cate_idx = d[2];
+                    s_free(buddy->cate_index);
+                    buddy->cate_index = cate_idx;
+                } break;
+            case CHANGE_STATUS:
+                {
+                    LwqqClient* lc = d[1];
+                    const char* status = d[2];
+                    lc->stat = lwqq_status_from_str(status);
+                    lc->status = lwqq_status_to_str(lc->stat);
+                } break;
+            case CHANGE_MASK:
+                {
+                    LwqqGroup* group = d[1];
+                    LWQQ_MASK mask = (LWQQ_MASK)d[2];
+                    group->mask = mask;
+                } break;
         }
     }
 done:
@@ -1745,6 +1769,28 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
+
+LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,const char* alias)
+{
+    if(!lc || !group || !alias) return NULL;
+    char url[256];
+    char post[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/modify_discu_info");
+    snprintf(post,sizeof(post),"r={\"did\":\"%s\",\"discu_name\":\"%s\","
+            "\"dtype\":1,\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
+            group->did,alias,lc->clientid,lc->psessionid,lc->vfwebqq);
+    puts(post);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    req->set_header(req,"Origin","http://d.web2.qq.com");
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    void **data = s_malloc(sizeof(void*)*3);
+    data[0] = (void*)CHANGE_GROUP_MARKNAME;
+    data[1] = group;
+    data[2] = s_strdup(alias);
+    return req->do_request_async(req,1,post,info_commom_back,data);
+}
+
+
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate)
 {
     if(!lc||!buddy||!new_cate) return NULL;
