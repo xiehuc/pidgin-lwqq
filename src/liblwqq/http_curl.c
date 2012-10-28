@@ -532,8 +532,10 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
     GLOBAL* g = userp;
     ev_timer_stop(EV_DEFAULT, &g->timer_event);
+    printf("timer_cb:%ld\n",timeout_ms);
     if (timeout_ms > 0) {
         double t = timeout_ms / 1000.0;
+        printf("time ms:%lf",t);
         ev_timer_init(&g->timer_event,timer_cb,t,0.);
         ev_timer_start(EV_DEFAULT, &g->timer_event);
     } else if(timeout_ms==0)

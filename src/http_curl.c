@@ -5,6 +5,7 @@
 #include <plugin.h>
 #include <eventloop.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "async.h"
 #include "smemory.h"
 #include "http.h"
@@ -261,6 +262,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
+    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
+    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
     //curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
@@ -453,7 +456,7 @@ static void check_multi_info(GLOBAL *g)
     D_ITEM *conn;
     CURL *easy;
 
-
+    printf("still_running:%d\n",g->still_running);
     while ((msg = curl_multi_info_read(g->multi, &msgs_left))) {
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
@@ -473,16 +476,21 @@ static int timer_cb(void* data)
     GLOBAL* g = data;
 
     if(!g->multi) return 0;
-    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
+    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, CURL_CSELECT_ERR, &g->still_running);
     check_multi_info(g);
     return 0;
 }
 static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
     GLOBAL* g = userp;
-    purple_timeout_remove(g->timer_event);
+    printf("timer_cb:%ld\n",timeout_ms);
+    long timeout;
+    //purple_timeout_remove(g->timer_event);
     if (timeout_ms > 0) {
-        g->timer_event = purple_timeout_add(timeout_ms,timer_cb,g);
+        //because timeout_ms is the 'latest' value;
+        //so we should advance it more.
+        timeout = (timeout_ms/10);
+        g->timer_event = purple_timeout_add((timeout<100)?100:timeout,timer_cb,g);
     } else if(timeout_ms==0)
         timer_cb(g);
     else{}
@@ -494,7 +502,7 @@ static void event_cb(void* data,int fd,PurpleInputCondition revents)
 
     int action = (revents&PURPLE_INPUT_READ?CURL_POLL_IN:0)|
                  (revents&PURPLE_INPUT_WRITE?CURL_POLL_OUT:0);
-    if(!g->multi) return;
+    if(!g->multi) {assert(0);}
     curl_multi_socket_action(g->multi, fd, action, &g->still_running);
     check_multi_info(g);
     if ( g->still_running <= 0 ) {

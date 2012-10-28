@@ -34,14 +34,14 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
 static void lwqq_http_set_default_header(LwqqHttpRequest *request)
 {
     lwqq_http_set_header(request, "User-Agent", LWQQ_HTTP_USER_AGENT);
-    lwqq_http_set_header(request, "Accept", "text/html, application/xml;q=0.9, "
-                         "application/xhtml+xml, image/png, image/jpeg, "
-                         "image/gif, image/x-xbitmap, */*;q=0.1");
-    lwqq_http_set_header(request, "Accept-Language", "en-US,zh-CN,zh;q=0.9,en;q=0.8");
-    lwqq_http_set_header(request, "Accept-Charset", "GBK, utf-8, utf-16, *;q=0.1");
-    lwqq_http_set_header(request, "Accept-Encoding", "deflate, gzip, x-gzip, "
-                         "identity, *;q=0");
-    lwqq_http_set_header(request, "Connection", "Keep-Alive");
+    //lwqq_http_set_header(request, "Accept", "text/html, application/xml;q=0.9, "
+    //                     "application/xhtml+xml, image/png, image/jpeg, "
+    //                     "image/gif, image/x-xbitmap, */*;q=0.1");
+    lwqq_http_set_header(request, "Accept-Language", "zh-CN,zh;q=0.8");
+    lwqq_http_set_header(request, "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*,q=0.8");
+    lwqq_http_set_header(request, "Accept-Charset", "UTF-8");
+    lwqq_http_set_header(request, "Accept-Encoding", "deflate, gzip, x-gzip");
+    lwqq_http_set_header(request, "Connection", "keep-alive");
 }
 
 static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)

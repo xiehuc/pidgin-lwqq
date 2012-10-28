@@ -1450,6 +1450,8 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
 failed:
     if(root)
         json_free_value(&root);
+    if(errno)
+        puts(req->response);
     lwqq_http_request_free(req);
     return errno;
 }
@@ -1549,7 +1551,10 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
+    req->set_header(req,"Origin","http://web2.qq.com");
+    req->set_header(req,"Cache-Control","max-age=0");
 
+    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
@@ -1562,8 +1567,8 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     char fileid[128];
     snprintf(fileid,sizeof(fileid),"%s_%ld",file->to,time(NULL));
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
-    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","1");
-    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","1");
+    req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
+    req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
     return req->do_request_async(req,0,NULL,upload_offline_file_back,file);
 }
 
