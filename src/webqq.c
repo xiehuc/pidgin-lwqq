@@ -301,15 +301,6 @@ static const char* group_name(LwqqGroup* group)
         strcat(gname,"(屏蔽)");
     return gname;
 }
-static const char* discu_name(LwqqGroup* discu)
-{
-    if(strcmp(discu->name,"")==0){
-        return "未命名讨论组";
-    } else{
-        return discu->name;
-    }
-    return discu->name;
-}
 static int group_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -334,10 +325,10 @@ static int group_come(LwqqClient* lc,void* data)
 
     if(lwqq_group_is_qun(group)){
         purple_blist_alias_chat(chat,group_name(group));
-    if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
-        lwqq_info_get_group_avatar(lc,group);
+        if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
+            lwqq_info_get_group_avatar(lc,group);
     }else{
-        purple_blist_alias_chat(chat,discu_name(group));
+        purple_blist_alias_chat(chat,group_name(group));
     }
     ac->disable_send_server = 0;
     return 0;
@@ -997,14 +988,27 @@ static PurpleRoomlist* qq_get_all_group_list(PurpleConnection* gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     PurpleAccount* account = ac->account;
     PurpleRoomlist* list = purple_roomlist_new(account);
+
     GList* fields = NULL;
-    PurpleRoomlistField* field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_GID,FALSE);
+    PurpleRoomlistField* field;
+    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_GID,FALSE);
+    fields = g_list_append(fields,field);
+    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"类型",QQ_ROOM_TYPE,FALSE);
     fields = g_list_append(fields,field);
     purple_roomlist_set_fields(list,fields);
+
     LwqqGroup* group;
     LIST_FOREACH(group,&ac->qq->groups,entries) {
         PurpleRoomlistRoom* room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM,group->name,NULL);
         purple_roomlist_room_add_field(list,room,group->gid);
+        purple_roomlist_room_add_field(list,room,QQ_ROOM_TYPE_GROUP);
+        purple_roomlist_room_add(list,room);
+    }
+    LwqqGroup* discu;
+    LIST_FOREACH(discu,&ac->qq->discus,entries){
+        PurpleRoomlistRoom* room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM,discu->name,NULL);
+        purple_roomlist_room_add_field(list,room,discu->did);
+        purple_roomlist_room_add_field(list,room,QQ_ROOM_TYPE_DISCU);
         purple_roomlist_room_add(list,room);
     }
     return list;

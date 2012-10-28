@@ -736,10 +736,15 @@ static void parse_discus_dnamelist_child(LwqqClient* lc,json_t* root)
     json_t* json = json_find_first_label(root, "dnamelist");
     if(json == NULL) return;
     json = json->child->child;
+    char* name;
     while(json){
         LwqqGroup* discu = lwqq_group_new(LWQQ_GROUP_DISCU);
         discu->did = s_strdup(json_parse_simple_value(json,"did"));
-        discu->name = json_unescape(json_parse_simple_value(json,"name"));
+        name = json_parse_simple_value(json,"name");
+        if(strcmp(name,"")==0)
+            discu->name = s_strdup("未命名讨论组");
+        else
+            discu->name = json_unescape(name);
         LIST_INSERT_HEAD(&lc->discus, discu, entries);
         json=json->next;
     }
@@ -755,6 +760,8 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
+    req->response[req->resp_len] = '\0';
+    puts(req->response);
     json_parse_document(&root, req->response);
     if(!root){ errno = 1; goto done;}
     json_temp = get_result_json_object(root);
@@ -1961,9 +1968,13 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK m
     char post[512];
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
     puts(url);
-    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"groupmask\":{"
+    const char* mask_type;
+
+    mask_type = (group->type == LWQQ_GROUP_QUN)? "groupmask":"discumask";
+
+    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{"
             "\"%s\":\"%d\",\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
-            group->gid,mask,lc->index,lc->port,lc->vfwebqq);
+            mask_type,group->gid,mask,lc->index,lc->port,lc->vfwebqq);
     puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
