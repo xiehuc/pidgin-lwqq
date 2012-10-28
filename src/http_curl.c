@@ -262,8 +262,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
-    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
-    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
+    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
+    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
     //curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
@@ -456,7 +456,7 @@ static void check_multi_info(GLOBAL *g)
     D_ITEM *conn;
     CURL *easy;
 
-    printf("still_running:%d\n",g->still_running);
+    //printf("still_running:%d\n",g->still_running);
     while ((msg = curl_multi_info_read(g->multi, &msgs_left))) {
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
@@ -474,26 +474,33 @@ static int timer_cb(void* data)
 {
     //这个表示有超时任务出现.
     GLOBAL* g = data;
+    printf("timeout_come\n");
 
     if(!g->multi) return 0;
-    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, CURL_CSELECT_ERR, &g->still_running);
+    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
+    printf("still running:%d\n",g->still_running);
     check_multi_info(g);
-    return 0;
+    //this is inner timeout 
+    //always keep it
+    return 1;
 }
 static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
+    //this function call only when timeout clock '''changed'''.
+    //called by curl
     GLOBAL* g = userp;
     printf("timer_cb:%ld\n",timeout_ms);
-    long timeout;
-    //purple_timeout_remove(g->timer_event);
+    purple_timeout_remove(g->timer_event);
     if (timeout_ms > 0) {
-        //because timeout_ms is the 'latest' value;
-        //so we should advance it more.
-        timeout = (timeout_ms/10);
-        g->timer_event = purple_timeout_add((timeout<100)?100:timeout,timer_cb,g);
-    } else if(timeout_ms==0)
+        //change time clock
+        g->timer_event = purple_timeout_add(timeout_ms,timer_cb,g);
+    } else{
+        //keep time clock
         timer_cb(g);
-    else{}
+    }
+    //close time clock
+    //purple_timeout_remove(g->timer_event);
+    //this should always return 0 this is curl!!
     return 0;
 }
 static void event_cb(void* data,int fd,PurpleInputCondition revents)
@@ -511,14 +518,16 @@ static void event_cb(void* data,int fd,PurpleInputCondition revents)
 }
 static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 {
-    int kind = (act&CURL_POLL_IN?PURPLE_INPUT_READ:0)|(act&CURL_POLL_OUT?PURPLE_INPUT_WRITE:0);
+    int kind = ((act&CURL_POLL_IN)?PURPLE_INPUT_READ:0)|((act&CURL_POLL_OUT)?PURPLE_INPUT_WRITE:0);
+    printf("kind:%d\n",kind);
 
     f->sockfd = s;
     f->action = act;
     f->easy = e;
     if ( f->evset )
         purple_input_remove(f->ev);
-    f->ev = purple_input_add(f->sockfd,kind,event_cb,g);
+    //since read+write works fine. we find out 'kind' not worked when have time
+    f->ev = purple_input_add(f->sockfd,PURPLE_INPUT_READ|PURPLE_INPUT_WRITE,event_cb,g);
     f->evset=1;
 }
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)

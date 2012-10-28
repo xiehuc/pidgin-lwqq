@@ -1554,7 +1554,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Cache-Control","max-age=0");
 
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
