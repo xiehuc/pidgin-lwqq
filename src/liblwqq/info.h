@@ -30,9 +30,8 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err);
  */
 LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err);
 
-LwqqAsyncEvent* lwqq_info_get_discu_list(LwqqClient* lc);
+LwqqAsyncEvent* lwqq_info_get_discu_name_list(LwqqClient* lc);
 
-LwqqAsyncEvent* lwqq_info_get_discu_detail_info(LwqqClient* lc,LwqqDiscu* discu);
 
 /** 
  * Get detail information of QQ friend(NB: include myself)
@@ -102,6 +101,7 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporb
  */
 LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
                                      LwqqErrorCode *err);
+#define lwqq_info_get_discu_detail_info(lc,group) (lwqq_info_get_group_detail_info(lc,group,NULL));
 
 /** 
  * Get online buddies

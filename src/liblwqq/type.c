@@ -128,7 +128,7 @@ void lwqq_client_free(LwqqClient *client)
     LwqqBuddy *b_entry, *b_next;
     LwqqFriendCategory *c_entry, *c_next;
     LwqqGroup *g_entry, *g_next;
-    LwqqDiscu* d_entry,* d_next;
+    LwqqGroup* d_entry,* d_next;
 
     if (!client)
         return ;
@@ -170,7 +170,7 @@ void lwqq_client_free(LwqqClient *client)
 
     LIST_FOREACH_SAFE(d_entry, &client->discus, entries, d_next) {
         LIST_REMOVE(d_entry, entries);
-        lwqq_discu_free(d_entry);
+        lwqq_group_free(d_entry);
     }
 
     /* Free msg_list */
@@ -286,9 +286,11 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin)
  * 
  * @return A LwqqGroup instance
  */
-LwqqGroup *lwqq_group_new()
+LwqqGroup *lwqq_group_new(int type)
 {
     LwqqGroup *g = s_malloc0(sizeof(*g));
+    if (type == 0) g->type = LWQQ_GROUP_QUN;
+    else g->type = LWQQ_GROUP_DISCU;
     return g;
 }
 
@@ -329,22 +331,6 @@ void lwqq_group_free(LwqqGroup *group)
     s_free(group);
 }
 
-void lwqq_discu_free(LwqqDiscu* discu)
-{
-    LwqqSimpleBuddy *m_entry, *m_next;
-    if(!discu) return;
-
-    s_free(discu->name);
-    s_free(discu->did);
-    s_free(discu->owner);
-
-    LIST_FOREACH_SAFE(m_entry,&discu->members,entries,m_next){
-        LIST_REMOVE(m_entry, entries);
-        lwqq_simple_buddy_free(m_entry);
-    }
-
-    s_free(discu);
-}
 
 /** 
  * Find group object by group's gid member
@@ -363,6 +349,10 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid)
 
     LIST_FOREACH(group, &lc->groups, entries) {
         if (group->gid && (strcmp(group->gid, gid) == 0))
+            return group;
+    }
+    LIST_FOREACH(group, &lc->discus, entries) {
+        if (group->did && (strcmp(group->did, gid) == 0))
             return group;
     }
 
@@ -385,20 +375,6 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
         return NULL;
 
     LIST_FOREACH(member, &group->members, entries) {
-        if (member->uin && (strcmp(member->uin, uin) == 0))
-            return member;
-    }
-
-    return NULL;
-}
-LwqqSimpleBuddy *lwqq_discu_find_discu_member_by_uin(LwqqDiscu* discu, const char *uin)
-{
-    LwqqSimpleBuddy *member;
-    
-    if (!discu || !uin)
-        return NULL;
-
-    LIST_FOREACH(member, &discu->members, entries) {
         if (member->uin && (strcmp(member->uin, uin) == 0))
             return member;
     }

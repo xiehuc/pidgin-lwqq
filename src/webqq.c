@@ -301,7 +301,7 @@ static const char* group_name(LwqqGroup* group)
         strcat(gname,"(屏蔽)");
     return gname;
 }
-static const char* discu_name(LwqqDiscu* discu)
+static const char* discu_name(LwqqGroup* discu)
 {
     if(strcmp(discu->name,"")==0){
         return "未命名讨论组";
@@ -316,27 +316,34 @@ static int group_come(LwqqClient* lc,void* data)
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     LwqqGroup* group = data;
-    PurpleGroup* gp = purple_group_new("QQ群");
+    PurpleGroup* qun = purple_group_new("QQ群");
+    PurpleGroup* talk = purple_group_new("讨论组");
     GHashTable* components;
     PurpleChat* chat;
+    const char* type;
 
     if(purple_blist_find_chat(account,group->gid) == NULL) {
         components = g_hash_table_new_full(g_str_hash, g_str_equal, NULL , g_free);
         g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(group->gid));
-        g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(QQ_ROOM_TYPE_GROUP));
+        type = (group->type==LWQQ_GROUP_QUN)? "qun":"discu";
+        g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(type));
         chat = purple_chat_new(account,group->gid,components);
-        purple_blist_add_chat(chat,gp,NULL);
+        purple_blist_add_chat(chat,lwqq_group_is_qun(group)?qun:talk,NULL);
     } else
         chat = purple_blist_find_chat(account,group->gid);
 
-    purple_blist_alias_chat(chat,group_name(group));
-
+    if(lwqq_group_is_qun(group)){
+        purple_blist_alias_chat(chat,group_name(group));
     if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
         lwqq_info_get_group_avatar(lc,group);
+    }else{
+        purple_blist_alias_chat(chat,discu_name(group));
+    }
     ac->disable_send_server = 0;
     return 0;
 }
-static int discu_come(LwqqClient* lc,void* data)
+#define discu_come(lc,data) (group_come(lc,data))
+/*static int discu_come(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     ac->disable_send_server = 1;
@@ -357,11 +364,11 @@ static int discu_come(LwqqClient* lc,void* data)
 
     purple_blist_alias_chat(chat,discu_name(discu));
 
-    /*if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
-        lwqq_info_get_group_avatar(lc,group);*/
+    if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
+        lwqq_info_get_group_avatar(lc,group);
     ac->disable_send_server = 0;
     return 0;
-}
+}*/
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -748,28 +755,7 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
         lwqq_info_get_friend_avatar(lc,lc->myself);
-    //search buddy list see if alread delete from server
-    //GSList* list = purple_blist_get_buddies();
-    //g_slist_foreach(list,check_exist,ac);
 
-    /*PurpleChat* chat;
-    PurpleGroup* group = purple_find_group("QQ群");
-    PurpleBlistNode* node = purple_blist_node_get_first_child(PURPLE_BLIST_NODE(group));
-    while(node){
-        if(PURPLE_BLIST_NODE_IS_CHAT(node)){
-            chat = PURPLE_CHAT(node);
-            GHashTable* table = purple_chat_get_components(chat);
-            const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
-            if(purple_chat_get_account(chat)==ac->account&&
-                    qqnum&&
-                    find_group_by_qqnumber(lc,qqnum)==NULL){
-                node = purple_blist_node_next(node,1);
-                purple_blist_remove_chat(chat);
-                continue;
-            }
-        }
-        node = purple_blist_node_next(node,1);
-    }*/
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
         friend_come(lc,buddy);
@@ -778,10 +764,10 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     LIST_FOREACH(group,&lc->groups,entries) {
         group_come(lc,group);
     }
-    /*LwqqDiscu* discu;
+    LwqqGroup* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
         discu_come(lc,discu);
-    }*/
+    }
 
     ac->state = LOAD_COMPLETED;
     background_msg_poll(ac);

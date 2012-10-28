@@ -120,9 +120,15 @@ typedef struct LwqqGroup {
         LWQQ_GROUP_DISCU,
     }type;
     char *name;                  /**< QQ Group name */
-    char *gid;
-    char *code;    
+    union{
+    char *gid;                   /**< QQ Group id */
+    char *did;                   /**< QQ Discu id */
+    };
+    union{
     char *account;               /** < QQ Group number */
+    char *qq;                    /** < QQ number */
+    };
+    char *code;    
     char *markname;              /** < QQ Group mark name */
 
     /* ginfo */
@@ -146,14 +152,8 @@ typedef struct LwqqGroup {
     LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
 } LwqqGroup;
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
-
-typedef struct LwqqDiscu{
-    char* did;
-    char* name;
-    char* owner;
-    LIST_ENTRY(LwqqDiscu) entries;
-    LIST_HEAD(,LwqqSimpleBuddy) members;
-}LwqqDiscu;
+#define lwqq_group_is_qun(group) (group->type==LWQQ_GROUP_QUN)
+#define lwqq_group_is_discu(group) (group->type==LWQQ_GROUP_DISCU)
 
 typedef struct LwqqVerifyCode {
     char *str;
@@ -203,7 +203,7 @@ typedef struct LwqqClient {
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
-    LIST_HEAD(, LwqqDiscu) discus; /**< QQ discus */
+    LIST_HEAD(, LwqqGroup) discus; /**< QQ discus */
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
     int magic;          /**< 0x4153 **/
@@ -310,13 +310,14 @@ void lwqq_group_free(LwqqGroup *group);
 /** 
  * 
  * Create a new group
+ * @param type LWQQ_GROUP_DISCU or LWQQ_GROUP_QUN
  * 
  * @return A LwqqGroup instance
  */
-LwqqGroup *lwqq_group_new();
+LwqqGroup *lwqq_group_new(int type);
 
 /** 
- * Find group object by group's gid member
+ * Find group object or discus object by group's gid member
  * 
  * @param lc Our Lwqq client object
  * @param uin The gid of group which we want to find
@@ -334,17 +335,10 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
  * @return A LwqqBuddy instance 
  */
 LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
-LwqqSimpleBuddy *lwqq_discu_find_discu_member_by_uin(LwqqDiscu* discu, const char *uin);
 
 #define format_append(str,format...)\
 snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
-
-///////discu api
-
-
-#define lwqq_discu_new() ((LwqqDiscu*)s_malloc0(sizeof(LwqqDiscu)))
-void lwqq_discu_free(LwqqDiscu* dis);
 
 
 /************************************************************************/
