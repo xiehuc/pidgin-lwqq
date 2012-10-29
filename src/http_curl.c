@@ -474,11 +474,11 @@ static int timer_cb(void* data)
 {
     //这个表示有超时任务出现.
     GLOBAL* g = data;
-    printf("timeout_come\n");
+    //printf("timeout_come\n");
 
     if(!g->multi) return 0;
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
-    printf("still running:%d\n",g->still_running);
+    //printf("still running:%d\n",g->still_running);
     check_multi_info(g);
     //this is inner timeout 
     //always keep it
@@ -489,7 +489,7 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
     //this function call only when timeout clock '''changed'''.
     //called by curl
     GLOBAL* g = userp;
-    printf("timer_cb:%ld\n",timeout_ms);
+    //printf("timer_cb:%ld\n",timeout_ms);
     purple_timeout_remove(g->timer_event);
     if (timeout_ms > 0) {
         //change time clock
@@ -519,7 +519,7 @@ static void event_cb(void* data,int fd,PurpleInputCondition revents)
 static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 {
     int kind = ((act&CURL_POLL_IN)?PURPLE_INPUT_READ:0)|((act&CURL_POLL_OUT)?PURPLE_INPUT_WRITE:0);
-    printf("kind:%d\n",kind);
+    //printf("kind:%d\n",kind);
 
     f->sockfd = s;
     f->action = act;

@@ -852,7 +852,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     if (!req) {
         goto done;
     }
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
@@ -1183,7 +1183,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMs
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendPic");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
@@ -1281,7 +1281,7 @@ LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType type,LwqqMsgCon
     snprintf(url,sizeof(url),"http://up.web2.qq.com/cgi-bin/cface_upload?time=%ld",
             time(NULL));
     req = lwqq_http_create_default_request(url,&err);
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
+    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
