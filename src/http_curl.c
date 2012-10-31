@@ -2,8 +2,6 @@
 #include <zlib.h>
 #include <stdio.h>
 #include <curl/curl.h>
-#include <plugin.h>
-#include <eventloop.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "async.h"
@@ -30,7 +28,7 @@ typedef struct GLOBAL {
     pthread_mutex_t share_lock[2];
     //struct ev_loop* loop;
     int still_running;
-    int timer_event;
+    LwqqAsyncTimer timer_event;
     LIST_HEAD(,CURLPOOL) easy_pool;
 }GLOBAL;
 GLOBAL global;
@@ -42,13 +40,14 @@ typedef struct S_ITEM {
     CURL *easy;
     /**@brief ev重用标志,一直为1 */
     int evset;
-    int ev;
+    LwqqAsyncIo ev;
 }S_ITEM;
 typedef struct D_ITEM{
     LwqqAsyncCallback callback;
     LwqqHttpRequest* req;
     LwqqAsyncEvent* event;
     void* data;
+    LwqqAsyncTimer delay;
 }D_ITEM;
 /* For async request */
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -490,44 +489,42 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
     //called by curl
     GLOBAL* g = userp;
     //printf("timer_cb:%ld\n",timeout_ms);
-    purple_timeout_remove(g->timer_event);
+    lwqq_async_timer_stop(&g->timer_event);
     if (timeout_ms > 0) {
         //change time clock
-        g->timer_event = purple_timeout_add(timeout_ms,timer_cb,g);
+        lwqq_async_timer_watch(&g->timer_event,timeout_ms,timer_cb,g);
     } else{
         //keep time clock
         timer_cb(g);
     }
     //close time clock
-    //purple_timeout_remove(g->timer_event);
     //this should always return 0 this is curl!!
     return 0;
 }
-static void event_cb(void* data,int fd,PurpleInputCondition revents)
+static void event_cb(void* data,int fd,int revents)
 {
     GLOBAL* g = data;
 
-    int action = (revents&PURPLE_INPUT_READ?CURL_POLL_IN:0)|
-                 (revents&PURPLE_INPUT_WRITE?CURL_POLL_OUT:0);
-    if(!g->multi) {assert(0);}
+    int action = (revents&LWQQ_ASYNC_READ?CURL_POLL_IN:0)|
+                 (revents&LWQQ_ASYNC_WRITE?CURL_POLL_OUT:0);
     curl_multi_socket_action(g->multi, fd, action, &g->still_running);
     check_multi_info(g);
     if ( g->still_running <= 0 ) {
-        purple_timeout_remove(g->timer_event);
+        lwqq_async_timer_stop(&g->timer_event);
     }
 }
 static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 {
-    int kind = ((act&CURL_POLL_IN)?PURPLE_INPUT_READ:0)|((act&CURL_POLL_OUT)?PURPLE_INPUT_WRITE:0);
+    //int kind = ((act&CURL_POLL_IN)?LWQQ_ASYNC_READ:0)|((act&CURL_POLL_OUT)?LWQQ_ASYNC_WRITE:0);
     //printf("kind:%d\n",kind);
 
     f->sockfd = s;
     f->action = act;
     f->easy = e;
     if ( f->evset )
-        purple_input_remove(f->ev);
+        lwqq_async_io_stop(&f->ev);
     //since read+write works fine. we find out 'kind' not worked when have time
-    f->ev = purple_input_add(f->sockfd,PURPLE_INPUT_READ|PURPLE_INPUT_WRITE,event_cb,g);
+    lwqq_async_io_watch(&f->ev,f->sockfd,LWQQ_ASYNC_READ|LWQQ_ASYNC_WRITE,event_cb,g);
     f->evset=1;
 }
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
@@ -540,7 +537,7 @@ static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
         //清除socket关联对象
         if ( si ) {
             if ( si->evset )
-                purple_input_remove(si->ev);
+                lwqq_async_io_stop(&si->ev);
             s_free(si);
         }
     } else {
@@ -612,7 +609,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->req = request;
     di->data = data;
     di->event = lwqq_async_event_new(request);
-    purple_timeout_add(50,delay_add_handle,di);
+    lwqq_async_timer_watch(&di->delay,50,delay_add_handle,di);
     return di->event;
 
 failed:

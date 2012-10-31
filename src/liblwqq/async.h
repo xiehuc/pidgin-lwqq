@@ -11,6 +11,40 @@
 #define LWQQ_ASYNC_H
 #include "type.h"
 
+
+#ifndef USE_LIBPURPLE
+#define USE_LIBEV
+#endif
+
+#ifdef USE_LIBPURPLE
+#include <eventloop.h>
+typedef struct{
+    int ev;
+    void* wrap;
+}LwqqAsyncIo;
+typedef int LwqqAsyncTimer;
+typedef LwqqAsyncIo* LwqqAsyncIoHandle;
+typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
+#define LWQQ_ASYNC_READ PURPLE_INPUT_READ
+#define LWQQ_ASYNC_WRITE PURPLE_INPUT_WRITE
+#endif
+
+#ifdef USE_LIBEV
+typedef ev_timer  LwqqAsyncTimer;
+typedef ev_io     LwqqAsyncIo;
+typedef ev_timer* LwqqAsyncTimerHandle;
+typedef ev_io*    LwqqAsyncIoHandle;
+#define LWQQ_ASYNC_READ EV_READ
+#define LWQQ_ASYNC_WRITE EV_WRITE
+#endif
+typedef void (*LwqqAsyncIoCallback)(void* data,int fd,int action);
+typedef int (*LwqqAsyncTimerCallback)(void* data);
+
+void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback fun,void* data);
+void lwqq_async_io_stop(LwqqAsyncIoHandle io);
+void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int second,LwqqAsyncTimerCallback fun,void* data);
+void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+
 /**@param data this is special data passed by liblwqq.
  *              it's value is different in different ListenerType.
  *              for example FRIEND_COME this is LwqqBuddy*
@@ -38,6 +72,7 @@ typedef struct _LwqqAsync {
     void* data[ListenerTypeLength];
     int _enabled;
 } _LwqqAsync;
+
 /**set async enabled or disabled*/
 void lwqq_async_set(LwqqClient* client,int enabled);
 /** check if async enabled*/
@@ -75,14 +110,12 @@ typedef void (*EVSET_CALLBACK)(LwqqAsyncEvset* evset,void* data);
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished
  */
-#define lwqq_async_evset_new() lwqq_async_evset_new_with_debug(__FILE__,__LINE__)
-LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line);
+LwqqAsyncEvset* lwqq_async_evset_new();
 /** return a new event. 
  * you can wait a event by use evset or LWQQ_SYNC macro simply.
  * you can also add a event listener
  */
-#define lwqq_async_event_new(req) lwqq_async_event_new_with_debug(req,__FILE__,__LINE__)
-LwqqAsyncEvent* lwqq_async_event_new_with_debug(void* req,const char* file,int line);
+LwqqAsyncEvent* lwqq_async_event_new(void* req);
 /** this would remove a event.
  * and call a event listener if is set.
  * and try to wake up a evset if all events of evset are finished

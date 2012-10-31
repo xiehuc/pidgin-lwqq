@@ -30,10 +30,6 @@ typedef struct _LwqqAsyncEvset{
     int ref_count;
     EVSET_CALLBACK callback;
     void* data;
-    struct{
-        const char* __file;
-        int __line;
-    }debug;
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
@@ -43,10 +39,6 @@ typedef struct _LwqqAsyncEvent {
     EVENT_CALLBACK start;
     void* start_data;
     LwqqHttpRequest* req;
-    struct{
-        const char* __file;
-        int __line;
-    }debug;
 }_LwqqAsyncEvent;
 
 static gboolean timeout_come(void* p);
@@ -91,21 +83,17 @@ void lwqq_async_set(LwqqClient* client,int enabled)
     }
 
 }
-LwqqAsyncEvent* lwqq_async_event_new_with_debug(void* req,const char* file,int line)
+LwqqAsyncEvent* lwqq_async_event_new(void* req)
 {
     LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
     event->req = req;
-    event->debug.__file = file;
-    event->debug.__line = line;
     return event;
 }
-LwqqAsyncEvset* lwqq_async_evset_new_with_debug(const char* file,int line)
+LwqqAsyncEvset* lwqq_async_evset_new()
 {
     LwqqAsyncEvset* l = s_malloc0(sizeof(*l));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
-    l->debug.__file = file;
-    l->debug.__line = line;
     return l;
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
@@ -192,3 +180,62 @@ void lwqq_async_event_start(LwqqAsyncEvent* event,int socket)
     if(event->start)
         event->start(event,event->start_data);
 }
+typedef struct {
+    LwqqAsyncIoCallback callback;
+    void* data;
+}LwqqAsyncIoWrap;
+typedef struct {
+    LwqqAsyncTimerCallback callback;
+    void* data;
+}LwqqAsyncTimerWrap;
+#ifdef USE_LIBEV
+static void event_cb_wrap(EV_P_ ev_io *w,int action)
+{
+    LwqqAsyncWrap* wrap = w->data;
+    if(wrap->callback)
+        wrap->callback(wrap->data,action);
+}
+void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,AsyncIoCallback fun,void* data)
+{
+    ev_io_init(io,event_cb_wrap,fd,action);
+    LwqqAsyncWrap* wrap = s_malloc0(sizeof(*wrap));
+    wrap->callback = fun;
+    wrap->data = data;
+    io->data = wrap;
+    ev_io_start(EV_DEFAULT,io);
+}
+void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,int second,AsyncTimerCallback fun,void* data)
+{
+}
+#endif
+#ifdef USE_LIBPURPLE
+static void event_cb_wrap(void* data,int fd,PurpleInputCondition action)
+{
+    LwqqAsyncIoWrap* wrap = data;
+    if(wrap->callback)
+        wrap->callback(wrap->data,fd,action);
+}
+void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback fun,void* data)
+{
+    LwqqAsyncIoWrap* wrap = s_malloc0(sizeof(*wrap));
+    wrap->callback = fun;
+    wrap->data = data;
+    io->ev = purple_input_add(fd,action,event_cb_wrap,wrap);
+    io->wrap = wrap;
+}
+void lwqq_async_io_stop(LwqqAsyncIoHandle io)
+{
+    purple_input_remove(io->ev);
+    io->ev = 0;
+    s_free(io->wrap);
+}
+void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
+{
+    *timer = purple_timeout_add(timeout_ms,fun,data);
+}
+void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
+{
+    purple_timeout_remove(*timer);
+    *timer = 0;
+}
+#endif
