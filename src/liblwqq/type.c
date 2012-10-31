@@ -176,6 +176,7 @@ void lwqq_client_free(LwqqClient *client)
     /* Free msg_list */
     lwqq_recvmsg_free(client->msg_list);
     s_free(client);
+
 }
 
 /************************************************************************/

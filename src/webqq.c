@@ -1172,6 +1172,7 @@ static void qq_close(PurpleConnection *gc)
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
     lwqq_http_global_free();
+    lwqq_async_global_quit();
 }
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)

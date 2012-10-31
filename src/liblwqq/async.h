@@ -30,6 +30,7 @@ typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
 #endif
 
 #ifdef USE_LIBEV
+#include <ev.h>
 typedef ev_timer  LwqqAsyncTimer;
 typedef ev_io     LwqqAsyncIo;
 typedef ev_timer* LwqqAsyncTimerHandle;
@@ -44,6 +45,7 @@ void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallb
 void lwqq_async_io_stop(LwqqAsyncIoHandle io);
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int second,LwqqAsyncTimerCallback fun,void* data);
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+void lwqq_async_global_quit();
 
 /**@param data this is special data passed by liblwqq.
  *              it's value is different in different ListenerType.
