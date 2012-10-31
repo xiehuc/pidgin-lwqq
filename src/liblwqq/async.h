@@ -38,15 +38,10 @@ typedef ev_io*    LwqqAsyncIoHandle;
 #define LWQQ_ASYNC_READ EV_READ
 #define LWQQ_ASYNC_WRITE EV_WRITE
 #endif
-typedef void (*LwqqAsyncIoCallback)(void* data,int fd,int action);
-typedef int (*LwqqAsyncTimerCallback)(void* data);
 
-void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback fun,void* data);
-void lwqq_async_io_stop(LwqqAsyncIoHandle io);
-void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int second,LwqqAsyncTimerCallback fun,void* data);
-void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+
+/** call this function when you quit your program.*/
 void lwqq_async_global_quit();
-
 /**@param data this is special data passed by liblwqq.
  *              it's value is different in different ListenerType.
  *              for example FRIEND_COME this is LwqqBuddy*
@@ -182,5 +177,36 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
 #define LWQQ_SYNC_END() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0)
 
 #define LWQQ_SYNC_ENABLED() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED == 1)
+
+//=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//
+//=======================PLEASE MAKE SURE DONT USED IN YOUR CODE==================//
+/** the call back of io watch 
+ * @param data user defined data
+ * @param fd the socket
+ * @param action read/write enum value
+ */
+typedef void (*LwqqAsyncIoCallback)(void* data,int fd,int action);
+/** the call back of timer watch
+ * @param data user defined data
+ * return 1 to continue timer 0 to stop timer.
+ */
+typedef int (*LwqqAsyncTimerCallback)(void* data);
+/** watch an io socket for special event
+ * implement by libev or libpurple
+ * @param io this is pointer to a LwqqAsyncIo struct
+ * @param fd socket
+ * @param action combination of LWQQ_ASYNC_READ and LWQQ_ASYNC_WRITE
+ */
+void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback func,void* data);
+/** stop a io watcher */
+void lwqq_async_io_stop(LwqqAsyncIoHandle io);
+/** start a timer count down
+ * @param timer the pointer to a LwqqAsyncTimer struct
+ * @param ms microsecond time
+ */
+void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int ms,LwqqAsyncTimerCallback func,void* data);
+/** stop a timer */
+void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+//=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//
 
 #endif
