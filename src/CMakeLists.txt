@@ -22,7 +22,7 @@ set(LWQQ_LIST
   liblwqq/info.c)
 
 add_definitions(-Wall)
-add_definitions(-DUSE_LIBPURPLE)
+#add_definitions(-DUSE_LIBPURPLE)
 ADD_LIBRARY(webqq MODULE
     ${SRC_LIST}
     ${LWQQ_LIST}
@@ -36,6 +36,7 @@ target_link_libraries(webqq
   ${PURPLE_LIBRARIES}
   ${GLIB_LIBRARIES}
   ${CURL_LIBRARIES}
+  ev
   )
 
 #add_library(webqqa MODULE

@@ -609,7 +609,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->req = request;
     di->data = data;
     di->event = lwqq_async_event_new(request);
-    lwqq_async_timer_watch(&di->delay,50,delay_add_handle,di);
+    lwqq_async_timer_watch(&di->delay,100,delay_add_handle,di);
     return di->event;
 
 failed:
