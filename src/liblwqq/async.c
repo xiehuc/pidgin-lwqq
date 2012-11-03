@@ -127,7 +127,7 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
 }
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
 {
-    if(handle==NULL) return;
+    if(!host || !handle) return;
     pthread_mutex_lock(&host->lock);
     handle->host_lock = host;
     host->ref_count++;
@@ -157,7 +157,14 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback
     event->callback = callback;
     event->data = data;
 }
-
+static void async_call_on_chain(LwqqAsyncEvent* ev,void* data)
+{
+    lwqq_async_event_finish((LwqqAsyncEvent*)data);
+}
+void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
+{
+    lwqq_async_add_event_listener(caller,async_call_on_chain,called);
+}
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data)
 {
     if(!evset) return;

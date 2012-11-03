@@ -138,6 +138,7 @@ int lwqq_async_wait(LwqqAsyncEvset* host);
  * async listener can only set one data for one ListenerType.
  */
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
+void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called);
 /**
  * note!! you must free evset in callback function.
  */
