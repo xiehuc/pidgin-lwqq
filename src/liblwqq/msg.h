@@ -298,29 +298,13 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 #define lwqq_msg_send_group(lc,group,message) \
     ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : NULL)
 /* LwqqRecvMsg API end */
-/** it upload a picture use offpic mode.
- * it is slow.recommend cface method.
- * @param to the buddy uin to send pic.
- * @param c the content which contain pic data.
- *          you should ensure c contain follow information:
- *          c->type is set to LWQQ_CONTENT_OFFPIC
- *          c->img.name is set to file name (not const).
- *          c->img.data is set to file content pointer.
- *          c->img.size is set to file content length.
- *          you should free picture data by hand.(use event listener)
- */
-LwqqAsyncEvent* lwqq_msg_upload_offline_pic(LwqqClient* lc,const char* to,LwqqMsgContent* c);
-/** it upload a picture use cface mode.
- * it has a good speed. recommend to use it.
- * @param c the content which contain picdata.
- *          you should ensure c contain follow information:
- *          c->type is set to LWQQ_CONTENT_CFACE
- *          c->cface.name is set to file name (not const).
- *          c->cface.data is set to file content pointer.
- *          c->cface.size is set to file content length.
- *          you should free picture data by hand.(use event listener)
- */
-LwqqAsyncEvent* lwqq_msg_upload_cface(LwqqClient* lc,LwqqMsgType,LwqqMsgContent* c);
+//fill a msg content with upload cface
+LwqqMsgContent* lwqq_msg_fill_upload_cface(const char* filename,
+        const void* buffer,size_t buf_size);
+//fill a msg content with upload offline pic
+LwqqMsgContent* lwqq_msg_fill_upload_offline_pic(const char* filename,
+        const void* buffer,size_t buf_size);
+
 LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
 LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
