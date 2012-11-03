@@ -92,20 +92,12 @@ void background_friends_info(qq_account* ac)
 {
     START_THREAD(_background_friends_info,ac);
 }
-static void* _background_msg_poll(void* data)
+void background_msg_poll(qq_account* ac)
 {
-    qq_account* ac = (qq_account*)data;
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
 
     /* Poll to receive message */
     l->poll_msg(l);
-
-    return NULL;
-}
-void background_msg_poll(qq_account* ac)
-{
-    //pthread_create(&msg_th,NULL,_background_msg_poll,ac);
-    _background_msg_poll(ac);
 }
 void background_msg_drain(qq_account* ac)
 {
@@ -114,83 +106,6 @@ void background_msg_drain(qq_account* ac)
     l->tid = 0;
     /*purple_timeout_remove(msg_check_handle);
     tid = 0;*/
-}
-
-
-static void send_back(LwqqAsyncEvent* event,void* data)
-{
-    static char buf[1024];
-    void **d = data;
-    LwqqMsg* msg = d[0];
-    char* what = d[2];
-    qq_account* ac = d[3];
-    char* who = d[4];
-    int errno = lwqq_async_event_get_result(event);
-    s_free(data);
-    if(errno){
-        PurpleConversation* conv = find_conversation(msg->type,who,ac);
-        if(errno==108) snprintf(buf,sizeof(buf),"您发送的速度过快:\n%s",what);
-        else 
-            snprintf(buf,sizeof(buf),"发送失败:\n%s",what);
-        if(conv)
-            lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
-        if(errno==121){
-            puts("msg send back lost connection");
-            lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
-        }
-    }
-
-    LwqqMsgMessage* mmsg = msg->opaque;
-    mmsg->to = NULL;
-    if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
-    else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
-    s_free(what);
-    s_free(who);
-    lwqq_msg_free(msg);
-}
-void conversation_safe_write(int msg_type,const char* who,qq_account* ac,char* msg,int purple_type,time_t t)
-{
-}
-void* _background_send_msg(void* data)
-{
-    void **d = data;
-    LwqqMsg* msg = d[0];
-    LwqqMsgMessage* mmsg = msg->opaque;
-    const char* to = mmsg->to;
-    const char* what = d[2];
-    qq_account* ac = d[3];
-    const char* who = d[4];
-    LwqqClient* lc = ac->qq;
-    int will_upload = (strstr(what,"<IMG")!=NULL);
-
-    int ret = translate_message_to_struct(lc,to,what,msg,0);
-    if(will_upload){
-        //group msg 'who' is gid.
-        PurpleConversation* conv = find_conversation(msg->type,who,ac);
-        if(ret==0&&conv)
-            lwqq_async_dispatch(lc,SYS_MSG_COME,system_msg_new(msg->type,who,ac,"图片上传完成",PURPLE_MESSAGE_SYSTEM,time(NULL)));
-        else if(ret!=0&&conv)
-            lwqq_async_dispatch(lc,SYS_MSG_COME,system_msg_new(msg->type,who,ac,"图片上传失败",PURPLE_MESSAGE_ERROR,time(NULL)));
-    }
-    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg),send_back,data);
-    return NULL;
-}
-
-void background_send_msg(qq_account* ac,LwqqMsg* msg,const char* who,const char* what,PurpleConversation* conv)
-{
-    void** data = s_malloc0(sizeof(void*)*5);
-    data[0] = msg;
-    data[1] = conv;
-    data[2] = s_strdup(what);
-    data[3] = ac;
-    data[4] = s_strdup(who);
-
-    int will_upload = 0;
-    will_upload = (strstr(what,"<IMG")!=NULL);
-    if(will_upload)
-        START_THREAD(_background_send_msg,data);
-    else
-        _background_send_msg(data);
 }
 
 static void* _background_upload_file(void* d)

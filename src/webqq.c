@@ -721,6 +721,13 @@ int qq_msg_check(LwqqClient* lc,void* data)
 
 }
 
+int qq_msg_check_wrap(void* data)
+{
+    qq_account* ac = data;
+    qq_msg_check(ac->qq,ac);
+    return 1;
+}
+
 int qq_sys_msg_write(LwqqClient* lc,void* data)
 {
     system_msg* msg = data;
@@ -763,7 +770,10 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     }
 
     ac->state = LOAD_COMPLETED;
+
     background_msg_poll(ac);
+
+    ac->msg_poll_handle = purple_timeout_add(500, qq_msg_check_wrap, ac);
     return 0;
 }
 
@@ -841,13 +851,45 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
     lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
-    lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
+    //lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
 }
 
+//send back receipt
+static void send_receipt(LwqqAsyncEvent* ev,void* data)
+{
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqMsg* msg = d[1];
+    char* who = d[2];
+    char* what = d[3];
+    s_free(data);
 
+    int err = lwqq_async_event_get_result(ev);
+    static char buf[1024];
+    PurpleConversation* conv = find_conversation(msg->type,who,ac);
+
+    if(err == LWQQ_MC_LOST_CONN){
+        lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
+    }
+    if(conv && err > 0){
+        if(err == LWQQ_MC_FAST)
+            snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
+        else
+            snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
+        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
+    }
+
+    LwqqMsgMessage* mmsg = msg->opaque;
+    mmsg->to = NULL;
+    if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
+    else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
+    s_free(what);
+    s_free(who);
+    lwqq_msg_free(msg);
+}
 
 //send a message to a friend.
 //called by purple
@@ -881,10 +923,17 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = s_strdup("000000");
-    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
+    //PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
+    translate_message_to_struct(lc, who, what, msg, 0);
 
-    background_send_msg(ac,msg,who,what,conv);
+    void **d = s_malloc0(sizeof(void*)*4);
+    d[0] = ac;
+    d[1] = msg;
+    d[2] = s_strdup(who);
+    d[3] = s_strdup(what);
+    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg), send_receipt, d);
+    //background_send_msg(ac,msg,who,what,conv);
 
 
     return 1;
@@ -913,7 +962,15 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_color = s_strdup("000000");
     PurpleConversation* conv = purple_find_chat(gc,id);
 
-    background_send_msg(ac,msg,group->gid,message,conv);
+    translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
+
+    void **d = s_malloc0(sizeof(void*)*4);
+    d[0] = ac;
+    d[1] = msg;
+    d[2] = s_strdup(group->gid);
+    d[3] = s_strdup(message);
+    lwqq_async_add_event_listener(lwqq_msg_send(ac->qq,msg), send_receipt, d);
+    //background_send_msg(ac,msg,group->gid,message,conv);
 
     //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));

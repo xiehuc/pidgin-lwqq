@@ -1450,6 +1450,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
             "\"psessionid\":\"%s\"}",
             content,lc->msg_id,lc->clientid,lc->psessionid);
     format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
+    puts(data);
 
     /* Create a POST request */
     char url[512];

@@ -16,6 +16,7 @@ typedef struct qq_account {
         CONNECTED,
         LOAD_COMPLETED
     }state;
+    int msg_poll_handle;
     GPtrArray* opend_chat;
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;

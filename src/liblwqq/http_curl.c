@@ -72,7 +72,7 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
     strcpy(opt+name_len+2,value);
 
     request->header = curl_slist_append((struct curl_slist*)request->header,opt);
-    curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
+    //curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
 
     s_free(opt);
 }
@@ -336,6 +336,7 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         *resp = NULL;
     }
 
+    curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
     /* Set http method */
     if (method==0){
     }else if (method == 1 && body) {
@@ -619,6 +620,7 @@ static int lwqq_http_do_request_async(struct LwqqHttpRequest *request, int metho
         *resp = NULL;
     }
 
+    curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
     /* Set http method */
     if (method==0){
     }else if (method == 1 && body) {

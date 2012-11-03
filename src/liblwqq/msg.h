@@ -30,6 +30,11 @@ typedef enum LwqqMsgType {
     LWQQ_MT_FILE_MSG,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
+typedef enum {
+    LWQQ_MC_OK = 0,
+    LWQQ_MC_FAST = 108,
+    LWQQ_MC_LOST_CONN = 121
+}LwqqMsgRetcode;
 
 typedef struct LwqqMsgContent {
     enum {
@@ -271,6 +276,9 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client);
  */
 void lwqq_recvmsg_free(LwqqRecvMsgList *list);
 
+//insert msg content
+#define lwqq_msg_content_append(msg,c) \
+    TAILQ_INSERT_TAIL(&msg->content,c,entries)
 
 /**
  *

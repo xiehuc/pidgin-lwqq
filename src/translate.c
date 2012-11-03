@@ -125,25 +125,16 @@ static LwqqMsgContent* build_face_direct(int num)
     c->data.face = num;
     return c;
 }
-static void img_unref(LwqqAsyncEvent* event,void* data)
-{
-    PurpleStoredImage* img = data;
-    purple_imgstore_unref(img);
-}
 int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,LwqqMsg* msg,int using_cface)
 {
     const char* ptr = what;
     int img_id;
     LwqqMsgContent *c;
-    puts(what);
     const char* begin,*end;
     TRexMatch m;
     if(_regex==NULL) translate_global_init();
     TRex* x = _regex;
     LwqqMsgMessage* mmsg = msg->opaque;
-
-    LwqqAsyncEvset* set = lwqq_async_evset_new();
-    LwqqAsyncEvent* event;
      
     while(*ptr!='\0'){
         c = NULL;
@@ -165,23 +156,17 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //process ing img.
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
             PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
-            c = s_malloc0(sizeof(*c));
             if(using_cface||msg->type == LWQQ_MT_GROUP_MSG){
-                c->type = LWQQ_CONTENT_CFACE;
-                c->data.cface.name = s_strdup(purple_imgstore_get_filename(simg));
-                c->data.cface.data = (char*)purple_imgstore_get_data(simg);
-                c->data.cface.size = purple_imgstore_get_size(simg);
-                event = lwqq_msg_upload_cface(lc,msg->type,c);
+                c = lwqq_msg_fill_upload_cface(
+                        purple_imgstore_get_filename(simg),
+                        purple_imgstore_get_data(simg),
+                        purple_imgstore_get_size(simg));
             }else{
-                c->type = LWQQ_CONTENT_OFFPIC;
-                c->data.img.name = s_strdup(purple_imgstore_get_filename(simg));
-                c->data.img.data = (char*)purple_imgstore_get_data(simg);
-                c->data.img.size = purple_imgstore_get_size(simg);
-                event = lwqq_msg_upload_offline_pic(lc,to,c);
+                c = lwqq_msg_fill_upload_offline_pic(
+                        purple_imgstore_get_filename(simg), 
+                        purple_imgstore_get_data(simg), 
+                        purple_imgstore_get_size(simg));
             }
-            purple_imgstore_ref(simg);
-            lwqq_async_add_event_listener(event,img_unref,simg);
-            lwqq_async_evset_add_event(set,event);
         }else if(strstr(begin,"[FACE")==begin){
             //processing face
             sscanf(begin,"[FACE_%d]",&img_id);
@@ -193,9 +178,9 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
         }
         ptr = end;
         if(c!=NULL)
-            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+            lwqq_msg_content_append(mmsg, c);
     }
-    return lwqq_async_wait(set);
+    return 0;
 }
 static void paste_content_string(const char* from,char* to)
 {

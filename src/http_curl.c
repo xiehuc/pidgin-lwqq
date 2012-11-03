@@ -141,7 +141,7 @@ static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
         }
         list = list->next;
     }
-    printf("cookie:%s\n",cookie);
+    //printf("cookie:%s\n",cookie);
     if (!cookie) {
         lwqq_log(LOG_WARNING, "No cookie: %s\n", name);
         return NULL;
@@ -477,7 +477,7 @@ static int timer_cb(void* data)
 
     if(!g->multi) return 0;
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
-    //printf("still running:%d\n",g->still_running);
+    printf("still running:%d\n",g->still_running);
     check_multi_info(g);
     //this is inner timeout 
     //always keep it
