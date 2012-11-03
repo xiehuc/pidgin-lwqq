@@ -66,7 +66,7 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
 ((group!=NULL) ? lwqq_info_get_avatar(lc,1,group):NULL) 
 
 
-void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy);
+LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy);
 /** 
  * Get all friends qqnumbers
  * 

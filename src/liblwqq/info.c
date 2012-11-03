@@ -364,10 +364,10 @@ json_error:
     return 0;
 }
 
-void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
+LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
 {
     static int serv_id = 0;
-    if(!lc||!grouporbuddy) return ;
+    if(!lc||!grouporbuddy) return NULL;
     //there have avatar already do not repeat work;
     LwqqBuddy* buddy = NULL;
     LwqqGroup* group = NULL;
@@ -402,9 +402,6 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
              "http://%s/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%s&vfwebqq=%s",
              host,type,uin, lc->vfwebqq);
     req = lwqq_http_create_default_request(url, &error);
-    if (!req) {
-        goto done;
-    }
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req,"Host",host);
 
@@ -417,19 +414,15 @@ void lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
     }
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     void** array = s_malloc0(sizeof(void*)*4);
-    array[0] = lc;
-    array[1] = buddy;
-    array[2] = group;
-    req->do_request_async(req, 0, NULL,get_avatar_back,array);
-done:
-    return;
+    array[0] = buddy;
+    array[1] = group;
+    return req->do_request_async(req, 0, NULL,get_avatar_back,array);
 }
 static int get_avatar_back(LwqqHttpRequest* req,void* data)
 {
     void** array = data;
-    LwqqClient* lc = array[0];
-    LwqqBuddy* buddy = array[1];
-    LwqqGroup* group = array[2];
+    LwqqBuddy* buddy = array[0];
+    LwqqGroup* group = array[1];
     s_free(data);
     int isgroup = (group !=NULL);
     const char* qqnumber = (isgroup)?group->code:buddy->uin;
@@ -482,8 +475,8 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
             utime(path,&wutime);
         }
         lwqq_http_request_free(req);
-        if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
-        else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
+        /*if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
+        else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);*/
         return 0;
     }
 
@@ -501,8 +494,8 @@ done:
         }
     }
     lwqq_http_request_free(req);
-    if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
-    else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);
+    /*if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
+    else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);*/
     return 0;
 }
 

@@ -26,6 +26,8 @@ static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(LwqqAsyncEvent* event,void* data);
 static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
+static void friend_avatar(LwqqAsyncEvent* ev,void* data);
+static void group_avatar(LwqqAsyncEvent* ev,void* data);
 
 #if 0
 static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
@@ -283,7 +285,11 @@ static int friend_come(LwqqClient* lc,void* data)
         purple_prpl_got_user_status(account, buddy->uin, buddy_status(buddy), NULL);
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,buddy->uin))==0) {
-        lwqq_info_get_friend_avatar(lc,buddy);
+        void **d = s_malloc0(sizeof(void*)*2);
+        d[0] = ac;
+        d[1] = buddy;
+        lwqq_async_add_event_listener(
+                lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
     } else {
         purple_buddy_set_icon(purple_find_buddy(account,buddy->uin),icon);
     }
@@ -325,8 +331,13 @@ static int group_come(LwqqClient* lc,void* data)
 
     if(lwqq_group_is_qun(group)){
         purple_blist_alias_chat(chat,group_name(group));
-        if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0)
-            lwqq_info_get_group_avatar(lc,group);
+        if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0){
+            void **d = s_malloc0(sizeof(void*)*2);
+            d[0] = ac;
+            d[1] = group;
+            lwqq_async_add_event_listener(
+                    lwqq_info_get_group_avatar(lc,group),group_avatar,d);
+        }
     }else{
         purple_blist_alias_chat(chat,group_name(group));
     }
@@ -586,12 +597,15 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
     }
 }
-static int friend_avatar(LwqqClient* lc,void* data)
+static void friend_avatar(LwqqAsyncEvent* ev,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqBuddy* buddy = d[1];
+    s_free(data);
+
     PurpleAccount* account = ac->account;
-    LwqqBuddy* buddy = data;
-    if(buddy->avatar_len==0)return 0;
+    if(buddy->avatar_len==0)return ;
 
     if(strcmp(buddy->uin,purple_account_get_username(account))==0) {
         purple_buddy_icons_set_account_icon(account,(guchar*)buddy->avatar,buddy->avatar_len);
@@ -600,22 +614,25 @@ static int friend_avatar(LwqqClient* lc,void* data)
     }
     //let free by purple;
     buddy->avatar = NULL;
-    return 0;
+    return ;
 }
-static int group_avatar(LwqqClient* lc,void* data)
+static void group_avatar(LwqqAsyncEvent* ev,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqGroup* group = d[1];
+    s_free(data);
+    
     PurpleAccount* account = ac->account;
-    LwqqGroup* group = data;
     PurpleChat* chat;
-    if(group->avatar_len==0)return 0;
+    if(group->avatar_len==0)return ;
 
     chat = purple_blist_find_chat(account,group->gid);
-    if(chat==NULL) return 0;
+    if(chat==NULL) return ;
     purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat),(guchar*)group->avatar,group->avatar_len);
     //let free by purple;
     group->avatar = NULL;
-    return 0;
+    return ;
 }
 static int lost_connection(LwqqClient* lc,void* data)
 {
@@ -623,28 +640,6 @@ static int lost_connection(LwqqClient* lc,void* data)
     PurpleConnection* gc = ac->gc;
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
     return 0;
-}
-static void msg_delaied_by_download_picture(LwqqAsyncEvset* evset,void* data)
-{
-    void** d = data;
-    LwqqClient* lc = d[0];
-    LwqqMsg* msg = d[1];
-    s_free(data);
-    switch(msg->type) {
-    case LWQQ_MT_BUDDY_MSG:
-        buddy_message(lc,(LwqqMsgMessage*)msg->opaque);
-        break;
-    case LWQQ_MT_GROUP_MSG:
-    case LWQQ_MT_DISCU_MSG:
-        group_message(lc,(LwqqMsgMessage*)msg->opaque);
-        break;
-    case LWQQ_MT_SESS_MSG:
-        whisper_message(lc,(LwqqMsgMessage*)msg->opaque);
-        break;
-    default:
-        break;
-    }
-    lwqq_msg_free(msg);
 }
 int qq_msg_check(LwqqClient* lc,void* data)
 {
@@ -741,8 +736,13 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     qq_account* ac = data;
     //LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
-    if(purple_buddy_icons_find_account_icon(ac->account)==NULL)
-        lwqq_info_get_friend_avatar(lc,lc->myself);
+    if(purple_buddy_icons_find_account_icon(ac->account)==NULL){
+        void **d = s_malloc0(sizeof(void*)*2);
+        d[0] = ac;
+        d[1] = lc->myself;
+        lwqq_async_add_event_listener(
+                lwqq_info_get_friend_avatar(lc,lc->myself),friend_avatar,d);
+    }
 
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
@@ -836,8 +836,8 @@ static int login_complete(LwqqClient* lc,void* data)
     lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
     lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
-    lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
-    lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
+    //lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
+    //lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
     //lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);

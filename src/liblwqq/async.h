@@ -55,8 +55,6 @@ typedef enum ListenerType {
     FRIEND_COME,///< after get friend qqnumber
     FRIEND_COMPLETE,
     GROUP_COME,///< after get group qqnumber
-    FRIEND_AVATAR,///<after get_friend_avatar
-    GROUP_AVATAR,///<after get_group_avatar
     POLL_LOST_CONNECTION,///
     POLL_MSG_COME,
     SYS_MSG_COME,//come from inner
