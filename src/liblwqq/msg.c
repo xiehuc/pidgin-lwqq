@@ -36,6 +36,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
+void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -861,7 +862,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
+static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
     LwqqAsyncEvset* ret = NULL;
@@ -881,6 +882,14 @@ LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage*
         }
     }
     return ret;
+}
+void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
+{
+    void **d = data;
+    LwqqRecvMsgList* list = d[0];
+    LwqqMsg* msg = d[1];
+    s_free(data);
+    insert_recv_msg_with_order(list,msg);
 }
 /**
  * Parse message received from server
@@ -929,6 +938,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         
         msg_type = parse_recvmsg_type(cur);
         msg = lwqq_msg_new(msg_type);
+        LwqqAsyncEvset* ev;
         if (!msg) {
             continue;
         }
@@ -939,6 +949,15 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         case LWQQ_MT_DISCU_MSG:
         case LWQQ_MT_SESS_MSG:
             ret = parse_new_msg(cur, msg->opaque);
+            ev = lwqq_msg_request_picture(list->lc, msg->type, msg->opaque);
+            if(ev){
+                ret = -1;
+                void **d = s_malloc0(sizeof(void*)*2);
+                d[0] = list;
+                d[1] = msg;
+                lwqq_async_add_evset_listener(ev,insert_msg_delay_by_request_content,d);
+                continue;
+            }
             break;
         case LWQQ_MT_STATUS_CHANGE:
             ret = parse_status_change(cur, msg->opaque);
@@ -971,37 +990,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         }
 
         if (ret == 0) {
-            LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
-            rmsg->msg = msg;
-            LwqqRecvMsg *iter;
-            /* Parse a new message successfully, link it to our list */
-            pthread_mutex_lock(&list->mutex);
-            //sort the order for messages.
-            if(msg->type <= LWQQ_MT_SESS_MSG){
-                int id2 = ((LwqqMsgMessage*)msg->opaque)->msg_id2;
-                int inserted = 0;
-                TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
-                    if(iter->msg->type>LWQQ_MT_SESS_MSG)
-                        continue;
-                    LwqqMsgMessage* iter_msg = iter->msg->opaque;
-                    if(iter_msg->msg_id2<id2){
-                        TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
-                        inserted = 1;
-                        break;
-                    }else if(iter_msg->msg_id2==id2){
-                        //this is duplicated message. we destroy it.
-                        inserted = 1;
-                        lwqq_msg_free(msg);
-                        break;
-                    }
-                }
-                if(!inserted){
-                    TAILQ_INSERT_HEAD(&list->head,rmsg,entries);
-                }
-            }else{
-                TAILQ_INSERT_TAIL(&list->head, rmsg, entries);
-            }
-            pthread_mutex_unlock(&list->mutex);
+            insert_recv_msg_with_order(list,msg);
         } else {
             lwqq_msg_free(msg);
         }
@@ -1012,6 +1001,41 @@ done:
         json_free_value(&json);
     }
     return retcode;
+}
+
+void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
+{
+    LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
+    rmsg->msg = msg;
+    LwqqRecvMsg *iter;
+    /* Parse a new message successfully, link it to our list */
+    pthread_mutex_lock(&list->mutex);
+    //sort the order for messages.
+    if(msg->type <= LWQQ_MT_SESS_MSG){
+        int id2 = ((LwqqMsgMessage*)msg->opaque)->msg_id2;
+        int inserted = 0;
+        TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
+            if(iter->msg->type>LWQQ_MT_SESS_MSG)
+                continue;
+            LwqqMsgMessage* iter_msg = iter->msg->opaque;
+            if(iter_msg->msg_id2<id2){
+                TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
+                inserted = 1;
+                break;
+            }else if(iter_msg->msg_id2==id2){
+                //this is duplicated message. we destroy it.
+                inserted = 1;
+                lwqq_msg_free(msg);
+                break;
+            }
+        }
+        if(!inserted){
+            TAILQ_INSERT_HEAD(&list->head,rmsg,entries);
+        }
+    }else{
+        TAILQ_INSERT_TAIL(&list->head, rmsg, entries);
+    }
+    pthread_mutex_unlock(&list->mutex);
 }
 
 /**
@@ -1518,7 +1542,9 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     c->data.str = s_strdup(message);
     TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
-    LWQQ_SYNC(lwqq_msg_send(lc,msg));
+    LWQQ_SYNC_BEGIN();
+    lwqq_msg_send(lc,msg);
+    LWQQ_SYNC_END();
 
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;

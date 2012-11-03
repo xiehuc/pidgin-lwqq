@@ -660,18 +660,6 @@ int qq_msg_check(LwqqClient* lc,void* data)
     while(!TAILQ_EMPTY(&l->head)) {
 
         msg = TAILQ_FIRST(&l->head);
-        if(msg->msg->type <= LWQQ_MT_SESS_MSG) {
-            LwqqAsyncEvset* picset = NULL;
-            picset = lwqq_msg_request_picture(lc,msg->msg->type,msg->msg->opaque);
-            if(picset != NULL) {
-                void** data = s_malloc0(sizeof(void*)*2);
-                data[0] = lc;
-                data[1] = msg->msg;
-                lwqq_async_add_evset_listener(picset,msg_delaied_by_download_picture,data);
-                //clean msg pointer to delay delete.
-                msg->msg = NULL;
-            }
-        }
         if(msg->msg) {
             switch(msg->msg->type) {
             case LWQQ_MT_BUDDY_MSG:

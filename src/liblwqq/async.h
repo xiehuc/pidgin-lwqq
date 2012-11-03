@@ -126,19 +126,12 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event);
  * do not repeatly add one event twice
  */
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
-/**
- * @return the error number of evset.
- * it is one of event error number.
- * it can only store one error number.
- */
-int lwqq_async_wait(LwqqAsyncEvset* host);
 /** this add a event listener to a event.
  * it is better than lwqq_async_add_listener.
  * because you can set different data to different event which may the same function.
  * async listener can only set one data for one ListenerType.
  */
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
-void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called);
 /**
  * note!! you must free evset in callback function.
  */
@@ -158,25 +151,9 @@ do{\
 #define lwqq_async_event_get_result(ev) (*((int*)ev))
 #define lwqq_async_evset_get_result(ev) (*((int*)ev))
 
-/** this is a easy and useful macro.
- * it can keep sync for one function.
- * it is simple. it create one evset and add only one event.
- * then wait it finished.
- * so it is synced.
- */
-#define LWQQ_SYNC(ev) \
-    do{\
-        LwqqAsyncEvset* evset = lwqq_async_evset_new();\
-        LwqqAsyncEvent* event = ev;\
-        lwqq_async_evset_add_event(evset,event);\
-        lwqq_async_wait(evset);\
-    }while(0)
-
 extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
-#define LWQQ_SYNC_BEGIN() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1)
-
-#define LWQQ_SYNC_END() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0)
-
+#define LWQQ_SYNC_BEGIN() { LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1;
+#define LWQQ_SYNC_END() LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;}
 #define LWQQ_SYNC_ENABLED() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED == 1)
 
 //=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//
@@ -208,6 +185,9 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io);
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int ms,LwqqAsyncTimerCallback func,void* data);
 /** stop a timer */
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+//when caller finished . it would raise called finish yet.
+//so it is calld event chain.
+void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called);
 //=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//
 
 #endif

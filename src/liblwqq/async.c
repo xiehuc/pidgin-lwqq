@@ -134,20 +134,6 @@ void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
     pthread_mutex_unlock(&host->lock);
 }
 
-int lwqq_async_wait(LwqqAsyncEvset* host)
-{
-    int ret = 0;
-    pthread_mutex_lock(&host->lock);
-    if(host->ref_count>0){
-        host->cond_waiting = 1;
-        pthread_cond_wait(&host->cond,&host->lock);
-    }
-    pthread_mutex_unlock(&host->lock);
-    ret = host->result;
-    s_free(host);
-    return ret;
-}
-
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data)
 {
     if(event == NULL){

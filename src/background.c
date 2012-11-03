@@ -50,20 +50,15 @@ static void* _background_friends_info(void* data)
     LwqqErrorCode err;
     LwqqClient* lc=ac->qq;
 
-    LwqqAsyncEvset* lock = lwqq_async_evset_new();
-    LwqqAsyncEvent* event;
-    event = lwqq_info_get_friends_info(lc,&err);
-    lwqq_async_evset_add_event(lock,event);
-    event = lwqq_info_get_group_name_list(ac->qq,&err);
-    lwqq_async_evset_add_event(lock,event);
-    lwqq_async_wait(lock);
+    LWQQ_SYNC_BEGIN();
+    lwqq_info_get_friends_info(lc,&err);
+    lwqq_info_get_group_name_list(ac->qq,&err);
+    LWQQ_SYNC_END();
 
-    lock = lwqq_async_evset_new();
-    event = lwqq_info_get_online_buddies(ac->qq,&err);
-    lwqq_async_evset_add_event(lock,event);
-    event = lwqq_info_get_discu_name_list(ac->qq);
-    lwqq_async_evset_add_event(lock, event);
-    lwqq_async_wait(lock);
+    LWQQ_SYNC_BEGIN();
+    lwqq_info_get_online_buddies(ac->qq,&err);
+    lwqq_info_get_discu_name_list(ac->qq);
+    LWQQ_SYNC_END();
 
     lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
 

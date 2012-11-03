@@ -313,7 +313,6 @@ LwqqMsgContent* lwqq_msg_fill_upload_cface(const char* filename,
 LwqqMsgContent* lwqq_msg_fill_upload_offline_pic(const char* filename,
         const void* buffer,size_t buf_size);
 
-LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg);
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
 LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
         LWQQ_PROGRESS progress,void* prog_data);

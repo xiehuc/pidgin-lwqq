@@ -26,7 +26,6 @@ typedef struct GLOBAL {
     CURLM* multi;
     CURLSH* share;
     pthread_mutex_t share_lock[2];
-    //struct ev_loop* loop;
     int still_running;
     LwqqAsyncTimer timer_event;
     LIST_HEAD(,CURLPOOL) easy_pool;
