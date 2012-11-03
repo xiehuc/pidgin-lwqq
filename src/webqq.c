@@ -833,11 +833,7 @@ static int login_complete(LwqqClient* lc,void* data)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    lwqq_async_add_listener(ac->qq,FRIEND_COME,friend_come);
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
-    lwqq_async_add_listener(ac->qq,GROUP_COME,group_come);
-    //lwqq_async_add_listener(ac->qq,FRIEND_AVATAR,friend_avatar);
-    //lwqq_async_add_listener(ac->qq,GROUP_AVATAR,group_avatar);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
     //lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);

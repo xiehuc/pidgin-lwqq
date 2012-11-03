@@ -36,8 +36,6 @@ typedef struct _LwqqAsyncEvent {
     LwqqAsyncEvset* host_lock;
     EVENT_CALLBACK callback;
     void* data;
-    EVENT_CALLBACK start;
-    void* start_data;
     LwqqHttpRequest* req;
 }_LwqqAsyncEvent;
 
@@ -161,17 +159,6 @@ void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback
 void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)
 {
     lwqq_http_on_progress(event->req,callback,data);
-}
-void lwqq_async_event_on_start(LwqqAsyncEvent* event,EVENT_CALLBACK start,void* data)
-{
-    event->start = start;
-    event->start_data = data;
-}
-void lwqq_async_event_start(LwqqAsyncEvent* event,int socket)
-{
-    event->result = socket;
-    if(event->start)
-        event->start(event,event->start_data);
 }
 typedef struct {
     LwqqAsyncIoCallback callback;

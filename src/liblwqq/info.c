@@ -1315,26 +1315,18 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporb
              "%s/api/get_friend_uin2?tuin=%s&verifysession=&type=1&code=&vfwebqq=%s&t=%ld",
              "http://s.web2.qq.com", uin, lc->vfwebqq,time(NULL));
     req = lwqq_http_create_default_request(url, NULL);
-    if (!req) {
-        goto done;
-    }
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     void ** data = s_malloc0(sizeof(void*)*3);
-    data[0] = lc;
-    data[1] = group;
-    data[2] = buddy;
+    data[0] = group;
+    data[1] = buddy;
     return req->do_request_async(req, 0, NULL,get_qqnumber_back,data);
-done:
-    lwqq_http_request_free(req);
-    return NULL;
 }
 static int get_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
     void **d = data;
-    LwqqClient* lc = d[0];
-    LwqqGroup* group = d[1];
-    LwqqBuddy* buddy = d[2];
+    LwqqGroup* group = d[0];
+    LwqqBuddy* buddy = d[1];
     s_free(data);
     int isgroup = (group!=NULL);
 
@@ -1371,10 +1363,8 @@ static int get_qqnumber_back(LwqqHttpRequest* req,void* data)
 
     if(isgroup){
         group->account = s_strdup(account);
-        lwqq_async_dispatch(lc,GROUP_COME,group);
     }else{ 
         buddy->qqnumber = s_strdup(account);
-        lwqq_async_dispatch(lc,FRIEND_COME,buddy);
     }
 done:
     /* Free temporary string */
