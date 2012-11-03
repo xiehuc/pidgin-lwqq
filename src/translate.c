@@ -142,12 +142,14 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             ///last part.
             c = build_string_content(ptr,NULL,mmsg);
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+            //this is finished yet.
             break;
         }
         if(begin>ptr){
             //note you can not pass c directly. 
             //because insert_tail is a macro.
             c = build_string_content(ptr,begin,mmsg);
+            //you should insert twice now. like |inserted|begin|
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
         trex_getsubexp(x,0,&m);

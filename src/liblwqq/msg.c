@@ -1080,12 +1080,13 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
     pthread_create(&list->tid, &list->attr, start_poll_msg, list);
 }
 
+///low level special char mapping
 static void parse_unescape(char* source,char *buf,int buf_len)
 {
     char* ptr = source;
     size_t idx;
     while(*ptr!='\0'){
-        idx = strcspn(ptr,"\n\t\\;&\"");
+        idx = strcspn(ptr,"\n\t\\;&\"+");
         if(ptr[idx] == '\0'){
             strcpy(buf,ptr);
             buf+=idx;
@@ -1102,6 +1103,7 @@ static void parse_unescape(char* source,char *buf,int buf_len)
             case ';' : strcpy(buf,"\\u003B");break;
             case '&' : strcpy(buf,"\\u0026");break;
             case '"' : strcpy(buf,"\\\\\\\"");break;
+            case '+' : strcpy(buf,"\\u002B");break;
         }
         ptr+=idx+1;
         buf+=strlen(buf);
@@ -1116,7 +1118,7 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
 {
     //not thread safe. 
     //you need ensure only one thread send msg in one time.
-    static char buf[2048];
+    static char buf[8192];
     strcpy(buf,"\"[");
     LwqqMsgContent* c;
 
@@ -1443,7 +1445,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
         apistr = "send_discu_msg2";
     }
     format_append(data,
-            "\"face\":0,"
+            //"\"face\":0,"
             "\"content\":%s,"
             "\"msg_id\":%ld,"
             "\"clientid\":\"%s\","
