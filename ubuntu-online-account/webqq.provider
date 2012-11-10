@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Generated using empathy/ubuntu-online-accounts/cc-plugins/generate-plugins.py
+     Do NOT edit manually -->
+<provider id="webqq">
+  <name>WebQQ</name>
+  <icon>webqq</icon>
+</provider>
