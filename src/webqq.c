@@ -704,13 +704,6 @@ int qq_msg_check(LwqqClient* lc,void* data)
 
 }
 
-int qq_msg_check_wrap(void* data)
-{
-    qq_account* ac = data;
-    qq_msg_check(ac->qq,ac);
-    return 1;
-}
-
 int qq_sys_msg_write(LwqqClient* lc,void* data)
 {
     system_msg* msg = data;
@@ -761,7 +754,6 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
 
     background_msg_poll(ac);
 
-    ac->msg_poll_handle = purple_timeout_add(500, qq_msg_check_wrap, ac);
     return 0;
 }
 
@@ -835,7 +827,7 @@ static int login_complete(LwqqClient* lc,void* data)
 
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
     lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
-    //lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
+    lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;

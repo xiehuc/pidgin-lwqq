@@ -13,6 +13,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(PURPLE REQUIRED  purple>=2.8.0)
 pkg_check_modules(GLIB REQUIRED  glib-2.0)
 pkg_check_modules(CURL REQUIRED libcurl)
+pkg_check_modules(ACCOUNT account-plugin)
 #recommand libcurl>=7.22.0
 
 
@@ -47,3 +48,4 @@ endif(NLS)
 
 add_subdirectory(src)
 add_subdirectory(res)
+add_subdirectory(ubuntu-online-account)

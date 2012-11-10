@@ -39,7 +39,6 @@ typedef ev_io*    LwqqAsyncIoHandle;
 #define LWQQ_ASYNC_WRITE EV_WRITE
 #endif
 
-
 /** call this function when you quit your program.*/
 void lwqq_async_global_quit();
 /**===================EVSET API==========================================**/
