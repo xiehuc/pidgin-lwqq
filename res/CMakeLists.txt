@@ -4,3 +4,5 @@ install(DIRECTORY "empathy/"
     DESTINATION "/usr/share/empathy/icons/hicolor")
 install(DIRECTORY "qqfaces/"
     DESTINATION "${PURPLE_DATADIR}/pixmaps/pidgin/emotes/webqq")
+install(DIRECTORY "hicolor/"
+    DESTINATION "/usr/share/icons/hicolor")
