@@ -36,7 +36,7 @@ target_link_libraries(webqq
   ${PURPLE_LIBRARIES}
   ${GLIB_LIBRARIES}
   ${CURL_LIBRARIES}
-  ev
+  #  ev
   )
 
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
