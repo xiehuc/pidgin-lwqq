@@ -6,6 +6,7 @@
 #include "msg.h"
 #include "async.h"
 #include "smemory.h"
+#include "background.h"
 
 
 static void file_trans_request_denied(PurpleXfer* xfer)
@@ -110,16 +111,13 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     void** data = xfer->data;
     qq_account* ac = data[0];
     LwqqClient* lc = ac->qq;
-    LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
-    file->from = s_strdup(lc->myself->uin);
-    file->to = s_strdup(purple_xfer_get_remote_user(xfer));
-    file->name = s_strdup(purple_xfer_get_local_filename(xfer));
+    LwqqMsgOffFile* file = lwqq_msg_fill_upload_offline_file(
+            xfer->local_filename, lc->myself->uin, purple_xfer_get_remote_user(xfer));
     xfer->start_time = time(NULL);
     data[1] = file;
     data[2] = xfer;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
     lwqq_async_add_event_listener(ev,send_file,data);
-    //lwqq_async_event_on_start(ev,file_trans_on_start,xfer);
     lwqq_async_event_set_progress(ev, file_trans_on_progress, xfer);
 }
 static void upload_file_init(PurpleXfer* xfer)
@@ -137,7 +135,6 @@ static void upload_file_init(PurpleXfer* xfer)
     //lwqq_async_add_event_listener(
     background_upload_file(lc,file,file_trans_on_progress,xfer);
     //send_file,data);
-
 }
 
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)

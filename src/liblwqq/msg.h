@@ -306,20 +306,35 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 #define lwqq_msg_send_group(lc,group,message) \
     ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : NULL)
 /* LwqqRecvMsg API end */
-//fill a msg content with upload cface
+//======================LWQQ MSG UPLOAD API=========================================///
+//helper function : fill a msg content with upload cface
+//then add it to LwqqMsgMessage::content
 LwqqMsgContent* lwqq_msg_fill_upload_cface(const char* filename,
         const void* buffer,size_t buf_size);
-//fill a msg content with upload offline pic
+//helper function : fill a msg content with upload offline pic
+//then add it to LwqqMsgMessage::content
 LwqqMsgContent* lwqq_msg_fill_upload_offline_pic(const char* filename,
         const void* buffer,size_t buf_size);
 
+//get file url from a receieve offline msg 
+//then use this url to download file whatever you like
 const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg);
+//helper function : fill a message content with upload offline file
+//then use upload_offline_file function to do upload
+LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
+        const char* from,const char* to);
+//do upload 
+//you should always check server return to see it upload successful.
+//if successed use send_offfile function do send the message.
+//or use offfile_free to clean memory.
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file);
+//call this function when upload_offline_file finished.
+void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
+//call this when upload failed.
+void lwqq_msg_offfile_free(void* opaque);
+
 LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
         LWQQ_PROGRESS progress,void* prog_data);
-//call this function when upload_offfile finished.
-void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file);
-void lwqq_msg_offfile_free(void* opaque);
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 

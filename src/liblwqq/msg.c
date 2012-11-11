@@ -1748,3 +1748,12 @@ LwqqMsgContent* lwqq_msg_fill_upload_offline_pic(const char* filename,
     c->data.img.size = buf_size;
     return c;
 }
+LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
+        const char* from,const char* to)
+{
+    LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
+    file->name = s_strdup(filename);
+    file->from = s_strdup(from);
+    file->to = s_strdup(to);
+    return file;
+}
