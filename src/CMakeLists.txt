@@ -3,13 +3,13 @@ set(SRC_LIST
   trex.c
   webqq.c
   translate.c
-  http_curl.c
   qq_types.c
   ft.c
   )
 
 set(LWQQ_LIST
   liblwqq/async.c
+  liblwqq/http_curl.c
   liblwqq/url.c
   liblwqq/md5.c
   liblwqq/unicode.c

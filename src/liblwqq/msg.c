@@ -1569,8 +1569,7 @@ static int lwqq_file_download_finish(LwqqHttpRequest* req,void* data)
     lwqq_http_request_free(req);
     return 0;
 }
-LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
-        LWQQ_PROGRESS progress_func,void* prog_data)
+LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto)
 {
     char url[512];
     //char* gbk = to_gbk(msg->recv.name);
@@ -1602,7 +1601,6 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     name = url_whole_encode(follow_url);
     s_free(follow_url);
     lwqq_http_set_option(req, LWQQ_HTTP_RESET_URL,name);
-    //lwqq_http_reset_url(req,name);
     s_free(name);
 
     FILE* file = fopen(saveto,"w");
@@ -1611,10 +1609,6 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         return NULL;
     }
     lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE,file);
-    //lwqq_http_save_file(req,file);
-    if(progress_func){
-        lwqq_http_on_progress(req,progress_func,prog_data);
-    }
     return req->do_request_async(req,0,NULL,lwqq_file_download_finish,file);
 }
 

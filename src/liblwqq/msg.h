@@ -333,8 +333,7 @@ void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
 //call this when upload failed.
 void lwqq_msg_offfile_free(void* opaque);
 
-LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto,
-        LWQQ_PROGRESS progress,void* prog_data);
+LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto);
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 
