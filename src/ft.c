@@ -44,10 +44,9 @@ static void file_trans_init(PurpleXfer* xfer)
     LwqqMsgFileMessage* file = data[1];
     s_free(data);
     const char* filename = purple_xfer_get_local_filename(xfer);
-    xfer->start_time = time(NULL);
+    //xfer->start_time = time(NULL);
     lwqq_async_add_event_listener(
         lwqq_msg_accept_file(lc,file,filename,file_trans_on_progress,xfer),
-        //lwqq_msg_accept_file(lc,file,filename,NULL,NULL),
         file_trans_complete,xfer);
 }
 static void file_trans_cancel(PurpleXfer* xfer)

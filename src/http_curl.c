@@ -807,17 +807,17 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
     va_start(args,opt);
     switch(opt){
         case LWQQ_HTTP_TIMEOUT:
-            curl_easy_setopt(req->req,CURLOPT_TIMEOUT,args);
+            curl_easy_setopt(req->req,CURLOPT_TIMEOUT,va_arg(args,unsigned long));
             break;
         case LWQQ_HTTP_NOT_FOLLOW:
-            curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,int));
+            curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,long));
             break;
         case LWQQ_HTTP_SAVE_FILE:
             curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
             curl_easy_setopt(req->req,CURLOPT_WRITEDATA,va_arg(args,FILE*));
             break;
         case LWQQ_HTTP_RESET_URL:
-            curl_easy_setopt(req->req,CURLOPT_URL,args);
+            curl_easy_setopt(req->req,CURLOPT_URL,va_arg(args,const char*));
             break;
     }
     va_end(args);
