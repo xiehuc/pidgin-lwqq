@@ -11,15 +11,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <plugin.h>
-#include <eventloop.h>
+//#include <plugin.h>
 #include "async.h"
 #include "smemory.h"
 #include "http.h"
 typedef struct async_dispatch_data {
     ListenerType type;
     LwqqClient* client;
-    int handle;
+    LwqqAsyncTimer handle;
     void* data;
 } async_dispatch_data;
 typedef struct _LwqqAsyncEvset{
@@ -39,22 +38,9 @@ typedef struct _LwqqAsyncEvent {
     LwqqHttpRequest* req;
 }_LwqqAsyncEvent;
 
-static gboolean timeout_come(void* p);
-
 int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
 
-void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* param)
-{
-    if(!lwqq_client_valid(lc)||!lwqq_async_has_listener(lc,type))
-        return;
-    async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
-    data->type = type;
-    data->client = lc;
-    data->data = param;
-    data->handle = purple_timeout_add(50,timeout_come,data);
-}
-
-static gboolean timeout_come(void* p)
+static int timeout_come(void* p)
 {
     async_dispatch_data* data = (async_dispatch_data*)p;
     LwqqClient* lc = data->client;
@@ -67,6 +53,18 @@ static gboolean timeout_come(void* p)
     //remote handle;
     return 0;
 }
+
+void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* param)
+{
+    if(!lwqq_client_valid(lc)||!lwqq_async_has_listener(lc,type))
+        return;
+    async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
+    data->type = type;
+    data->client = lc;
+    data->data = param;
+    lwqq_async_timer_watch(&data->handle, 50, timeout_come, data);
+}
+
 
 
 void lwqq_async_set(LwqqClient* client,int enabled)
