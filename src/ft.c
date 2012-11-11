@@ -43,8 +43,10 @@ static void file_trans_init(PurpleXfer* xfer)
     LwqqMsgFileMessage* file = data[1];
     s_free(data);
     const char* filename = purple_xfer_get_local_filename(xfer);
+    xfer->start_time = time(NULL);
     lwqq_async_add_event_listener(
         lwqq_msg_accept_file(lc,file,filename,file_trans_on_progress,xfer),
+        //lwqq_msg_accept_file(lc,file,filename,NULL,NULL),
         file_trans_complete,xfer);
 }
 static void file_trans_cancel(PurpleXfer* xfer)
@@ -112,7 +114,7 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     file->from = s_strdup(lc->myself->uin);
     file->to = s_strdup(purple_xfer_get_remote_user(xfer));
     file->name = s_strdup(purple_xfer_get_local_filename(xfer));
-    purple_xfer_ref(xfer);
+    xfer->start_time = time(NULL);
     data[1] = file;
     data[2] = xfer;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
@@ -129,6 +131,7 @@ static void upload_file_init(PurpleXfer* xfer)
     file->from = s_strdup(lc->myself->uin);
     file->to = s_strdup(purple_xfer_get_remote_user(xfer));
     file->name = s_strdup(purple_xfer_get_local_filename(xfer));
+    xfer->start_time = time(NULL);
     data[1] = file;
     data[2] = xfer;
     //lwqq_async_add_event_listener(

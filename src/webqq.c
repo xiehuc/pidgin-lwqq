@@ -954,12 +954,12 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     return 1;
 }
 
+#if 0
 static void qq_leave_chat(PurpleConnection* gc,int id)
 {
     printf("test\n");
 }
 
-#if 0
 //pidgin not use send_whisper .
 //may use it in v 3.0.0
 static void qq_send_whisper(PurpleConnection* gc,int id,const char* who,const char* message)
