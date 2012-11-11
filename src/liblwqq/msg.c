@@ -1586,7 +1586,8 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     req->set_header(req,"Referer","http://web2.qq.com/");
     //followlocation by hand
     //because curl doesn't escape url after auto follow;
-    lwqq_http_not_follow(req);
+    //lwqq_http_not_follow(req);
+    lwqq_http_set_option(req, LWQQ_HTTP_NOT_FOLLOW,1L);
     req->do_request(req,0,NULL);
     if(req->http_code != 302){
         lwqq_http_request_free(req);
@@ -1600,7 +1601,8 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     req->location = NULL;
     name = url_whole_encode(follow_url);
     s_free(follow_url);
-    lwqq_http_reset_url(req,name);
+    lwqq_http_set_option(req, LWQQ_HTTP_RESET_URL,name);
+    //lwqq_http_reset_url(req,name);
     s_free(name);
 
     FILE* file = fopen(saveto,"w");
@@ -1608,7 +1610,8 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         perror("Error:");
         return NULL;
     }
-    lwqq_http_save_file(req,file);
+    lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE,file);
+    //lwqq_http_save_file(req,file);
     if(progress_func){
         lwqq_http_on_progress(req,progress_func,prog_data);
     }

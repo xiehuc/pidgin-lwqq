@@ -28,7 +28,6 @@ typedef struct GLOBAL {
     pthread_mutex_t share_lock[2];
     int still_running;
     LwqqAsyncTimer timer_event;
-    LIST_HEAD(,CURLPOOL) easy_pool;
 }GLOBAL;
 GLOBAL global;
 
@@ -115,14 +114,6 @@ static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *na
 
     return h;
 }
-static void lwqq_http_print_header(LwqqHttpRequest* request)
-{
-    struct curl_slist* list = request->recv_head;
-    while(list!=NULL){
-        puts(list->data);
-        list = list->next;
-    }
-}
 
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
 {
@@ -140,13 +131,12 @@ static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
         }
         list = list->next;
     }
-    //printf("cookie:%s\n",cookie);
     if (!cookie) {
         lwqq_log(LOG_WARNING, "No cookie: %s\n", name);
         return NULL;
     }
 
-    lwqq_log(LOG_DEBUG, "Parse Cookie: %s=%s\n", name, cookie);
+    //lwqq_log(LOG_DEBUG, "Parse Cookie: %s=%s\n", name, cookie);
     return s_strdup(cookie);
 }
 /** 
@@ -168,7 +158,6 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
         curl_formfree(request->form_start);
         if(request->req)
             curl_easy_cleanup(request->req);
-        //LIST_INSERT_HEAD(&global.easy_pool,(CURLPOOL*)request->req,entries);
         s_free(request);
     }
 }
@@ -545,8 +534,6 @@ static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
             si = s_malloc0(sizeof(*si));
             setsock(si,s,e,what,g);
             curl_multi_assign(g->multi, s, si);
-            //curl_easy_getinfo(si->easy,CURLINFO_PRIVATE,&di);
-            //lwqq_async_event_start(di->event,s);
         } else {
             //重新关联socket;
             setsock(si,s,e,what,g);
@@ -796,21 +783,6 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
     curl_easy_setopt(request->req,CURLOPT_HTTPPOST,request->form_start);
 }
 
-void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
-{
-    curl_easy_setopt(req->req,CURLOPT_TIMEOUT,time_out);
-}
-
-void lwqq_http_not_follow(LwqqHttpRequest* req)
-{
-    curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION, 0L);
-    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1L);
-}
-void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file)
-{
-    curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
-    curl_easy_setopt(req->req,CURLOPT_WRITEDATA,file);
-}
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
     LwqqHttpRequest* req = d;
@@ -829,7 +801,24 @@ void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* pro
     curl_easy_setopt(req->req,CURLOPT_NOPROGRESS,0L);
 }
 
-void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url)
+void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 {
-    curl_easy_setopt(req->req,CURLOPT_URL,url);
+    va_list args;
+    va_start(args,opt);
+    switch(opt){
+        case LWQQ_HTTP_TIMEOUT:
+            curl_easy_setopt(req->req,CURLOPT_TIMEOUT,args);
+            break;
+        case LWQQ_HTTP_NOT_FOLLOW:
+            curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,int));
+            break;
+        case LWQQ_HTTP_SAVE_FILE:
+            curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
+            curl_easy_setopt(req->req,CURLOPT_WRITEDATA,va_arg(args,FILE*));
+            break;
+        case LWQQ_HTTP_RESET_URL:
+            curl_easy_setopt(req->req,CURLOPT_URL,args);
+            break;
+    }
+    va_end(args);
 }

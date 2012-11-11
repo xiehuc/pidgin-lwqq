@@ -121,14 +121,16 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri);
 LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
         LwqqErrorCode *err);
 
-void lwqq_http_set_async(LwqqHttpRequest* request);
+typedef enum {
+    LWQQ_HTTP_TIMEOUT,
+    LWQQ_HTTP_NOT_FOLLOW,
+    LWQQ_HTTP_SAVE_FILE,
+    LWQQ_HTTP_RESET_URL,
+}LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();
-void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out);
-void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file);
+void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...);
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data);
-void lwqq_http_not_follow(LwqqHttpRequest* req);
-void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url);
 char* lwqq_http_escape(LwqqHttpRequest* req,const char* url);
 
 
