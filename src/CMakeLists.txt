@@ -19,7 +19,10 @@ set(LWQQ_LIST
   liblwqq/msg.c
   liblwqq/type.c
   liblwqq/smemory.c
-  liblwqq/info.c)
+  liblwqq/info.c
+  liblwqq/lwdb.c
+  liblwqq/swsqlite.c
+  )
 
 add_definitions(-Wall)
 add_definitions(-DUSE_LIBPURPLE)
@@ -33,6 +36,7 @@ include_directories(
   liblwqq)
 
 target_link_libraries(webqq
+  ${SQLITE_LIBRARIES}
   ${PURPLE_LIBRARIES}
   ${GLIB_LIBRARIES}
   ${CURL_LIBRARIES}

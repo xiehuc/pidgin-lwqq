@@ -17,6 +17,7 @@
 #include "webqq.h"
 #include "qq_types.h"
 #include "login.h"
+#include "lwdb.h"
 #include "background.h"
 #include "translate.h"
 
@@ -1179,6 +1180,10 @@ static void qq_login(PurpleAccount *account)
         purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
+    LwdbUserDB* db = lwdb_userdb_new(username);
+    lwdb_userdb_sync_client(db, ac->qq);
+    lwdb_userdb_free(db);
+    
     //this remove all buddies
     all_reset(ac);
     lwqq_async_set(ac->qq,1);
