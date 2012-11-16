@@ -698,14 +698,11 @@ void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
         target = find_buddy_by_qqnumber(lc, buddy->qqnumber);
         if(target == NULL)
             target = find_buddy_by_nick_and_mark(lc,buddy->nick,buddy->markname);
-        if(target == NULL)
-            LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-        else{
+        if(target){
             buddy_merge(target,buddy);
             lwqq_buddy_free(buddy);
-            //LIST_REMOVE(target,entries);
+        }else{
             //LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-            //lwqq_buddy_free(target);
         }
     }
     sws_query_end(stmt, NULL);

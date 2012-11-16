@@ -289,8 +289,8 @@ static int friend_come(LwqqClient* lc,void* data)
         void **d = s_malloc0(sizeof(void*)*2);
         d[0] = ac;
         d[1] = buddy;
-        //lwqq_async_add_event_listener(
-        //        lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
+        lwqq_async_add_event_listener(
+                lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
     } else {
         purple_buddy_set_icon(purple_find_buddy(account,buddy->uin),icon);
     }
@@ -336,8 +336,8 @@ static int group_come(LwqqClient* lc,void* data)
             void **d = s_malloc0(sizeof(void*)*2);
             d[0] = ac;
             d[1] = group;
-            //lwqq_async_add_event_listener(
-            //        lwqq_info_get_group_avatar(lc,group),group_avatar,d);
+            lwqq_async_add_event_listener(
+                    lwqq_info_get_group_avatar(lc,group),group_avatar,d);
         }
     }else{
         purple_blist_alias_chat(chat,group_name(group));
@@ -733,6 +733,7 @@ static void write_to_db(LwqqAsyncEvent* ev,void* data)
     s_free(data);
 
     lwdb_userdb_insert_buddy_info(ac->db, buddy);
+    friend_come(ac->qq,buddy);
 }
 int qq_set_basic_info(LwqqClient* lc,void* data)
 {
@@ -751,7 +752,6 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
-        friend_come(lc,buddy);
         if(! buddy->qqnumber){
             void **d = s_malloc0(sizeof(void*)*2);
             d[0] = ac;
@@ -759,7 +759,10 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
             lwqq_async_add_event_listener(
                 lwqq_info_get_friend_qqnumber(lc,buddy),write_to_db,d);
         }
-        else printf("%s:%s\n",buddy->nick,buddy->qqnumber);
+        else{
+            friend_come(lc,buddy);
+            printf("%s:%s:%s\n",buddy->nick,buddy->qqnumber,buddy->uin);
+        }
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {

@@ -25,6 +25,7 @@
 #include "json.h"
 #include "async.h"
 
+#define LWQQ_CACHE_DIR "/tmp/lwqq/"
 
 static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
@@ -374,7 +375,7 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbud
     LwqqErrorCode error;
     if(isgroup) group = grouporbuddy;
     else buddy = grouporbuddy;
-    const char* qqnumber = (isgroup)?group->code:buddy->uin;
+    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     const char* uin = (isgroup)?group->code:buddy->uin;
 
     //to avoid chinese character
@@ -382,8 +383,8 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbud
     //first we try to read from disk
     char path[32];
     time_t modify=0;
-    if(qqnumber) {
-        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
+    if(qqnumber || uin) {
+        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber?qqnumber:uin);
         struct stat st = {0};
         //we read it last modify date
         stat(path,&st);
@@ -425,7 +426,8 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     LwqqGroup* group = array[1];
     s_free(data);
     int isgroup = (group !=NULL);
-    const char* qqnumber = (isgroup)?group->code:buddy->uin;
+    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    const char* uin = (isgroup)? group->code: buddy->uin;
     char** avatar = (isgroup)?&group->avatar:&buddy->avatar;
     size_t* len = (isgroup)?&group->avatar_len:&buddy->avatar_len;
     char path[32];
@@ -433,8 +435,8 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     size_t filesize=0;
     FILE* f;
 
-    if(qqnumber) {
-        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber);
+    if(qqnumber || uin) {
+        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber?qqnumber:uin);
         struct stat st = {0};
         //we read it last modify date
         hasfile = !stat(path,&st);
@@ -455,7 +457,7 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
         req->resp_len = 0;
 
         //we cache it to file
-        if(qqnumber) {
+        if(qqnumber || uin ) {
             f = fopen(path,"w");
             if(f==NULL) {
                 mkdir(LWQQ_CACHE_DIR,0777);
@@ -475,8 +477,6 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
             utime(path,&wutime);
         }
         lwqq_http_request_free(req);
-        /*if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
-        else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);*/
         return 0;
     }
 
@@ -494,8 +494,6 @@ done:
         }
     }
     lwqq_http_request_free(req);
-    /*if(isgroup)lwqq_async_dispatch(lc,GROUP_AVATAR,group);
-    else lwqq_async_dispatch(lc,FRIEND_AVATAR,buddy);*/
     return 0;
 }
 

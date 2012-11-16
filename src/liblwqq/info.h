@@ -58,7 +58,6 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
  *         2 means read from local cache
  *         0 means failed
  */
-#define LWQQ_CACHE_DIR "/tmp/lwqq/"
 #define lwqq_info_get_friend_avatar(lc,buddy) \
 ((buddy!=NULL) ? lwqq_info_get_avatar(lc,0,buddy):NULL) 
 
