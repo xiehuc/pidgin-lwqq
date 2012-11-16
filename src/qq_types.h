@@ -7,6 +7,7 @@ typedef struct _AsyncListener AsyncListener;
 #include "msg.h"
 #include "lwdb.h"
 #define QQ_MAGIC 0x4153
+#define QQ_USE_QQNUM 1
 typedef struct qq_account {
     LwqqClient* qq;
     PurpleAccount* account;
