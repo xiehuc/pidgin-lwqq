@@ -103,7 +103,8 @@ void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* lc);
  */
 void lwdb_userdb_free(LwdbUserDB *db);
 
-void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* lc);
+void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* to);
+void lwdb_client_sync_userdb(LwqqClient* from,LwdbUserDB* to);
 /* LwdbUserDB API end */
 
 /************************************************************************/

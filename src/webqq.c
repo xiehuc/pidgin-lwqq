@@ -1180,9 +1180,10 @@ static void qq_login(PurpleAccount *account)
         purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
-    LwdbUserDB* db = lwdb_userdb_new(username);
+
+    /*LwdbUserDB* db = lwdb_userdb_new(username);
     lwdb_userdb_sync_client(db, ac->qq);
-    lwdb_userdb_free(db);
+    lwdb_userdb_free(db);*/
     
     //this remove all buddies
     all_reset(ac);
@@ -1199,6 +1200,10 @@ static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
+
+    LwdbUserDB* db = lwdb_userdb_new(ac->qq->myself->uin);
+    lwdb_client_sync_userdb(ac->qq,db);
+    lwdb_userdb_free(db);
 
     lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {

@@ -32,7 +32,7 @@ endif(NLS)
 add_subdirectory(src)
 add_subdirectory(res)
 
-option(UOA "ubuntu online account support" On)
+option(UOA "ubuntu online account support" Off)
 if(UOA)
     pkg_check_modules(GTK gtk+-3.0)
     EXEC_PROGRAM("pkg-config --variable=provider_plugindir account-plugin 2>/dev/null"

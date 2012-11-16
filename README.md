@@ -1,13 +1,38 @@
-# pidgin-lwqq
-a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.
+pidgin-lwqq
+===========
+
+Intro
+-----
+
+a pidgin plugin based on lwqq, a excellent safe useful library for webqq protocol.   
 see github:https://github.com/mathslinux/lwqq.
 
 License: GPLv3
 
+
+Build Option
+------------
+
+### Building From Source
+
+    cmake ..
+    make
+    sudo make install
+
+### Building With Ubuntu-Account-Online Support
+
+    cmake .. -DUOA=On
+    make
+    sudo make install
+
+### Notice
+
 *recommand libcurl >=7.22.0*
 
-# support
-## pidgin support
+Function list
+-------------
+
+### pidgin support
 * send / recv text messages
 * send / recv picture messages
 * send / recv group messages
@@ -41,11 +66,28 @@ telepathy-haze never store buddy list!!
 It only saves file in /tmp/haze-XXXXXX
 so never want to enjoy a good speed
 
-# pidgin-lwqq
-一个基于lwqq库的pidgin插件.
-lwqq库是一个非常安全有效的webqq协议的库.
-见github:https://github.com/mathslinux/lwqq
+简介
+----
+
+一个基于lwqq库的pidgin插件.  
+lwqq库是一个非常安全有效的webqq协议的库.  
+见github:https://github.com/mathslinux/lwqq  
 *推荐libcurl 版本高于等于 7.22*
+
+编译选项
+--------
+
+### 从源代码编译
+
+    cmake ..
+    make
+    sudo make install
+
+### 编译 Ubuntu-Account-Online 支持
+
+    cmake .. -DUOA=On
+    make
+    sudo make install
 
 # support
 ## pidgin

@@ -84,7 +84,8 @@ static const char *create_user_db_sql =
     "    vip_info default '',"
     "    markname default '',"
     "    flag default '',"
-    "    cate_index default '');"
+    "    cate_index default '',"
+    "    last_modify timestamp default 0);"
     
     "create table if not exists categories("
     "    name primary key,"
@@ -437,7 +438,7 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
     if (!e) {
         goto failed;
     }*/
-    snprintf(db_name,sizeof(db_name),DB_PATH"/%s.db",qqnumber);
+    snprintf(db_name,sizeof(db_name),"~/.config/lwqq/%s.db",qqnumber);
 
     /* If there is no db named "db_name", create it */
     if (!db_is_valid(db_name, 1)) {
@@ -559,7 +560,11 @@ failed:
     sws_query_end(stmt, NULL);
     return NULL;
 }
-
+static LwqqErrorCode lwdb_userdb_insert_buddy_info(
+        LwdbUserDB* db,LwqqBuddy* buddy)
+{
+    
+}
 /** 
  * Update buddy's information
  * 
@@ -657,11 +662,13 @@ static LwqqBuddy* find_buddy_by_nick_and_mark(LwqqClient* lc,const char* nick,co
     }
     return NULL;
 }
-void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* lc)
+void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* to)
 {
+    if(!from || !to) return;
     char sql[256];
     LwqqBuddy *buddy = NULL,*target = NULL;
     SwsStmt *stmt = NULL;
+    LwqqClient* lc = to;
 
     snprintf(sql, sizeof(sql),
              "SELECT face,occupation,phone,allow,college,reg_time,constel,"
@@ -684,4 +691,18 @@ void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* lc)
         }
     }
     sws_query_end(stmt, NULL);
+}
+void lwdb_client_sync_userdb(LwqqClient* from,LwdbUserDB* to)
+{
+    if(!from || !to ) return;
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&from->friends,entries){
+        if(buddy->qqnumber){
+            lwdb_userdb_update_buddy_info(to, buddy);
+        }else{
+            buddy->qqnumber = buddy->uin;
+            lwdb_userdb_update_buddy_info(to, buddy);
+            buddy->qqnumber = NULL;
+        }
+    }
 }
