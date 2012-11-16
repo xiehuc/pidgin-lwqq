@@ -289,8 +289,8 @@ static int friend_come(LwqqClient* lc,void* data)
         void **d = s_malloc0(sizeof(void*)*2);
         d[0] = ac;
         d[1] = buddy;
-        lwqq_async_add_event_listener(
-                lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
+        //lwqq_async_add_event_listener(
+        //        lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
     } else {
         purple_buddy_set_icon(purple_find_buddy(account,buddy->uin),icon);
     }
@@ -336,8 +336,8 @@ static int group_come(LwqqClient* lc,void* data)
             void **d = s_malloc0(sizeof(void*)*2);
             d[0] = ac;
             d[1] = group;
-            lwqq_async_add_event_listener(
-                    lwqq_info_get_group_avatar(lc,group),group_avatar,d);
+            //lwqq_async_add_event_listener(
+            //        lwqq_info_get_group_avatar(lc,group),group_avatar,d);
         }
     }else{
         purple_blist_alias_chat(chat,group_name(group));
@@ -725,6 +725,15 @@ int qq_sys_msg_write(LwqqClient* lc,void* data)
         purple_blist_remove_buddy(bu);
     }
 }*/
+static void write_to_db(LwqqAsyncEvent* ev,void* data)
+{
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqBuddy* buddy = d[1];
+    s_free(data);
+
+    lwdb_userdb_insert_buddy_info(ac->db, buddy);
+}
 int qq_set_basic_info(LwqqClient* lc,void* data)
 {
     qq_account* ac = data;
@@ -738,9 +747,19 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
                 lwqq_info_get_friend_avatar(lc,lc->myself),friend_avatar,d);
     }
 
+    lwdb_userdb_write_to_client(ac->db, lc);
+    
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
         friend_come(lc,buddy);
+        if(! buddy->qqnumber){
+            void **d = s_malloc0(sizeof(void*)*2);
+            d[0] = ac;
+            d[1] = buddy;
+            lwqq_async_add_event_listener(
+                lwqq_info_get_friend_qqnumber(lc,buddy),write_to_db,d);
+        }
+        else printf("%s:%s\n",buddy->nick,buddy->qqnumber);
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
@@ -1180,11 +1199,8 @@ static void qq_login(PurpleAccount *account)
         purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
+    ac->db = lwdb_userdb_new(username);
 
-    /*LwdbUserDB* db = lwdb_userdb_new(username);
-    lwdb_userdb_sync_client(db, ac->qq);
-    lwdb_userdb_free(db);*/
-    
     //this remove all buddies
     all_reset(ac);
     lwqq_async_set(ac->qq,1);
@@ -1201,21 +1217,19 @@ static void qq_close(PurpleConnection *gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
 
-    LwdbUserDB* db = lwdb_userdb_new(ac->qq->myself->uin);
-    lwdb_client_sync_userdb(ac->qq,db);
-    lwdb_userdb_free(db);
-
     lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
         background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);
     }
     lwqq_client_free(ac->qq);
+    lwdb_userdb_free(ac->db);
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
     lwqq_http_global_free();
     lwqq_async_global_quit();
+    lwdb_global_free();
 }
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)

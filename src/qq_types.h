@@ -5,11 +5,13 @@ typedef struct _AsyncListener AsyncListener;
 #include <type.h>
 #include <connection.h>
 #include "msg.h"
+#include "lwdb.h"
 #define QQ_MAGIC 0x4153
 typedef struct qq_account {
     LwqqClient* qq;
     PurpleAccount* account;
     PurpleConnection* gc;
+    LwdbUserDB* db;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
     enum {
         DISCONNECT,
@@ -18,11 +20,13 @@ typedef struct qq_account {
     }state;
     int msg_poll_handle;
     GPtrArray* opend_chat;
+    struct{
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
     gboolean dark_theme_fix;
     gboolean debug_file_send;
     gboolean compatible_pidgin_conversation_integration;
+    };
     int magic;//0x4153
 } qq_account;
 typedef struct system_msg {

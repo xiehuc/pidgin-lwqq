@@ -46,6 +46,10 @@ static char *global_database_name;
 
 #define LWDB_INIT_VERSION 1001
 
+static struct {
+    SwsStmt* ins_buddy;
+}g_stmt = {0};
+
 static const char *create_global_db_sql =
     "create table if not exists configs("
     "    id integer primary key asc autoincrement,"
@@ -96,7 +100,7 @@ static const char *create_user_db_sql =
  * LWDB initialization
  * 
  */
-void lwdb_init()
+void lwdb_global_init()
 {
     char buf[256];
     char *home;
@@ -116,6 +120,13 @@ void lwdb_init()
     
     snprintf(buf, sizeof(buf), "%s/lwqq.db", database_path);
     global_database_name = s_strdup(buf);
+}
+
+void lwdb_global_free()
+{
+#define END_STMT(stmt) if(stmt) sws_query_end(stmt,NULL)
+    END_STMT(g_stmt.ins_buddy);
+#undef END_STMT
 }
 
 /** 
@@ -420,8 +431,6 @@ static LwqqErrorCode lwdb_globaldb_update_user_info(
 LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
 {
     LwdbUserDB *udb = NULL;
-    LwdbGlobalDB *gdb = NULL;
-    LwdbGlobalUserEntry *e = NULL;
     int ret;
     char db_name[64];
     
@@ -429,16 +438,8 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
         return NULL;
     }
 
-    /* Get user's db name */
-    /*gdb = lwdb_globaldb_new();
-    if (!gdb) {
-        goto failed;
-    }
-    e = gdb->query_user_info(gdb, qqnumber);
-    if (!e) {
-        goto failed;
-    }*/
-    snprintf(db_name,sizeof(db_name),"~/.config/lwqq/%s.db",qqnumber);
+    char* home = getenv("HOME");
+    snprintf(db_name,sizeof(db_name),"%s/.config/lwqq/%s.db",home,qqnumber);
 
     /* If there is no db named "db_name", create it */
     if (!db_is_valid(db_name, 1)) {
@@ -457,13 +458,11 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
     udb->query_buddy_info = lwdb_userdb_query_buddy_info;
     udb->update_buddy_info = lwdb_userdb_update_buddy_info;
 
-    lwdb_globaldb_free(gdb);
-    lwdb_globaldb_free_user_entry(e);
+    sws_exec_sql(udb->db, "BEGIN;", NULL);
+
     return udb;
 
 failed:
-    lwdb_globaldb_free(gdb);
-    lwdb_globaldb_free_user_entry(e);
     lwdb_userdb_free(udb);
     return NULL;
 }
@@ -471,6 +470,7 @@ failed:
 void lwdb_userdb_free(LwdbUserDB *db)
 {
     if (db) {
+        sws_exec_sql(db->db,"COMMIT;",NULL);
         sws_close_db(db->db, NULL);
         s_free(db);
     }
@@ -560,10 +560,18 @@ failed:
     sws_query_end(stmt, NULL);
     return NULL;
 }
-static LwqqErrorCode lwdb_userdb_insert_buddy_info(
-        LwdbUserDB* db,LwqqBuddy* buddy)
+LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
-    
+    SwsStmt* stmt = g_stmt.ins_buddy;
+    if(!stmt)
+        sws_query_start(db->db, "INSERT INTO buddies ("
+            "qqnumber,nick,markname) VALUES (?,?,?)", &stmt, NULL);
+    sws_query_reset(stmt);
+    sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
+    sws_query_bind(stmt,2,SWS_BIND_TEXT,buddy->nick);
+    sws_query_bind(stmt,3,SWS_BIND_TEXT,buddy->markname);
+    sws_query_next(stmt,NULL);
+    return 0;
 }
 /** 
  * Update buddy's information
@@ -662,7 +670,15 @@ static LwqqBuddy* find_buddy_by_nick_and_mark(LwqqClient* lc,const char* nick,co
     }
     return NULL;
 }
-void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* to)
+static void buddy_merge(LwqqBuddy* into,LwqqBuddy* from)
+{
+#define MERGE_TEXT(t,f) if(f){s_free(t);t = s_strdup(f);}
+#define MERGE_INT(t,f) (t = f)
+    MERGE_TEXT(into->qqnumber,from->qqnumber);
+#undef MERGE_TEXT
+#undef MERGE_INT
+}
+void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
 {
     if(!from || !to) return;
     char sql[256];
@@ -685,24 +701,25 @@ void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* to)
         if(target == NULL)
             LIST_INSERT_HEAD(&lc->friends,buddy,entries);
         else{
-            LIST_REMOVE(target,entries);
-            LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-            lwqq_buddy_free(target);
+            buddy_merge(target,buddy);
+            lwqq_buddy_free(buddy);
+            //LIST_REMOVE(target,entries);
+            //LIST_INSERT_HEAD(&lc->friends,buddy,entries);
+            //lwqq_buddy_free(target);
         }
     }
     sws_query_end(stmt, NULL);
 }
-void lwdb_client_sync_userdb(LwqqClient* from,LwdbUserDB* to)
+void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to)
 {
+    
     if(!from || !to ) return;
+    sws_exec_sql(to, "BEGIN TRANSACTION;", NULL);
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&from->friends,entries){
         if(buddy->qqnumber){
-            lwdb_userdb_update_buddy_info(to, buddy);
-        }else{
-            buddy->qqnumber = buddy->uin;
-            lwdb_userdb_update_buddy_info(to, buddy);
-            buddy->qqnumber = NULL;
+            lwdb_userdb_insert_buddy_info(to, buddy);
         }
     }
+    sws_exec_sql(to, "COMMIT TRANSACTION;", NULL);
 }

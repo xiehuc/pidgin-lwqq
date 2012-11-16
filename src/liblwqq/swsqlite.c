@@ -140,6 +140,32 @@ int sws_query_start(SwsDB *db, const char *sql, SwsStmt **stmt, char **errmsg)
 
     return 0;
 }
+int sws_query_bind(SwsStmt *stmt,int index,SWS_BIND_TYPE type,...)
+{
+    va_list args;
+    va_start(args,type);
+    switch(type){
+        case SWS_BIND_INT:
+            sqlite3_bind_int(stmt,index,va_arg(args,int));
+            break;
+        case SWS_BIND_TEXT:
+            {
+                const char * text = va_arg(args,const char*);
+                if(text == NULL)
+                    sqlite3_bind_null(stmt, index);
+                else 
+                    sqlite3_bind_text(stmt,index,text,strlen(text),SQLITE_TRANSIENT);
+            } break;
+    }
+    va_end(args);
+    return 0;
+}
+
+int sws_query_reset(SwsStmt* stmt)
+{
+    sqlite3_reset(stmt);
+    return 0;
+}
 
 /** 
  * Query next result
@@ -255,6 +281,7 @@ int sws_exec_sql_directly(const char *filename, const char *sql, char **errmsg)
 
     db = sws_open_db(filename, errmsg);
     if (!db) {
+        perror("Error:");
         goto failed;
     }
 

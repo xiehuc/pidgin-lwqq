@@ -21,7 +21,8 @@
  * LWDB initialization
  * 
  */
-void lwdb_init();
+void lwdb_global_init();
+void lwdb_global_free();
 
 /** 
  * LWDB final
@@ -94,17 +95,21 @@ typedef struct LwdbUserDB {
  */
 LwdbUserDB *lwdb_userdb_new(const char *qqnumber);
 
-void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* lc);
-
 /** 
  * Free a LwdbUserDB object
  * 
  * @param db 
  */
 void lwdb_userdb_free(LwdbUserDB *db);
+/**
+ * maybe it is better recognisation
+ */
+#define lwdb_userdb_close(db) (lwdb_userdb_free(db))
 
-void lwdb_userdb_sync_client(LwdbUserDB* from,LwqqClient* to);
-void lwdb_client_sync_userdb(LwqqClient* from,LwdbUserDB* to);
+LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy);
+
+void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to);
+void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to);
 /* LwdbUserDB API end */
 
 /************************************************************************/
