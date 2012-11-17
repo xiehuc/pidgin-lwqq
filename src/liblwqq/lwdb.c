@@ -47,8 +47,10 @@ static char *global_database_name;
 #define LWDB_INIT_VERSION 1001
 
 static struct {
-    SwsStmt* ins_buddy;
-}g_stmt = {0};
+    SwsStmt* stmt[10];
+    size_t len;
+}g_stmt = {{0},0};
+#define PUSH_STMT(stmt) (g_stmt.stmt[g_stmt.len++] = stmt)
 
 static const char *create_global_db_sql =
     "create table if not exists configs("
@@ -94,7 +96,32 @@ static const char *create_user_db_sql =
     "create table if not exists categories("
     "    name primary key,"
     "    cg_index default '',"
-    "    sort default '');";
+    "    sort default '');"
+
+    "create table if not exists groups("
+    "    account primary key,"
+    "    name default '',"
+    "    markname default '',"
+    "    face default '',"
+    "    memo default '',"
+    "    class default '',"
+    "    fingermemo default '',"
+    "    createtime default '',"
+    "    level default '',"
+    "    owner default '',"
+    "    flag default '',"
+    "    mask int default 0);"
+    ;
+
+static const char* buddy_query_sql = 
+    "SELECT face,occupation,phone,allow,college,reg_time,constel,"
+    "blood,homepage,stat,country,city,personal,nick,shengxiao,"
+    "email,province,gender,mobile,vip_info,markname,flag,"
+    "cate_index,qqnumber FROM buddies ;";
+
+static const char* group_query_sql = 
+    "SELECT account,name,markname FROM groups ;";
+
 
 /** 
  * LWDB initialization
@@ -102,6 +129,7 @@ static const char *create_user_db_sql =
  */
 void lwdb_global_init()
 {
+    memset(&g_stmt,sizeof(g_stmt),0);
     char buf[256];
     char *home;
 
@@ -124,9 +152,11 @@ void lwdb_global_init()
 
 void lwdb_global_free()
 {
-#define END_STMT(stmt) if(stmt) sws_query_end(stmt,NULL)
-    END_STMT(g_stmt.ins_buddy);
-#undef END_STMT
+    int i;
+    for(i=0;i<g_stmt.len;i++){
+        if(g_stmt.stmt[i]) sws_query_end(g_stmt.stmt[i],NULL);
+    }
+    g_stmt.len = 0;
 }
 
 /** 
@@ -518,6 +548,26 @@ static LwqqBuddy* read_buddy_from_stmt(SwsStmt* stmt)
 #undef GET_BUDDY_MEMBER_INT
         return buddy;
 }
+
+static LwqqGroup* read_group_from_stmt(SwsStmt* stmt)
+{
+    LwqqGroup* group = s_malloc0(sizeof(*group));
+    char buf[256] = {0};
+#define GET_GROUP_MEMBER_VALUE(i, member) {                     \
+            sws_query_column(stmt, i, buf, sizeof(buf), NULL);      \
+            group->member = s_strdup(buf);                          \
+        }
+#define GET_GROUP_MEMBER_INT(i,member) {                        \
+            sws_query_column(stmt, i, buf, sizeof(buf), NULL);          \
+            group->member = atoi(buf);                                  \
+        }
+    GET_GROUP_MEMBER_VALUE(0,account);
+    GET_GROUP_MEMBER_VALUE(1,name);
+    GET_GROUP_MEMBER_VALUE(2,markname);
+#undef GET_GROUP_MEMBER_VALUE
+#undef GET_GROUP_MEMBER_INT
+    return group;
+}
 /** 
  * Query buddy's information
  * 
@@ -562,14 +612,31 @@ failed:
 }
 LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
-    SwsStmt* stmt = g_stmt.ins_buddy;
-    if(!stmt)
+    static SwsStmt* stmt = NULL;
+    if(!stmt){
         sws_query_start(db->db, "INSERT INTO buddies ("
             "qqnumber,nick,markname) VALUES (?,?,?)", &stmt, NULL);
+        PUSH_STMT(stmt);
+    }
     sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
     sws_query_bind(stmt,2,SWS_BIND_TEXT,buddy->nick);
     sws_query_bind(stmt,3,SWS_BIND_TEXT,buddy->markname);
+    sws_query_next(stmt,NULL);
+    return 0;
+}
+LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
+{
+    static SwsStmt* stmt = NULL;
+    if(!stmt){
+        sws_query_start(db->db,"INSERT INTO groups ("
+                "account,name,markname) VALUES (?,?,?)",&stmt,NULL);
+        PUSH_STMT(stmt);
+    }
+    sws_query_reset(stmt);
+    sws_query_bind(stmt,1,SWS_BIND_TEXT,group->account);
+    sws_query_bind(stmt,2,SWS_BIND_TEXT,group->name);
+    sws_query_bind(stmt,3,SWS_BIND_TEXT,group->markname);
     sws_query_next(stmt,NULL);
     return 0;
 }
@@ -661,11 +728,43 @@ static LwqqBuddy* find_buddy_by_nick_and_mark(LwqqClient* lc,const char* nick,co
             if(buddy->markname && !strcmp(buddy->markname,mark) &&
                     buddy->nick && !strcmp(buddy->nick,nick))
                 return buddy;
+            else if(buddy->nick && !strcmp(buddy->nick,nick) )
+                return buddy;
         }
     }else{
         LIST_FOREACH(buddy,&lc->friends,entries){
             if(buddy->nick && !strcmp(buddy->nick,nick))
                 return buddy;
+        }
+    }
+    return NULL;
+}
+static LwqqGroup* find_group_by_account(LwqqClient* lc, const char* account)
+{
+    if(!lc || !account) return NULL;
+    LwqqGroup* group = NULL;
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(group->account && !strcmp(group->account,account) )
+            return group;
+    }
+    return NULL;
+}
+static LwqqGroup* find_group_by_name_and_mark(LwqqClient* lc,const char* name,const char* mark)
+{
+    if(!lc || !name) return NULL;
+    LwqqGroup* group = NULL;
+    if(mark){
+        LIST_FOREACH(group,&lc->groups,entries){
+            if(group->markname && !strcmp(group->markname,mark) &&
+                    group->name && !strcmp(group->name,name) )
+                return group;
+            else if(group->name && !strcmp(group->name,name) )
+                return group;
+        }
+    }else{
+        LIST_FOREACH(group,&lc->groups,entries){
+            if(group->name && ! strcmp(group->name,name) )
+                return group;
         }
     }
     return NULL;
@@ -678,20 +777,23 @@ static void buddy_merge(LwqqBuddy* into,LwqqBuddy* from)
 #undef MERGE_TEXT
 #undef MERGE_INT
 }
+static void group_merge(LwqqGroup* into,LwqqGroup* from)
+{
+#define MERGE_TEXT(t,f) if(f){s_free(t);t = s_strdup(f);}
+#define MERGE_INT(t,f) (t = f)
+    MERGE_TEXT(into->account,from->account);
+#undef MERGE_TEXT
+#undef MERGE_INT
+}
 void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
 {
     if(!from || !to) return;
-    char sql[256];
     LwqqBuddy *buddy = NULL,*target = NULL;
+    LwqqGroup *group = NULL,*gtarget = NULL;
     SwsStmt *stmt = NULL;
     LwqqClient* lc = to;
 
-    snprintf(sql, sizeof(sql),
-             "SELECT face,occupation,phone,allow,college,reg_time,constel,"
-             "blood,homepage,stat,country,city,personal,nick,shengxiao,"
-             "email,province,gender,mobile,vip_info,markname,flag,"
-             "cate_index,qqnumber FROM buddies ;");
-    sws_query_start(from->db, sql, &stmt, NULL);
+    sws_query_start(from->db, buddy_query_sql, &stmt, NULL);
 
     while (!sws_query_next(stmt, NULL)) {
         buddy = read_buddy_from_stmt(stmt);
@@ -706,6 +808,19 @@ void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
         }
     }
     sws_query_end(stmt, NULL);
+
+    sws_query_start(from->db,group_query_sql,&stmt,NULL);
+    while(!sws_query_next(stmt, NULL)){
+        group = read_group_from_stmt(stmt);
+        gtarget = find_group_by_account(lc,group->account);
+        if(gtarget == NULL)
+            gtarget = find_group_by_name_and_mark(lc,group->name,group->markname);
+        if(gtarget){
+            group_merge(gtarget,group);
+            lwqq_group_free(group);
+        }
+    }
+    sws_query_end(stmt,NULL);
 }
 void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to)
 {

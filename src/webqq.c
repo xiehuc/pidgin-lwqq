@@ -291,6 +291,7 @@ static int friend_come(LwqqClient* lc,void* data)
     }
     if(buddy->stat)
         purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
+    //download avatar
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         void **d = s_malloc0(sizeof(void*)*2);
@@ -299,7 +300,7 @@ static int friend_come(LwqqClient* lc,void* data)
         lwqq_async_add_event_listener(
                 lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
     } //else {
-        //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
+    //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
     ac->disable_send_server = 0;
     return 0;
@@ -725,7 +726,7 @@ int qq_sys_msg_write(LwqqClient* lc,void* data)
         purple_blist_remove_buddy(bu);
     }
 }*/
-static void write_to_db(LwqqAsyncEvent* ev,void* data)
+static void write_buddy_to_db(LwqqAsyncEvent* ev,void* data)
 {
     void **d = data;
     qq_account* ac = d[0];
@@ -735,6 +736,17 @@ static void write_to_db(LwqqAsyncEvent* ev,void* data)
     lwdb_userdb_insert_buddy_info(ac->db, buddy);
     friend_come(ac->qq,buddy);
 }
+static void write_group_to_db(LwqqAsyncEvent* ev,void* data)
+{
+    void **d = data;
+    qq_account* ac = d[0];
+    LwqqGroup* group = d[1];
+    s_free(data);
+
+    lwdb_userdb_insert_group_info(ac->db, group);
+    group_come(ac->qq,group);
+}
+
 int qq_set_basic_info(LwqqClient* lc,void* data)
 {
     qq_account* ac = data;
@@ -757,7 +769,7 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
             d[0] = ac;
             d[1] = buddy;
             lwqq_async_add_event_listener(
-                lwqq_info_get_friend_qqnumber(lc,buddy),write_to_db,d);
+                lwqq_info_get_friend_qqnumber(lc,buddy),write_buddy_to_db,d);
         }
         else{
             friend_come(lc,buddy);
@@ -765,7 +777,16 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
-        group_come(lc,group);
+        if(! group->account){
+            void **d = s_malloc0(sizeof(void*)*2);
+            d[0] = ac;
+            d[1] = group;
+            lwqq_async_add_event_listener(
+                lwqq_info_get_group_qqnumber(lc,group),write_group_to_db,d);
+        }else{
+            group_come(lc,group);
+            printf("%s:%s\n",group->name,group->account);
+        }
     }
     LwqqGroup* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
@@ -836,14 +857,15 @@ static int login_complete(LwqqClient* lc,void* data)
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
 
-    if(ac->compatible_pidgin_conversation_integration){
+    /*if(ac->compatible_pidgin_conversation_integration){
         //this is for pidgin-conversation plugin for gnome-shell hot fix
         purple_buddy_icons_set_caching(1);
         mkdir("/tmp/lwqq/icon_cache",0777);
         purple_buddy_icons_set_cache_dir("/tmp/lwqq/icon_cache");
     }else{
         purple_buddy_icons_set_caching(0);
-    }
+    }*/
+    purple_buddy_icons_set_caching(1);
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
@@ -1211,8 +1233,8 @@ static void qq_login(PurpleAccount *account)
     ac->qq = lwqq_client_new(username,password);
     ac->db = lwdb_userdb_new(username);
 
-    //this remove all buddies
-    all_reset(ac,2);
+    all_reset(ac,0);
+
     lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);
