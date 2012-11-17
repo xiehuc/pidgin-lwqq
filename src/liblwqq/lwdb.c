@@ -47,10 +47,10 @@ static char *global_database_name;
 #define LWDB_INIT_VERSION 1001
 
 static struct {
-    SwsStmt* stmt[10];
+    SwsStmt** stmt[10];
     size_t len;
 }g_stmt = {{0},0};
-#define PUSH_STMT(stmt) (g_stmt.stmt[g_stmt.len++] = stmt)
+#define PUSH_STMT(stmt) (g_stmt.stmt[g_stmt.len++] = &stmt)
 
 static const char *create_global_db_sql =
     "create table if not exists configs("
@@ -154,7 +154,8 @@ void lwdb_global_free()
 {
     int i;
     for(i=0;i<g_stmt.len;i++){
-        if(g_stmt.stmt[i]) sws_query_end(g_stmt.stmt[i],NULL);
+        if(g_stmt.stmt[i]) sws_query_end(*g_stmt.stmt[i],NULL);
+        *(g_stmt.stmt[i]) = NULL;
     }
     g_stmt.len = 0;
 }

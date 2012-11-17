@@ -244,7 +244,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         return;
 
     printf ("type: %d\n", msg->type);
-    if(msg->type==LWQQ_MT_GROUP_MSG||msg->type==LWQQ_MT_BUDDY_MSG||msg->type==LWQQ_MT_SESS_MSG)
+    if(msg->type<=LWQQ_MT_SESS_MSG)
         lwqq_msg_message_free(msg->opaque);
     else if(msg->type==LWQQ_MT_STATUS_CHANGE)
         lwqq_msg_status_free(msg->opaque);
