@@ -649,6 +649,22 @@ LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
  * 
  * @return LWQQ_EC_OK on success, or a LwqqErrorCode member
  */
+#if 0
+static LwqqErrorCode lwdb_userdb_update_buddy_info(
+        LwdbUserDB* db,LwqqBuddy* buddy)
+{
+    if(! buddy || ! buddy->qqnumber) return LWQQ_EC_NULL_POINTER;
+
+    static SwsStmt* stmt = NULL;
+    if(!stmt){
+        sws_query_start(db,"UPDATE buddies SET nick = ? AND markname = ? WHERE qqnumber = ?001 ;",
+                &stmt,NULL);
+        PUSH_STMT(stmt);
+    }
+    sws_query_reset(stmt);
+    sws_query_bind(
+}
+#endif
 static LwqqErrorCode lwdb_userdb_update_buddy_info(
     struct LwdbUserDB *db, LwqqBuddy *buddy)
 {

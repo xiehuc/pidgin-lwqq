@@ -33,7 +33,7 @@ static void group_avatar(LwqqAsyncEvent* ev,void* data);
 #define try_get(val,fail) (val?val:fail)
 
 #if QQ_USE_QQNUM
-static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
+LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
@@ -1418,8 +1418,13 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
     GHashTable* table = purple_chat_get_components(chat);
+#if QQ_USE_QQNUM
+    const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
+    return find_group_by_qqnumber(lc, qqnum);
+#else
     const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
     return lwqq_group_find_group_by_gid(lc,gid);
+#endif
 }
 
 static void flush_group_name(LwqqAsyncEvent* event,void* data)
@@ -1435,9 +1440,7 @@ static void qq_block_chat(PurpleBlistNode* node)
     PurpleAccount* account = purple_chat_get_account(chat);
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
-    GHashTable* table = purple_chat_get_components(chat);
-    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    LwqqGroup* group = find_group_by_chat(chat);
     lwqq_async_add_event_listener(
             lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL),
             flush_group_name,chat);
@@ -1448,9 +1451,7 @@ static void qq_unblock_chat(PurpleBlistNode* node)
     PurpleAccount* account = purple_chat_get_account(chat);
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
-    GHashTable* table = purple_chat_get_components(chat);
-    const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    LwqqGroup* group = find_group_by_chat(chat);
     lwqq_async_add_event_listener(
             lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE),
             flush_group_name,chat);
@@ -1515,7 +1516,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .rename_group=      qq_rename_category,
     .remove_buddy=      qq_remove_buddy,
     .add_buddy_with_invite=qq_add_buddy_with_invite,
-    .struct_size=           sizeof(PurplePluginProtocolInfo)
+    .struct_size=       sizeof(PurplePluginProtocolInfo)
 };
 
 static PurplePluginInfo info = {

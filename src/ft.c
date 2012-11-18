@@ -46,6 +46,7 @@ static void file_trans_init(PurpleXfer* xfer)
     const char* filename = purple_xfer_get_local_filename(xfer);
     xfer->start_time = time(NULL);
     LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc,file,filename);
+    if(ev == NULL){ puts("file trans error ");return ; }
     lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
     lwqq_async_add_event_listener(ev,file_trans_complete,xfer);
 }
@@ -59,7 +60,9 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
     if(file->mode == MODE_RECV) {
         PurpleAccount* account = ac->account;
         //for(i=0;i<file->file_count;i++){
-        PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,file->from);
+        LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(ac->qq, file->from);
+        if(buddy == NULL || buddy->qqnumber == NULL) return;
+        PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,buddy->qqnumber);
         purple_xfer_set_filename(xfer,file->recv.name);
         purple_xfer_set_init_fnc(xfer,file_trans_init);
         purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
@@ -161,7 +164,14 @@ void qq_send_offline_file(PurpleBlistNode* node)
     PurpleAccount* account = purple_buddy_get_account(buddy);
     qq_account* ac = purple_connection_get_protocol_data(
                          purple_account_get_connection(account));
-    const char* who = purple_buddy_get_name(buddy);
+#if QQ_USE_QQNUM
+    const char* qqnum = purple_buddy_get_name(buddy);
+    LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
+    if(b == NULL) return;
+    const char* who = b->uin;
+#else
+    const char *who = purple_buddy_get_name(buddy);
+#endif
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
