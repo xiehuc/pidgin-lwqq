@@ -6,8 +6,26 @@ typedef struct _AsyncListener AsyncListener;
 #include <connection.h>
 #include "msg.h"
 #include "lwdb.h"
+
 #define QQ_MAGIC 0x4153
 #define QQ_USE_QQNUM 1
+
+#ifdef UNUSED
+#elif defined(__GNUC__)
+# 	define UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#else
+#	define UNUSED(x) x
+#endif
+
+#define DISPLAY_VERSION "0.1"
+#define DBGID   "webqq"
+//this is qqnumber of a group
+#define QQ_ROOM_KEY_QUN_ID "account"
+#define QQ_ROOM_KEY_GID "gid"
+#define QQ_ROOM_TYPE "type"
+#define QQ_ROOM_TYPE_GROUP "group"
+#define QQ_ROOM_TYPE_DISCU "discu"
+
 typedef struct qq_account {
     LwqqClient* qq;
     PurpleAccount* account;
@@ -26,7 +44,7 @@ typedef struct qq_account {
     gboolean disable_custom_font_size;
     gboolean dark_theme_fix;
     gboolean debug_file_send;
-    gboolean compatible_pidgin_conversation_integration;
+    //gboolean compatible_pidgin_conversation_integration;
     };
     int magic;//0x4153
 } qq_account;
