@@ -890,6 +890,7 @@ void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
     LwqqMsg* msg = d[1];
     s_free(data);
     insert_recv_msg_with_order(list,msg);
+    lwqq_async_dispatch(list->lc, POLL_MSG_COME, NULL);
 }
 /**
  * Parse message received from server
@@ -956,6 +957,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
                 d[0] = list;
                 d[1] = msg;
                 lwqq_async_add_evset_listener(ev,insert_msg_delay_by_request_content,d);
+                //this jump the case
                 continue;
             }
             break;
@@ -1210,7 +1212,6 @@ static LwqqAsyncEvent* lwqq_msg_upload_offline_pic(
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Cache-Control","max-age=0");
 
-    curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendPic");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
@@ -1226,9 +1227,6 @@ static LwqqAsyncEvent* lwqq_msg_upload_offline_pic(
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
 
     return req->do_request_async(req,0,NULL,upload_offline_pic_back,c);
-    /*req->do_request(req,0,NULL);
-    upload_offline_pic_back(req,c);
-    return NULL;*/
 }
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
 {
