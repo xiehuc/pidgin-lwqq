@@ -31,29 +31,6 @@ static void group_avatar(LwqqAsyncEvent* ev,void* data);
 
 #define try_get(val,fail) (val?val:fail)
 
-#if QQ_USE_QQNUM
-LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&lc->friends,entries) {
-        //this may caused by qqnumber not loaded successful.
-        if(!buddy->qqnumber) continue;
-        if(strcmp(buddy->qqnumber,qqnum)==0)
-            return buddy;
-    }
-    return NULL;
-}
-static LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
-    LwqqGroup* group;
-    LIST_FOREACH(group,&lc->groups,entries) {
-        if(!group->account) continue;
-        if(strcmp(group->account,qqnum)==0)
-            return group;
-    }
-    return NULL;
-}
-#endif
 static const char* qq_get_type_from_chat(PurpleChat* chat)
 {
     GHashTable* table = purple_chat_get_components(chat);
@@ -69,7 +46,7 @@ static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
     const char* key = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
     ret = find_group_by_qqnumber(lc, key);
     if(ret == NULL)
-        ret = lwqq_group_find_group_by_gid(lc,key);
+        ret = find_group_by_gid(lc,key);
     return ret;
 }
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
@@ -315,6 +292,9 @@ static int friend_come(LwqqClient* lc,void* data)
     } //else {
     //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
+
+    qq_account_insert_index_node(ac, NODE_IS_BUDDY, buddy);
+
     ac->disable_send_server = 0;
     return 0;
 }
@@ -362,6 +342,9 @@ static int group_come(LwqqClient* lc,void* data)
     }else{
         purple_blist_alias_chat(chat,group_name(group));
     }
+
+    qq_account_insert_index_node(ac, NODE_IS_GROUP, group);
+
     ac->disable_send_server = 0;
     return 0;
 }
@@ -377,7 +360,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     translate_struct_to_message(ac,msg,buf);
     const char* who;
 #if QQ_USE_QQNUM
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc, msg->from);
+    LwqqBuddy* buddy = find_buddy_by_uin(lc, msg->from);
     who =  (buddy&&buddy->qqnumber)? buddy->qqnumber : msg->from;
 #else
     who = msg->from;
@@ -410,7 +393,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
+    LwqqGroup* group = find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
 
     g_return_if_fail(group);
 
@@ -480,7 +463,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 
     translate_struct_to_message(ac,mmsg,buf);
 
-    LwqqGroup* group = lwqq_group_find_group_by_gid(lc,gid);
+    LwqqGroup* group = find_group_by_gid(lc,gid);
     if(group == NULL) {
         snprintf(name,sizeof(name),"%s #(broken)# %s",from,gid);
         serv_got_im(pc,name,buf,PURPLE_MESSAGE_RECV,mmsg->time);
@@ -523,7 +506,7 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
 #if QQ_USE_QQNUM
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc, status->who);
+    LwqqBuddy* buddy = find_buddy_by_uin(lc, status->who);
     if(buddy==NULL || buddy->qqnumber == NULL) return;
     const char* who = buddy->qqnumber;
 #else
@@ -1008,7 +991,7 @@ static void qq_send_whisper(PurpleConnection* gc,int id,const char* who,const ch
     LwqqClient* lc = ac->qq;
     LwqqGroup* group = opend_chat_index(ac,id);
 
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
+    LwqqBuddy* buddy = find_buddy_by_uin(lc,who);
     if(buddy!=NULL) {
         qq_send_im(gc,who,message,PURPLE_MESSAGE_WHISPER);
         return;
@@ -1121,7 +1104,7 @@ static void group_member_list_come(LwqqAsyncEvent* event,void* data)
             if(member->mflag & LWQQ_MEMBER_IS_ADMIN) flag |= PURPLE_CBFLAGS_OP;
 
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
-            if((buddy = lwqq_buddy_find_buddy_by_uin(lc,member->uin))) {
+            if((buddy = find_buddy_by_uin(lc,member->uin))) {
 #if QQ_USE_QQNUM
                 users = g_list_append(users,try_get(buddy->qqnumber,buddy->uin));
 #else
@@ -1152,7 +1135,7 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     if(key==NULL) return;
     group = find_group_by_qqnumber(lc,key);
-    if(group == NULL) group = lwqq_group_find_group_by_gid(lc,key);
+    if(group == NULL) group = find_group_by_gid(lc,key);
     if(group == NULL) return;
 
     //this will open chat dialog.
@@ -1262,7 +1245,7 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
+    LwqqBuddy* buddy = find_buddy_by_uin(lc,who);
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
@@ -1343,7 +1326,7 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
-    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc,who);
+    LwqqBuddy* buddy = find_buddy_by_uin(lc,who);
     if(buddy==NULL) return;
 
     const char* category;
@@ -1373,7 +1356,7 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     //const char* qqnum = purple_buddy_get_name(buddy);
     const char* uin = purple_buddy_get_name(buddy);
     //LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
-    LwqqBuddy* friend = lwqq_buddy_find_buddy_by_uin(lc,uin);
+    LwqqBuddy* friend = find_buddy_by_uin(lc,uin);
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 
@@ -1392,7 +1375,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     qq_account* ac = purple_connection_get_protocol_data(
                          purple_account_get_connection(account));
     const char* uin = purple_buddy_get_name(buddy);
-    LwqqBuddy* friend = lwqq_buddy_find_buddy_by_uin(ac->qq,uin);
+    LwqqBuddy* friend = find_buddy_by_uin(ac->qq,uin);
     if(friend==NULL) return;
     if(!friend->qqnumber) {
         lwqq_async_add_event_listener(
@@ -1429,7 +1412,7 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
     return find_group_by_qqnumber(lc, qqnum);
 #else
     const char* gid = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
-    return lwqq_group_find_group_by_gid(lc,gid);
+    return find_group_by_gid(lc,gid);
 #endif
 }
 

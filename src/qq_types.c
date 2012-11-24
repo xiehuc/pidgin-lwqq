@@ -1,6 +1,7 @@
 #include "qq_types.h"
 #include "smemory.h"
 #include "msg.h"
+#include "async.h"
 
 qq_account* qq_account_new(PurpleAccount* account)
 {
@@ -8,13 +9,43 @@ qq_account* qq_account_new(PurpleAccount* account)
     ac->account = account;
     ac->magic = QQ_MAGIC;
     ac->opend_chat = g_ptr_array_sized_new(10);
+#if QQ_USE_FAST_INDEX
+    ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,g_free);
+    ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
+#endif
     return ac;
 }
 void qq_account_free(qq_account* ac)
 {
     g_ptr_array_free(ac->opend_chat,0);
+#if QQ_USE_FAST_INDEX
+    g_hash_table_destroy(ac->fast_index.qqnum_index);
+    g_hash_table_destroy(ac->fast_index.uin_index);
+#endif
     g_free(ac);
 }
+
+void qq_account_insert_index_node(qq_account* ac,int type,void* data)
+{
+#if QQ_USE_FAST_INDEX
+    if(!ac || !data) return;
+    index_node* node = s_malloc(sizeof(*node));
+    node->type = type;
+    node->node = data;
+    if(type == NODE_IS_BUDDY){
+        LwqqBuddy* buddy = data;
+        g_hash_table_insert(ac->fast_index.uin_index,buddy->uin,node);
+        if(buddy->qqnumber)
+            g_hash_table_insert(ac->fast_index.qqnum_index,buddy->qqnumber,node);
+    }else{
+        LwqqGroup* group = data;
+        g_hash_table_insert(ac->fast_index.uin_index,group->gid,node);
+        if(group->account)
+            g_hash_table_insert(ac->fast_index.qqnum_index,group->account,node);
+    }
+#endif
+}
+
 int open_new_chat(qq_account* ac,LwqqGroup* group)
 {
     GPtrArray* opend_chat = ac->opend_chat;
@@ -59,3 +90,73 @@ PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* a
         return NULL;
 }
 
+#if QQ_USE_FAST_INDEX
+#if QQ_USE_QQNUM
+LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
+    if(node == NULL) return NULL;
+    if(node->type != NODE_IS_BUDDY) return NULL;
+    return node->node;
+}
+LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
+    if(node == NULL) return NULL;
+    if(node->type != NODE_IS_GROUP) return NULL;
+    return node->node;
+}
+#else
+LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries) {
+        //this may caused by qqnumber not loaded successful.
+        if(!buddy->qqnumber) continue;
+        if(strcmp(buddy->qqnumber,qqnum)==0)
+            return buddy;
+    }
+    return NULL;
+}
+LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
+{
+    LwqqGroup* group;
+    LIST_FOREACH(group,&lc->groups,entries) {
+        if(!group->account) continue;
+        if(strcmp(group->account,qqnum)==0)
+            return group;
+    }
+    return NULL;
+}
+#endif
+
+
+LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
+    if(node == NULL) return NULL;
+    if(node->type != NODE_IS_BUDDY) return NULL;
+    return node->node;
+}
+LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,gid);
+    if(node == NULL) return NULL;
+    if(node->type != NODE_IS_GROUP) return NULL;
+    return node->node;
+}
+#else
+LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
+{
+    return lwqq_buddy_find_buddy_by_uin(lc, uin);
+}
+LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
+{
+    return lwqq_group_find_group_by_gid(lc, gid);
+}
+
+#endif
