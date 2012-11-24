@@ -522,7 +522,14 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleAccount* account = ac->account;
-    purple_prpl_got_user_status(account,status->who,status->status,NULL);
+#if QQ_USE_QQNUM
+    LwqqBuddy* buddy = lwqq_buddy_find_buddy_by_uin(lc, status->who);
+    if(buddy==NULL || buddy->qqnumber == NULL) return;
+    const char* who = buddy->qqnumber;
+#else
+    const char* who = status->who;
+#endif
+    purple_prpl_got_user_status(account,who,status->status,NULL);
 }
 static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
 {
