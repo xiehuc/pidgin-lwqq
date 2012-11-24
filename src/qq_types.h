@@ -45,10 +45,12 @@ typedef struct qq_account {
     }state;
     int msg_poll_handle;
     GPtrArray* opend_chat;
+#if QQ_USE_FAST_INDEX
     struct{
         GHashTable* qqnum_index;
         GHashTable* uin_index;
     }fast_index;
+#endif
     struct{
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
@@ -72,6 +74,7 @@ void qq_account_free(qq_account* ac);
 #define qq_account_valid(ac) (ac->magic == QQ_MAGIC)
 
 void qq_account_insert_index_node(qq_account* ac,int type,void* data);
+void qq_account_remove_index_node(qq_account* ac,int type,void* data);
 
 int open_new_chat(qq_account* ac,LwqqGroup* group);
 #define opend_chat_search(ac,group) open_new_chat(ac,group)

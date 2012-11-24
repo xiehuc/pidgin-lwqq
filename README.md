@@ -33,6 +33,7 @@ Function list
 -------------
 
 ### pidgin support
+
 * send / recv text messages
 * send / recv picture messages
 * send / recv group messages
@@ -50,11 +51,18 @@ Function list
 * support block group message
 * support recv file trans
 
-## empathy support (via telepathy-haze)
+### empathy support (via telepathy-haze)
+
 * send / recv text messages
 * avatar
 
-## known issue
+### core
+
+* support local qqnumber cache
+
+known issue
+-----------
+
 * send picture abnormal when libcurl < = 7.22.0
 * use pidgin conversation intergrate gnome-shell plugin would cause crash.
 enable "capible pidgin conversation intergrate" option in pidgin account setting to solve it.
@@ -89,8 +97,12 @@ lwqq库是一个非常安全有效的webqq协议的库.
     make
     sudo make install
 
-# support
-## pidgin
+功能列表
+--------
+
+
+### pidgin
+
 * 支持发送接受文本消息
 * 支持发送接受图片
 * 支持群聊天
@@ -108,11 +120,18 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持群消息屏蔽
 * 支持接受文件传输
 
-## empathy support (via telepathy-haze)
+### empathy support (via telepathy-haze)
+
 * 支持发送接受文本消息
 * 支持头像
 
-## 已知问题
+### core
+
+* 提供本地QQ号缓存机制
+
+已知问题
+--------
+
 * 当libcurl版本低于7.22.0时可能造成图片发送失败
 * 使用gnome-shell的pidgin conversation intergrate 插件会导致段错误.
 请在pidgin的账户设置中开启"兼容pidgin conversation intergrate"选项.

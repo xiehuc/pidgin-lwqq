@@ -1244,8 +1244,11 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
-    //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+#if QQ_USE_QQNUM
+    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+#else
     LwqqBuddy* buddy = find_buddy_by_uin(lc,who);
+#endif
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
@@ -1325,8 +1328,11 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
-    //LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+#if QQ_USE_QQNUM
+    LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
+#else
     LwqqBuddy* buddy = find_buddy_by_uin(lc,who);
+#endif
     if(buddy==NULL) return;
 
     const char* category;
@@ -1353,14 +1359,17 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    //const char* qqnum = purple_buddy_get_name(buddy);
+#if QQ_USE_QQNUM
+    const char* qqnum = purple_buddy_get_name(buddy);
+    LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
+#else
     const char* uin = purple_buddy_get_name(buddy);
-    //LwqqBuddy* friend = find_buddy_by_qqnumber(lc,qqnum);
     LwqqBuddy* friend = find_buddy_by_uin(lc,uin);
+#endif
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
-
 }
+#if ! QQ_USE_QQNUM
 static void visit_qqzone(LwqqAsyncEvent* event,void* data)
 {
     LwqqBuddy* buddy = data;
@@ -1368,9 +1377,17 @@ static void visit_qqzone(LwqqAsyncEvent* event,void* data)
     snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
     system(url);
 }
+#endif
 static void qq_visit_qzone(PurpleBlistNode* node)
 {
     PurpleBuddy* buddy = PURPLE_BUDDY(node);
+#if QQ_USE_QQNUM
+    const char* qqnum = purple_buddy_get_name(buddy);
+    char url[256];
+    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",qqnum);
+    system(url);
+    return;
+#else
     PurpleAccount* account = purple_buddy_get_account(buddy);
     qq_account* ac = purple_connection_get_protocol_data(
                          purple_account_get_connection(account));
@@ -1384,6 +1401,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     } else {
         visit_qqzone(NULL,friend);
     }
+#endif
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {

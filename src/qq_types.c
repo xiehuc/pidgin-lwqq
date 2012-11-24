@@ -45,6 +45,21 @@ void qq_account_insert_index_node(qq_account* ac,int type,void* data)
     }
 #endif
 }
+void qq_account_remove_index_node(qq_account* ac,int type,void* data)
+{
+#if QQ_USE_FAST_INDEX
+    if(!ac || !data) return;
+    if(type == NODE_IS_BUDDY){
+        LwqqBuddy* buddy = data;
+        if(buddy->qqnumber)g_hash_table_remove(ac->fast_index.qqnum_index,buddy->qqnumber);
+        g_hash_table_remove(ac->fast_index.uin_index,buddy->uin);
+    }else{
+        LwqqGroup* group = data;
+        if(group->account) g_hash_table_remove(ac->fast_index.qqnum_index,group->account);
+        g_hash_table_remove(ac->fast_index.uin_index,group->gid);
+    }
+#endif
+}
 
 int open_new_chat(qq_account* ac,LwqqGroup* group)
 {

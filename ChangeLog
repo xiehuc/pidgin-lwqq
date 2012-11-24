@@ -1,6 +1,10 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+dev (11/24/2012):
+	* new feature: add fast index to speed up qqnumber/uin lookup
+	* new feature: support local qqnumber cache.
+
 dev (10/26/2012):
 	* new feature: support send/recv offline file.
 	* new feature: support recv file trans.
