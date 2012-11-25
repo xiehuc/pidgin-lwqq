@@ -192,6 +192,15 @@ static int lwdb_create_db(const char *filename, int db_type)
         lwqq_log(LOG_WARNING, "Find a file whose name is same as file "
                  "we want to create, delete it.\n");
         unlink(filename);
+    }else{
+        //create parent dir
+	char* dir = s_strdup(filename);
+	char* end = strrchr(dir,'/');
+	if(end){
+	   *end = '\0';
+	   mkdir(dir,0755);
+	}
+	s_free(dir);
     }
     if (db_type == 0) {
         ret = sws_exec_sql_directly(filename, create_global_db_sql, &errmsg);
