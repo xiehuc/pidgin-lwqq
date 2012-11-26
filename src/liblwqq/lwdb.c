@@ -143,7 +143,7 @@ void lwdb_global_init()
     database_path = s_strdup(buf);
     if (access(database_path, F_OK)) {
         /* Create a new config directory if we dont have */
-        mkdir(database_path, 0755);
+        mkdir(database_path, 0777);
     }
     
     snprintf(buf, sizeof(buf), "%s/lwqq.db", database_path);
@@ -208,6 +208,9 @@ static int lwdb_create_db(const char *filename, int db_type)
         ret = sws_exec_sql_directly(filename, create_user_db_sql, &errmsg);
     } else {
         ret = -1;
+    }
+    if(ret >= 0) {
+        chmod(filename,0666);
     }
 
     if (errmsg) {

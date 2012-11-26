@@ -911,7 +911,11 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     json_t *json = NULL, *json_tmp, *cur;
 
     ret = json_parse_document(&json, (char *)str);
-    puts(str);
+
+    char* dbg_str = json_unescape((char*)str);
+    puts(dbg_str);
+    s_free(dbg_str);
+    
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", str);
         goto done;
@@ -1079,7 +1083,6 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     while(1) {
         ret = req->do_request(req, 1, msg);
-        printf("%ld\n",req->http_code);
         if (ret || req->http_code != 200) {
             continue;
         }

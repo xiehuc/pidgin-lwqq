@@ -1207,6 +1207,7 @@ static void qq_login(PurpleAccount *account)
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
     ac->db = lwdb_userdb_new(username);
+    mkdir("/home/xiehuc/.lwqq",0777);
 
     all_reset(ac,0x4);
 
