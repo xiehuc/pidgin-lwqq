@@ -8,6 +8,7 @@ qq_account* qq_account_new(PurpleAccount* account)
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
     ac->magic = QQ_MAGIC;
+    ac->qq_use_qqnum = 0;
     ac->opend_chat = g_ptr_array_sized_new(10);
 #if QQ_USE_FAST_INDEX
     ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,g_free);
@@ -105,38 +106,33 @@ PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* a
         return NULL;
 }
 
-#if QQ_USE_FAST_INDEX
-#if QQ_USE_QQNUM
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+#if QQ_USE_FAST_INDEX
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_BUDDY) return NULL;
     return node->node;
+#else
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries) {
+        //this may caused by qqnumber not loaded successful.
+        if(buddy->qqnumber && strcmp(buddy->qqnumber,qqnum)==0)
+            return buddy;
+    }
+    return NULL;
+#endif
 }
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+#if QQ_USE_FAST_INDEX
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_GROUP) return NULL;
     return node->node;
-}
 #else
-LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&lc->friends,entries) {
-        //this may caused by qqnumber not loaded successful.
-        if(!buddy->qqnumber) continue;
-        if(strcmp(buddy->qqnumber,qqnum)==0)
-            return buddy;
-    }
-    return NULL;
-}
-LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
-{
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
         if(!group->account) continue;
@@ -144,34 +140,31 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
             return group;
     }
     return NULL;
-}
 #endif
-
+}
 
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
 {
+#if QQ_USE_FAST_INDEX
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_BUDDY) return NULL;
     return node->node;
+#else
+    return lwqq_buddy_find_buddy_by_uin(lc, uin);
+#endif
 }
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
 {
+#if QQ_USE_FAST_INDEX
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,gid);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_GROUP) return NULL;
     return node->node;
-}
 #else
-LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
-{
-    return lwqq_buddy_find_buddy_by_uin(lc, uin);
-}
-LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
-{
     return lwqq_group_find_group_by_gid(lc, gid);
+#endif
 }
 
-#endif

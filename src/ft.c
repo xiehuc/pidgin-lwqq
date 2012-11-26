@@ -164,14 +164,15 @@ void qq_send_offline_file(PurpleBlistNode* node)
     PurpleAccount* account = purple_buddy_get_account(buddy);
     qq_account* ac = purple_connection_get_protocol_data(
                          purple_account_get_connection(account));
-#if QQ_USE_QQNUM
-    const char* qqnum = purple_buddy_get_name(buddy);
-    LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
-    if(b == NULL) return;
-    const char* who = b->uin;
-#else
-    const char *who = purple_buddy_get_name(buddy);
-#endif
+    const char* who;
+    if(ac->qq_use_qqnum){
+        const char* qqnum = purple_buddy_get_name(buddy);
+        LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
+        if(b == NULL) return;
+        who = b->uin;
+    }else{
+        who = purple_buddy_get_name(buddy);
+    }
     PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);

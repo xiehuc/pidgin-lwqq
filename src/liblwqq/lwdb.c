@@ -629,6 +629,7 @@ failed:
 }
 LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
+    if(!db || !buddy) return -1;
     static SwsStmt* stmt = NULL;
     if(!stmt){
         sws_query_start(db->db, "INSERT INTO buddies ("
@@ -644,6 +645,7 @@ LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 }
 LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
 {
+    if(!db || !group) return -1;
     static SwsStmt* stmt = NULL;
     if(!stmt){
         sws_query_start(db->db,"INSERT INTO groups ("

@@ -8,7 +8,6 @@ typedef struct _AsyncListener AsyncListener;
 #include "lwdb.h"
 
 #define QQ_MAGIC 0x4153
-#define QQ_USE_QQNUM 1
 #define QQ_USE_FAST_INDEX 1
 
 #ifdef UNUSED
@@ -52,11 +51,11 @@ typedef struct qq_account {
     }fast_index;
 #endif
     struct{
+    gboolean qq_use_qqnum;
     gboolean disable_custom_font_face;
     gboolean disable_custom_font_size;
     gboolean dark_theme_fix;
     gboolean debug_file_send;
-    //gboolean compatible_pidgin_conversation_integration;
     };
     int magic;//0x4153
 } qq_account;
@@ -89,10 +88,8 @@ void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
 int qq_sys_msg_write(LwqqClient* lc,void* data);
 void qq_send_offline_file(PurpleBlistNode* node);
 
-#if QQ_USE_QQNUM
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
-#endif
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin);
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid);
 
