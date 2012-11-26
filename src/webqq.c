@@ -1202,7 +1202,6 @@ static void qq_login(PurpleAccount *account)
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
-    ac->qq = lwqq_client_new(username,password);
     char db_path[64];
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path);

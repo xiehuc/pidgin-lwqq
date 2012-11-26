@@ -51,6 +51,9 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
 
     lc->msg_list = lwqq_recvmsg_new(lc);
 
+    lc->find_buddy_by_uin = lwqq_buddy_find_buddy_by_uin;
+    lc->find_buddy_by_qqnumber = lwqq_buddy_find_buddy_by_qqnumber;
+
     /* Set msg_id */
     gettimeofday(&tv, NULL);
     v = tv.tv_usec;
@@ -275,6 +278,16 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin)
             return buddy;
     }
 
+    return NULL;
+}
+LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnum)
+{
+    LwqqBuddy* buddy;
+    LIST_FOREACH(buddy,&lc->friends,entries) {
+        //this may caused by qqnumber not loaded successful.
+        if(buddy->qqnumber && strcmp(buddy->qqnumber,qqnum)==0)
+            return buddy;
+    }
     return NULL;
 }
 

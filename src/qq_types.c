@@ -10,7 +10,12 @@ qq_account* qq_account_new(PurpleAccount* account)
     ac->magic = QQ_MAGIC;
     ac->qq_use_qqnum = 0;
     ac->opend_chat = g_ptr_array_sized_new(10);
+    const char* username = purple_account_get_username(account);
+    const char* password = purple_account_get_password(account);
+    ac->qq = lwqq_client_new(username,password);
 #if QQ_USE_FAST_INDEX
+    ac->qq->find_buddy_by_uin = find_buddy_by_uin;
+    ac->qq->find_buddy_by_qqnumber = find_buddy_by_qqnumber;
     ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,g_free);
     ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
 #endif
@@ -115,13 +120,7 @@ LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
     if(node->type != NODE_IS_BUDDY) return NULL;
     return node->node;
 #else
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&lc->friends,entries) {
-        //this may caused by qqnumber not loaded successful.
-        if(buddy->qqnumber && strcmp(buddy->qqnumber,qqnum)==0)
-            return buddy;
-    }
-    return NULL;
+    return lwqq_buddy_find_buddy_by_qqnumber(lc, qqnum);
 #endif
 }
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)

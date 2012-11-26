@@ -744,16 +744,6 @@ static LwqqErrorCode lwdb_userdb_update_buddy_info(
 
     return LWQQ_EC_OK;
 }
-static LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnumber)
-{
-    if(!lc || !qqnumber ) return NULL;
-    LwqqBuddy * buddy = NULL;
-    LIST_FOREACH(buddy,&lc->friends,entries){
-        if(buddy->qqnumber && !strcmp(buddy->qqnumber,qqnumber))
-            return buddy;
-    }
-    return NULL;
-}
 static LwqqBuddy* find_buddy_by_nick_and_mark(LwqqClient* lc,const char* nick,const char* mark)
 {
     if(!lc || !nick ) return NULL;
@@ -832,7 +822,7 @@ void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
 
     while (!sws_query_next(stmt, NULL)) {
         buddy = read_buddy_from_stmt(stmt);
-        target = find_buddy_by_qqnumber(lc, buddy->qqnumber);
+        target = lc->find_buddy_by_qqnumber(lc, buddy->qqnumber);
         if(target == NULL)
             target = find_buddy_by_nick_and_mark(lc,buddy->nick,buddy->markname);
         if(target){

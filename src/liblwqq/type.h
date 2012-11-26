@@ -207,6 +207,9 @@ typedef struct LwqqClient {
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
     int magic;          /**< 0x4153 **/
+
+    LwqqBuddy* (*find_buddy_by_uin)(struct LwqqClient* lc,const char* uin);
+    LwqqBuddy* (*find_buddy_by_qqnumber)(struct LwqqClient* lc,const char* qqnumber);
 } LwqqClient;
 
 /* Lwqq Error Code */
@@ -296,6 +299,7 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy);
  * @return 
  */
 LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin);
+LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber);
 
 /* LwqqBuddy API END*/
 
