@@ -471,7 +471,7 @@ static LwqqErrorCode lwdb_globaldb_update_user_info(
     return LWQQ_EC_OK;
 }
 
-LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
+LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir)
 {
     LwdbUserDB *udb = NULL;
     int ret;
@@ -481,8 +481,12 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber)
         return NULL;
     }
 
-    char* home = getenv("HOME");
-    snprintf(db_name,sizeof(db_name),"%s/.config/lwqq/%s.db",home,qqnumber);
+    if(dir == NULL){
+        char* home = getenv("HOME");
+        snprintf(db_name,sizeof(db_name),"%s/.config/lwqq/%s.db",home,qqnumber);
+    }else{
+        snprintf(db_name,sizeof(db_name),"%s/%s.db",dir,qqnumber);
+    }
 
     /* If there is no db named "db_name", create it */
     if (!db_is_valid(db_name, 1)) {

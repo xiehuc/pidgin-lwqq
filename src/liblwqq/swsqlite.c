@@ -42,9 +42,6 @@ SwsDB *sws_open_db(const char *filename, char **errmsg)
         char msg[128];
         snprintf(msg, sizeof(msg), "Open file: %s failed, errcode is %d, %s",
                  filename, ret,sqlite3_errmsg(db));
-        FILE* f = fopen("/var/tmp/lwqq_temp_log","w");
-        fprintf(f,"%s\n",msg);
-        fclose(f);
         SET_ERRMSG(errmsg, msg);
         /**
          * NB: should close db though we open this db failed,

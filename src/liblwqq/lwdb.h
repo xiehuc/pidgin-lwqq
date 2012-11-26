@@ -93,7 +93,7 @@ typedef struct LwdbUserDB {
  * @return A new user DB object, or NULL if somethins wrong, and store
  * error code in err
  */
-LwdbUserDB *lwdb_userdb_new(const char *qqnumber);
+LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir);
 
 /** 
  * Free a LwdbUserDB object

@@ -1206,8 +1206,18 @@ static void qq_login(PurpleAccount *account)
     //    purple_account_get_bool(account,"compatible_pidgin_conversation_integration", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->qq = lwqq_client_new(username,password);
-    ac->db = lwdb_userdb_new(username);
-    mkdir("/home/xiehuc/.lwqq",0777);
+    char db_path[64];
+    snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
+    ac->db = lwdb_userdb_new(username,db_path);
+    //for empathy
+    if(ac->db == NULL){
+        snprintf(db_path,sizeof(db_path),"/var/tmp/lwqq");
+        ac->db = lwdb_userdb_new(username,db_path);
+    }
+    if(ac->db == NULL){
+        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"无法创建数据库");
+        return;
+    }
 
     all_reset(ac,0x4);
 
