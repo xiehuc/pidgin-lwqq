@@ -87,7 +87,28 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         }
 
     }
+
 }
+
+static void send_offline_file_receipt(LwqqAsyncEvent* ev,void* d)
+{
+    int errno = lwqq_async_event_get_result(ev);
+    void **data = d;
+    qq_account* ac = data[0];
+    LwqqMsgOffFile* file = data[1];
+    char* name = data[3];
+    s_free(d);
+    if(errno == 0){
+        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
+                system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件成功",PURPLE_MESSAGE_SYSTEM,time(NULL)));
+    }else{
+        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
+                system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL)));
+    }
+    s_free(name);
+    lwqq_msg_offfile_free(file);
+}
+
 static void send_file(LwqqAsyncEvent* event,void* d)
 {
     if(d==NULL) return;
@@ -96,16 +117,18 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     LwqqClient* lc = ac->qq;
     LwqqMsgOffFile* file = data[1];
     PurpleXfer* xfer = data[2];
-    s_free(d);
+    char* name = data[3];
     int errno = lwqq_async_event_get_result(event);
     purple_xfer_set_completed(xfer,1);
     purple_xfer_unref(xfer);
     if(errno) {
-        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,file->to,ac,
+        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,
                             "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
         lwqq_msg_offfile_free(file);
+        s_free(name);
+        s_free(d);
     } else {
-        lwqq_msg_send_offfile(lc,file);
+        lwqq_async_add_event_listener(lwqq_msg_send_offfile(lc,file),send_offline_file_receipt,d);
     }
 }
 static void upload_offline_file_init(PurpleXfer* xfer)
@@ -177,8 +200,9 @@ void qq_send_offline_file(PurpleBlistNode* node)
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,file_trans_cancel);
-    void** data = s_malloc(sizeof(void*)*3);
+    void** data = s_malloc(sizeof(void*)*4);
     data[0] = ac;
+    data[3] = strdup(purple_buddy_get_name(buddy));
     xfer->data = data;
     purple_xfer_request(xfer);
 }

@@ -1669,7 +1669,7 @@ done:
     return errno;
 }
 
-void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
+LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
 {
     char url[512];
     char post[512];
@@ -1683,14 +1683,26 @@ void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
             "clientid=%s&psessionid=%s",
             file->to,file->path,file->name,file->to,lc->clientid,lc->psessionid,
             lc->clientid,lc->psessionid);
-    req->do_request_async(req,1,post,send_offfile_back,file);
+    return req->do_request_async(req,1,post,send_offfile_back,file);
 }
 
 static int send_offfile_back(LwqqHttpRequest* req,void* data)
 {
-    lwqq_msg_offfile_free(data);
+    json_t* json = NULL;
+    int errno = 0;
+    if(req->http_code != 200){
+        errno = 1;
+        goto done;
+    }
+    puts(req->response);
+    json_parse_document(&json, req->response);
+    errno = atoi(json_parse_simple_value(json, "retcode"));
+done:
+    if(json){
+        json_free_value(&json);
+    }
     lwqq_http_request_free(req);
-    return 0;
+    return errno;
 }
 #define rand(n) (rand()%9000+1000)
 int dump_resoponse(LwqqHttpRequest* req,void* data)

@@ -1030,7 +1030,7 @@ GList *qq_chat_info(PurpleConnection *gc)
     m = NULL;
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = "ID: ";
+    pce->label = "QQ: ";
     pce->identifier = QQ_ROOM_KEY_GID;
     m = g_list_append(m, pce);
 

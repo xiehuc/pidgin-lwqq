@@ -329,7 +329,7 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
 //or use offfile_free to clean memory.
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file);
 //call this function when upload_offline_file finished.
-void lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
+LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
 //call this when upload failed.
 void lwqq_msg_offfile_free(void* opaque);
 
