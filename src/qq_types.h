@@ -9,6 +9,8 @@ typedef struct _AsyncListener AsyncListener;
 
 #define QQ_MAGIC 0x4153
 #define QQ_USE_FAST_INDEX 1
+#define SUCCESS 0
+#define FAILED -1
 
 #ifdef UNUSED
 #elif defined(__GNUC__)

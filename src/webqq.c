@@ -305,7 +305,7 @@ static const char* group_name(LwqqGroup* group)
         strncpy(gname,group->markname,sizeof(gname));
     } else 
         strncpy(gname,group->name,sizeof(gname));
-    if(group->mask)
+    if(group->mask == LWQQ_MASK_ALL)
         strcat(gname,"(屏蔽)");
     return gname;
 }
@@ -389,13 +389,13 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
         serv_got_joined_chat(gc,open_new_chat(ac,group),try_get(group->account,group->gid));
     }
 }
-static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
+static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
     PurpleConnection* pc = ac->gc;
     LwqqGroup* group = find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
 
-    g_return_if_fail(group);
+    if(group == NULL) return FAILED;
 
     //force open dialog
     qq_conv_open(pc,group);
@@ -422,6 +422,7 @@ static void group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     } else {
         group_message_delay_display(NULL,data);
     }
+    return SUCCESS;
 }
 static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
 {
@@ -623,7 +624,7 @@ static int lost_connection(LwqqClient* lc,void* data)
 int qq_msg_check(LwqqClient* lc,void* data)
 {
     LwqqRecvMsgList* l = lc->msg_list;
-    LwqqRecvMsg *msg;
+    LwqqRecvMsg *msg,*prev;
 
     pthread_mutex_lock(&l->mutex);
     if (TAILQ_EMPTY(&l->head)) {
@@ -631,9 +632,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
         pthread_mutex_unlock(&l->mutex);
         return 0;
     }
-    while(!TAILQ_EMPTY(&l->head)) {
-
-        msg = TAILQ_FIRST(&l->head);
+    msg = TAILQ_FIRST(&l->head);
+    while(msg) {
+        int res = SUCCESS;
         if(msg->msg) {
             switch(msg->msg->type) {
             case LWQQ_MT_BUDDY_MSG:
@@ -641,7 +642,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 break;
             case LWQQ_MT_GROUP_MSG:
             case LWQQ_MT_DISCU_MSG:
-                group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+                res = group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
                 break;
             case LWQQ_MT_SESS_MSG:
                 whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
@@ -673,10 +674,13 @@ int qq_msg_check(LwqqClient* lc,void* data)
             }
         }
 
-        TAILQ_REMOVE(&l->head,msg, entries);
-        lwqq_msg_free(msg->msg);
-        s_free(msg);
-
+        prev = msg;
+        msg = TAILQ_NEXT(msg,entries);
+        if(res == SUCCESS){
+            TAILQ_REMOVE(&l->head,prev, entries);
+            lwqq_msg_free(prev->msg);
+            s_free(prev);
+        }
     }
     pthread_mutex_unlock(&l->mutex);
     return 0;
@@ -737,6 +741,7 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
                 lwqq_info_get_friend_avatar(lc,lc->myself),friend_avatar,d);
     }
 
+    if(ac->qq_use_qqnum)
     lwdb_userdb_write_to_client(ac->db, lc);
     
     LwqqBuddy* buddy;
@@ -871,7 +876,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
         lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
     }
     if(conv && err > 0){
-        if(err == LWQQ_MC_FAST)
+        if(err == LWQQ_MC_TOO_FAST)
             snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
         else
             snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);

@@ -32,7 +32,7 @@ typedef enum LwqqMsgType {
 } LwqqMsgType;
 typedef enum {
     LWQQ_MC_OK = 0,
-    LWQQ_MC_FAST = 108,
+    LWQQ_MC_TOO_FAST = 108,             //< send message too fast
     LWQQ_MC_LOST_CONN = 121
 }LwqqMsgRetcode;
 
