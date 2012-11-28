@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
-#include <curl/curl.h>
 
 #include "type.h"
 #include "smemory.h"
@@ -123,6 +122,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
         break;
     case LWQQ_MT_FILE_MSG:
         msg->opaque = s_malloc0(sizeof(LwqqMsgFileMessage));
+        break;
+    case LWQQ_MT_NOTIFY_OFFFILE:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgNotifyOfffile));
         break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
@@ -317,6 +319,14 @@ void lwqq_msg_free(LwqqMsg *msg)
             };
         }
         s_free(file);
+    }else if(msg->type == LWQQ_MT_NOTIFY_OFFFILE){
+        LwqqMsgNotifyOfffile* notify = msg->opaque;
+        if(notify){
+            s_free(notify->from);
+            s_free(notify->to);
+            s_free(notify->filename);
+        }
+        s_free(notify);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }
@@ -391,6 +401,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_FILETRANS;
     }else if(!strncmp(msg_type,"file_message",strlen("file_message"))){
         type = LWQQ_MT_FILE_MSG;
+    }else if(!strncmp(msg_type,"notify_offfile",strlen("file_message"))){
+        type = LWQQ_MT_NOTIFY_OFFFILE;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -746,6 +758,21 @@ static int parse_file_message(json_t* json,void* opaque)
     }
     return 0;
 }
+static int parse_notify_offfile(json_t* json,void* opaque)
+{
+    /*
+     * {"retcode":0,"result":[{"poll_type":"notify_offfile","value":
+     * {"msg_id":9948,"from_uin":495653555,"to_uin":350512021,"msg_id2":460591,"msg_type":9,"reply_ip":178847911,"action":2,"filename":"12.jpg","filesize":137972}}]}
+    */
+    LwqqMsgNotifyOfffile* notify = opaque;
+    notify->msg_id = atoi(json_parse_simple_value(json,"msg_id"));
+    notify->action = atoi(json_parse_simple_value(json,"action"));
+    notify->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    notify->to = s_strdup(json_parse_simple_value(json,"to_uin"));
+    notify->filename = json_unescape(json_parse_simple_value(json,"filename"));
+    notify->filesize = strtoul(json_parse_simple_value(json,"filesize"), NULL, 10);
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -988,6 +1015,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_FILE_MSG:
             ret = parse_file_message(cur,msg->opaque);
+            break;
+        case LWQQ_MT_NOTIFY_OFFFILE:
+            ret = parse_notify_offfile(cur,msg->opaque);
             break;
         default:
             ret = -1;

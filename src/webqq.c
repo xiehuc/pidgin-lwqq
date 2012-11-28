@@ -32,6 +32,15 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void friend_avatar(LwqqAsyncEvent* ev,void* data);
 static void group_avatar(LwqqAsyncEvent* ev,void* data);
 
+static const char* get_name_from_file_from(qq_account* ac,const char* from_uin)
+{
+    if(ac->qq_use_qqnum){
+        LwqqBuddy* buddy = find_buddy_by_uin(ac->qq,from_uin);
+        return (buddy&&buddy->qqnumber) ?buddy->qqnumber:from_uin;
+    }else
+        return from_uin;
+}
+
 static const char* qq_get_type_from_chat(PurpleChat* chat)
 {
     GHashTable* table = purple_chat_get_components(chat);
@@ -360,14 +369,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     strcpy(buf,"");
 
     translate_struct_to_message(ac,msg,buf);
-    const char* who;
-    if(ac->qq_use_qqnum){
-        LwqqBuddy* buddy = find_buddy_by_uin(lc, msg->from);
-        who =  (buddy&&buddy->qqnumber)? buddy->qqnumber : msg->from;
-    }else{
-        who = msg->from;
-    }
-    serv_got_im(pc, who, buf, PURPLE_MESSAGE_RECV, msg->time);
+    serv_got_im(pc, get_name_from_file_from(ac,msg->from), buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
@@ -378,7 +380,16 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
              "到期时间:%s"
              "<a href=\"%s\">点此下载</a>",
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
-    serv_got_im(pc,msg->from,buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,get_name_from_file_from(ac,msg->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+}
+static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
+{
+    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    PurpleConnection* pc = ac->gc;
+    char buf[512];
+    const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
+    snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
+    serv_got_im(pc,get_name_from_file_from(ac,notify->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -669,6 +680,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 break;
             case LWQQ_MT_FILETRANS:
                 //complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_NOTIFY_OFFFILE:
+                notify_offfile(lc,(LwqqMsgNotifyOfffile*)msg->msg->opaque);
                 break;
             default:
                 printf("unknow message\n");

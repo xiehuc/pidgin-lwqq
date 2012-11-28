@@ -28,6 +28,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_OFFFILE,
     LWQQ_MT_FILETRANS,
     LWQQ_MT_FILE_MSG,
+    LWQQ_MT_NOTIFY_OFFFILE,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 typedef enum {
@@ -215,6 +216,17 @@ typedef struct LwqqMsgFileMessage{
         }refuse;
     };
 }LwqqMsgFileMessage;
+
+typedef struct LwqqMsgNotifyOfffile{
+    int msg_id;
+    char* from;
+    char* to;
+    enum {
+        NOTIFY_OFFFILE_REFUSE = 2,
+    }action;
+    char* filename;
+    size_t filesize;
+}LwqqMsgNotifyOfffile;
 
 
 typedef struct LwqqMsg {
