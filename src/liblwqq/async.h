@@ -13,7 +13,9 @@
 
 
 #ifndef USE_LIBPURPLE
+#ifndef USE_LIBEV
 #define USE_LIBEV
+#endif
 #endif
 
 #ifdef USE_LIBPURPLE

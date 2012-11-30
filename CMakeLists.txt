@@ -32,6 +32,11 @@ endif(NLS)
 add_subdirectory(src)
 add_subdirectory(res)
 
+option(WITH_LIBEV "build in libev for async process" Off)
+if(WITH_LIBEV)
+    pkg_check_modules(EV libev)
+endif(WITH_LIBEV)
+
 option(UOA "ubuntu online account support" Off)
 if(UOA)
     pkg_check_modules(GTK gtk+-3.0)
