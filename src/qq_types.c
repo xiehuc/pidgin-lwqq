@@ -3,6 +3,26 @@
 #include "msg.h"
 #include "async.h"
 
+static int did_dispatch(void* param)
+{
+    void **d = param;
+    LwqqClient* lc = d[0];
+    DISPATCH_FUNC func = d[1];
+    void* data = d[2];
+    s_free(d);
+    func(lc,data);
+    return 0;
+}
+
+static void qq_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
+{
+    void **d = s_malloc(sizeof(void*)*3);
+    d[0] = lc;
+    d[1] = func;
+    d[2] = param;
+    purple_timeout_add(50,did_dispatch,d);
+}
+
 qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
@@ -13,12 +33,14 @@ qq_account* qq_account_new(PurpleAccount* account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
+    lwqq_async_set(ac->qq,1);
 #if QQ_USE_FAST_INDEX
     ac->qq->find_buddy_by_uin = find_buddy_by_uin;
     ac->qq->find_buddy_by_qqnumber = find_buddy_by_qqnumber;
     ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,g_free);
     ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
 #endif
+    ac->qq->dispatch = qq_dispatch;
     return ac;
 }
 void qq_account_free(qq_account* ac)

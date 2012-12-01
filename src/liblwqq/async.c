@@ -16,7 +16,7 @@
 #include "smemory.h"
 #include "http.h"
 typedef struct async_dispatch_data {
-    ListenerType type;
+    DISPATCH_FUNC func;
     LwqqClient* client;
     LwqqAsyncTimer handle;
     void* data;
@@ -44,11 +44,9 @@ static int timeout_come(void* p)
 {
     async_dispatch_data* data = (async_dispatch_data*)p;
     LwqqClient* lc = data->client;
-    ListenerType type = data->type;
-    if(lwqq_client_valid(lc)&&lwqq_async_enabled(lc)){
-        if(lc->async->listener[type]!=NULL)
-            lc->async->listener[type](lc,data->data);
-    }
+    DISPATCH_FUNC func = data->func;
+    func(lc,data->data);
+
     free(data);
     //remote handle;
     return 0;
@@ -58,8 +56,17 @@ void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* param)
 {
     if(!lwqq_client_valid(lc)||!lwqq_async_has_listener(lc,type))
         return;
+    DISPATCH_FUNC func;
+    if(lwqq_client_valid(lc)&&lwqq_async_enabled(lc)&&lc->async->listener[type]!=NULL){
+        func = lc->async->listener[type];
+    }else return;
+    lc->dispatch(lc,func,param);
+}
+
+static void async_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
+{
     async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
-    data->type = type;
+    data->func = func;
     data->client = lc;
     data->data = param;
     lwqq_async_timer_watch(&data->handle, 50, timeout_come, data);
@@ -72,6 +79,7 @@ void lwqq_async_set(LwqqClient* client,int enabled)
     if(enabled&&client->async==NULL) {
         client->async = s_malloc0(sizeof(LwqqAsync));
         client->async->_enabled=1;
+        client->dispatch = async_dispatch;
     } else if(!enabled&&lwqq_async_enabled(client)) {
         client->async->_enabled=0;
         /*free(client->async);

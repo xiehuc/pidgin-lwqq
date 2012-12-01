@@ -19,8 +19,11 @@ typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsync LwqqAsync;
 typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
+typedef struct _LwqqClient LwqqClient;
+typedef int (*DISPATCH_FUNC)(LwqqClient* lc,void* data);
 /************************************************************************/
 /* Struct defination */
+
 
 typedef struct LwqqFriendCategory {
     int index;
@@ -44,6 +47,7 @@ typedef enum LWQQ_CTYPE{
     LWQQ_CLIENT_MOBILE=21,
     LWQQ_CLIENT_WEBQQ=41,
 }LWQQ_CTYPE;
+
 /* QQ buddy */
 typedef struct LwqqBuddy {
     char *uin;                  /**< Uin. Change every login */
@@ -85,7 +89,7 @@ typedef struct LwqqBuddy {
      */
     LWQQ_CTYPE client_type;
 
-    //char *status;               /* Online status */
+
     int ref;
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
@@ -177,7 +181,7 @@ typedef struct LwqqCookies {
     char *lwcookies;
 } LwqqCookies;
 /* LwqqClient API */
-typedef struct LwqqClient {
+struct _LwqqClient {
     char *username;             /**< Username */
     char *password;             /**< Password */
     LwqqBuddy *myself;          /**< Myself */
@@ -208,9 +212,10 @@ typedef struct LwqqClient {
     long msg_id;            /**< Used to send message */
     int magic;          /**< 0x4153 **/
 
-    LwqqBuddy* (*find_buddy_by_uin)(struct LwqqClient* lc,const char* uin);
-    LwqqBuddy* (*find_buddy_by_qqnumber)(struct LwqqClient* lc,const char* qqnumber);
-} LwqqClient;
+    LwqqBuddy* (*find_buddy_by_uin)(LwqqClient* lc,const char* uin);
+    LwqqBuddy* (*find_buddy_by_qqnumber)(LwqqClient* lc,const char* qqnumber);
+    void (*dispatch)(LwqqClient* lc,DISPATCH_FUNC func,void* param);
+} ;
 
 /* Lwqq Error Code */
 typedef enum {

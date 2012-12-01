@@ -1232,7 +1232,6 @@ static void qq_login(PurpleAccount *account)
     
     //all_reset(ac,RESET_DISCU);
 
-    lwqq_async_set(ac->qq,1);
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);
 

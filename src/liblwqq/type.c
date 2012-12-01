@@ -16,6 +16,11 @@
 #include "logger.h"
 #include "msg.h"
 
+static void direct_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
+{
+    func(lc,param);
+}
+
 /** 
  * Create a new lwqq client
  * 
@@ -53,6 +58,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
 
     lc->find_buddy_by_uin = lwqq_buddy_find_buddy_by_uin;
     lc->find_buddy_by_qqnumber = lwqq_buddy_find_buddy_by_qqnumber;
+    lc->dispatch = direct_dispatch;
 
     /* Set msg_id */
     gettimeofday(&tv, NULL);
