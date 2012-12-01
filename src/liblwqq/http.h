@@ -126,6 +126,7 @@ typedef enum {
     LWQQ_HTTP_NOT_FOLLOW,
     LWQQ_HTTP_SAVE_FILE,
     LWQQ_HTTP_RESET_URL,
+    LWQQ_HTTP_VERBOSE,
 }LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();

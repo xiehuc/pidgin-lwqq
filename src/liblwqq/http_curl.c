@@ -819,6 +819,9 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
         case LWQQ_HTTP_RESET_URL:
             curl_easy_setopt(req->req,CURLOPT_URL,va_arg(args,const char*));
             break;
+        case LWQQ_HTTP_VERBOSE:
+            curl_easy_setopt(req->req,CURLOPT_VERBOSE,va_arg(args,long));
+            break;
     }
     va_end(args);
 }

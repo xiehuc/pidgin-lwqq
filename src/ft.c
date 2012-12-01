@@ -15,7 +15,7 @@ static void file_trans_request_denied(PurpleXfer* xfer)
 static int file_trans_on_progress(void* data,size_t now,size_t total)
 {
     PurpleXfer* xfer = data;
-    if(purple_xfer_is_canceled(xfer)) {
+    if(purple_xfer_is_canceled(xfer)||purple_xfer_is_completed(xfer)) {
         return 1;
     }
     purple_xfer_set_size(xfer,total);
@@ -96,13 +96,8 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,void* d)
     s_free(d);
     if(errno == 0){
         qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, name, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
-        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
-        //        system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件成功",PURPLE_MESSAGE_SYSTEM,time(NULL)));
     }else{
         qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, name, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
-
-        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
-        //        system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL)));
     }
     s_free(name);
     lwqq_msg_offfile_free(file);
@@ -114,16 +109,26 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     void** data = d;
     qq_account* ac = data[0];
     LwqqClient* lc = ac->qq;
+    long errno = 0;
+#ifdef USE_LIBEV
+    if(event){
+        errno = lwqq_async_event_get_result(event);
+        data[4] = (void*)errno;
+        lc->dispatch(NULL,(DISPATCH_FUNC)send_file,d);
+        return;
+    }else{
+        errno = (long)data[4];
+    }
+#else
+    errno = lwqq_async_event_get_result(event);
+#endif
     LwqqMsgOffFile* file = data[1];
     PurpleXfer* xfer = data[2];
     char* name = data[3];
-    int errno = lwqq_async_event_get_result(event);
     purple_xfer_set_completed(xfer,1);
     purple_xfer_unref(xfer);
     if(errno) {
-        qq_sys_msg_write(ac,LWQQ_MT_BUDDY_MSG, name,"上船空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
-        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,
-        //                    "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
+        qq_sys_msg_write(ac,LWQQ_MT_BUDDY_MSG, name,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_offfile_free(file);
         s_free(name);
         s_free(d);
@@ -200,7 +205,7 @@ void qq_send_offline_file(PurpleBlistNode* node)
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,file_trans_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,file_trans_cancel);
-    void** data = s_malloc(sizeof(void*)*4);
+    void** data = s_malloc(sizeof(void*)*5);
     data[0] = ac;
     data[3] = strdup(purple_buddy_get_name(buddy));
     xfer->data = data;
