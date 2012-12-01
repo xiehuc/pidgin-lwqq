@@ -70,6 +70,16 @@ typedef struct system_msg {
     time_t t;
 }system_msg;
 
+struct qq_extra_async_opt {
+    DISPATCH_FUNC login_complete;
+    DISPATCH_FUNC need_verify;
+};
+
+extern struct qq_extra_async_opt extra_async_opt;
+
+
+int qq_set_basic_info(LwqqClient* lc,void* data);
+
 qq_account* qq_account_new(PurpleAccount* account);
 void qq_account_free(qq_account* ac);
 #define qq_account_valid(ac) (ac->magic == QQ_MAGIC)

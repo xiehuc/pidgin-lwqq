@@ -129,9 +129,7 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
  */
 typedef int (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
-    LOGIN_COMPLETE,
-    FRIEND_COMPLETE,
-    VERIFY_COME,
+    //LOGIN_COMPLETE,
     ListenerTypeLength
 } ListenerType;
 typedef struct _LwqqAsync {

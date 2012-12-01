@@ -212,12 +212,16 @@ struct _LwqqClient {
     LIST_HEAD(, LwqqGroup) discus; /**< QQ discus */
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
-    int magic;          /**< 0x4153 **/
+
+    void* data;                     /**< user defined data*/
 
     LwqqBuddy* (*find_buddy_by_uin)(LwqqClient* lc,const char* uin);
     LwqqBuddy* (*find_buddy_by_qqnumber)(LwqqClient* lc,const char* qqnumber);
     void (*dispatch)(LwqqClient* lc,DISPATCH_FUNC func,void* param);
+
+    int magic;          /**< 0x4153 **/
 } ;
+#define lwqq_client_userdata(lc) (lc->data)
 
 /* Lwqq Error Code */
 typedef enum {

@@ -56,7 +56,7 @@ static void file_trans_cancel(PurpleXfer* xfer)
 
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     if(file->mode == MODE_RECV) {
         PurpleAccount* account = ac->account;
         //for(i=0;i<file->file_count;i++){

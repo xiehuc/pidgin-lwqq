@@ -158,7 +158,7 @@ PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,q
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
 #if QQ_USE_FAST_INDEX
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
@@ -170,7 +170,7 @@ LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 }
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
 #if QQ_USE_FAST_INDEX
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
@@ -190,7 +190,7 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
 {
 #if QQ_USE_FAST_INDEX
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_BUDDY) return NULL;
@@ -202,7 +202,7 @@ LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
 {
 #if QQ_USE_FAST_INDEX
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,gid);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_GROUP) return NULL;

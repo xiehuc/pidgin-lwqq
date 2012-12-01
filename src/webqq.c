@@ -254,7 +254,7 @@ static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
 
 static int friend_come(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     LwqqBuddy* buddy = data;
@@ -322,7 +322,7 @@ static const char* group_name(LwqqGroup* group)
 }
 static int group_come(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     LwqqGroup* group = data;
@@ -363,7 +363,7 @@ static int group_come(LwqqClient* lc,void* data)
 #define discu_come(lc,data) (group_come(lc,data))
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     static char buf[8192];
     //clean buffer
@@ -374,7 +374,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     char buf[512];
     snprintf(buf,sizeof(buf),"您收到一个离线文件:%s\n"
@@ -385,7 +385,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 }
 static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     char buf[512];
     const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
@@ -405,7 +405,7 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 }
 static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     LwqqGroup* group = find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
 
@@ -482,7 +482,7 @@ static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
 
     const char* from = mmsg->from;
@@ -533,7 +533,7 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data)
 }
 static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleAccount* account = ac->account;
     const char* who;
     if(ac->qq_use_qqnum){
@@ -547,7 +547,7 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
 }
 static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     char* reason;
     if(kick->show_reason) reason = kick->reason;
     else reason = "您被不知道什么东西踢下线了额";
@@ -575,7 +575,7 @@ static void verify_required_cancel(void* data,PurpleRequestFields* root)
 }
 static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     char buf1[128];
     char buf2[128];
     if(system->type == VERIFY_REQUIRED) {
@@ -645,7 +645,7 @@ static void group_avatar(LwqqAsyncEvent* ev,void* data)
 }
 static int lost_connection(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = ac->gc;
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
     return 0;
@@ -821,7 +821,7 @@ static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
 }
 static int verify_come(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
     PurpleRequestFieldGroup *field_group;
     PurpleRequestField *code_entry;
     PurpleRequestField *code_pic;
@@ -851,12 +851,11 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
 };
-
 static int login_complete(LwqqClient* lc,void* data)
 {
-    qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
+    qq_account* ac = lwqq_client_userdata(lc);
+    LwqqErrorCode err = (long)data;
     PurpleConnection* gc = purple_account_get_connection(ac->account);
-    LwqqErrorCode err = lwqq_async_get_error(lc,LOGIN_COMPLETE);
     if(err==LWQQ_EC_LOGIN_ABNORMAL) {
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
         return 0;
@@ -871,7 +870,6 @@ static int login_complete(LwqqClient* lc,void* data)
     gc->flags |= PURPLE_CONNECTION_HTML;
 
     ac->qq->async_opt = &qq_async_opt;
-    lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
     //lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
@@ -1239,9 +1237,9 @@ static void qq_login(PurpleAccount *account)
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);
 
-    lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
-    lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
-    lwqq_async_add_listener(ac->qq,VERIFY_COME,verify_come);
+    lwqq_client_userdata(ac->qq) = ac;
+    //lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
+    //lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
     background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)
@@ -1511,6 +1509,11 @@ static void client_connect_signals(PurpleConnection* gc)
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
     //        PURPLE_CALLBACK(qq_change_group_markname),gc);
 }
+
+struct qq_extra_async_opt extra_async_opt = {
+    .login_complete = login_complete,
+    .need_verify = verify_come,
+};
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,

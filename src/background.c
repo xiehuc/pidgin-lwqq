@@ -30,11 +30,13 @@ static void* _background_login(void* data)
     lwqq_login(lc,lwqq_status_from_str(status), &err);
 
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
-        lwqq_async_set_error(lc,VERIFY_COME,err);
-        lwqq_async_dispatch(lc,VERIFY_COME,NULL);
+        lc->dispatch(lc,extra_async_opt.need_verify,(void*)err);
+        //lwqq_async_set_error(lc,VERIFY_COME,err);
+        //lwqq_async_dispatch(lc,VERIFY_COME,NULL);
     }else{
-        lwqq_async_set_error(lc,LOGIN_COMPLETE,err);
-        lwqq_async_dispatch(lc,LOGIN_COMPLETE,NULL);
+        lc->dispatch(lc,extra_async_opt.login_complete,(void*)err);
+        //lwqq_async_set_error(lc,LOGIN_COMPLETE,err);
+        //lwqq_async_dispatch(lc,LOGIN_COMPLETE,NULL);
     }
     return NULL;
 }
@@ -62,7 +64,8 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
 
-    lwqq_async_dispatch(lc,FRIEND_COMPLETE,ac);
+    lc->dispatch(lc,qq_set_basic_info,ac);
+    //lwqq_async_dispatch(lc,FRIEND_COMPLETE,ac);
     //qq_set_basic_info(0,ac);
 
 
