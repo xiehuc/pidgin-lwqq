@@ -17,6 +17,7 @@
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
+typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqAsync LwqqAsync;
 typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 typedef struct _LwqqClient LwqqClient;
@@ -198,6 +199,7 @@ struct _LwqqClient {
     char *gface_key;                  /**< use at cface */
     char *gface_sig;                  /**<use at cfage */
     LwqqAsync* async;
+    const LwqqAsyncOption* async_opt;
     LwqqCookies *cookies;
     const char *status;
     LWQQ_STATUS stat;

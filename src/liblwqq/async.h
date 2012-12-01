@@ -131,8 +131,6 @@ typedef int (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
     FRIEND_COMPLETE,
-    POLL_LOST_CONNECTION,///
-    POLL_MSG_COME,
     SYS_MSG_COME,//come from inner
     VERIFY_COME,
     ListenerTypeLength
@@ -143,6 +141,11 @@ typedef struct _LwqqAsync {
     void* data[ListenerTypeLength];
     int _enabled;
 } _LwqqAsync;
+struct _LwqqAsyncOption {
+    DISPATCH_FUNC poll_msg;
+    DISPATCH_FUNC poll_lost;
+
+};
 
 /**set async enabled or disabled*/
 void lwqq_async_set(LwqqClient* client,int enabled);

@@ -839,6 +839,12 @@ static int verify_come(LwqqClient* lc,void* data)
 
     return 0;
 }
+
+static LwqqAsyncOption qq_async_opt = {
+    .poll_msg = qq_msg_check,
+    .poll_lost = lost_connection,
+};
+
 static int login_complete(LwqqClient* lc,void* data)
 {
     qq_account* ac = lwqq_async_get_userdata(lc,LOGIN_COMPLETE);
@@ -866,9 +872,8 @@ static int login_complete(LwqqClient* lc,void* data)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
+    ac->qq->async_opt = &qq_async_opt;
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
-    lwqq_async_add_listener(ac->qq,POLL_LOST_CONNECTION,lost_connection);
-    lwqq_async_add_listener(ac->qq,POLL_MSG_COME,qq_msg_check);
     lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
@@ -889,7 +894,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
     PurpleConversation* conv = find_conversation(msg->type,who,ac);
 
     if(err == LWQQ_MC_LOST_CONN){
-        lwqq_async_dispatch(ac->qq,POLL_LOST_CONNECTION,NULL);
+        ac->qq->dispatch(ac->qq,ac->qq->async_opt->poll_lost,NULL);
     }
     if(conv && err > 0){
         if(err == LWQQ_MC_TOO_FAST)

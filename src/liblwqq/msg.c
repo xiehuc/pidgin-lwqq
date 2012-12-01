@@ -917,7 +917,9 @@ void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
     LwqqMsg* msg = d[1];
     s_free(data);
     insert_recv_msg_with_order(list,msg);
-    lwqq_async_dispatch(list->lc, POLL_MSG_COME, NULL);
+    LwqqClient* lc = list->lc;
+    lc->dispatch(list->lc,lc->async_opt->poll_msg,NULL);
+    //lwqq_async_dispatch(list->lc, POLL_MSG_COME, NULL);
 }
 /**
  * Parse message received from server
@@ -1118,10 +1120,12 @@ static void *start_poll_msg(void *msg_list)
         }
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121){
-            lwqq_async_dispatch(lc,POLL_LOST_CONNECTION,NULL);
+            //lwqq_async_dispatch(lc,POLL_LOST_CONNECTION,NULL);
+            lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
             break;
         }else{
-            lwqq_async_dispatch(lc,POLL_MSG_COME,NULL);
+            lc->dispatch(lc,lc->async_opt->poll_msg,NULL);
+            //lwqq_async_dispatch(lc,POLL_MSG_COME,NULL);
         }
         //if(retcode==121)
         //    lwqq_relogin(lc);

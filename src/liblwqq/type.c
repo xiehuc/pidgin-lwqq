@@ -15,11 +15,22 @@
 #include "smemory.h"
 #include "logger.h"
 #include "msg.h"
+#include "async.h"
 
 static void direct_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
 {
     func(lc,param);
 }
+
+static int null_action(LwqqClient* lc,void* param)
+{
+    return 0;
+}
+
+static LwqqAsyncOption default_async_opt = {
+    .poll_msg = null_action,
+    .poll_lost = null_action,
+};
 
 /** 
  * Create a new lwqq client
@@ -55,6 +66,8 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
     lc->cookies = s_malloc0(sizeof(*(lc->cookies)));
 
     lc->msg_list = lwqq_recvmsg_new(lc);
+
+    lc->async_opt = &default_async_opt;
 
     lc->find_buddy_by_uin = lwqq_buddy_find_buddy_by_uin;
     lc->find_buddy_by_qqnumber = lwqq_buddy_find_buddy_by_qqnumber;
