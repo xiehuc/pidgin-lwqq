@@ -34,7 +34,7 @@ add_subdirectory(res)
 
 option(WITH_LIBEV "build in libev for async process" Off)
 if(WITH_LIBEV)
-    pkg_check_modules(EV libev)
+    find_package(Ev)
 endif(WITH_LIBEV)
 
 option(UOA "ubuntu online account support" Off)
