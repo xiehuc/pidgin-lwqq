@@ -31,12 +31,8 @@ static void* _background_login(void* data)
 
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
         lc->dispatch(lc,extra_async_opt.need_verify,(void*)err);
-        //lwqq_async_set_error(lc,VERIFY_COME,err);
-        //lwqq_async_dispatch(lc,VERIFY_COME,NULL);
     }else{
         lc->dispatch(lc,extra_async_opt.login_complete,(void*)err);
-        //lwqq_async_set_error(lc,LOGIN_COMPLETE,err);
-        //lwqq_async_dispatch(lc,LOGIN_COMPLETE,NULL);
     }
     return NULL;
 }

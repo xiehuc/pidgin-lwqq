@@ -119,58 +119,33 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
 #define LWQQ_SYNC_BEGIN() { LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1;
 #define LWQQ_SYNC_END() LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;}
 #define LWQQ_SYNC_ENABLED() (LWQQ_ASYNC_GLOBAL_SYNC_ENABLED == 1)
-//============================OLD ASYNC API===========================///
-/**@param data this is special data passed by liblwqq.
- *              it's value is different in different ListenerType.
- *              for example FRIEND_COME this is LwqqBuddy*
- *                          GROUP_COME this is LwqqGroup*
- * @return you should return a errno.
- *          0 means success.
+//============================ASYNC DISPATCH API===========================///
+/**
+ * this part include a async dispatch merchanism. that is use a small timeout
+ * event to let function called by main event loop thread.
+ * it is useful when some case that X11 function call require called in only main
+ * gtk event loop .
+ * 
+ * it include lc->dispatch function pointer and lwqq async option struct.
+ * 
+ * lc->dispatch is a low level dispatch function. by default make a 50ms timeout 
+ * using default AsyncTimer object.
+ *
+ * override this to provide customized timer loop.
+ * 
+ * then provide lwqq async option struct .these are some inner callback of lwqq.
+ * like this:
+ * lc->async_opt = & your_static_async_opt;
+ *
  */
-typedef int (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
-typedef enum ListenerType {
-    //LOGIN_COMPLETE,
-    ListenerTypeLength
-} ListenerType;
-typedef struct _LwqqAsync {
-    ASYNC_CALLBACK listener[ListenerTypeLength];
-    LwqqErrorCode err[ListenerTypeLength];
-    void* data[ListenerTypeLength];
-    int _enabled;
-} _LwqqAsync;
 struct _LwqqAsyncOption {
     DISPATCH_FUNC poll_msg;
     DISPATCH_FUNC poll_lost;
 
 };
 
-/**set async enabled or disabled*/
-void lwqq_async_set(LwqqClient* client,int enabled);
-/** check if async enabled*/
-//#define lwqq_async_enabled(lc) (lc->async!=NULL)
-#define lwqq_async_enabled(lc) (lc->async->_enabled)
-/** add a ASYNC_CALLBACK type listener.*/
-#define lwqq_async_add_listener(lc,type,callback) \
-    ((lwqq_async_enabled(lc))?lc->async->listener[type] = callback:0)
-/**  remove a listener */
-#define lwqq_async_remove_listener(lc,type) (lwqq_async_add_listener(lc,type,NULL))
-/** set some data for listener.
- *  note: one type listener can only set one pointer 
- */
-#define lwqq_async_set_userdata(lc,type,value) \
-    ((lwqq_async_enabled(lc))?lc->async->data[type] = value:0)
-#define lwqq_async_get_userdata(lc,type) \
-    ((lwqq_async_enabled(lc))?lc->async->data[type]:NULL)
-/** set a errno for listener.
- *  note： one type listener can only set one error
- */
-#define lwqq_async_set_error(lc,type,err) \
-    ((lwqq_async_enabled(lc))?lc->async->err[type] = err:0)
-#define lwqq_async_get_error(lc,type) \
-    ((lwqq_async_enabled(lc))?lc->async->err[type]:0)
-#define lwqq_async_has_listener(lc,type) (lc->async->listener[type]!=NULL)
-/** dispatch a async listener */
-void lwqq_async_dispatch(LwqqClient* lc,ListenerType type,void* extradata);
+//initialize lwqq client with default dispatch function
+void lwqq_async_init(LwqqClient* lc);
 
 
 //=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//

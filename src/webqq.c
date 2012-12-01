@@ -1238,8 +1238,6 @@ static void qq_login(PurpleAccount *account)
     client_connect_signals(ac->gc);
 
     lwqq_client_userdata(ac->qq) = ac;
-    //lwqq_async_set_userdata(ac->qq,LOGIN_COMPLETE,ac);
-    //lwqq_async_add_listener(ac->qq,LOGIN_COMPLETE,login_complete);
     background_login(ac);
 }
 static void qq_close(PurpleConnection *gc)
@@ -1247,7 +1245,6 @@ static void qq_close(PurpleConnection *gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
 
-    lwqq_async_set(ac->qq,0);
     if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
         background_msg_drain(ac);
         lwqq_logout(ac->qq,&err);

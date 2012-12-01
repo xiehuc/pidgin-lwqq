@@ -17,11 +17,6 @@
 #include "msg.h"
 #include "async.h"
 
-static void direct_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
-{
-    func(lc,param);
-}
-
 static int null_action(LwqqClient* lc,void* param)
 {
     return 0;
@@ -71,7 +66,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
 
     lc->find_buddy_by_uin = lwqq_buddy_find_buddy_by_uin;
     lc->find_buddy_by_qqnumber = lwqq_buddy_find_buddy_by_qqnumber;
-    lc->dispatch = direct_dispatch;
+    lwqq_async_init(lc);
 
     /* Set msg_id */
     gettimeofday(&tv, NULL);

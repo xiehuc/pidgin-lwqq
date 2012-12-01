@@ -33,7 +33,7 @@ qq_account* qq_account_new(PurpleAccount* account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
-    lwqq_async_set(ac->qq,1);
+    //lwqq_async_set(ac->qq,1);
 #if QQ_USE_FAST_INDEX
     ac->qq->find_buddy_by_uin = find_buddy_by_uin;
     ac->qq->find_buddy_by_qqnumber = find_buddy_by_qqnumber;

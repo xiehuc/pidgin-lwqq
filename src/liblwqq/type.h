@@ -18,7 +18,6 @@
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
-typedef struct _LwqqAsync LwqqAsync;
 typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 typedef struct _LwqqClient LwqqClient;
 typedef int (*DISPATCH_FUNC)(LwqqClient* lc,void* data);
@@ -198,7 +197,6 @@ struct _LwqqClient {
     const char* last_err;
     char *gface_key;                  /**< use at cface */
     char *gface_sig;                  /**<use at cfage */
-    LwqqAsync* async;
     const LwqqAsyncOption* async_opt;
     LwqqCookies *cookies;
     const char *status;
