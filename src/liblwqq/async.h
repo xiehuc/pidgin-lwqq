@@ -131,7 +131,6 @@ typedef int (*ASYNC_CALLBACK)(LwqqClient* lc,void* data);
 typedef enum ListenerType {
     LOGIN_COMPLETE,
     FRIEND_COMPLETE,
-    SYS_MSG_COME,//come from inner
     VERIFY_COME,
     ListenerTypeLength
 } ListenerType;

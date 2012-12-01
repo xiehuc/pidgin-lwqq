@@ -1120,15 +1120,11 @@ static void *start_poll_msg(void *msg_list)
         }
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121){
-            //lwqq_async_dispatch(lc,POLL_LOST_CONNECTION,NULL);
             lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
             break;
         }else{
             lc->dispatch(lc,lc->async_opt->poll_msg,NULL);
-            //lwqq_async_dispatch(lc,POLL_MSG_COME,NULL);
         }
-        //if(retcode==121)
-        //    lwqq_relogin(lc);
     }
 failed:
     pthread_exit(NULL);

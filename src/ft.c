@@ -77,13 +77,9 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         purple_xfer_request(xfer);
     } else if(file->mode == MODE_REFUSE) {
         if(file->refuse.cancel_type == CANCEL_BY_USER) {
-            qq_sys_msg_write(lc,
-                             system_msg_new(0,file->from,ac,"对方取消文件传输",PURPLE_MESSAGE_SYSTEM,time(NULL))
-                            );
+            qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
         } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
-            qq_sys_msg_write(lc,
-                             system_msg_new(0,file->from,ac,"文件传输超时",PURPLE_MESSAGE_SYSTEM,time(NULL))
-                            );
+            qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
         }
 
     }
@@ -99,11 +95,14 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,void* d)
     char* name = data[3];
     s_free(d);
     if(errno == 0){
-        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
-                system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件成功",PURPLE_MESSAGE_SYSTEM,time(NULL)));
+        qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, name, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
+        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
+        //        system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件成功",PURPLE_MESSAGE_SYSTEM,time(NULL)));
     }else{
-        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
-                system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL)));
+        qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, name, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
+
+        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,
+        //        system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL)));
     }
     s_free(name);
     lwqq_msg_offfile_free(file);
@@ -122,8 +121,9 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     purple_xfer_set_completed(xfer,1);
     purple_xfer_unref(xfer);
     if(errno) {
-        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,
-                            "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
+        qq_sys_msg_write(ac,LWQQ_MT_BUDDY_MSG, name,"上船空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
+        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(LWQQ_MT_BUDDY_MSG,name,ac,
+        //                    "上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL)));
         lwqq_msg_offfile_free(file);
         s_free(name);
         s_free(d);

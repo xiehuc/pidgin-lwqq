@@ -27,7 +27,8 @@ enum RESET_OPT{RESET_BUDDY=0x1,RESET_GROUP=0x2,RESET_DISCU=0x4,RESET_ALL=-1};
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(LwqqAsyncEvent* event,void* data);
-static void group_message_delay_display(LwqqAsyncEvent* event,void* data);
+static int group_message_delay_display(LwqqClient* lc,void* data);
+static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data);
 static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void friend_avatar(LwqqAsyncEvent* ev,void* data);
 static void group_avatar(LwqqAsyncEvent* ev,void* data);
@@ -430,15 +431,16 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
         //use block method to get list
         lwqq_async_add_event_listener(
             lwqq_info_get_group_detail_info(lc,group,&err),
-            group_message_delay_display,
+            group_message_delay_display_wrapper,
             data);
     } else {
         group_message_delay_display(NULL,data);
     }
     return SUCCESS;
 }
-static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
+static int group_message_delay_display(LwqqClient* lc,void* data)
 {
+    //@notice lc may null
     void **d = data;
     qq_account* ac = d[0];
     LwqqGroup* group = d[1];
@@ -448,9 +450,10 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     //LwqqClient* lc = ac->qq;
     PurpleConnection* pc = ac->gc;
     const char* who;
+    LwqqBuddy* buddy;
 
-    if(purple_find_buddy(ac->account,sender)!=NULL) {
-        who = sender;
+    if((buddy = ac->qq->find_buddy_by_uin(ac->qq,sender))!=NULL) {
+        who = (ac->qq_use_qqnum&&buddy->qqnumber)?buddy->qqnumber:sender;
     } else {
         LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,sender);
         if(sb)
@@ -463,6 +466,19 @@ static void group_message_delay_display(LwqqAsyncEvent* event,void* data)
     s_free(sender);
     s_free(buf);
     group_member_list_come(NULL,data);
+    return 0;
+}
+static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data)
+{
+#ifdef USE_LIBEV
+    void **d = data;
+    qq_account* ac = d[0];
+    ac->qq->dispatch(ac->qq,group_message_delay_display,data);
+
+#else
+    group_message_delay_display(NULL,data);
+
+#endif
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
@@ -703,15 +719,6 @@ int qq_msg_check(LwqqClient* lc,void* data)
 
 }
 
-int qq_sys_msg_write(LwqqClient* lc,void* data)
-{
-    system_msg* msg = data;
-    PurpleConversation* conv = find_conversation(msg->msg_type,msg->who,msg->ac);
-    if(conv)
-        purple_conversation_write(conv,NULL,msg->msg,msg->type,msg->t);
-    system_msg_free(msg);
-    return 0;
-}
 
 /*static void check_exist(void* data,void* userdata)
 {
@@ -861,20 +868,11 @@ static int login_complete(LwqqClient* lc,void* data)
     purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
 
-    /*if(ac->compatible_pidgin_conversation_integration){
-        //this is for pidgin-conversation plugin for gnome-shell hot fix
-        purple_buddy_icons_set_caching(1);
-        mkdir("/tmp/lwqq/icon_cache",0777);
-        purple_buddy_icons_set_cache_dir("/tmp/lwqq/icon_cache");
-    }else{
-        purple_buddy_icons_set_caching(0);
-    }*/
-
     gc->flags |= PURPLE_CONNECTION_HTML;
 
     ac->qq->async_opt = &qq_async_opt;
     lwqq_async_add_listener(ac->qq,FRIEND_COMPLETE,qq_set_basic_info);
-    lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
+    //lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
 }
@@ -901,7 +899,8 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
             snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
         else
             snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
-        lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
+        qq_sys_msg_write(ac, msg->type, who, buf, PURPLE_MESSAGE_ERROR, time(NULL));
+        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
     }
 
     LwqqMsgMessage* mmsg = msg->opaque;

@@ -81,13 +81,11 @@ int open_new_chat(qq_account* ac,LwqqGroup* group);
 #define opend_chat_search(ac,group) open_new_chat(ac,group)
 #define opend_chat_index(ac,id) g_ptr_array_index(ac->opend_chat,id)
 
-system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t);
-void system_msg_free(system_msg* m);
+void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t);
 
-PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac);
+PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac);
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
-int qq_sys_msg_write(LwqqClient* lc,void* data);
 void qq_send_offline_file(PurpleBlistNode* node);
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);

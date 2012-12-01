@@ -102,7 +102,7 @@ int open_new_chat(qq_account* ac,LwqqGroup* group)
 }
 
 /**m_t == 0 buddy_message m_t == 1 chat_message*/
-system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
+static system_msg* system_msg_new(LwqqMsgType m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
 {
     system_msg* ret = s_malloc0(sizeof(*ret));
     ret->msg_type = m_t;
@@ -113,7 +113,7 @@ system_msg* system_msg_new(int m_t,const char* who,qq_account* ac,const char* ms
     ret->t = t;
     return ret;
 }
-void system_msg_free(system_msg* m)
+static void system_msg_free(system_msg* m)
 {
     if(m){
         s_free(m->who);
@@ -121,15 +121,38 @@ void system_msg_free(system_msg* m)
     }
     s_free(m);
 }
+static int sys_msg_write(LwqqClient* lc,void* data)
+{
+    system_msg* msg = data;
+    PurpleConversation* conv = find_conversation(msg->msg_type,msg->who,msg->ac);
+    if(conv)
+        purple_conversation_write(conv,NULL,msg->msg,msg->type,msg->t);
+    system_msg_free(msg);
+    return 0;
+}
 
-PurpleConversation* find_conversation(int msg_type,const char* who,qq_account* ac)
+void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t)
+{
+    ac->qq->dispatch(ac->qq,sys_msg_write,system_msg_new(m_t,who,ac,msg,type,t));
+}
+
+PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)
 {
     PurpleAccount* account = ac->account;
-    if(msg_type == LWQQ_MT_BUDDY_MSG)
-        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,account);
-    else if(msg_type == LWQQ_MT_GROUP_MSG || msg_type == LWQQ_MT_DISCU_MSG)
-        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,who,account);
-    else 
+    const char* local_id;
+    if(msg_type == LWQQ_MT_BUDDY_MSG){
+        if(ac->qq_use_qqnum){
+            LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
+            local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;
+        }else local_id = serv_id;
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,local_id,account);
+    } else if(msg_type == LWQQ_MT_GROUP_MSG || msg_type == LWQQ_MT_DISCU_MSG){
+        if(ac->qq_use_qqnum){
+            LwqqGroup* group = find_group_by_gid(ac->qq,serv_id);
+            local_id = (group&&group->account)?group->account:serv_id;
+        }else local_id = serv_id;
+        return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,local_id,account);
+    } else 
         return NULL;
 }
 
