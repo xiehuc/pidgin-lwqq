@@ -36,4 +36,7 @@
 void lwqq_log(int level, const char *file, int line,
               const char *function, const char* msg, ...);
 
+#define lwqq_puts(str) fprintf(stderr,"%s\n",str);
+
+
 #endif  /* LWQQ_LOGGER_H */

@@ -465,7 +465,7 @@ static int timer_cb(void* data)
 
     if(!g->multi) return 0;
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
-    printf("still running:%d\n",g->still_running);
+    lwqq_log(LOG_NOTICE,"still running:%d\n",g->still_running);
     check_multi_info(g);
     //this is inner timeout 
     //always keep it
@@ -547,7 +547,7 @@ static int delay_add_handle(void* data)
     CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
 
     if(rc != CURLM_OK){
-        puts(curl_multi_strerror(rc));
+        lwqq_puts(curl_multi_strerror(rc));
     }
     return 0;
 }

@@ -245,7 +245,7 @@ void lwqq_msg_free(LwqqMsg *msg)
     if (!msg)
         return;
 
-    printf ("type: %d\n", msg->type);
+    lwqq_log(LOG_NOTICE,"type: %d\n", msg->type);
     if(msg->type<=LWQQ_MT_SESS_MSG)
         lwqq_msg_message_free(msg->opaque);
     else if(msg->type==LWQQ_MT_STATUS_CHANGE)
@@ -876,7 +876,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
              "http://d.web2.qq.com",
              msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
     req = lwqq_http_create_default_request(url, err);
-    puts(url);
+    lwqq_puts(url);
     if (!req) {
         goto done;
     }
@@ -942,7 +942,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     ret = json_parse_document(&json, (char *)str);
 
     char* dbg_str = json_unescape((char*)str);
-    puts(dbg_str);
+    lwqq_puts(dbg_str);
     s_free(dbg_str);
     
     if (ret != JSON_OK) {
@@ -1268,7 +1268,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
     if(req->http_code!=200){
         goto done;
     }
-    puts(req->response);
+    lwqq_puts(req->response);
 
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
@@ -1373,7 +1373,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data)
     int errno = 0;
     char msg[256];
 
-    if(req->response)puts(req->response);
+    if(req->response)lwqq_puts(req->response);
     if(req->http_code!=200){
         errno = 1;
         goto done;
@@ -1507,7 +1507,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
             "\"psessionid\":\"%s\"}",
             content,lc->msg_id,lc->clientid,lc->psessionid);
     format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
-    puts(data);
+    lwqq_puts(data);
 
     /* Create a POST request */
     char url[512];
@@ -1536,7 +1536,7 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto failed;
     }
-    puts(req->response);
+    lwqq_puts(req->response);
 
     //we check result if ok return 1,fail return 0;
     ret = json_parse_document(&root,req->response);
@@ -1551,7 +1551,7 @@ failed:
     if(root)
         json_free_value(&root);
     if(errno)
-        puts(req->response);
+        lwqq_puts(req->response);
     lwqq_http_request_free(req);
     return errno;
 }
@@ -1610,7 +1610,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
             msg->session_id,name,msg->from,lc->psessionid,time(NULL),lc->clientid);
     s_free(name);
     //s_free(gbk);
-    puts(url);
+    lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
@@ -1680,7 +1680,7 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    puts(req->response);
+    lwqq_puts(req->response);
 
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
@@ -1724,7 +1724,7 @@ static int send_offfile_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    puts(req->response);
+    lwqq_puts(req->response);
     json_parse_document(&json, req->response);
     errno = atoi(json_parse_simple_value(json, "retcode"));
 done:
@@ -1748,7 +1748,7 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
     snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%ld/%s/%s/1/f/1/0/0?psessionid=%s",
             file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
-    puts(url);
+    lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");

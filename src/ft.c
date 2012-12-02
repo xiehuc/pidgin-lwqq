@@ -22,7 +22,6 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     xfer->bytes_sent = now;
     xfer->bytes_remaining = total-now;
     purple_xfer_update_progress(xfer);
-    //printf("%d:%d\n",now,total);
     return 0;
 }
 #if 0
@@ -46,7 +45,7 @@ static void file_trans_init(PurpleXfer* xfer)
     const char* filename = purple_xfer_get_local_filename(xfer);
     xfer->start_time = time(NULL);
     LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc,file,filename);
-    if(ev == NULL){ puts("file trans error ");return ; }
+    if(ev == NULL){ lwqq_puts("file trans error ");return ; }
     lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
     lwqq_async_add_event_listener(ev,file_trans_complete,xfer);
 }

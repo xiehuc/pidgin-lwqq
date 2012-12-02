@@ -53,3 +53,4 @@ void lwqq_log(int level, const char *file, int line,
 
 	fprintf(stderr, "%s", buf);
 }
+

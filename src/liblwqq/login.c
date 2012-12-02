@@ -385,7 +385,7 @@ static char *lwqq_enc_pwd(const char *pwd, const char *vc, const char *uin)
     upcase_string(buf, strlen(buf));
 
     /* OK, seems like every is OK */
-    puts(buf);
+    lwqq_puts(buf);
     return s_strdup(buf);
 }
 

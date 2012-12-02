@@ -153,7 +153,6 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
         trex_getsubexp(x,0,&m);
-        puts(m.begin);
         if(strstr(begin,"<IMG")==begin){
             //process ing img.
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
@@ -265,13 +264,13 @@ void translate_global_init()
     if(_regex==NULL){
         const char* err = NULL;
         _regex = trex_compile(_TREXC(SMILY_EXP),&err);
-        if(err) {puts(err);assert(0);}
+        if(err) {lwqq_puts(err);assert(0);}
         assert(_regex!=NULL);
     }
     if(hs_regex==NULL){
         const char* err = NULL;
         hs_regex = trex_compile(_TREXC(HTML_SYMBOL),&err);
-        if(err){puts(err);assert(0);}
+        if(err){lwqq_puts(err);assert(0);}
         assert(_regex!=NULL);
     }
     if(smily_table ==NULL){

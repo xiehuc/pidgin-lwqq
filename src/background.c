@@ -61,24 +61,6 @@ static void* _background_friends_info(void* data)
     lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
 
     lc->dispatch(lc,qq_set_basic_info,ac);
-    //lwqq_async_dispatch(lc,FRIEND_COMPLETE,ac);
-    //qq_set_basic_info(0,ac);
-
-
-    //lwqq_info_get_all_friend_qqnumbers(lc,&err);
-    /*lock = lwqq_async_evset_new();
-    LwqqBuddy* buddy;
-    LIST_FOREACH(buddy,&ac->qq->friends,entries){
-        event = lwqq_info_get_friend_qqnumber(lc,buddy);
-        //lwqq_async_add_event_listener(event,friend_come,buddy);
-        lwqq_async_evset_add_event(lock,event);
-    }
-    LwqqGroup* group;
-    LIST_FOREACH(group,&ac->qq->groups,entries) {
-        event = lwqq_info_get_group_qqnumber(lc,group);
-        lwqq_async_evset_add_event(lock,event);
-    }
-    lwqq_async_add_evset_listener(lock,qq_set_basic_info,ac);*/
 
     return NULL;
 }
@@ -111,7 +93,7 @@ static void* _background_upload_file(void* d)
     PurpleXfer* xfer = data[3];
     s_free(d);
     lwqq_msg_upload_file(lc,file,progress,xfer);
-    printf("quit upload file");
+    lwqq_puts("quit upload file");
     return NULL;
 }
 

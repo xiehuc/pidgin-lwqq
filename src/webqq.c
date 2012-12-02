@@ -701,7 +701,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
                 notify_offfile(lc,(LwqqMsgNotifyOfffile*)msg->msg->opaque);
                 break;
             default:
-                printf("unknow message\n");
+                lwqq_puts("unknow message\n");
                 break;
             }
         }
@@ -790,7 +790,6 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
                 lwqq_info_get_group_qqnumber(lc,group),write_group_to_db,d);
         }else{
             group_come(lc,group);
-            printf("%s:%s\n",group->name,group->account);
         }
     }
     LwqqGroup* discu;
@@ -870,7 +869,6 @@ static int login_complete(LwqqClient* lc,void* data)
     gc->flags |= PURPLE_CONNECTION_HTML;
 
     ac->qq->async_opt = &qq_async_opt;
-    //lwqq_async_add_listener(ac->qq,SYS_MSG_COME,qq_sys_msg_write);
     background_friends_info(ac);
     return 0;
 }
@@ -1003,7 +1001,6 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 #if 0
 static void qq_leave_chat(PurpleConnection* gc,int id)
 {
-    printf("test\n");
 }
 
 //pidgin not use send_whisper .

@@ -25,6 +25,15 @@ Build Option
     make
     sudo make install
 
+### Building With libev Support (Optional)
+
+put all http io waiting to another thread.
+avoid block main ui thread.so it can be very smoothly.
+
+    cmake .. -DWITH_LIBEV=On
+    make
+    sudo make install
+
 ### Notice
 
 *recommand libcurl >=7.22.0*
@@ -34,9 +43,8 @@ Function list
 
 ### pidgin support
 
-* send / recv text messages
+* send / recv buddy|group|discu messages
 * send / recv picture messages
-* send / recv group messages
 * send / recv qq face (you should use webqq faces theme in settings)
 * avatar
 * change buddy markname
@@ -50,22 +58,19 @@ Function list
 * support font style
 * support block group message
 * support recv file trans
+* support local qqnumber cache
 
 ### empathy support (via telepathy-haze)
 
 * send / recv text messages
 * avatar
+* **not** support local qqnumber cache
 
-### core
-
-* support local qqnumber cache
 
 known issue
 -----------
 
 * send picture abnormal when libcurl < = 7.22.0
-* use pidgin conversation intergrate gnome-shell plugin would cause crash.
-enable "capible pidgin conversation intergrate" option in pidgin account setting to solve it.
 
 *telepathy-haze itself doesn't support group or picture.*
 
@@ -97,15 +102,23 @@ lwqq库是一个非常安全有效的webqq协议的库.
     make
     sudo make install
 
+### 编译 libev 支持(可选)
+
+将全部的http io等待放到一个单独的线程中.
+避免卡UI线程.能够提高程序的响应和体验.
+
+    cmake .. -DWITH_LIBEV=On
+    make
+    sudo make install
+
 功能列表
 --------
 
 
 ### pidgin
 
-* 支持发送接受文本消息
+* 支持发送接受 好友|群|讨论组 消息
 * 支持发送接受图片
-* 支持群聊天
 * 支持发送接受表情(在设置中使用webqq表情主题)
 * 支持头像
 * 支持设置好友备注
@@ -119,22 +132,21 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持文本样式
 * 支持群消息屏蔽
 * 支持接受文件传输
+* 支持本地QQ号缓存机制
 
 ### empathy support (via telepathy-haze)
 
 * 支持发送接受文本消息
 * 支持头像
+* **不** 支持本地QQ号缓存机制
 
 ### core
 
-* 提供本地QQ号缓存机制
 
 已知问题
 --------
 
 * 当libcurl版本低于7.22.0时可能造成图片发送失败
-* 使用gnome-shell的pidgin conversation intergrate 插件会导致段错误.
-请在pidgin的账户设置中开启"兼容pidgin conversation intergrate"选项.
 
 *telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*
 

@@ -6,6 +6,7 @@ typedef struct _AsyncListener AsyncListener;
 #include <connection.h>
 #include "msg.h"
 #include "lwdb.h"
+#include "logger.h"
 
 #define QQ_MAGIC 0x4153
 #define QQ_USE_FAST_INDEX 1
