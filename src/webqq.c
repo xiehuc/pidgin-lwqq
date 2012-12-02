@@ -392,6 +392,12 @@ static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
     snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
     serv_got_im(pc,get_name_from_file_from(ac,notify->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
+static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+    PurpleConnection* pc = ac->gc;
+    serv_got_typing(pc,get_name_from_file_from(ac,input->from),5,PURPLE_TYPING);
+}
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
@@ -700,6 +706,9 @@ int qq_msg_check(LwqqClient* lc,void* data)
             case LWQQ_MT_NOTIFY_OFFFILE:
                 notify_offfile(lc,(LwqqMsgNotifyOfffile*)msg->msg->opaque);
                 break;
+            case LWQQ_MT_INPUT_NOTIFY:
+                input_notify(lc,(LwqqMsgInputNotify*)msg->msg->opaque);
+                break;
             default:
                 lwqq_puts("unknow message\n");
                 break;
@@ -996,6 +1005,11 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;
+}
+
+static unsigned int qq_send_typing(PurpleConnection* gc,const char* local_id,PurpleTypingState state)
+{
+    return 0;
 }
 
 #if 0
@@ -1528,6 +1542,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .get_cb_real_name=  qq_get_cb_real_name,
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
+    .send_typing=       qq_send_typing,
     .chat_send=         qq_send_chat,
     //.chat_leave=        qq_leave_chat,
     .send_file=         qq_send_file,

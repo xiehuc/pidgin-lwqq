@@ -126,6 +126,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     case LWQQ_MT_NOTIFY_OFFFILE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgNotifyOfffile));
         break;
+    case LWQQ_MT_INPUT_NOTIFY:
+        msg->opaque = s_malloc0(sizeof(LwqqMsgInputNotify));
+        break;
     default:
         lwqq_log(LOG_ERROR, "No such message type\n");
         goto failed;
@@ -326,6 +329,13 @@ void lwqq_msg_free(LwqqMsg *msg)
             s_free(notify->filename);
         }
         s_free(notify);
+    }else if(msg->type == LWQQ_MT_INPUT_NOTIFY){
+        LwqqMsgInputNotify * input = msg->opaque;
+        if(input){
+            s_free(input->from);
+            s_free(input->to);
+        }
+        s_free(input);
     }else{
         lwqq_log(LOG_ERROR, "No such message type\n");
     }
@@ -402,6 +412,8 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
         type = LWQQ_MT_FILE_MSG;
     }else if(!strncmp(msg_type,"notify_offfile",strlen("file_message"))){
         type = LWQQ_MT_NOTIFY_OFFFILE;
+    }else if(!strncmp(msg_type,"input_notify",strlen("input_notify"))){
+        type = LWQQ_MT_INPUT_NOTIFY;
     }else
         type = LWQQ_MT_UNKNOWN;
     return type;
@@ -772,6 +784,20 @@ static int parse_notify_offfile(json_t* json,void* opaque)
     notify->filesize = strtoul(json_parse_simple_value(json,"filesize"), NULL, 10);
     return 0;
 }
+
+static int parse_input_notify(json_t* json,void* opaque)
+{
+    /**
+     *  {"retcode":0,"result":[{"poll_type":"input_notify","value":
+     *  {"msg_id":21940,"from_uin":3228283951,"to_uin":350512021,"msg_id2":3588813984,"msg_type":121,"reply_ip":4294967295}
+     *  }]}
+     *
+     */
+    LwqqMsgInputNotify* input = opaque;
+    input->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    input->to = s_strdup(json_parse_simple_value(json,"to_uin"));
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -1019,6 +1045,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             break;
         case LWQQ_MT_NOTIFY_OFFFILE:
             ret = parse_notify_offfile(cur,msg->opaque);
+            break;
+        case LWQQ_MT_INPUT_NOTIFY:
+            ret = parse_input_notify(cur,msg->opaque);
             break;
         default:
             ret = -1;
