@@ -1765,7 +1765,7 @@ done:
 #define rand(n) (rand()%9000+1000)
 int dump_resoponse(LwqqHttpRequest* req,void* data)
 {
-    //lwqq_http_request_free(req);
+    lwqq_http_request_free(req);
     //s_free(data);
     return 0;
 }
@@ -1821,4 +1821,15 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
     file->from = s_strdup(from);
     file->to = s_strdup(to);
     return file;
+}
+LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
+{
+    if(!lc || !serv_id) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/input_notify2?to_uin=%s&clientid=%s&psessionid=%s&t=%ld",
+            serv_id,lc->clientid,lc->psessionid,time(NULL)
+            );
+    lwqq_puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    return req->do_request_async(req,0,NULL,dump_resoponse,NULL);
 }

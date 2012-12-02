@@ -356,6 +356,8 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 
+LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id);
+
 /************************************************************************/
 /*  LwqqSendMsg API */
 

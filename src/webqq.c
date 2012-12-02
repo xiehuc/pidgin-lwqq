@@ -33,13 +33,21 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void friend_avatar(LwqqAsyncEvent* ev,void* data);
 static void group_avatar(LwqqAsyncEvent* ev,void* data);
 
-static const char* get_name_from_file_from(qq_account* ac,const char* from_uin)
+static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 {
     if(ac->qq_use_qqnum){
-        LwqqBuddy* buddy = find_buddy_by_uin(ac->qq,from_uin);
-        return (buddy&&buddy->qqnumber) ?buddy->qqnumber:from_uin;
+        LwqqBuddy* buddy = find_buddy_by_uin(ac->qq,serv_id);
+        return (buddy&&buddy->qqnumber) ?buddy->qqnumber:serv_id;
     }else
-        return from_uin;
+        return serv_id;
+}
+
+static const char* local_id_to_serv(qq_account* ac,const char* local_id)
+{
+    if(ac->qq_use_qqnum){
+        LwqqBuddy* buddy = find_buddy_by_qqnumber(ac->qq,local_id);
+        return (buddy&&buddy->uin)?buddy->uin:local_id;
+    }else return local_id;
 }
 
 static const char* qq_get_type_from_chat(PurpleChat* chat)
@@ -370,7 +378,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     strcpy(buf,"");
 
     translate_struct_to_message(ac,msg,buf);
-    serv_got_im(pc, get_name_from_file_from(ac,msg->from), buf, PURPLE_MESSAGE_RECV, msg->time);
+    serv_got_im(pc, serv_id_to_local(ac,msg->from), buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
@@ -381,7 +389,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
              "到期时间:%s"
              "<a href=\"%s\">点此下载</a>",
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
-    serv_got_im(pc,get_name_from_file_from(ac,msg->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,serv_id_to_local(ac,msg->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
 {
@@ -390,13 +398,13 @@ static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
     char buf[512];
     const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
     snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
-    serv_got_im(pc,get_name_from_file_from(ac,notify->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,serv_id_to_local(ac,notify->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    serv_got_typing(pc,get_name_from_file_from(ac,input->from),5,PURPLE_TYPING);
+    serv_got_typing(pc,serv_id_to_local(ac,input->from),5,PURPLE_TYPING);
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -1009,6 +1017,9 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 
 static unsigned int qq_send_typing(PurpleConnection* gc,const char* local_id,PurpleTypingState state)
 {
+    if(state != PURPLE_TYPING) return 0;
+    qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+    lwqq_msg_input_notify(ac->qq,local_id_to_serv(ac,local_id));
     return 0;
 }
 
