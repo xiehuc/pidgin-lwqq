@@ -245,7 +245,6 @@ void lwqq_msg_free(LwqqMsg *msg)
     if (!msg)
         return;
 
-    lwqq_log(LOG_NOTICE,"type: %d\n", msg->type);
     if(msg->type<=LWQQ_MT_SESS_MSG)
         lwqq_msg_message_free(msg->opaque);
     else if(msg->type==LWQQ_MT_STATUS_CHANGE)

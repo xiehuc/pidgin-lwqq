@@ -161,7 +161,6 @@ static enum{
 pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 static void *ev_run_thread(void* data)
 {
-    lwqq_puts("the ev_thread created\n");
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     while(1){
         ev_thread_status = THREAD_NOW_RUNNING;
