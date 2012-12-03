@@ -19,7 +19,7 @@ FIND_PATH(EV_INCLUDE_DIR ev.h
 SET(EV_NAMES ${EV_NAMES} ev)
 FIND_LIBRARY(EV_LIBRARY
   NAMES ${EV_NAMES}
-  PATHS /usr/lib /usr/local/lib /usr/lib/64 /usr/local/lib64
+  PATHS /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64
   )
 
 IF (EV_LIBRARY AND EV_INCLUDE_DIR)
