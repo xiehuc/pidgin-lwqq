@@ -625,6 +625,12 @@ static void friend_avatar(LwqqAsyncEvent* ev,void* data)
 {
     void **d = data;
     qq_account* ac = d[0];
+#ifdef USE_LIBEV
+    if(ev){
+        ac->qq->dispatch(NULL,(DISPATCH_FUNC)friend_avatar,data);
+        return;
+    }
+#endif
     LwqqBuddy* buddy = d[1];
     s_free(data);
 
@@ -1276,8 +1282,8 @@ static void qq_close(PurpleConnection *gc)
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
-    lwqq_http_global_free();
     lwqq_async_global_quit();
+    lwqq_http_global_free();
     lwdb_global_free();
 }
 //send change markname to server.

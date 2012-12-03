@@ -717,6 +717,14 @@ void lwqq_http_global_init()
 void lwqq_http_global_free()
 {
     if(global.multi){
+        CURLMsg* msg = NULL;
+        CURL* easy;
+        int left;
+        while((msg = curl_multi_info_read(global.multi, &left)) != NULL){
+            easy = msg->easy_handle;
+            curl_multi_remove_handle(global.multi, easy);
+            curl_easy_cleanup(easy);
+        }
         curl_multi_cleanup(global.multi);
         global.multi = NULL;
     }
