@@ -21,6 +21,8 @@ typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 typedef struct _LwqqClient LwqqClient;
 typedef int (*DISPATCH_FUNC)(LwqqClient* lc,void* data);
+//return zero means continue.>1 means abort
+typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
 /* Struct defination */
 
@@ -358,6 +360,4 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LWQQ_STATUS status);
 LWQQ_STATUS lwqq_status_from_str(const char* str);
-//return zero means continue.>1 means abort
-typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 #endif  /* LWQQ_TYPE_H */

@@ -50,4 +50,3 @@ if(UOA)
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     add_subdirectory(ubuntu-online-account)
 endif(UOA)
-

@@ -35,7 +35,7 @@ static int upload_cface_back(LwqqHttpRequest *req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
-void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
+static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -935,7 +935,7 @@ static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgM
     }
     return ret;
 }
-void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
+static void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
 {
     void **d = data;
     LwqqRecvMsgList* list = d[0];
@@ -944,7 +944,6 @@ void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
     lc->dispatch(list->lc,lc->async_opt->poll_msg,NULL);
-    //lwqq_async_dispatch(list->lc, POLL_MSG_COME, NULL);
 }
 /**
  * Parse message received from server
@@ -1069,7 +1068,7 @@ done:
     return retcode;
 }
 
-void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
+static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
 {
     LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
     rmsg->msg = msg;

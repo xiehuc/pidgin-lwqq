@@ -796,7 +796,7 @@ static LwqqGroup* find_group_by_name_and_mark(LwqqClient* lc,const char* name,co
 }
 static void buddy_merge(LwqqBuddy* into,LwqqBuddy* from)
 {
-#define MERGE_TEXT(t,f) if(f){s_free(t);t = s_strdup(f);}
+#define MERGE_TEXT(t,f) if(f&&strcmp(f,"")){s_free(t);t = s_strdup(f);}
 #define MERGE_INT(t,f) (t = f)
     MERGE_TEXT(into->qqnumber,from->qqnumber);
 #undef MERGE_TEXT
