@@ -26,11 +26,6 @@ set(LWQQ_LIST
 
 add_definitions(-Wall)
 
-if(WITH_LIBEV)
-    add_definitions(-DUSE_LIBEV)
-else(WITH_LIBEV)
-    add_definitions(-DUSE_LIBPURPLE)
-endif(WITH_LIBEV)
 
 ADD_LIBRARY(webqq MODULE
     ${SRC_LIST}
@@ -39,15 +34,22 @@ ADD_LIBRARY(webqq MODULE
 include_directories(
   ${PURPLE_INCLUDE_DIRS}
   ${GLIB_INCLUDE_DIRS}
-  ${EV_INCLUDE_DIRS}
   liblwqq)
+
+if(WITH_LIBEV)
+    add_definitions(-DUSE_LIBEV)
+    include_directories(${EV_INCLUDE_DIRS})
+    target_link_libraries(webqq ${EV_LIBRARY})
+else(WITH_LIBEV)
+    add_definitions(-DUSE_LIBPURPLE)
+endif(WITH_LIBEV)
 
 target_link_libraries(webqq
   ${SQLITE_LIBRARIES}
   ${PURPLE_LIBRARIES}
   ${GLIB_LIBRARIES}
   ${CURL_LIBRARIES}
-  ${EV_LIBRARY}
   )
+
 
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})

@@ -1146,7 +1146,7 @@ static void *start_poll_msg(void *msg_list)
             continue;
         }
         retcode = parse_recvmsg_from_json(list, req->response);
-        if(retcode == 121){
+        if(retcode == 121 || retcode == 108){
             lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
             break;
         }else{
