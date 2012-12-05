@@ -1172,27 +1172,33 @@ static void parse_unescape(char* source,char *buf,int buf_len)
     char* ptr = source;
     size_t idx;
     while(*ptr!='\0'){
+        if(buf_len<=0) return;
         idx = strcspn(ptr,"\n\t\\;&\"+");
         if(ptr[idx] == '\0'){
-            strcpy(buf,ptr);
+            strncpy(buf,ptr,buf_len);
             buf+=idx;
+            buf_len-=idx;
             break;
         }
-        strncpy(buf,ptr,idx);
+        strncpy(buf,ptr,(idx<buf_len)?idx:buf_len);
         buf+=idx;
+        buf_len-=idx;
+        if(buf_len<=0) return;
         switch(ptr[idx]){
             //note buf point the end position
-            case '\n': strcpy(buf,"\\\\n");break;
-            case '\t': strcpy(buf,"\\\\t");break;
-            case '\\': strcpy(buf,"\\\\\\\\");break;
+            case '\n': strncpy(buf,"\\\\n",buf_len);break;
+            case '\t': strncpy(buf,"\\\\t",buf_len);break;
+            case '\\': strncpy(buf,"\\\\\\\\",buf_len);break;
             //i dont know why ; is not worked.so we use another expression
-            case ';' : strcpy(buf,"\\u003B");break;
-            case '&' : strcpy(buf,"\\u0026");break;
-            case '"' : strcpy(buf,"\\\\\\\"");break;
-            case '+' : strcpy(buf,"\\u002B");break;
+            case ';' : strncpy(buf,"\\u003B",buf_len);break;
+            case '&' : strncpy(buf,"\\u0026",buf_len);break;
+            case '"' : strncpy(buf,"\\\\\\\"",buf_len);break;
+            case '+' : strncpy(buf,"\\u002B",buf_len);break;
         }
         ptr+=idx+1;
-        buf+=strlen(buf);
+        idx=strlen(buf);
+        buf+=idx;
+        buf_len-=idx;
     }
     *buf = '\0';
 }
@@ -1471,7 +1477,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 {
     LwqqHttpRequest *req = NULL;  
     char *content = NULL;
-    static char data[8192];
+    char data[8192];
     data[0] = '\0';
     LwqqMsgMessage *mmsg;
     const char *apistr;
@@ -1534,6 +1540,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
             "\"psessionid\":\"%s\"}",
             content,lc->msg_id,lc->clientid,lc->psessionid);
     format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
+    if(strlen(data)+1==sizeof(data)) return NULL;
     lwqq_puts(data);
 
     /* Create a POST request */

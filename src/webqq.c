@@ -906,20 +906,23 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
     char* what = d[3];
     s_free(data);
 
-    int err = lwqq_async_event_get_result(ev);
-    static char buf[1024];
-    PurpleConversation* conv = find_conversation(msg->type,who,ac);
+    if(ev == NULL){
+        qq_sys_msg_write(ac,msg->type,who,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
+    }else{
+        int err = lwqq_async_event_get_result(ev);
+        static char buf[1024];
+        PurpleConversation* conv = find_conversation(msg->type,who,ac);
 
-    if(err == LWQQ_MC_LOST_CONN){
-        ac->qq->dispatch(ac->qq,ac->qq->async_opt->poll_lost,NULL);
-    }
-    if(conv && err > 0){
-        if(err == LWQQ_MC_TOO_FAST)
-            snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
-        else
-            snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
-        qq_sys_msg_write(ac, msg->type, who, buf, PURPLE_MESSAGE_ERROR, time(NULL));
-        //lwqq_async_dispatch(ac->qq,SYS_MSG_COME,system_msg_new(msg->type,who,ac,buf,PURPLE_MESSAGE_ERROR,time(NULL)));
+        if(err == LWQQ_MC_LOST_CONN){
+            ac->qq->dispatch(ac->qq,ac->qq->async_opt->poll_lost,NULL);
+        }
+        if(conv && err > 0){
+            if(err == LWQQ_MC_TOO_FAST)
+                snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
+            else
+                snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
+            qq_sys_msg_write(ac, msg->type, who, buf, PURPLE_MESSAGE_ERROR, time(NULL));
+        }
     }
 
     LwqqMsgMessage* mmsg = msg->opaque;
@@ -968,7 +971,6 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
     mmsg->f_color = s_strdup("000000");
-    //PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,who,ac->account);
 
     translate_message_to_struct(lc, who, what, msg, 0);
 
@@ -1013,9 +1015,6 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     d[2] = s_strdup(group->gid);
     d[3] = s_strdup(message);
     lwqq_async_add_event_listener(lwqq_msg_send(ac->qq,msg), send_receipt, d);
-    //background_send_msg(ac,msg,group->gid,message,conv);
-
-    //write message by hand
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;

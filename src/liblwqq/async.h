@@ -111,9 +111,9 @@ do{\
     *((int*)ev) = res;\
 }while(0)
 /** this return a errno of a event. */
-#define lwqq_async_event_get_result(ev) (*((int*)ev))
+#define lwqq_async_event_get_result(ev) (ev?*((int*)ev):-1)
 /** this return one of errno of event in set ,so do not use it*/
-#define lwqq_async_evset_get_result(ev) (*((int*)ev))
+#define lwqq_async_evset_get_result(ev) (ev?*((int*)ev):-1)
 
 extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
 #define LWQQ_SYNC_BEGIN() { LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1;
