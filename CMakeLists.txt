@@ -29,13 +29,13 @@ if(NLS)
   find_package(Gettext)
 endif(NLS)
 
-add_subdirectory(src)
-add_subdirectory(res)
-
 option(WITH_LIBEV "build in libev for async process" Off)
 if(WITH_LIBEV)
     find_package(Ev)
 endif(WITH_LIBEV)
+
+add_subdirectory(src)
+add_subdirectory(res)
 
 option(UOA "ubuntu online account support" Off)
 if(UOA)
