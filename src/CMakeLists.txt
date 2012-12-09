@@ -39,7 +39,7 @@ include_directories(
 if(WITH_LIBEV)
     add_definitions(-DUSE_LIBEV)
     include_directories(${EV_INCLUDE_DIRS})
-    target_link_libraries(webqq ${EV_LIBRARY})
+    target_link_libraries(webqq ${EV_LIBRARIES})
 else(WITH_LIBEV)
     add_definitions(-DUSE_LIBPURPLE)
 endif(WITH_LIBEV)

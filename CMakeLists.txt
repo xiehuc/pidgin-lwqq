@@ -29,9 +29,10 @@ if(NLS)
   find_package(Gettext)
 endif(NLS)
 
-option(WITH_LIBEV "build in libev for async process" Off)
+option(WITH_LIBEV "build in libev for async process" On)
+
 if(WITH_LIBEV)
-    find_package(Ev)
+        find_package(EV)
 endif(WITH_LIBEV)
 
 add_subdirectory(src)
@@ -39,7 +40,8 @@ add_subdirectory(res)
 
 option(UOA "ubuntu online account support" Off)
 if(UOA)
-    pkg_check_modules(GTK gtk+-3.0)
+    pkg_check_modules(AP REQUIRED account-plugin)
+    pkg_check_modules(GTK REQUIRED gtk+-3.0)
     EXEC_PROGRAM("pkg-config --variable=provider_plugindir account-plugin 2>/dev/null"
         OUTPUT_VARIABLE PLUGIN_INSTALL_DIR)
     #set the rpath for account-plugin.
