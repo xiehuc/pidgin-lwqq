@@ -158,8 +158,10 @@ static enum{
     THREAD_NOW_WAITING,
     THREAD_NOW_RUNNING,
 } ev_thread_status;
+//### global data area ###//
 pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
+//### global data area ###//
 static void *ev_run_thread(void* data)
 {
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;

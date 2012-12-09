@@ -78,8 +78,10 @@ void background_msg_poll(qq_account* ac)
 void background_msg_drain(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
-    pthread_cancel(l->tid);
-    l->tid = 0;
+    if(l->tid){
+        pthread_cancel(l->tid);
+        l->tid = 0;
+    }
     /*purple_timeout_remove(msg_check_handle);
     tid = 0;*/
 }

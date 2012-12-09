@@ -18,7 +18,6 @@
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
-typedef struct _LWQQ_HTTP_HANDLE LWQQ_HTTP_HANDLE;
 typedef struct _LwqqClient LwqqClient;
 typedef int (*DISPATCH_FUNC)(LwqqClient* lc,void* data);
 //return zero means continue.>1 means abort
@@ -204,7 +203,6 @@ struct _LwqqClient {
     const char *status;
     LWQQ_STATUS stat;
     char *error_description;
-    //LWQQ_HTTP_HANDLE* http_handle;
 
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
@@ -213,10 +211,13 @@ struct _LwqqClient {
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
 
-    void* data;                     /**< user defined data*/
 
     LwqqBuddy* (*find_buddy_by_uin)(LwqqClient* lc,const char* uin);
     LwqqBuddy* (*find_buddy_by_qqnumber)(LwqqClient* lc,const char* qqnumber);
+
+    /** non data area **/
+
+    void* data;                     /**< user defined data*/
     void (*dispatch)(LwqqClient* lc,DISPATCH_FUNC func,void* param);
 
     int magic;          /**< 0x4153 **/

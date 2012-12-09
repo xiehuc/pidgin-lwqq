@@ -33,6 +33,10 @@ static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
 static void friend_avatar(LwqqAsyncEvent* ev,void* data);
 static void group_avatar(LwqqAsyncEvent* ev,void* data);
 
+///###  global data area ###///
+int g_ref_count = 0;
+///###  global data area ###///
+
 static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 {
     if(ac->qq_use_qqnum){
@@ -1247,6 +1251,7 @@ static void qq_login(PurpleAccount *account)
         purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
         return;
     }
+    g_ref_count ++ ;
     ac->gc = pc;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
@@ -1281,8 +1286,11 @@ static void qq_close(PurpleConnection *gc)
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
-    lwqq_http_global_free();
-    lwqq_async_global_quit();
+    g_ref_count -- ;
+    if(g_ref_count == 0){
+        lwqq_http_global_free();
+        lwqq_async_global_quit();
+    }
     lwdb_global_free();
 }
 //send change markname to server.
