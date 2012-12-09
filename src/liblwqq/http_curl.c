@@ -723,6 +723,7 @@ void lwqq_http_global_free()
         while((msg = curl_multi_info_read(global.multi, &left)) != NULL){
             easy = msg->easy_handle;
             curl_multi_remove_handle(global.multi, easy);
+            curl_easy_pause(easy,CURLPAUSE_ALL);
             curl_easy_cleanup(easy);
         }
         curl_multi_cleanup(global.multi);
