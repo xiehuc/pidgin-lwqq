@@ -236,11 +236,11 @@ void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 }
 void lwqq_async_global_quit()
 {
+    ev_thread_status = THREAD_NOT_CREATED;
     if(ev_thread_status == THREAD_NOW_WAITING){
-        ev_thread_status = THREAD_NOT_CREATED;
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
-        ev_break(EV_DEFAULT,0);
+        ev_break(EV_DEFAULT,EVBREAK_ALL);
     }
     pthread_join(pid,NULL);
 }

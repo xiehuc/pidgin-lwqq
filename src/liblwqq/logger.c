@@ -45,7 +45,9 @@ void lwqq_log(int level, const char *file, int line,
 	tm = localtime(&t);
 	strftime(date, sizeof(date), "%b %e %T", tm);
 	
+    if(level > 1)
 	snprintf(buf, sizeof(buf), "[%s] %s[%ld]: %s:%d %s: \n\t", date, levels[level], (long)getpid(), file, line, function);
+
 	buf_used = strlen(buf);
 	va_start (va, msg);
 	vsnprintf(buf + buf_used , sizeof(buf) - buf_used, (char*)msg, va);

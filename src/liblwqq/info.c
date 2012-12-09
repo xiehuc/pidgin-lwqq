@@ -665,6 +665,7 @@ static int get_group_name_list_back(LwqqHttpRequest* req,void* data)
      * "gmarklist":[{"uin":2698833507,"markname":".................."}]}}
      *
      */
+    req->response[req->resp_len] = '\0';
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);

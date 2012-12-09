@@ -8,6 +8,7 @@
 #include "smemory.h"
 #include "http.h"
 #include "logger.h"
+#include "queue.h"
 
 #define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
 
@@ -28,8 +29,9 @@ typedef struct GLOBAL {
     pthread_mutex_t share_lock[2];
     int still_running;
     LwqqAsyncTimer timer_event;
+    SLIST_HEAD(,D_ITEM) conn_link;
 }GLOBAL;
-GLOBAL global;
+GLOBAL global = {0};
 
 typedef struct S_ITEM {
     /**@brief 全局事件循环*/
@@ -46,6 +48,7 @@ typedef struct D_ITEM{
     LwqqAsyncEvent* event;
     void* data;
     LwqqAsyncTimer delay;
+    SLIST_ENTRY(D_ITEM) entries;
 }D_ITEM;
 /* For async request */
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -156,8 +159,9 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
         curl_slist_free_all(request->recv_head);
         slist_free_all(request->cookie);
         curl_formfree(request->form_start);
-        if(request->req)
+        if(request->req){
             curl_easy_cleanup(request->req);
+        }
         s_free(request);
     }
 }
@@ -449,6 +453,7 @@ static void check_multi_info(GLOBAL *g)
             easy = msg->easy_handle;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
 
+            SLIST_REMOVE(&global.conn_link,conn,D_ITEM,entries);
             curl_multi_remove_handle(g->multi, easy);
 
             //执行完成时候的回调
@@ -518,7 +523,6 @@ static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
 {
     S_ITEM *si = (S_ITEM*)sockp;
-    //D_ITEM *di;
     GLOBAL* g = cbp;
 
     if(what == CURL_POLL_REMOVE) {
@@ -595,6 +599,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->req = request;
     di->data = data;
     di->event = lwqq_async_event_new(request);
+    SLIST_INSERT_HEAD(&global.conn_link,di,entries);
     lwqq_async_timer_watch(&di->delay,100,delay_add_handle,di);
     return di->event;
 
@@ -714,26 +719,20 @@ void lwqq_http_global_init()
         pthread_mutex_init(&global.share_lock[1],NULL);
     }
 }
-LwqqAsyncTimer quitter;
-static int multi_free(void* data)
-{
-    curl_multi_cleanup(global.multi);
-    global.multi = NULL;
-    return 0;
-}
 void lwqq_http_global_free()
 {
     if(global.multi){
-        CURLMsg* msg = NULL;
+        D_ITEM * item,* tvar;
         CURL* easy;
-        int left;
-        while((msg = curl_multi_info_read(global.multi, &left)) != NULL){
-            easy = msg->easy_handle;
+        SLIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
+            SLIST_REMOVE(&global.conn_link,item,D_ITEM,entries);
+            easy = item->req->req;
             curl_multi_remove_handle(global.multi, easy);
-            curl_easy_pause(easy,CURLPAUSE_ALL);
-            curl_easy_cleanup(easy);
+            lwqq_http_request_free(item->req);
+            s_free(item);
         }
-        lwqq_async_timer_watch(&quitter, 1, multi_free, &global);
+        curl_multi_cleanup(global.multi);
+        global.multi = NULL;
     }
     if(global.share){
         curl_share_cleanup(global.share);
