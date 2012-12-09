@@ -159,6 +159,7 @@ static enum{
     THREAD_NOW_RUNNING,
 } ev_thread_status;
 pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
+pthread_t pid = 0;
 static void *ev_run_thread(void* data)
 {
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -180,7 +181,6 @@ static void start_ev_thread()
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOT_CREATED){
         ev_thread_status = THREAD_NOW_RUNNING;
-        pthread_t pid;
         pthread_create(&pid,NULL,ev_run_thread,NULL);
     }
 }
@@ -240,6 +240,7 @@ void lwqq_async_global_quit()
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
         ev_break(EV_DEFAULT,0);
     }
+    pthread_join(pid,NULL);
 }
 #endif
 #ifdef USE_LIBPURPLE

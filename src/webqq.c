@@ -1281,8 +1281,8 @@ static void qq_close(PurpleConnection *gc)
     qq_account_free(ac);
     purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
-    lwqq_async_global_quit();
     lwqq_http_global_free();
+    lwqq_async_global_quit();
     lwdb_global_free();
 }
 //send change markname to server.

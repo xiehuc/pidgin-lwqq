@@ -714,6 +714,13 @@ void lwqq_http_global_init()
         pthread_mutex_init(&global.share_lock[1],NULL);
     }
 }
+LwqqAsyncTimer quitter;
+static int multi_free(void* data)
+{
+    curl_multi_cleanup(global.multi);
+    global.multi = NULL;
+    return 0;
+}
 void lwqq_http_global_free()
 {
     if(global.multi){
@@ -726,8 +733,7 @@ void lwqq_http_global_free()
             curl_easy_pause(easy,CURLPAUSE_ALL);
             curl_easy_cleanup(easy);
         }
-        curl_multi_cleanup(global.multi);
-        global.multi = NULL;
+        lwqq_async_timer_watch(&quitter, 1, multi_free, &global);
     }
     if(global.share){
         curl_share_cleanup(global.share);
