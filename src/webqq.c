@@ -627,18 +627,22 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 }
 static void friend_avatar(LwqqAsyncEvent* ev,void* data)
 {
-    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED){
-        s_free(data);
-        return ;
-    }
     void **d = data;
     qq_account* ac = d[0];
-#ifdef USE_LIBEV
-    if(ev){
-        ac->qq->dispatch(NULL,(DISPATCH_FUNC)friend_avatar,data);
-        return;
+    switch(lwqq_async_event_get_code(ev)){
+        case LWQQ_CALLBACK_FAILED:
+            s_free(data);
+            return ;
+        break;
+        case LWQQ_CALLBACK_VALID:
+            lwqq_async_event_set_code(ev,LWQQ_CALLBACK_DISPATCH);
+            ac->qq->dispatch(ev,(DISPATCH_FUNC)friend_avatar,data);
+            return;
+        break;
+        case LWQQ_CALLBACK_DISPATCH:
+        break;
+
     }
-#endif
     LwqqBuddy* buddy = d[1];
     s_free(data);
 

@@ -14,7 +14,7 @@ static int did_dispatch(void* param)
     return 0;
 }
 
-static void qq_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
+static void qq_dispatch(void* lc,DISPATCH_FUNC func,void* param)
 {
     void **d = s_malloc(sizeof(void*)*3);
     d[0] = lc;

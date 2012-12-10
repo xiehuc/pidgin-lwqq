@@ -52,7 +52,7 @@ static int timeout_come(void* p)
     //remote handle;
     return 0;
 }
-static void async_dispatch(LwqqClient* lc,DISPATCH_FUNC func,void* param)
+static void async_dispatch(void* lc,DISPATCH_FUNC func,void* param)
 {
     async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
     data->func = func;
