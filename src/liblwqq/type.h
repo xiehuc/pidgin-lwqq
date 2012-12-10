@@ -15,6 +15,8 @@
 #include "queue.h"
 #define LWQQ_MAGIC 0x4153
 
+#define USE_MSG_THREAD 0
+
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;

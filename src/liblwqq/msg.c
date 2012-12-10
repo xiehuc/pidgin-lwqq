@@ -1103,6 +1103,41 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
     pthread_mutex_unlock(&list->mutex);
 }
 
+#if ! USE_MSG_THREAD
+static void _destroy_poll(LwqqAsyncEvent* ev,void* data)
+{
+    //if ev is null, it is called when lwqq quit.
+    //else is called by async_complete;
+    if(ev != NULL) return;
+    
+    void **d = data;
+    char* msg = d[1];
+    s_free(data);
+
+    s_free(msg);
+}
+static int _continue_poll(LwqqHttpRequest* req,void* data)
+{
+    void **d = data;
+    LwqqRecvMsgList* list = d[0];
+    char* msg = d[1];
+    LwqqClient* lc = list->lc;
+
+    int retcode;
+    if(req->http_code==200){
+        retcode = parse_recvmsg_from_json(list, req->response);
+        if(retcode == 121 || retcode == 108){
+            lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
+            return 0;
+        }else{
+            lc->dispatch(lc,lc->async_opt->poll_msg,NULL);
+        }
+    }
+
+    req->do_request_async(req,1,msg,_continue_poll,data);
+    return 0;
+}
+#endif
 /**
  * Poll to receive message.
  * 
@@ -1112,9 +1147,7 @@ static void *start_poll_msg(void *msg_list)
 {
     LwqqClient *lc;
     LwqqHttpRequest *req = NULL;  
-    int ret;
     char *s;
-    int retcode;
     char msg[1024];
     LwqqRecvMsgList *list;
 
@@ -1140,6 +1173,9 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+#if USE_MSG_THREAD
+    int retcode;
+    int ret;
     while(1) {
         ret = req->do_request(req, 1, msg);
         if (ret || req->http_code != 200) {
@@ -1155,15 +1191,29 @@ static void *start_poll_msg(void *msg_list)
     }
 failed:
     pthread_exit(NULL);
+#else
+    void ** data = s_malloc0(sizeof(void*)*2);
+    data[0] = list;
+    data[1] = strdup(msg);
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,msg,_continue_poll,data);
+    lwqq_async_add_event_listener(ev, _destroy_poll, data);
+    return NULL;
+failed:
+    if(req) lwqq_http_request_free(req);
+    return NULL;
+#endif
 }
 
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
-    
+#if USE_MSG_THREAD
     pthread_attr_init(&list->attr);
     pthread_attr_setdetachstate(&list->attr, PTHREAD_CREATE_DETACHED);
 
     pthread_create(&list->tid, &list->attr, start_poll_msg, list);
+#else
+    start_poll_msg(list);
+#endif
 }
 
 ///low level special char mapping
