@@ -627,6 +627,10 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 }
 static void friend_avatar(LwqqAsyncEvent* ev,void* data)
 {
+    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED){
+        s_free(data);
+        return ;
+    }
     void **d = data;
     qq_account* ac = d[0];
 #ifdef USE_LIBEV
@@ -1260,11 +1264,14 @@ static void qq_login(PurpleAccount *account)
     char db_path[64];
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path);
+    ac->qq_use_qqnum = ! purple_account_get_bool(account, "disable_qq_cache", FALSE);
     //for empathy
-    ac->qq_use_qqnum = (ac->db != NULL);
+    if(ac->qq_use_qqnum)
+        ac->qq_use_qqnum = (ac->db != NULL);
     purple_buddy_icons_set_caching(ac->qq_use_qqnum);
     
-    //all_reset(ac,RESET_DISCU);
+    if(!ac->qq_use_qqnum) 
+        all_reset(ac,RESET_ALL);
 
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);
@@ -1606,6 +1613,8 @@ init_plugin(PurplePlugin *plugin)
     //option = purple_account_option_bool_new("兼容Pidgin Conversation integration", 
     //        "compatible_pidgin_conversation_integration", FALSE);
     //options = g_list_append(options, option);
+    option = purple_account_option_bool_new("不缓存QQ号","disable_qq_cache",FALSE);
+    options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);

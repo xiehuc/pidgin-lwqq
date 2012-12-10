@@ -32,6 +32,7 @@ typedef struct _LwqqAsyncEvset{
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
+    LwqqCallbackCode failcode; ///<it must put second
     LwqqAsyncEvset* host_lock;
     EVENT_CALLBACK callback;
     void* data;
@@ -69,6 +70,7 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
 {
     LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
     event->req = req;
+    event->failcode = LWQQ_CALLBACK_VALID;
     return event;
 }
 LwqqAsyncEvset* lwqq_async_evset_new()

@@ -425,6 +425,9 @@ static int get_avatar_back(LwqqHttpRequest* req,void* data)
     LwqqBuddy* buddy = array[0];
     LwqqGroup* group = array[1];
     s_free(data);
+    if( req == LWQQ_CALLBACK_FAILED ){
+        return -1;
+    }
     int isgroup = (group !=NULL);
     const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     const char* uin = (isgroup)? group->code: buddy->uin;

@@ -114,8 +114,15 @@ void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,
 do{\
     *((int*)ev) = res;\
 }while(0)
+
+#define lwqq_async_event_set_code(ev,code) \
+    do{\
+        *(((int*)ev)+1) = code;\
+    }while(0)
 /** this return a errno of a event. */
 #define lwqq_async_event_get_result(ev) (ev?*((int*)ev):-1)
+
+#define lwqq_async_event_get_code(ev) (ev?*(((int*)ev)+1):LWQQ_CALLBACK_FAILED)
 /** this return one of errno of event in set ,so do not use it*/
 #define lwqq_async_evset_get_result(ev) (ev?*((int*)ev):-1)
 

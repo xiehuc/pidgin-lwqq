@@ -731,6 +731,7 @@ void lwqq_http_global_free()
             lwqq_http_request_free(item->req);
             //let callback delete data
             if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            lwqq_async_event_set_code(item,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);
         }
