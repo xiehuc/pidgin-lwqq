@@ -41,6 +41,7 @@ typedef ev_io*    LwqqAsyncIoHandle;
 #define LWQQ_ASYNC_WRITE EV_WRITE
 #endif
 
+
 /** 
  * call this function when you quit your program.
  * NOTE!! you must call lwqq_http_global_free first !!

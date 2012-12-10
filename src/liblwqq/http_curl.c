@@ -729,6 +729,9 @@ void lwqq_http_global_free()
             easy = item->req->req;
             curl_multi_remove_handle(global.multi, easy);
             lwqq_http_request_free(item->req);
+            //let callback delete data
+            if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            lwqq_async_event_finish(item->event);
             s_free(item);
         }
         curl_multi_cleanup(global.multi);

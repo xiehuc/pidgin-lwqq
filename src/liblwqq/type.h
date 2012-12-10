@@ -27,6 +27,10 @@ typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
 /* Struct defination */
 
+typedef enum {
+    LWQQ_CALLBACK_FAILED = 0x0,
+    LWQQ_CALLBACK_VALID,
+}LwqqCallbackCode;
 
 typedef struct LwqqFriendCategory {
     int index;

@@ -212,6 +212,11 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
     LwqqAsyncTimerWrap* wrap = w->data;
     int stop=1;
+    //!!! note . why wrap is zero ??????
+    if(wrap == NULL){
+        ev_timer_stop(EV_A_ w);
+        return ;
+    }
     if(wrap->callback)
         stop = ! wrap->callback(wrap->data);
     if(stop)
@@ -236,6 +241,9 @@ void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 }
 void lwqq_async_global_quit()
 {
+    //no need to destroy thread
+    if(ev_thread_status == THREAD_NOT_CREATED) return ;
+
     ev_thread_status = THREAD_NOT_CREATED;
     if(ev_thread_status == THREAD_NOW_WAITING){
         pthread_cond_signal(&ev_thread_cond);

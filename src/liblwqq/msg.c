@@ -1104,24 +1104,18 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
 }
 
 #if ! USE_MSG_THREAD
-static void _destroy_poll(LwqqAsyncEvent* ev,void* data)
-{
-    //if ev is null, it is called when lwqq quit.
-    //else is called by async_complete;
-    if(ev != NULL) return;
-    
-    void **d = data;
-    char* msg = d[1];
-    s_free(data);
-
-    s_free(msg);
-}
 static int _continue_poll(LwqqHttpRequest* req,void* data)
 {
     void **d = data;
     LwqqRecvMsgList* list = d[0];
     char* msg = d[1];
     LwqqClient* lc = list->lc;
+
+    if(req == LWQQ_CALLBACK_FAILED){
+        s_free(msg);
+        s_free(data);
+        return -1;
+    }
 
     int retcode;
     if(req->http_code==200){
@@ -1195,8 +1189,7 @@ failed:
     void ** data = s_malloc0(sizeof(void*)*2);
     data[0] = list;
     data[1] = strdup(msg);
-    LwqqAsyncEvent* ev = req->do_request_async(req,1,msg,_continue_poll,data);
-    lwqq_async_add_event_listener(ev, _destroy_poll, data);
+    req->do_request_async(req,1,msg,_continue_poll,data);
     return NULL;
 failed:
     if(req) lwqq_http_request_free(req);
@@ -1613,6 +1606,7 @@ failed:
 }
 static int msg_send_back(LwqqHttpRequest* req,void* data)
 {
+    if (req == LWQQ_CALLBACK_FAILED ) return -1;
     json_t *root = NULL;
     int ret;
     int errno = 0;
