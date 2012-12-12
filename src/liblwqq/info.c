@@ -1682,9 +1682,9 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
         goto done;
     }
     errno = s_atoi(retcode);
+    void** d = data;
+    long type = (long)d[0];
     if(errno==0&&data!=NULL){
-        void** d = data;
-        long type = (long)d[0];
         switch(type){
             case CHANGE_BUDDY_MARKNAME:
                 {
@@ -1719,6 +1719,14 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
                     LwqqGroup* group = d[1];
                     LWQQ_MASK mask = (LWQQ_MASK)d[2];
                     group->mask = mask;
+                } break;
+        }
+    }else if(errno == 108){
+        switch(type){
+            case CHANGE_STATUS:
+                {
+                    LwqqClient* lc = d[1];
+                    lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
                 } break;
         }
     }
