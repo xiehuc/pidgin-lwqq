@@ -166,7 +166,7 @@ static void get_verify_code(LwqqClient *lc, LwqqErrorCode *err)
 
     snprintf(url, sizeof(url), "%s%s?uin=%s&appid=%s", LWQQ_URL_CHECK_HOST,
              VCCHECKPATH, lc->username, APPID);
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto failed;
     }
@@ -270,7 +270,7 @@ static void get_verify_image(LwqqClient *lc)
     LwqqErrorCode err;
  
     snprintf(url, sizeof(url), LWQQ_URL_VERIFY_IMG, APPID, lc->username);
-    req = lwqq_http_create_default_request(url, &err);
+    req = lwqq_http_create_default_request(lc,url, &err);
     if (!req) {
         goto failed;
     }
@@ -423,7 +423,7 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
              "ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&"
              "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
 
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto done;
     }
@@ -541,7 +541,7 @@ static void get_version(LwqqClient *lc, LwqqErrorCode *err)
     char *response = NULL;
     int ret;
 
-    req = lwqq_http_create_default_request(LWQQ_URL_VERSION, err);
+    req = lwqq_http_create_default_request(lc,LWQQ_URL_VERSION, err);
     if (!req) {
         goto done;
     }
@@ -634,7 +634,7 @@ static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *
     s_free(buf);
 
     /* Create a POST request */
-    req = lwqq_http_create_default_request(LWQQ_URL_SET_STATUS, err);
+    req = lwqq_http_create_default_request(lc,LWQQ_URL_SET_STATUS, err);
     if (!req) {
         goto done;
     }
@@ -819,7 +819,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
              "http://d.web2.qq.com", client->clientid, client->psessionid, re);
 
     /* Create a GET request */
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(client,url, err);
     if (!req) {
         goto done;
     }
@@ -876,13 +876,18 @@ done:
     lwqq_http_request_free(req);    
 }
 
+void lwqq_client_cleanup(LwqqClient* lc)
+{
+    lwqq_http_cleanup(lc);
+}
+
 /*void lwqq_relogin(LwqqClient* lc)
 {
     char url[128];
     char post[1024];
     int ret;
     snprintf(url,sizeof(url),"%s/channel/login2","http://d.web2.qq.com");
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     if(req==NULL){
         goto done;
     }

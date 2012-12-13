@@ -850,7 +850,7 @@ static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,L
              "http://d.web2.qq.com/channel",
              file_path,f_uin,lc->clientid,lc->psessionid);
     s_free(file_path);
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto done;
     }
@@ -875,7 +875,7 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
              "http://web2.qq.com/cgi-bin",
              group_code,send_uin,c->data.cface.serv_ip,c->data.cface.serv_port,
              c->data.cface.file_id,c->data.cface.name,lc->vfwebqq,time(NULL));
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto done;
     }
@@ -900,7 +900,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
              "%s/channel/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
              "http://d.web2.qq.com",
              msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
-    req = lwqq_http_create_default_request(url, err);
+    req = lwqq_http_create_default_request(lc,url, err);
     lwqq_puts(url);
     if (!req) {
         goto done;
@@ -1159,7 +1159,7 @@ static void *start_poll_msg(void *msg_list)
     /* Create a POST request */
     char url[512];
     snprintf(url, sizeof(url), "%s/channel/poll2", "http://d.web2.qq.com");
-    req = lwqq_http_create_default_request(url, NULL);
+    req = lwqq_http_create_default_request(lc,url, NULL);
     if (!req) {
         goto failed;
     }
@@ -1315,7 +1315,7 @@ static LwqqAsyncEvent* lwqq_msg_upload_offline_pic(
 
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%ld",
             time(NULL));
-    req = lwqq_http_create_default_request(url,&err);
+    req = lwqq_http_create_default_request(lc,url,&err);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
@@ -1378,7 +1378,7 @@ static int query_gface_sig(LwqqClient* lc)
     //https://d.web2.qq.com/channel/get_gface_sig2?clientid=30179476&psessionid=8368046764001e636f6e6e7365727665725f77656271714031302e3132382e36362e31313500006158000000c4036e04005c821a956d0000000a4065466637416b7142666d00000028fdd28eddedb8dd0cd414fdcb13af93532615ebe10b93f55182189da5c557360fee73da41ebf0c9fc&t=1343198241175
     snprintf(url,sizeof(url),"%s/get_gface_sig2?clientid=%s&psessionid=%s&t=%ld",
             "https://d.web2.qq.com/channel",lc->clientid,lc->psessionid,time(NULL));
-    req = lwqq_http_create_default_request(url,&err);
+    req = lwqq_http_create_default_request(lc,url,&err);
     req->set_header(req,"Host","d.web2.qq.com");
     req->set_header(req,"Referer","https://d.web2.qq.com/cfproxy.html?v=20110331002&callback=1");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
@@ -1415,7 +1415,7 @@ static LwqqAsyncEvent* lwqq_msg_upload_cface(
 
     snprintf(url,sizeof(url),"http://up.web2.qq.com/cgi-bin/cface_upload?time=%ld",
             time(NULL));
-    req = lwqq_http_create_default_request(url,&err);
+    req = lwqq_http_create_default_request(lc,url,&err);
     //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Referer","http://web2.qq.com/");
@@ -1589,7 +1589,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     /* Create a POST request */
     char url[512];
     snprintf(url, sizeof(url), "%s/channel/%s", "http://d.web2.qq.com",apistr);
-    req = lwqq_http_create_default_request(url, NULL);
+    req = lwqq_http_create_default_request(lc,url, NULL);
     if (!req) {
         goto failed;
     }
@@ -1689,7 +1689,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     s_free(name);
     //s_free(gbk);
     lwqq_puts(url);
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     //followlocation by hand
@@ -1725,7 +1725,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
 {
     char url[512];
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",time(NULL));
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Origin","http://web2.qq.com");
@@ -1782,7 +1782,7 @@ LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
     char url[512];
     char post[512];
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/send_offfile2");
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
     snprintf(post,sizeof(post),"r={\"to\":\"%s\",\"file_path\":\"%s\","
@@ -1827,7 +1827,7 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
             file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
     lwqq_puts(url);
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
 
@@ -1880,6 +1880,6 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
             serv_id,lc->clientid,lc->psessionid,time(NULL)
             );
     lwqq_puts(url);
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     return req->do_request_async(req,0,NULL,dump_resoponse,NULL);
 }

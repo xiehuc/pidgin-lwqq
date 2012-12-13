@@ -135,6 +135,7 @@ static void lwqq_categories_free(LwqqFriendCategory *cate)
     s_free(cate);
 }
 
+
 /** 
  * Free LwqqClient instance
  * 

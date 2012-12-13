@@ -15,7 +15,6 @@
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                  const char *value);
-static void lwqq_http_set_default_header(LwqqHttpRequest *request);
 static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name);
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name);
 static void lwqq_http_add_form(LwqqHttpRequest* request,LWQQ_FORM form,
@@ -29,7 +28,7 @@ typedef struct GLOBAL {
     pthread_mutex_t share_lock[2];
     int still_running;
     LwqqAsyncTimer timer_event;
-    SLIST_HEAD(,D_ITEM) conn_link;
+    LIST_HEAD(,D_ITEM) conn_link;
 }GLOBAL;
 GLOBAL global = {0};
 
@@ -48,7 +47,7 @@ typedef struct D_ITEM{
     LwqqAsyncEvent* event;
     void* data;
     LwqqAsyncTimer delay;
-    SLIST_ENTRY(D_ITEM) entries;
+    LIST_ENTRY(D_ITEM) entries;
 }D_ITEM;
 /* For async request */
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -69,7 +68,7 @@ static int lwqq_gdb_whats_running()
 {
     D_ITEM* item;
     char* url;
-    SLIST_FOREACH(item,&global.conn_link,entries){
+    LIST_FOREACH(item,&global.conn_link,entries){
         curl_easy_getinfo(item->req->req,CURLINFO_EFFECTIVE_URL,&url);
         lwqq_puts(url);
     }
@@ -99,7 +98,7 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
     s_free(opt);
 }
 
-static void lwqq_http_set_default_header(LwqqHttpRequest *request)
+void lwqq_http_set_default_header(LwqqHttpRequest *request)
 {
     lwqq_http_set_header(request, "User-Agent", LWQQ_HTTP_USER_AGENT);
     lwqq_http_set_header(request, "Accept", "*/*,text/html, application/xml;q=0.9, "
@@ -273,7 +272,6 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
-    request->set_default_header = lwqq_http_set_default_header;
     request->get_header = lwqq_http_get_header;
     request->get_cookie = lwqq_http_get_cookie;
     request->add_form = lwqq_http_add_form;
@@ -383,7 +381,7 @@ static char *ungzip(const char *source, int len, int *total)
  * 
  * @return Null if failed, else a new http request object
  */
-LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
+LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url,
                                                   LwqqErrorCode *err)
 {
     LwqqHttpRequest *req;
@@ -402,7 +400,8 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
         return NULL;
     }
 
-    req->set_default_header(req);
+    lwqq_http_set_default_header(req);
+    req->lc = lc;
     //lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
     return req;
 }
@@ -467,7 +466,7 @@ static void check_multi_info(GLOBAL *g)
             easy = msg->easy_handle;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
 
-            SLIST_REMOVE(&global.conn_link,conn,D_ITEM,entries);
+            LIST_REMOVE(conn,entries);
             curl_multi_remove_handle(g->multi, easy);
 
             //执行完成时候的回调
@@ -486,7 +485,7 @@ static int timer_cb(void* data)
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
     lwqq_log(LOG_NOTICE,"still running:%d\n",g->still_running);
 #if USE_DEBUG
-    if(g->still_running>1){
+   if(g->still_running>1){
         lwqq_gdb_whats_running();
     }
 #endif
@@ -618,7 +617,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->req = request;
     di->data = data;
     di->event = lwqq_async_event_new(request);
-    SLIST_INSERT_HEAD(&global.conn_link,di,entries);
+    LIST_INSERT_HEAD(&global.conn_link,di,entries);
     lwqq_async_timer_watch(&di->delay,100,delay_add_handle,di);
     return di->event;
 
@@ -743,8 +742,8 @@ void lwqq_http_global_free()
     if(global.multi){
         D_ITEM * item,* tvar;
         CURL* easy;
-        SLIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
-            SLIST_REMOVE(&global.conn_link,item,D_ITEM,entries);
+        LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
+            LIST_REMOVE(item,entries);
             easy = item->req->req;
             curl_multi_remove_handle(global.multi, easy);
             lwqq_http_request_free(item->req);
@@ -762,6 +761,25 @@ void lwqq_http_global_free()
         global.share = NULL;
         pthread_mutex_destroy(&global.share_lock[0]);
         pthread_mutex_destroy(&global.share_lock[1]);
+    }
+}
+void lwqq_http_cleanup(LwqqClient*lc)
+{
+    if(global.multi){
+        D_ITEM * item,* tvar;
+        CURL* easy;
+        LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
+            if(item->req->lc != lc) continue;
+            LIST_REMOVE(item,entries);
+            easy = item->req->req;
+            curl_multi_remove_handle(global.multi, easy);
+            lwqq_http_request_free(item->req);
+            //let callback delete data
+            if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
+            lwqq_async_event_finish(item->event);
+            s_free(item);
+        }
     }
 }
 

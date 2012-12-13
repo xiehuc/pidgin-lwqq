@@ -72,7 +72,7 @@ typedef struct LwqqHttpRequest {
                        const char *value);
 
     /* Set default http header */
-    void (*set_default_header)(struct LwqqHttpRequest *request);
+    //void (*set_default_header)(struct LwqqHttpRequest *request);
 
     /**
      * Get header, return a alloca memory, so caller has responsibility
@@ -118,7 +118,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri);
  *
  * @return Null if failed, else a new http request object
  */
-LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
+LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url,
         LwqqErrorCode *err);
 
 typedef enum {
@@ -130,6 +130,7 @@ typedef enum {
 }LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();
+void lwqq_http_cleanup(LwqqClient*lc);
 void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...);
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data);
 char* lwqq_http_escape(LwqqHttpRequest* req,const char* url);

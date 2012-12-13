@@ -34,6 +34,7 @@ typedef struct _LwqqAsyncEvset{
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
     LwqqCallbackCode failcode; ///<it must put second
+    LwqqClient* lc;
     LwqqAsyncEvset* host_lock;
     EVENT_CALLBACK callback;
     void* data;
@@ -71,6 +72,7 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
 {
     LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
     event->req = req;
+    event->lc = req?event->req->lc:NULL;
     event->failcode = LWQQ_CALLBACK_VALID;
     return event;
 }
@@ -257,10 +259,10 @@ void lwqq_async_global_quit()
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
         ev_thread_status = THREAD_NOT_CREATED;
         ev_break(ev_default,EVBREAK_ALL);
-        //ev_loop_destroy(ev_default);
-        //ev_default = NULL;
     }
     pthread_join(pid,NULL);
+    ev_loop_destroy(ev_default);
+    ev_default = NULL;
 }
 #endif
 #ifdef USE_LIBPURPLE
