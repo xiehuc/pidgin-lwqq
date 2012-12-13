@@ -164,13 +164,14 @@ static enum{
 //### global data area ###//
 pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
+static struct ev_loop* ev_default = NULL;
 //### global data area ###//
 static void *ev_run_thread(void* data)
 {
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     while(1){
         ev_thread_status = THREAD_NOW_RUNNING;
-        ev_run(EV_DEFAULT,0);
+        ev_run(ev_default,0);
         if(ev_thread_status == THREAD_NOT_CREATED) return NULL;
         ev_thread_status = THREAD_NOW_WAITING;
         pthread_mutex_lock(&mutex);
@@ -202,13 +203,14 @@ void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallb
     wrap->callback = fun;
     wrap->data = data;
     io->data = wrap;
-    ev_io_start(EV_DEFAULT,io);
+    if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
+    ev_io_start(ev_default,io);
     if(ev_thread_status!=THREAD_NOW_RUNNING) 
         start_ev_thread();
 }
 void lwqq_async_io_stop(LwqqAsyncIoHandle io)
 {
-    ev_io_stop(EV_DEFAULT,io);
+    ev_io_stop(ev_default,io);
     s_free(io->data);
 }
 static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
@@ -234,13 +236,14 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
     wrap->callback = fun;
     wrap->data = data;
     timer->data = wrap;
-    ev_timer_start(EV_DEFAULT,timer);
+    if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
+    ev_timer_start(ev_default,timer);
     if(ev_thread_status!=THREAD_NOW_RUNNING) 
         start_ev_thread();
 }
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
-    ev_timer_stop(EV_DEFAULT,timer);
+    ev_timer_stop(ev_default,timer);
     s_free(timer->data);
 }
 void lwqq_async_global_quit()
@@ -253,7 +256,9 @@ void lwqq_async_global_quit()
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
         ev_thread_status = THREAD_NOT_CREATED;
-        ev_break(EV_DEFAULT,EVBREAK_ALL);
+        ev_break(ev_default,EVBREAK_ALL);
+        //ev_loop_destroy(ev_default);
+        //ev_default = NULL;
     }
     pthread_join(pid,NULL);
 }

@@ -486,7 +486,7 @@ static int timer_cb(void* data)
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
     lwqq_log(LOG_NOTICE,"still running:%d\n",g->still_running);
 #if USE_DEBUG
-    if(g->still_running>0){
+    if(g->still_running>1){
         lwqq_gdb_whats_running();
     }
 #endif

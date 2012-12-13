@@ -375,6 +375,7 @@ static int group_come(LwqqClient* lc,void* data)
     } 
 
     if(lwqq_group_is_qun(group)){
+        //*** it failed ***/
         purple_blist_alias_chat(chat,group_name(group));
         if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0){
             void **d = s_malloc0(sizeof(void*)*2);

@@ -15,7 +15,7 @@
 #include "queue.h"
 #define LWQQ_MAGIC 0x4153
 
-#define USE_MSG_THREAD 1
+#define USE_MSG_THREAD 0
 
 #ifndef USE_DEBUG
 #define USE_DEBUG 0

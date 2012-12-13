@@ -1328,6 +1328,10 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,int isgroup,void* grouporb
 }
 static int get_qqnumber_back(LwqqHttpRequest* req,void* data)
 {
+    if(req == LWQQ_CALLBACK_FAILED){
+        s_free(data);
+        return 0;
+    }
     void **d = data;
     LwqqGroup* group = d[0];
     LwqqBuddy* buddy = d[1];
