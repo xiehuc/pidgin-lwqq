@@ -45,12 +45,14 @@ static LwqqErrorCode lwdb_userdb_update_buddy_info(
 static char *database_path;
 static char *global_database_name;
 
-#define LWDB_INIT_VERSION 1001
+#define LWDB_VERSION 1001
 #define LWDB_G_STMT_SIZE 10
 static struct {
     SwsStmt** stmt[LWDB_G_STMT_SIZE];
     size_t len;
 }g_stmt = {{0},0};
+#define VAL(v) #v
+#define STR(v) VAL(v)
 #define PUSH_STMT(st) (assert(g_stmt.len<LWDB_G_STMT_SIZE),g_stmt.stmt[g_stmt.len++] = &st)
 
 static const char *create_global_db_sql =
@@ -112,7 +114,15 @@ static const char *create_user_db_sql =
     "    owner default '',"
     "    flag default '',"
     "    mask int default 0);"
+
+    "create table if not exists pairs("
+    "   key primary key not null,"
+    "   value default '');"
     ;
+
+static const char* init_user_db_sql = 
+    "insert into pairs (key,value) values ('version','"STR(LWDB_VERSION)"');";
+
 
 static const char* buddy_query_sql = 
     "SELECT face,occupation,phone,allow,college,reg_time,constel,"
@@ -213,6 +223,9 @@ static int lwdb_create_db(const char *filename, int db_type)
     if(ret >= 0) {
         chmod(filename,0666);
     }
+    if(db_type ==1){
+        ret = sws_exec_sql_directly(filename, init_user_db_sql,&errmsg);
+    }else ret = -1;
 
     if (errmsg) {
         lwqq_log(LOG_ERROR, "%s\n", errmsg);
@@ -251,7 +264,7 @@ static int db_is_valid(const char *filename, int type)
     if (type == 0) {
         sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='configs';";
     } else {
-        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='buddies';";
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='pairs';";
     }
     ret = sws_query_start(db, sql, &stmt, NULL);
     if (ret) {
@@ -261,7 +274,16 @@ static int db_is_valid(const char *filename, int type)
         goto invalid;
     }
     sws_query_end(stmt, NULL);
-    
+
+    if(type == 1){
+        sws_query_start(db, "SELECT value FROM pairs WHERE key='version' AND value='"STR(LWDB_VERSION)"';",&stmt,NULL);
+        if(sws_query_next(stmt,NULL)) {
+            lwqq_puts("userdb version not matched,recreate it");
+            goto invalid;
+        }
+        sws_query_end(stmt,NULL);
+    }
+
     /* Close DB */
     sws_close_db(db, NULL);
 
