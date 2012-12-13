@@ -111,6 +111,9 @@ LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group);
 
 void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to);
 void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to);
+void lwdb_userdb_begin(LwdbUserDB* db,const char* transaction);
+void lwdb_userdb_commit(LwdbUserDB* db,const char* transaction);
+void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db);
 /* LwdbUserDB API end */
 
 /************************************************************************/

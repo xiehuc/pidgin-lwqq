@@ -9,7 +9,7 @@ set(SRC_LIST
 
 set(LWQQ_LIST
   liblwqq/async.c
-  liblwqq/http_curl.c
+  liblwqq/http.c
   liblwqq/url.c
   liblwqq/md5.c
   liblwqq/unicode.c
@@ -43,6 +43,8 @@ if(WITH_LIBEV)
 else(WITH_LIBEV)
     add_definitions(-DUSE_LIBPURPLE)
 endif(WITH_LIBEV)
+
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1")
 
 target_link_libraries(webqq
   ${SQLITE_LIBRARIES}

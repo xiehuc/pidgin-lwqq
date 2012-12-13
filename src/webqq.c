@@ -786,6 +786,12 @@ static void write_group_to_db(LwqqAsyncEvent* ev,void* data)
     group_come(ac->qq,group);
 }
 
+static void finish_insertion(LwqqAsyncEvset* ev,void* data)
+{
+    qq_account* ac = data;
+    lwdb_userdb_commit(ac->db, "insertion");
+}
+
 int qq_set_basic_info(LwqqClient* lc,void* data)
 {
     qq_account* ac = data;
@@ -799,8 +805,14 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
                 lwqq_info_get_friend_avatar(lc,lc->myself),friend_avatar,d);
     }
 
-    if(ac->qq_use_qqnum)
-    lwdb_userdb_write_to_client(ac->db, lc);
+    LwqqAsyncEvent* ev = NULL;
+    LwqqAsyncEvset* set = NULL;
+    if(ac->qq_use_qqnum){
+        //lwdb_userdb_write_to_client(ac->db, lc);
+        lwdb_userdb_query_qqnumbers(lc, ac->db);
+        lwdb_userdb_begin(ac->db,"insertion");
+        set = lwqq_async_evset_new();
+    }
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
@@ -808,8 +820,9 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
             void **d = s_malloc0(sizeof(void*)*2);
             d[0] = ac;
             d[1] = buddy;
-            lwqq_async_add_event_listener(
-                lwqq_info_get_friend_qqnumber(lc,buddy),write_buddy_to_db,d);
+            ev = lwqq_info_get_friend_qqnumber(lc,buddy);
+            lwqq_async_add_event_listener(ev,write_buddy_to_db,d);
+            lwqq_async_evset_add_event(set, ev);
         }
         else{
             friend_come(lc,buddy);
@@ -821,12 +834,15 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
             void **d = s_malloc0(sizeof(void*)*2);
             d[0] = ac;
             d[1] = group;
-            lwqq_async_add_event_listener(
-                lwqq_info_get_group_qqnumber(lc,group),write_group_to_db,d);
+            ev = lwqq_info_get_group_qqnumber(lc,group);
+            lwqq_async_add_event_listener(ev,write_group_to_db,d);
+            lwqq_async_evset_add_event(set, ev);
         }else{
             group_come(lc,group);
         }
     }
+    if(set)
+        lwqq_async_add_evset_listener(set, finish_insertion, ac);
     LwqqGroup* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
         discu_come(lc,discu);

@@ -140,7 +140,7 @@ int sws_query_start(SwsDB *db, const char *sql, SwsStmt **stmt, char **errmsg)
 
     return 0;
 }
-int sws_query_bind(SwsStmt *stmt,int index,SWS_BIND_TYPE type,...)
+int sws_query_bind(SwsStmt *stmt,int index,SwsBindType type,...)
 {
     va_list args;
     va_start(args,type);

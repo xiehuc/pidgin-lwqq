@@ -15,6 +15,7 @@
 #include "async.h"
 #include "smemory.h"
 #include "http.h"
+#include "logger.h"
 typedef struct async_dispatch_data {
     DISPATCH_FUNC func;
     LwqqClient* client;
@@ -216,6 +217,7 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
     int stop=1;
     //!!! note . why wrap is zero ??????
     if(wrap == NULL){
+        lwqq_log(LOG_WARNING,"event shouldn't be null");
         ev_timer_stop(EV_A_ w);
         return ;
     }

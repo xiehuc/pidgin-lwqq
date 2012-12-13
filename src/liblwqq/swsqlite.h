@@ -79,9 +79,10 @@ int sws_query_start(SwsDB *db, const char *sql, SwsStmt **stmt, char **errmsg);
 typedef enum {
     SWS_BIND_INT,
     SWS_BIND_TEXT
-}SWS_BIND_TYPE;
+}SwsBindType;
 
-int sws_query_bind(SwsStmt *stmt,int index,SWS_BIND_TYPE type,...);
+/** index starts from 1 */
+int sws_query_bind(SwsStmt *stmt,int index,SwsBindType type,...);
 
 int sws_query_reset(SwsStmt* stmt);
 

@@ -17,6 +17,10 @@
 
 #define USE_MSG_THREAD 1
 
+#ifndef USE_DEBUG
+#define USE_DEBUG 0
+#endif
+
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
