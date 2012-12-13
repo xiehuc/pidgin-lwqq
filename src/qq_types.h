@@ -47,6 +47,7 @@ typedef struct qq_account {
     }state;
     int msg_poll_handle;
     GPtrArray* opend_chat;
+    GList* p_buddy_list;///< purple buddy list
 #if QQ_USE_FAST_INDEX
     struct{
         GHashTable* qqnum_index;

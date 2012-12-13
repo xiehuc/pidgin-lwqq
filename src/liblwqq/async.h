@@ -110,13 +110,16 @@ void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.
  */
+#define type_assert(what,type) type ptr = what
 #define lwqq_async_event_set_result(ev,res)\
 do{\
+    type_assert(ev,LwqqAsyncEvent*);\
     *((int*)ev) = res;\
 }while(0)
 
 #define lwqq_async_event_set_code(ev,code) \
     do{\
+        type_assert(ev,LwqqAsyncEvent*);\
         *(((int*)ev)+1) = code;\
     }while(0)
 /** this return a errno of a event. */

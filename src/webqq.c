@@ -20,7 +20,12 @@
 #include "background.h"
 #include "translate.h"
 
-enum RESET_OPT{RESET_BUDDY=0x1,RESET_GROUP=0x2,RESET_DISCU=0x4,RESET_ALL=-1};
+enum ResetOption{
+    RESET_BUDDY=0x1,
+    RESET_GROUP=0x2,
+    RESET_DISCU=0x4,
+    RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
+    RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
 
 #define try_get(val,fail) (val?val:fail)
 
@@ -71,6 +76,12 @@ static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
     if(ret == NULL)
         ret = find_group_by_gid(lc,key);
     return ret;
+}
+//#define get_name_from_chat(chat) (g_hash_table_lookup(purple_chat_get_components(chat),QQ_ROOM_KEY_GID));
+static const char* get_name_from_chat(PurpleChat* chat)
+{
+    GHashTable* table = purple_chat_get_components(chat);
+    return g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
 }
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 {
@@ -142,7 +153,7 @@ static void all_reset(qq_account* ac,int opt)
         g_slist_foreach(buddies,buddies_all_remove,ac);
     }
 
-    if(opt & (RESET_GROUP | RESET_DISCU)){
+    if(opt & (RESET_GROUP | RESET_DISCU |RESET_GROUP_SOFT)){
         //PurpleGroup* group = purple_find_group("QQ群");
         PurpleBlistNode *group,*node;
         for(group = purple_get_blist()->root;group!=NULL;group=group->next){
@@ -155,6 +166,11 @@ static void all_reset(qq_account* ac,int opt)
                         const char* type = qq_get_type_from_chat(chat);
                         if(!strcmp(type,QQ_ROOM_TYPE_QUN)){
                             if(opt & RESET_GROUP) purple_blist_remove_chat(chat);
+                            if(opt & RESET_GROUP_SOFT ){
+                                const char* name = get_name_from_chat(chat);
+                                if(find_group_by_qqnumber(ac->qq,name)==NULL)
+                                    purple_blist_remove_chat(chat);
+                            }
                         }else{
                             if(opt & RESET_DISCU) purple_blist_remove_chat(chat);
                         }
@@ -290,6 +306,8 @@ static int friend_come(LwqqClient* lc,void* data)
     if(bu == NULL) {
         bu = purple_buddy_new(ac->account,key,(buddy->markname)?buddy->markname:buddy->nick);
         purple_blist_add_buddy(bu,NULL,group,NULL);
+        //if there isn't a qqnumber we shouldn't save it.
+        if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
     //flush new alias
     /*const char* alias = purple_buddy_get_alias_only(bu);
@@ -343,14 +361,17 @@ static int group_come(LwqqClient* lc,void* data)
     GHashTable* components;
     PurpleChat* chat;
     const char* type;
+    const char* key = try_get(group->account,group->gid);
 
-    if( (chat = purple_blist_find_chat(account,try_get(group->account,group->gid))) == NULL) {
+    if( (chat = purple_blist_find_chat(account,key)) == NULL) {
         components = g_hash_table_new_full(g_str_hash, g_str_equal, NULL , g_free);
-        g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(group->account));
+        g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(key));
         type = (group->type==LWQQ_GROUP_QUN)? QQ_ROOM_TYPE_QUN:QQ_ROOM_TYPE_DISCU;
         g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(type));
-        chat = purple_chat_new(account,try_get(group->account,group->gid),components);
+        chat = purple_chat_new(account,key,components);
         purple_blist_add_chat(chat,lwqq_group_is_qun(group)?qun:talk,NULL);
+        //we shouldn't save it.
+        if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     } 
 
     if(lwqq_group_is_qun(group)){
@@ -364,7 +385,6 @@ static int group_come(LwqqClient* lc,void* data)
         }
     }else{
         purple_blist_alias_chat(chat,group_name(group));
-        purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat), PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
 
     qq_account_insert_index_node(ac, NODE_IS_GROUP, group);
@@ -813,6 +833,23 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
         lwdb_userdb_begin(ac->db,"insertion");
         set = lwqq_async_evset_new();
     }
+
+    //we must put buddy and group clean before any add operation.
+    GList* ptr = ac->p_buddy_list, *nxt;
+    while(ptr){
+        nxt = ptr->next;
+        PurpleBuddy* buddy = ptr->data;
+        const char* qqnum = purple_buddy_get_name(buddy);
+        //if it isn't a qqnumber,we should delete it whatever.
+        if(lwqq_buddy_find_buddy_by_qqnumber(lc,qqnum)==NULL){
+            purple_blist_remove_buddy(buddy);
+            ac->p_buddy_list = g_list_delete_link(ac->p_buddy_list,ptr);
+        }
+        ptr = nxt;
+    }
+
+    //clean extra duplicated node
+    all_reset(ac,RESET_GROUP_SOFT);
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
@@ -843,6 +880,11 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     }
     if(set)
         lwqq_async_add_evset_listener(set, finish_insertion, ac);
+    //after this we finished the qqnumber fast index.
+    
+
+    //we should always put discu after group deletion.
+    //to avoid delete discu list.
     LwqqGroup* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
         discu_come(lc,discu);

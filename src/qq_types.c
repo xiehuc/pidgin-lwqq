@@ -22,14 +22,24 @@ static void qq_dispatch(void* lc,DISPATCH_FUNC func,void* param)
     d[2] = param;
     purple_timeout_add(50,did_dispatch,d);
 }
+static void add_p_buddy_to_ac(void* a,void* b)
+{
+    PurpleBuddy* buddy = a;
+    qq_account* ac = b;
+    if(purple_buddy_get_account(buddy) == ac->account)
+        ac->p_buddy_list = g_list_prepend(ac->p_buddy_list,buddy);
 
+}
 qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
     ac->magic = QQ_MAGIC;
     ac->qq_use_qqnum = 0;
+    //this is auto increment sized array . so don't worry about it.
     ac->opend_chat = g_ptr_array_sized_new(10);
+    ac->p_buddy_list = NULL;
+    g_slist_foreach(purple_blist_get_buddies(),add_p_buddy_to_ac,ac);
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
