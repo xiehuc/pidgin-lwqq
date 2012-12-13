@@ -59,13 +59,13 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
  *         0 means failed
  */
 #define lwqq_info_get_friend_avatar(lc,buddy) \
-((buddy!=NULL) ? lwqq_info_get_avatar(lc,0,buddy):NULL) 
+((buddy!=NULL) ? lwqq_info_get_avatar(lc,buddy,NULL):NULL) 
 
 #define lwqq_info_get_group_avatar(lc,group) \
-((group!=NULL) ? lwqq_info_get_avatar(lc,1,group):NULL) 
+((group!=NULL) ? lwqq_info_get_avatar(lc,NULL,group):NULL) 
 
 
-LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy);
+LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group);
 /** 
  * Get all friends qqnumbers
  * 

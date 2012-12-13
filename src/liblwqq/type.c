@@ -386,6 +386,19 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid)
     return NULL;
 }
 
+LwqqGroup* lwqq_group_find_group_by_qqnumber(LwqqClient* lc,const char* qqnumber)
+{
+    LwqqGroup *group;
+    
+    if (!lc || !qqnumber)
+        return NULL;
+
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(group->account && ! strcmp(group->account,qqnumber) ) return group;
+    }
+    return NULL;
+}
+
 /** 
  * Find group member object by member's uin
  * 

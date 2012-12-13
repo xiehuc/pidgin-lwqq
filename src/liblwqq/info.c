@@ -365,16 +365,13 @@ json_error:
     return 0;
 }
 
-LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,int isgroup,void* grouporbuddy)
+LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group)
 {
     static int serv_id = 0;
-    if(!lc||!grouporbuddy) return NULL;
+    if(!(lc&&(group||buddy))) return NULL;
     //there have avatar already do not repeat work;
-    LwqqBuddy* buddy = NULL;
-    LwqqGroup* group = NULL;
     LwqqErrorCode error;
-    if(isgroup) group = grouporbuddy;
-    else buddy = grouporbuddy;
+    int isgroup = group>0;
     const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     const char* uin = (isgroup)?group->code:buddy->uin;
 

@@ -10,6 +10,7 @@
 #ifndef LWQQ_ASYNC_H
 #define LWQQ_ASYNC_H
 #include "type.h"
+#include <assert.h>
 
 
 #ifndef USE_LIBPURPLE
@@ -110,7 +111,7 @@ void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.
  */
-#define type_assert(what,type) type ptr = what
+#define type_assert(what,type) {type ptr = what;assert(ptr);}
 #define lwqq_async_event_set_result(ev,res)\
 do{\
     type_assert(ev,LwqqAsyncEvent*);\

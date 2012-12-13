@@ -168,7 +168,7 @@ static void all_reset(qq_account* ac,int opt)
                             if(opt & RESET_GROUP) purple_blist_remove_chat(chat);
                             if(opt & RESET_GROUP_SOFT ){
                                 const char* name = get_name_from_chat(chat);
-                                if(find_group_by_qqnumber(ac->qq,name)==NULL)
+                                if(lwqq_group_find_group_by_qqnumber(ac->qq,name)==NULL)
                                     purple_blist_remove_chat(chat);
                             }
                         }else{
@@ -850,7 +850,7 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     }
 
     //clean extra duplicated node
-    all_reset(ac,RESET_GROUP_SOFT);
+    all_reset(ac,RESET_GROUP_SOFT|RESET_DISCU);
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {

@@ -15,7 +15,7 @@
 #include "queue.h"
 #define LWQQ_MAGIC 0x4153
 
-#define USE_MSG_THREAD 0
+#define USE_MSG_THREAD 1
 
 #ifndef USE_DEBUG
 #define USE_DEBUG 0
@@ -352,6 +352,7 @@ LwqqGroup *lwqq_group_new(int type);
  * @return A LwqqGroup instance
  */
 LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
+LwqqGroup* lwqq_group_find_group_by_qqnumber(LwqqClient* lc,const char* qqnumber);
 
 /** 
  * Find group member object by member's uin
