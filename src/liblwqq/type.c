@@ -17,9 +17,8 @@
 #include "msg.h"
 #include "async.h"
 
-static int null_action(LwqqClient* lc,void* param)
+static void null_action(LwqqClient* lc)
 {
-    return 0;
 }
 
 static LwqqAsyncOption default_async_opt = {
@@ -446,4 +445,25 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
     else if(strcmp(str,"slient")==0) return LWQQ_STATUS_SLIENT;
     else return LWQQ_STATUS_UNKNOW;
+}
+
+void lwqq_func_1_pointer(LwqqClient*lc,va_list args)
+{
+    typedef void (*f)(void*,void*);
+    f func = va_arg(args,f);
+    void* data2 = va_arg(args,void*);
+    func(lc,data2);
+}
+void lwqq_func_void(LwqqClient*lc,va_list args)
+{
+    typedef void (*f)(void*);
+    f func = va_arg(args,f);
+    func(lc);
+}
+void lwqq_func_1_int(LwqqClient*lc,va_list args)
+{
+    typedef void (*f)(void*,int);
+    f func = va_arg(args,f);
+    int data2 = va_arg(args,int);
+    func(lc,data2);
 }

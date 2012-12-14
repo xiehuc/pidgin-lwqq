@@ -12,6 +12,7 @@
 #define LWQQ_TYPE_H
 
 #include <pthread.h>
+#include <stdarg.h>
 #include "queue.h"
 #define LWQQ_MAGIC 0x4153
 
@@ -25,7 +26,7 @@ typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqClient LwqqClient;
-typedef int (*DISPATCH_FUNC)(LwqqClient* lc,void* data);
+typedef void (*DISPATCH_FUNC)(LwqqClient* lc,va_list args);
 //return zero means continue.>1 means abort
 typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
@@ -229,7 +230,7 @@ struct _LwqqClient {
     /** non data area **/
 
     void* data;                     /**< user defined data*/
-    void (*dispatch)(void* caller,DISPATCH_FUNC func,void* param);
+    void (*dispatch)(void* caller,DISPATCH_FUNC func,...);
 
     int magic;          /**< 0x4153 **/
 } ;
@@ -373,4 +374,7 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LWQQ_STATUS status);
 LWQQ_STATUS lwqq_status_from_str(const char* str);
+void lwqq_func_1_pointer(LwqqClient*lc,va_list args);
+void lwqq_func_void(LwqqClient*lc,va_list args);
+void lwqq_func_1_int(LwqqClient*lc,va_list args);
 #endif  /* LWQQ_TYPE_H */

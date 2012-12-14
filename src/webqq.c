@@ -512,7 +512,7 @@ static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data
 #ifdef USE_LIBEV
     void **d = data;
     qq_account* ac = d[0];
-    ac->qq->dispatch(ac->qq,group_message_delay_display,data);
+    ac->qq->dispatch(ac->qq,lwqq_func_1_pointer,group_message_delay_display,data);
 
 #else
     group_message_delay_display(NULL,data);
@@ -657,7 +657,7 @@ static void friend_avatar(LwqqAsyncEvent* ev,void* data)
         break;
         case LWQQ_CALLBACK_VALID:
             lwqq_async_event_set_code(ev,LWQQ_CALLBACK_DISPATCH);
-            ac->qq->dispatch(ev,(DISPATCH_FUNC)friend_avatar,data);
+            ac->qq->dispatch(ev,lwqq_func_1_pointer,friend_avatar,data);
             return;
         break;
         case LWQQ_CALLBACK_DISPATCH:
@@ -696,14 +696,13 @@ static void group_avatar(LwqqAsyncEvent* ev,void* data)
     group->avatar = NULL;
     return ;
 }
-static int lost_connection(LwqqClient* lc,void* data)
+static void lost_connection(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = ac->gc;
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
-    return 0;
 }
-int qq_msg_check(LwqqClient* lc,void* data)
+void qq_msg_check(LwqqClient* lc)
 {
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg,*prev;
@@ -712,7 +711,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
     if (TAILQ_EMPTY(&l->head)) {
         /* No message now, wait 100ms */
         pthread_mutex_unlock(&l->mutex);
-        return 0;
+        return ;
     }
     msg = TAILQ_FIRST(&l->head);
     while(msg) {
@@ -771,7 +770,7 @@ int qq_msg_check(LwqqClient* lc,void* data)
         }
     }
     pthread_mutex_unlock(&l->mutex);
-    return 0;
+    return ;
 
 }
 
@@ -912,7 +911,7 @@ static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
                                    PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
                                    _("Login Failed."));
 }
-static int verify_come(LwqqClient* lc,void* data)
+static void verify_come(LwqqClient* lc,LwqqErrorCode err)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleRequestFieldGroup *field_group;
@@ -937,24 +936,23 @@ static int verify_come(LwqqClient* lc,void* data)
                           _("Cancel"), G_CALLBACK(pic_cancel_cb),
                           ac->account, NULL, NULL, ac);
 
-    return 0;
+    return ;
 }
 
 static LwqqAsyncOption qq_async_opt = {
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
 };
-static int login_complete(LwqqClient* lc,void* data)
+static void login_complete(LwqqClient* lc,LwqqErrorCode err)
 {
     qq_account* ac = lwqq_client_userdata(lc);
-    LwqqErrorCode err = (long)data;
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     if(err==LWQQ_EC_LOGIN_ABNORMAL) {
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
-        return 0;
+        return ;
     } else if(err!=LWQQ_EC_OK) {
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
-        return 0;
+        return ;
     }
 
     purple_connection_set_state(gc,PURPLE_CONNECTED);
@@ -964,7 +962,7 @@ static int login_complete(LwqqClient* lc,void* data)
 
     ac->qq->async_opt = &qq_async_opt;
     background_friends_info(ac);
-    return 0;
+    return ;
 }
 
 //send back receipt
@@ -985,7 +983,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
         PurpleConversation* conv = find_conversation(msg->type,who,ac);
 
         if(err == LWQQ_MC_LOST_CONN){
-            ac->qq->dispatch(ac->qq,ac->qq->async_opt->poll_lost,NULL);
+            ac->qq->dispatch(ac->qq,lwqq_func_void,ac->qq->async_opt->poll_lost);
         }
         if(conv && err > 0){
             if(err == LWQQ_MC_TOO_FAST)

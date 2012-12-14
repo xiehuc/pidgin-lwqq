@@ -30,9 +30,9 @@ static void* _background_login(void* data)
     lwqq_login(lc,lwqq_status_from_str(status), &err);
 
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
-        lc->dispatch(lc,extra_async_opt.need_verify,(void*)err);
+        lc->dispatch(lc,lwqq_func_1_int,extra_async_opt.need_verify,err);
     }else{
-        lc->dispatch(lc,extra_async_opt.login_complete,(void*)err);
+        lc->dispatch(lc,lwqq_func_1_int,extra_async_opt.login_complete,err);
     }
     return NULL;
 }
@@ -60,7 +60,7 @@ static void* _background_friends_info(void* data)
 
     lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
 
-    lc->dispatch(lc,qq_set_basic_info,ac);
+    lc->dispatch(lc,lwqq_func_1_pointer,qq_set_basic_info,ac);
 
     return NULL;
 }

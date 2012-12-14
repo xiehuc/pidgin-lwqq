@@ -154,8 +154,8 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
  *
  */
 struct _LwqqAsyncOption {
-    DISPATCH_FUNC poll_msg;
-    DISPATCH_FUNC poll_lost;
+    void (*poll_msg)(LwqqClient* lc);
+    void (*poll_lost)(LwqqClient* lc);
 
 };
 

@@ -943,7 +943,7 @@ static void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
     s_free(data);
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
-    lc->dispatch(list->lc,lc->async_opt->poll_msg,NULL);
+    lc->dispatch(list->lc,lwqq_func_void,lc->async_opt->poll_msg);
 }
 /**
  * Parse message received from server
@@ -1177,10 +1177,10 @@ static void *start_poll_msg(void *msg_list)
         }
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121 || retcode == 108){
-            lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
+            lc->dispatch(lc,lwqq_func_void,lc->async_opt->poll_lost);
             break;
         }else{
-            lc->dispatch(lc,lc->async_opt->poll_msg,NULL);
+            lc->dispatch(lc,lwqq_func_void,lc->async_opt->poll_msg);
         }
     }
 failed:

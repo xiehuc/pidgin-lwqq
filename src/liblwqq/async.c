@@ -20,7 +20,7 @@ typedef struct async_dispatch_data {
     DISPATCH_FUNC func;
     LwqqClient* client;
     LwqqAsyncTimer handle;
-    void* data;
+    va_list data;
 } async_dispatch_data;
 typedef struct _LwqqAsyncEvset{
     int result;///<it must put first
@@ -50,16 +50,20 @@ static int timeout_come(void* p)
     DISPATCH_FUNC func = data->func;
     func(lc,data->data);
 
-    free(data);
+    va_end(data->data);
+    s_free(data);
     //remote handle;
     return 0;
 }
-static void async_dispatch(void* lc,DISPATCH_FUNC func,void* param)
+static void async_dispatch(void* lc,DISPATCH_FUNC func,...)
 {
     async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
     data->func = func;
     data->client = lc;
-    data->data = param;
+    va_list args;
+    va_start(args,func);
+    va_copy(data->data,args);
+    va_end(args);
     lwqq_async_timer_watch(&data->handle, 50, timeout_come, data);
 }
 

@@ -3,24 +3,36 @@
 #include "msg.h"
 #include "async.h"
 
+struct dispatch_data{
+    LwqqClient* lc;
+    DISPATCH_FUNC func;
+    va_list data;
+};
+
 static int did_dispatch(void* param)
 {
-    void **d = param;
-    LwqqClient* lc = d[0];
-    DISPATCH_FUNC func = d[1];
-    void* data = d[2];
+    struct dispatch_data *d = param;
+    LwqqClient* lc = d->lc;
+    DISPATCH_FUNC func = d->func;
+    va_list args;
+    va_copy(args,d->data);
+    func(lc,args);
+    va_end(args);
     s_free(d);
-    func(lc,data);
     return 0;
 }
 
-static void qq_dispatch(void* lc,DISPATCH_FUNC func,void* param)
+static void qq_dispatch(void* lc,DISPATCH_FUNC func,...)
 {
-    void **d = s_malloc(sizeof(void*)*3);
-    d[0] = lc;
-    d[1] = func;
-    d[2] = param;
-    purple_timeout_add(50,did_dispatch,d);
+    struct dispatch_data* d = s_malloc0(sizeof(*d));
+    d->lc = lc;
+    d->func = func;
+    va_list args;
+    va_start(args,func);
+
+    va_copy(d->data,args);
+    purple_timeout_add(10,did_dispatch,d);
+    va_end(args);
 }
 static void add_p_buddy_to_ac(void* a,void* b)
 {
@@ -143,7 +155,7 @@ static int sys_msg_write(LwqqClient* lc,void* data)
 
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t)
 {
-    ac->qq->dispatch(ac->qq,sys_msg_write,system_msg_new(m_t,who,ac,msg,type,t));
+    ac->qq->dispatch(ac->qq,lwqq_func_1_pointer,sys_msg_write,system_msg_new(m_t,who,ac,msg,type,t));
 }
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)

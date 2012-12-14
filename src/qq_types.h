@@ -73,8 +73,8 @@ typedef struct system_msg {
 }system_msg;
 
 struct qq_extra_async_opt {
-    DISPATCH_FUNC login_complete;
-    DISPATCH_FUNC need_verify;
+    void (*login_complete)(LwqqClient* lc,LwqqErrorCode err);
+    void (*need_verify)(LwqqClient* lc,LwqqErrorCode err);
 };
 
 extern struct qq_extra_async_opt extra_async_opt;

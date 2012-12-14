@@ -1727,7 +1727,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
             case CHANGE_STATUS:
                 {
                     LwqqClient* lc = d[1];
-                    lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
+                    lc->dispatch(lc,lwqq_func_void,lc->async_opt->poll_lost);
                 } break;
         }
     }
