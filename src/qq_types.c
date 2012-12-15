@@ -6,7 +6,7 @@
 struct dispatch_data{
     LwqqClient* lc;
     DISPATCH_FUNC func;
-    va_list data;
+    vp_list data;
 };
 
 static int did_dispatch(void* param)
@@ -14,10 +14,9 @@ static int did_dispatch(void* param)
     struct dispatch_data *d = param;
     LwqqClient* lc = d->lc;
     DISPATCH_FUNC func = d->func;
-    va_list args;
-    va_copy(args,d->data);
-    func(lc,args);
-    va_end(args);
+    vp_start(d->data);
+    func(lc,&d->data,NULL);
+    vp_end(d->data);
     s_free(d);
     return 0;
 }
@@ -27,12 +26,13 @@ static void qq_dispatch(void* lc,DISPATCH_FUNC func,...)
     struct dispatch_data* d = s_malloc0(sizeof(*d));
     d->lc = lc;
     d->func = func;
+
     va_list args;
     va_start(args,func);
-
-    va_copy(d->data,args);
-    purple_timeout_add(10,did_dispatch,d);
+    func(NULL,&d->data,&args);
     va_end(args);
+
+    purple_timeout_add(10,did_dispatch,d);
 }
 static void add_p_buddy_to_ac(void* a,void* b)
 {

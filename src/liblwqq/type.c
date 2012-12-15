@@ -447,23 +447,40 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else return LWQQ_STATUS_UNKNOW;
 }
 
-void lwqq_func_1_pointer(LwqqClient*lc,va_list args)
+void lwqq_func_1_pointer(LwqqClient*lc,vp_list* vp,va_list* va)
 {
     typedef void (*f)(void*,void*);
-    f func = va_arg(args,f);
-    void* data2 = va_arg(args,void*);
+    if( va ){
+        vp_init(*vp,sizeof(f)+sizeof(void*));
+        vp_push(*vp,*va,f);
+        vp_push(*vp,*va,void*);
+        return ;
+    }
+    f func = vp_arg(*vp,f);
+    void* data2 = vp_arg(*vp,void*);
     func(lc,data2);
 }
-void lwqq_func_void(LwqqClient*lc,va_list args)
+void lwqq_func_void(LwqqClient*lc,vp_list* vp,va_list* va)
 {
     typedef void (*f)(void*);
-    f func = va_arg(args,f);
+    if( va ){
+        vp_init(*vp,sizeof(f));
+        vp_push(*vp,*va,f);
+        return ;
+    }
+    f func = vp_arg(*vp,f);
     func(lc);
 }
-void lwqq_func_1_int(LwqqClient*lc,va_list args)
+void lwqq_func_1_int(LwqqClient*lc,vp_list* vp,va_list* va)
 {
     typedef void (*f)(void*,int);
-    f func = va_arg(args,f);
-    int data2 = va_arg(args,int);
+    if( va ){
+        vp_init(*vp,sizeof(f)+sizeof(int));
+        vp_push(*vp,*va,f);
+        vp_push(*vp,*va,int);
+        return ;
+    }
+    f func = vp_arg(*vp,f);
+    int data2 = vp_arg(*vp,int);
     func(lc,data2);
 }

@@ -766,6 +766,7 @@ static int parse_file_message(json_t* json,void* opaque)
         case MODE_REFUSE:
             file->refuse.cancel_type = atoi(json_parse_simple_value(json,"cancel_type"));
             break;
+        default:break;
     }
     return 0;
 }

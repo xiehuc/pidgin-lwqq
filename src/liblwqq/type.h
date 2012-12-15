@@ -26,7 +26,16 @@ typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqClient LwqqClient;
-typedef void (*DISPATCH_FUNC)(LwqqClient* lc,va_list args);
+
+typedef struct {void* st;void* cur; size_t sz;}vp_list;
+#define vp_init(vp,size) do{(vp).st = (vp).cur = s_malloc0(size);(vp).sz = size;}while(0)
+#define _ptr_self_inc(ptr,sz) ((ptr+=sz)-sz)
+#define vp_push(vp,va,type) do{type t = va_arg((va),type);memcpy(_ptr_self_inc((vp).cur,sizeof(type)),&t,sizeof(type));}while(0)
+#define vp_start(vp) (vp).cur = (vp).st
+#define vp_arg(vp,type) *(type*)(_ptr_self_inc((vp).cur,sizeof(type)))
+#define vp_end(vp) s_free((vp).st)
+
+typedef void (*DISPATCH_FUNC)(LwqqClient* lc,vp_list* vp,va_list* va);
 //return zero means continue.>1 means abort
 typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
@@ -374,7 +383,8 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LWQQ_STATUS status);
 LWQQ_STATUS lwqq_status_from_str(const char* str);
-void lwqq_func_1_pointer(LwqqClient*lc,va_list args);
-void lwqq_func_void(LwqqClient*lc,va_list args);
-void lwqq_func_1_int(LwqqClient*lc,va_list args);
+
+void lwqq_func_1_pointer(LwqqClient*lc,vp_list* vp,va_list* va);
+void lwqq_func_void(LwqqClient*lc,vp_list* vp,va_list* va);
+void lwqq_func_1_int(LwqqClient*lc,vp_list* vp,va_list* va);
 #endif  /* LWQQ_TYPE_H */
