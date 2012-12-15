@@ -57,7 +57,7 @@ static int timeout_come(void* p)
 }
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
 {
-    async_dispatch_data* data = s_malloc0(sizeof(async_dispatch_data));
+    async_dispatch_data* data = s_malloc0(sizeof(*data));
     data->dsph = dsph;
     data->func = func;
     va_list args;
@@ -181,6 +181,7 @@ static enum{
 pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
 static struct ev_loop* ev_default = NULL;
+static int global_quit_lock = 0;
 //### global data area ###//
 static void *ev_run_thread(void* data)
 {
@@ -188,12 +189,14 @@ static void *ev_run_thread(void* data)
     while(1){
         ev_thread_status = THREAD_NOW_RUNNING;
         ev_run(ev_default,0);
-        if(ev_thread_status == THREAD_NOT_CREATED) return NULL;
+        //if(ev_thread_status == THREAD_NOT_CREATED) return NULL;
+        if(global_quit_lock) return NULL;
         ev_thread_status = THREAD_NOW_WAITING;
         pthread_mutex_lock(&mutex);
         pthread_cond_wait(&ev_thread_cond,&mutex);
         pthread_mutex_unlock(&mutex);
-        if(ev_thread_status == THREAD_NOT_CREATED) return NULL;
+        //if(ev_thread_status == THREAD_NOT_CREATED) return NULL;
+        if(global_quit_lock) return NULL;
     }
     return NULL;
 }
@@ -214,6 +217,7 @@ static void event_cb_wrap(EV_P_ ev_io *w,int action)
 }
 void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback fun,void* data)
 {
+    if(global_quit_lock) return;
     ev_io_init(io,event_cb_wrap,fd,action);
     LwqqAsyncIoWrap* wrap = s_malloc0(sizeof(*wrap));
     wrap->callback = fun;
@@ -234,11 +238,11 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
     LwqqAsyncTimerWrap* wrap = w->data;
     int stop=1;
     //!!! note . why wrap is zero ??????
-    if(wrap == NULL){
+    /*if(wrap == NULL){
         lwqq_log(LOG_WARNING,"event shouldn't be null");
         ev_timer_stop(EV_A_ w);
         return ;
-    }
+    }*/
     if(wrap->callback)
         stop = ! wrap->callback(wrap->data);
     if(stop)
@@ -246,6 +250,7 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 }
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
+    if(global_quit_lock) return;
     double second = (timeout_ms) / 1000.0;
     ev_timer_init(timer,timer_cb_wrap,second,second);
     LwqqAsyncTimerWrap* wrap = s_malloc0(sizeof(*wrap));
@@ -259,21 +264,26 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
 }
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
-    ev_timer_stop(ev_default,timer);
     s_free(timer->data);
+    ev_timer_stop(ev_default,timer);
 }
 void lwqq_async_global_quit()
 {
     //no need to destroy thread
+    global_quit_lock = 1;
     if(ev_thread_status == THREAD_NOT_CREATED) return ;
 
+    /*pthread_cond_signal(&ev_thread_cond);
     if(ev_thread_status == THREAD_NOW_WAITING){
         ev_thread_status = THREAD_NOT_CREATED;
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
         ev_thread_status = THREAD_NOT_CREATED;
-        ev_break(ev_default,EVBREAK_ALL);
+        //ev_break(ev_default,EVBREAK_ALL);
     }
+    ev_thread_status = THREAD_NOT_CREATED;*/
+    //when ever it is waiting. we send a signal
+    pthread_cond_signal(&ev_thread_cond);
     pthread_join(pid,NULL);
     ev_loop_destroy(ev_default);
     ev_default = NULL;
