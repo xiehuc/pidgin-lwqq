@@ -1299,7 +1299,7 @@ static void qq_close(PurpleConnection *gc)
     translate_global_free();
     g_ref_count -- ;
     if(g_ref_count == 0){
-        lwqq_http_global_free();
+        lwqq_async_dispatch(vp_func_void,lwqq_http_global_free);
         lwqq_async_global_quit();
     }
     lwdb_global_free();

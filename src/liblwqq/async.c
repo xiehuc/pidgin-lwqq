@@ -19,9 +19,9 @@
 typedef struct async_dispatch_data {
     DISPATCH_FUNC dsph;
     CALLBACK_FUNC func;
-    vp_list data;
     LwqqAsyncTimer handle;
-} async_dispatch_data;
+    vp_list data;//s:24
+} async_dispatch_data; //s:88
 typedef struct _LwqqAsyncEvset{
     int result;///<it must put first
     pthread_mutex_t lock;
@@ -55,21 +55,21 @@ static int timeout_come(void* p)
     //remote handle;
     return 0;
 }
-static void async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
+void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
 {
-    async_dispatch_data* data = s_malloc(sizeof(async_dispatch_data));
+    async_dispatch_data* data = s_malloc0(sizeof(async_dispatch_data));
     data->dsph = dsph;
     data->func = func;
     va_list args;
     va_start(args,func);
     dsph(NULL,&data->data,&args);
     va_end(args);
-    lwqq_async_timer_watch(&data->handle, 50, timeout_come, data);
+    lwqq_async_timer_watch(&data->handle, 10, timeout_come, data);
 }
 
 void lwqq_async_init(LwqqClient* lc)
 {
-    lc->dispatch = async_dispatch;
+    lc->dispatch = lwqq_async_dispatch;
 }
 
 LwqqAsyncEvent* lwqq_async_event_new(void* req)
@@ -248,7 +248,7 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
 {
     double second = (timeout_ms) / 1000.0;
     ev_timer_init(timer,timer_cb_wrap,second,second);
-    LwqqAsyncTimerWrap* wrap = s_malloc(sizeof(*wrap));
+    LwqqAsyncTimerWrap* wrap = s_malloc0(sizeof(*wrap));
     wrap->callback = fun;
     wrap->data = data;
     timer->data = wrap;

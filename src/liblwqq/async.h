@@ -160,6 +160,7 @@ struct _LwqqAsyncOption {
 
 };
 
+void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);
 //initialize lwqq client with default dispatch function
 void lwqq_async_init(LwqqClient* lc);
 

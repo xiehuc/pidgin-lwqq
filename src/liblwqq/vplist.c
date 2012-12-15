@@ -27,7 +27,7 @@ void vp_do(vp_command cmd,void* retval)
 void vp_func_void(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void);
-    if( q ){
+    if( !func ){
         vp_init(*vp,0);
         return ;
     }
@@ -36,7 +36,7 @@ void vp_func_void(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*));
         vp_push(*vp,*va,void*);
@@ -49,7 +49,7 @@ void vp_func_p(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*2);
         vp_push(*vp,*va,void*);
@@ -63,7 +63,7 @@ void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_3p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*,void*);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*3);
         vp_push(*vp,*va,void*);
@@ -79,7 +79,7 @@ void vp_func_3p(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_4p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*,void*,void*);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*4);
         vp_push(*vp,*va,void*);
@@ -97,7 +97,7 @@ void vp_func_4p(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_pi(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,int);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)+sizeof(int));
         vp_push(*vp,*va,void*);
@@ -111,7 +111,7 @@ void vp_func_pi(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_2p_i(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef int (*f)(void*,void*);
-    if( q ){
+    if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*2);
         vp_push(*vp,*va,void*);
@@ -126,12 +126,14 @@ void vp_func_2p_i(VP_CALLBACK func,vp_list* vp,void* q)
 void vp_func_3p_i(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef int (*f)(void*,void*,void*);
-    if( q ){
-        va_list* va = q;
+    if( !func ){
+        va_list va;
+        va_copy(va,*(va_list*)q);
         vp_init(*vp,sizeof(void*)*3);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
+        vp_push(*vp,va,void*);
+        vp_push(*vp,va,void*);
+        vp_push(*vp,va,void*);
+        va_end(va);
         return;
     }
     void* p1 = vp_arg(*vp,void*);
