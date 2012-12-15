@@ -21,7 +21,7 @@ typedef struct {VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;}vp_command;
 #define vp_push(vp,va,type) do{type t = va_arg((va),type);memcpy(_ptr_self_inc((vp).cur,sizeof(type)),&t,sizeof(type));}while(0)
 #define vp_start(vp) (vp).cur = (vp).st
 #define vp_arg(vp,type) *(type*)(_ptr_self_inc((vp).cur,sizeof(type)))
-#define vp_end(vp) free((vp).st)
+#define vp_end(vp) do{free((vp).st),(vp).cur=(vp).st=NULL;(vp).sz=0;}while(0)
 
 vp_command vp_make_command(VP_DISPATCH,VP_CALLBACK,...);
 void vp_do(vp_command,void* retval);

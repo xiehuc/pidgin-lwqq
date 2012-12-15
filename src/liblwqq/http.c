@@ -744,7 +744,6 @@ void lwqq_http_global_free()
             LIST_REMOVE(item,entries);
             easy = item->req->req;
             curl_multi_remove_handle(global.multi, easy);
-            lwqq_http_request_free(item->req);
             //let callback delete data
             vp_do(item->cmd,NULL);
             //if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);

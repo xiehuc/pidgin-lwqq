@@ -22,6 +22,8 @@ void vp_do(vp_command cmd,void* retval)
     vp_start(cmd.data);
     cmd.dsph(cmd.func,&cmd.data,retval);
     vp_end(cmd.data);
+    cmd.dsph = (VP_DISPATCH)NULL;
+    cmd.func = (VP_CALLBACK)NULL;
 }
 
 void vp_func_void(VP_CALLBACK func,vp_list* vp,void* q)
@@ -50,10 +52,12 @@ void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*);
     if( !func ){
-        va_list* va = q;
+        va_list va;
+        va_copy(va,*(va_list*)q);
         vp_init(*vp,sizeof(void*)*2);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
+        vp_push(*vp,va,void*);
+        vp_push(*vp,va,void*);
+        va_end(va);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);

@@ -26,7 +26,7 @@ static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(qq_account* ac,LwqqGroup* group);
 static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sender,char* buf,time_t t);
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
-static void friend_avatar(LwqqAsyncEvent* ev,LwqqBuddy* buddy);
+static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 
 enum ResetOption{
@@ -324,11 +324,8 @@ static int friend_come(LwqqClient* lc,void* data)
     //download avatar
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
-        /*void **d = s_malloc0(sizeof(void*)*2);
-        d[0] = ac;
-        d[1] = buddy;*/
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
-        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ev,buddy));
+        lwqq_async_add_event_listener(ev,_C_(4p,lc->dispatch,vp_func_2p,friend_avatar,ac,buddy));
     } //else {
     //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
@@ -628,9 +625,9 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
     }
 }
-static void friend_avatar(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
+static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
 {
-    qq_account* ac = lwqq_async_event_get_owner(ev)->data;
+    /*qq_account* ac = lwqq_async_event_get_owner(ev)->data;
     switch(lwqq_async_event_get_code(ev)){
         case LWQQ_CALLBACK_FAILED:
             return ;
@@ -642,8 +639,7 @@ static void friend_avatar(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
         break;
         case LWQQ_CALLBACK_DISPATCH:
         break;
-
-    }
+    }*/
 
     PurpleAccount* account = ac->account;
     if(buddy->avatar_len==0)return ;
@@ -792,7 +788,7 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
         d[0] = ac;
         d[1] = lc->myself;*/
         LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
-        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ev,lc->myself));
+        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,lc->myself));
     }
 
     LwqqAsyncEvent* ev = NULL;
@@ -932,6 +928,7 @@ static void login_complete(LwqqClient* lc,LwqqErrorCode err)
 //send back receipt
 static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what)
 {
+    if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) goto failed;
     qq_account* ac = lwqq_async_event_get_owner(ev)->data;
 
     if(ev == NULL){
@@ -956,6 +953,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
     LwqqMsgMessage* mmsg = msg->opaque;
     if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
     else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
+failed:
     s_free(what);
     s_free(serv_id);
     lwqq_msg_free(msg);
@@ -1299,7 +1297,7 @@ static void qq_close(PurpleConnection *gc)
     translate_global_free();
     g_ref_count -- ;
     if(g_ref_count == 0){
-        lwqq_async_dispatch(vp_func_void,lwqq_http_global_free);
+        lwqq_http_global_free();
         lwqq_async_global_quit();
     }
     lwdb_global_free();

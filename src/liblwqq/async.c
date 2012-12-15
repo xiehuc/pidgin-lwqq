@@ -108,7 +108,7 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
         if(event->host_lock->ref_count==0){
             /*if(evset->callback)
                 evset->callback(evset,evset->data);*/
-            vp_do(event->cmd,NULL);
+            vp_do(evset->cmd,NULL);
             if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
             else{
@@ -265,6 +265,7 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
     s_free(timer->data);
+    timer->data=NULL;
     ev_timer_stop(ev_default,timer);
 }
 void lwqq_async_global_quit()
@@ -287,6 +288,7 @@ void lwqq_async_global_quit()
     pthread_join(pid,NULL);
     ev_loop_destroy(ev_default);
     ev_default = NULL;
+    global_quit_lock = 0;
 }
 #endif
 #ifdef USE_LIBPURPLE

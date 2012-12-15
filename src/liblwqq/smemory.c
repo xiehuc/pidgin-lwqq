@@ -34,10 +34,11 @@ void *s_malloc0(size_t size)
     return ptr;
 }
 
+/*j
 void s_free(void* ptr)
 {
     if(ptr) free(ptr);
-}
+}*/
 
 void *s_calloc(size_t nmemb, size_t lsize)
 {
