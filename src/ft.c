@@ -31,9 +31,8 @@ static void file_trans_on_start(LwqqAsyncEvent* event,void* data)
     purple_xfer_start(xfer,lwqq_async_event_get_result(event),NULL,0);
 }
 #endif
-static void file_trans_complete(LwqqAsyncEvent* event,void* data)
+static void file_trans_complete(PurpleXfer* xfer)
 {
-    PurpleXfer* xfer = data;
     purple_xfer_set_completed(xfer,1);
 }
 static void file_trans_init(PurpleXfer* xfer)
@@ -47,7 +46,7 @@ static void file_trans_init(PurpleXfer* xfer)
     LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc,file,filename);
     if(ev == NULL){ lwqq_puts("file trans error ");return ; }
     lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
-    lwqq_async_add_event_listener(ev,file_trans_complete,xfer);
+    lwqq_async_add_event_listener(ev,_C_(p,file_trans_complete,xfer));
 }
 static void file_trans_cancel(PurpleXfer* xfer)
 {
@@ -136,7 +135,8 @@ static void send_file(LwqqAsyncEvent* event,void* d)
         s_free(name);
         s_free(d);
     } else {
-        lwqq_async_add_event_listener(lwqq_msg_send_offfile(lc,file),send_offline_file_receipt,d);
+        LwqqAsyncEvent* ev = lwqq_msg_send_offfile(lc,file);
+        lwqq_async_add_event_listener(ev,_C_(2p,send_offline_file_receipt,ev,d));
     }
 }
 static void upload_offline_file_init(PurpleXfer* xfer)
@@ -150,7 +150,7 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     data[1] = file;
     data[2] = xfer;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
-    lwqq_async_add_event_listener(ev,send_file,data);
+    lwqq_async_add_event_listener(ev,_C_(2p,send_file,ev,data));
     lwqq_async_event_set_progress(ev, file_trans_on_progress, xfer);
 }
 static void upload_file_init(PurpleXfer* xfer)

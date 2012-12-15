@@ -18,6 +18,7 @@ vp_command vp_make_command(VP_DISPATCH dsph,VP_CALLBACK func,...)
 }
 void vp_do(vp_command cmd,void* retval)
 {
+    if(cmd.dsph==NULL||cmd.func==NULL) return;
     vp_start(cmd.data);
     cmd.dsph(cmd.func,&cmd.data,retval);
     vp_end(cmd.data);
@@ -59,6 +60,40 @@ void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
     void* p2 = vp_arg(*vp,void*);
     ((f)func)(p1,p2);
 }
+void vp_func_3p(VP_CALLBACK func,vp_list* vp,void* q)
+{
+    typedef void (*f)(void*,void*,void*);
+    if( q ){
+        va_list* va = q;
+        vp_init(*vp,sizeof(void*)*3);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        return ;
+    }
+    void* p1 = vp_arg(*vp,void*);
+    void* p2 = vp_arg(*vp,void*);
+    void* p3 = vp_arg(*vp,void*);
+    ((f)func)(p1,p2,p3);
+}
+void vp_func_4p(VP_CALLBACK func,vp_list* vp,void* q)
+{
+    typedef void (*f)(void*,void*,void*,void*);
+    if( q ){
+        va_list* va = q;
+        vp_init(*vp,sizeof(void*)*4);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        return ;
+    }
+    void* p1 = vp_arg(*vp,void*);
+    void* p2 = vp_arg(*vp,void*);
+    void* p3 = vp_arg(*vp,void*);
+    void* p4 = vp_arg(*vp,void*);
+    ((f)func)(p1,p2,p3,p4);
+}
 void vp_func_pi(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,int);
@@ -93,7 +128,7 @@ void vp_func_3p_i(VP_CALLBACK func,vp_list* vp,void* q)
     typedef int (*f)(void*,void*,void*);
     if( q ){
         va_list* va = q;
-        vp_init(*vp,sizeof(void*)*2);
+        vp_init(*vp,sizeof(void*)*3);
         vp_push(*vp,*va,void*);
         vp_push(*vp,*va,void*);
         vp_push(*vp,*va,void*);
@@ -109,6 +144,8 @@ static struct vp_d_table tables[]= {
     {"",vp_func_void},
     {"p",vp_func_p},
     {"pp",vp_func_2p},
+    {"ppp",vp_func_3p},
+    {"pppp",vp_func_4p},
     {"pi",vp_func_pi},
     {"i:pp",vp_func_2p_i},
 };

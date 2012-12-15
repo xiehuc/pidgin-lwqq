@@ -103,8 +103,8 @@ void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
  * because you can set different data to different event which may the same function.
  * async listener can only set one data for one ListenerType.
  */
-void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data);
-void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data);
+void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd);
+void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd);
 /** !!not finished yet */
 void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data);
 /** this set the errno for a event.
@@ -127,6 +127,7 @@ do{\
 #define lwqq_async_event_get_result(ev) (ev?*((int*)ev):-1)
 
 #define lwqq_async_event_get_code(ev) (ev?*(((int*)ev)+1):LWQQ_CALLBACK_FAILED)
+LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev);
 /** this return one of errno of event in set ,so do not use it*/
 #define lwqq_async_evset_get_result(ev) (ev?*((int*)ev):-1)
 

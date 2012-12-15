@@ -20,6 +20,15 @@
 #include "background.h"
 #include "translate.h"
 
+
+char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
+static void client_connect_signals(PurpleConnection* gc);
+static void group_member_list_come(qq_account* ac,LwqqGroup* group);
+static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sender,char* buf,time_t t);
+static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
+static void friend_avatar(LwqqAsyncEvent* ev,LwqqBuddy* buddy);
+static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
+
 enum ResetOption{
     RESET_BUDDY=0x1,
     RESET_GROUP=0x2,
@@ -28,16 +37,6 @@ enum ResetOption{
     RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
 
 #define try_get(val,fail) (val?val:fail)
-
-char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
-static void client_connect_signals(PurpleConnection* gc);
-static void group_member_list_come(LwqqAsyncEvent* event,void* data);
-static int group_message_delay_display(LwqqClient* lc,void* data);
-static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data);
-static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data);
-static void friend_avatar(LwqqAsyncEvent* ev,void* data);
-static void group_avatar(LwqqAsyncEvent* ev,void* data);
-
 ///###  global data area ###///
 int g_ref_count = 0;
 ///###  global data area ###///
@@ -325,11 +324,11 @@ static int friend_come(LwqqClient* lc,void* data)
     //download avatar
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
-        void **d = s_malloc0(sizeof(void*)*2);
+        /*void **d = s_malloc0(sizeof(void*)*2);
         d[0] = ac;
-        d[1] = buddy;
-        lwqq_async_add_event_listener(
-                lwqq_info_get_friend_avatar(lc,buddy),friend_avatar,d);
+        d[1] = buddy;*/
+        LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
+        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ev,buddy));
     } //else {
     //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
@@ -378,11 +377,8 @@ static int group_come(LwqqClient* lc,void* data)
         //*** it failed ***/
         purple_blist_alias_chat(chat,group_name(group));
         if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0){
-            void **d = s_malloc0(sizeof(void*)*2);
-            d[0] = ac;
-            d[1] = group;
-            lwqq_async_add_event_listener(
-                    lwqq_info_get_group_avatar(lc,group),group_avatar,d);
+            LwqqAsyncEvent* ev = lwqq_info_get_group_avatar(lc,group);
+            lwqq_async_add_event_listener(ev,_C_(2p,group_avatar,ev,group));
         }
     }else{
         purple_blist_alias_chat(chat,group_name(group));
@@ -458,35 +454,27 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     translate_struct_to_message(ac,msg,buf);
 
     LwqqErrorCode err;
-    void **data = s_malloc0(sizeof(void*)*5);
+    /*void **data = s_malloc0(sizeof(void*)*5);
     data[0] = ac;
     data[1] = group;
     data[2] = s_strdup(msg->group.send);
     //because buf is not always too long .so it is not slowdown performance.
     data[3] = s_strdup(buf);
-    data[4] = (void*)msg->time;
+    data[4] = (void*)msg->time;*/
     //get all member list
+    LwqqCommand cmd = _C_(4pl,group_message_delay_display,ac,group,s_strdup(msg->group.send),s_strdup(buf),msg->time);
     if(LIST_EMPTY(&group->members)) {
         //use block method to get list
-        lwqq_async_add_event_listener(
-            lwqq_info_get_group_detail_info(lc,group,&err),
-            group_message_delay_display_wrapper,
-            data);
+        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,&err);
+        lwqq_async_add_event_listener(ev,cmd);
     } else {
-        group_message_delay_display(NULL,data);
+        vp_do(cmd,NULL);
+        //group_message_delay_display(ac,group,s_strdup(msg->group.send);
     }
     return SUCCESS;
 }
-static int group_message_delay_display(LwqqClient* lc,void* data)
+static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sender,char* buf,time_t t)
 {
-    //@notice lc may null
-    void **d = data;
-    qq_account* ac = d[0];
-    LwqqGroup* group = d[1];
-    char* sender = d[2];
-    char* buf = d[3];
-    time_t t = (time_t)d[4];
-    //LwqqClient* lc = ac->qq;
     PurpleConnection* pc = ac->gc;
     const char* who;
     LwqqBuddy* buddy;
@@ -504,9 +492,10 @@ static int group_message_delay_display(LwqqClient* lc,void* data)
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
     s_free(sender);
     s_free(buf);
-    group_member_list_come(NULL,data);
+    group_member_list_come(ac,group);
     return 0;
 }
+#if 0 
 static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data)
 {
 #ifdef USE_LIBEV
@@ -519,6 +508,7 @@ static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data
 
 #endif
 }
+#endif
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -544,23 +534,15 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     data[2] = s_strdup(from);
     data[3] = s_strdup(buf);
     data[4] = (void*)mmsg->time;
+    LwqqCommand cmd = _C_(4pl,whisper_message_delay_display,ac,group,s_strdup(from),s_strdup(buf),mmsg->time);
     if(LIST_EMPTY(&group->members)) {
-        lwqq_async_add_event_listener(
-            lwqq_info_get_group_detail_info(lc,group,NULL),
-            whisper_message_delay_display,
-            data);
+        lwqq_async_add_event_listener(lwqq_info_get_group_detail_info(lc,group,NULL),cmd);
     } else
-        whisper_message_delay_display(NULL,data);
+        vp_do(cmd,NULL);
 }
-static void whisper_message_delay_display(LwqqAsyncEvent* event,void* data)
+static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t)
 {
-    void**d = data;
-    PurpleConnection* pc = d[0];
-    LwqqGroup* group = d[1];
-    char* from = d[2];
-    char* msg = d[3];
-    time_t t = (time_t)d[4];
-    s_free(data);
+    PurpleConnection* pc = purple_account_get_connection(ac->account);
     char name[70];
     LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,from);
     if(sb == NULL) {
@@ -646,26 +628,22 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
     }
 }
-static void friend_avatar(LwqqAsyncEvent* ev,void* data)
+static void friend_avatar(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
 {
-    void **d = data;
-    qq_account* ac = d[0];
+    qq_account* ac = lwqq_async_event_get_owner(ev)->data;
     switch(lwqq_async_event_get_code(ev)){
         case LWQQ_CALLBACK_FAILED:
-            s_free(data);
             return ;
         break;
         case LWQQ_CALLBACK_VALID:
             lwqq_async_event_set_code(ev,LWQQ_CALLBACK_DISPATCH);
-            ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)friend_avatar,ev,data);
+            ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)friend_avatar,ev,buddy);
             return;
         break;
         case LWQQ_CALLBACK_DISPATCH:
         break;
 
     }
-    LwqqBuddy* buddy = d[1];
-    s_free(data);
 
     PurpleAccount* account = ac->account;
     if(buddy->avatar_len==0)return ;
@@ -678,12 +656,9 @@ static void friend_avatar(LwqqAsyncEvent* ev,void* data)
     }
     buddy->avatar = NULL;
 }
-static void group_avatar(LwqqAsyncEvent* ev,void* data)
+static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group)
 {
-    void **d = data;
-    qq_account* ac = d[0];
-    LwqqGroup* group = d[1];
-    s_free(data);
+    qq_account* ac = lwqq_async_event_get_owner(ev)->data;
     
     PurpleAccount* account = ac->account;
     PurpleChat* chat;
@@ -785,30 +760,25 @@ void qq_msg_check(LwqqClient* lc)
         purple_blist_remove_buddy(bu);
     }
 }*/
-static void write_buddy_to_db(LwqqAsyncEvent* ev,void* data)
+static void write_buddy_to_db(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
 {
-    void **d = data;
-    qq_account* ac = d[0];
-    LwqqBuddy* buddy = d[1];
-    s_free(data);
+    LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    qq_account* ac = lwqq_client_userdata(lc);
 
     lwdb_userdb_insert_buddy_info(ac->db, buddy);
-    friend_come(ac->qq,buddy);
+    friend_come(lc,buddy);
 }
-static void write_group_to_db(LwqqAsyncEvent* ev,void* data)
+static void write_group_to_db(LwqqAsyncEvent* ev,LwqqGroup* group)
 {
-    void **d = data;
-    qq_account* ac = d[0];
-    LwqqGroup* group = d[1];
-    s_free(data);
+    LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    qq_account* ac = lwqq_client_userdata(lc);
 
     lwdb_userdb_insert_group_info(ac->db, group);
-    group_come(ac->qq,group);
+    group_come(lc,group);
 }
 
-static void finish_insertion(LwqqAsyncEvset* ev,void* data)
+static void finish_insertion(qq_account* ac)
 {
-    qq_account* ac = data;
     lwdb_userdb_commit(ac->db, "insertion");
 }
 
@@ -818,11 +788,11 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     //LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL){
-        void **d = s_malloc0(sizeof(void*)*2);
+        /*void **d = s_malloc0(sizeof(void*)*2);
         d[0] = ac;
-        d[1] = lc->myself;
-        lwqq_async_add_event_listener(
-                lwqq_info_get_friend_avatar(lc,lc->myself),friend_avatar,d);
+        d[1] = lc->myself;*/
+        LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
+        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ev,lc->myself));
     }
 
     LwqqAsyncEvent* ev = NULL;
@@ -854,11 +824,8 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(ac->qq_use_qqnum && ! buddy->qqnumber){
-            void **d = s_malloc0(sizeof(void*)*2);
-            d[0] = ac;
-            d[1] = buddy;
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
-            lwqq_async_add_event_listener(ev,write_buddy_to_db,d);
+            lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,ev,buddy));
             lwqq_async_evset_add_event(set, ev);
         }
         else{
@@ -868,18 +835,15 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
         if(ac->qq_use_qqnum && ! group->account){
-            void **d = s_malloc0(sizeof(void*)*2);
-            d[0] = ac;
-            d[1] = group;
             ev = lwqq_info_get_group_qqnumber(lc,group);
-            lwqq_async_add_event_listener(ev,write_group_to_db,d);
+            lwqq_async_add_event_listener(ev,_C_(2p,write_group_to_db,ev,group));
             lwqq_async_evset_add_event(set, ev);
         }else{
             group_come(lc,group);
         }
     }
     if(set)
-        lwqq_async_add_evset_listener(set, finish_insertion, ac);
+        lwqq_async_add_evset_listener(set, _C_(p,finish_insertion, ac));
     //after this we finished the qqnumber fast index.
     
 
@@ -966,21 +930,16 @@ static void login_complete(LwqqClient* lc,LwqqErrorCode err)
 }
 
 //send back receipt
-static void send_receipt(LwqqAsyncEvent* ev,void* data)
+static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what)
 {
-    void **d = data;
-    qq_account* ac = d[0];
-    LwqqMsg* msg = d[1];
-    char* who = d[2];
-    char* what = d[3];
-    s_free(data);
+    qq_account* ac = lwqq_async_event_get_owner(ev)->data;
 
     if(ev == NULL){
-        qq_sys_msg_write(ac,msg->type,who,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
+        qq_sys_msg_write(ac,msg->type,serv_id,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
     }else{
         int err = lwqq_async_event_get_result(ev);
         static char buf[1024];
-        PurpleConversation* conv = find_conversation(msg->type,who,ac);
+        PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
         if(err == LWQQ_MC_LOST_CONN){
             ac->qq->dispatch(vp_func_p,(CALLBACK_FUNC)ac->qq->async_opt->poll_lost,ac->qq);
@@ -990,7 +949,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
                 snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
             else
                 snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
-            qq_sys_msg_write(ac, msg->type, who, buf, PURPLE_MESSAGE_ERROR, time(NULL));
+            qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
     }
 
@@ -998,7 +957,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
     if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
     else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
     s_free(what);
-    s_free(who);
+    s_free(serv_id);
     lwqq_msg_free(msg);
 }
 
@@ -1043,12 +1002,8 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 
     translate_message_to_struct(lc, who, what, msg, 0);
 
-    void **d = s_malloc0(sizeof(void*)*4);
-    d[0] = ac;
-    d[1] = msg;
-    d[2] = s_strdup(who);
-    d[3] = s_strdup(what);
-    lwqq_async_add_event_listener(lwqq_msg_send(lc,msg), send_receipt, d);
+    LwqqAsyncEvent* ev = lwqq_msg_send(lc,msg);
+    lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
 
     return 1;
 }
@@ -1078,12 +1033,8 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 
     translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
 
-    void **d = s_malloc0(sizeof(void*)*4);
-    d[0] = ac;
-    d[1] = msg;
-    d[2] = s_strdup(group->gid);
-    d[3] = s_strdup(message);
-    lwqq_async_add_event_listener(lwqq_msg_send(ac->qq,msg), send_receipt, d);
+    LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq,msg);
+    lwqq_async_add_event_listener(ev, _C_(4p,send_receipt,ev,msg,s_strdup(group->gid),s_strdup(message)));
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;
@@ -1194,12 +1145,8 @@ static PurpleRoomlist* qq_get_all_group_list(PurpleConnection* gc)
     return list;
 }
 
-static void group_member_list_come(LwqqAsyncEvent* event,void* data)
+static void group_member_list_come(qq_account* ac,LwqqGroup* group)
 {
-    void** d = data;
-    qq_account* ac = d[0];
-    LwqqGroup* group = d[1];
-    s_free(data);
     LwqqClient* lc = ac->qq;
     LwqqSimpleBuddy* member;
     LwqqBuddy* buddy;
@@ -1258,16 +1205,12 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
 
     //this will open chat dialog.
     qq_conv_open(gc,group);
-    void** d = s_malloc0(sizeof(void*)*2);
-    d[0] = ac;
-    d[1] = group;
+    LwqqCommand cmd = _C_(2p,group_member_list_come,ac,group);
     if(!LIST_EMPTY(&group->members)) {
-        group_member_list_come(NULL,d);
+        vp_do(cmd,NULL);
     } else {
-        lwqq_async_add_event_listener(
-            lwqq_info_get_group_detail_info(lc,group,NULL),
-            group_member_list_come,
-            d);
+        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
+        lwqq_async_add_event_listener(ev,cmd);
     }
     return;
 }
@@ -1463,8 +1406,9 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     data[2] = ac;
     if(event == NULL) {
         purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
-    } else
-        lwqq_async_add_event_listener(event,change_category_back,data);
+    } else{
+        lwqq_async_add_event_listener(event,_C_(2p,change_category_back,event,data));
+    }
 }
 //keep this empty to ensure rename category dont crash
 static void qq_rename_category(PurpleConnection* gc,const char* old_name,PurpleGroup* group,GList* moved_buddies)
@@ -1486,9 +1430,8 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 }
 
-static void visit_qqzone(LwqqAsyncEvent* event,void* data)
+static void visit_qqzone(LwqqBuddy* buddy)
 {
-    LwqqBuddy* buddy = data;
     char url[256];
     snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
     system(url);
@@ -1513,9 +1456,9 @@ static void qq_visit_qzone(PurpleBlistNode* node)
         if(!friend->qqnumber) {
             lwqq_async_add_event_listener(
                     lwqq_info_get_friend_qqnumber(ac->qq,friend),
-                    visit_qqzone,friend);
+                    _C_(p,visit_qqzone,friend));
         } else {
-            visit_qqzone(NULL,friend);
+            visit_qqzone(friend);
         }
     }
 }
@@ -1550,7 +1493,7 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
     }
 }
 
-static void flush_group_name(LwqqAsyncEvent* event,void* data)
+static void flush_group_name(void* data)
 {
     PurpleChat* chat = data;
     LwqqGroup* group = find_group_by_chat(chat);
@@ -1566,7 +1509,7 @@ static void qq_block_chat(PurpleBlistNode* node)
     LwqqGroup* group = find_group_by_chat(chat);
     lwqq_async_add_event_listener(
             lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL),
-            flush_group_name,chat);
+            _C_(p,flush_group_name,chat));
 }
 static void qq_unblock_chat(PurpleBlistNode* node)
 {
@@ -1577,7 +1520,7 @@ static void qq_unblock_chat(PurpleBlistNode* node)
     LwqqGroup* group = find_group_by_chat(chat);
     lwqq_async_add_event_listener(
             lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE),
-            flush_group_name,chat);
+            _C_(p,flush_group_name,chat));
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {

@@ -936,12 +936,8 @@ static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgM
     }
     return ret;
 }
-static void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
+static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* msg)
 {
-    void **d = data;
-    LwqqRecvMsgList* list = d[0];
-    LwqqMsg* msg = d[1];
-    s_free(data);
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
     lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
@@ -1011,10 +1007,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
             ev = lwqq_msg_request_picture(list->lc, msg->type, msg->opaque);
             if(ev){
                 ret = -1;
-                void **d = s_malloc0(sizeof(void*)*2);
-                d[0] = list;
-                d[1] = msg;
-                lwqq_async_add_evset_listener(ev,insert_msg_delay_by_request_content,d);
+                lwqq_async_add_evset_listener(ev,_C_(2p,insert_msg_delay_by_request_content,list,msg));
                 //this jump the case
                 continue;
             }
@@ -1493,13 +1486,8 @@ static LwqqAsyncEvent* lwqq_msg_upload_content(
     return NULL;
 }
 
-void lwqq_msg_send_continue(LwqqAsyncEvset* ev,void* data)
+void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsg* msg,LwqqAsyncEvent* event)
 {
-    void **d = data;
-    LwqqClient* lc = d[0];
-    LwqqMsg* msg = d[1];
-    LwqqAsyncEvent* event = d[2];
-    s_free(data);
     LwqqAsyncEvent* ret = lwqq_msg_send(lc,msg);
     lwqq_async_add_event_chain(ret, event);
 }
@@ -1540,11 +1528,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     }
     if(will_upload){
         event = lwqq_async_event_new(NULL);
-        void** d = s_malloc(sizeof(void*)*3);
-        d[0] = lc;
-        d[1] = msg;
-        d[2] = event;
-        lwqq_async_add_evset_listener(evset, lwqq_msg_send_continue, d);
+        lwqq_async_add_evset_listener(evset, _C_(3p,lwqq_msg_send_continue, lc,msg,event));
         //if we need upload first. we break this send msg 
         //and use event chain to resume later.
         return event;

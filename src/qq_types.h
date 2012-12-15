@@ -105,4 +105,7 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin);
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid);
 
+
+void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* p);
+
 #endif

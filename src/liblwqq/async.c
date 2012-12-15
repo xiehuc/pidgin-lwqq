@@ -28,16 +28,14 @@ typedef struct _LwqqAsyncEvset{
     pthread_cond_t cond;
     int cond_waiting;
     int ref_count;
-    EVSET_CALLBACK callback;
-    void* data;
+    LwqqCommand cmd;
 }_LwqqAsyncEvset;
 typedef struct _LwqqAsyncEvent {
     int result;///<it must put first
     LwqqCallbackCode failcode; ///<it must put second
     LwqqClient* lc;
     LwqqAsyncEvset* host_lock;
-    EVENT_CALLBACK callback;
-    void* data;
+    LwqqCommand cmd;
     LwqqHttpRequest* req;
 }_LwqqAsyncEvent;
 
@@ -82,6 +80,10 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
     event->failcode = LWQQ_CALLBACK_VALID;
     return event;
 }
+LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev)
+{
+    return ev->lc;
+}
 LwqqAsyncEvset* lwqq_async_evset_new()
 {
     LwqqAsyncEvset* l = s_malloc0(sizeof(*l));
@@ -91,9 +93,10 @@ LwqqAsyncEvset* lwqq_async_evset_new()
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
 {
-    if(event->callback){
+    /*if(event->callback){
         event->callback(event,event->data);
-    }
+    }*/
+    vp_do(event->cmd,NULL);
     LwqqAsyncEvset* evset = event->host_lock;
     if(evset !=NULL){
         pthread_mutex_lock(&evset->lock);
@@ -103,8 +106,9 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
         if(event->result != 0)
             evset->result = event->result;
         if(event->host_lock->ref_count==0){
-            if(evset->callback)
-                evset->callback(evset,evset->data);
+            /*if(evset->callback)
+                evset->callback(evset,evset->data);*/
+            vp_do(event->cmd,NULL);
             if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
             else{
@@ -127,28 +131,32 @@ void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
     pthread_mutex_unlock(&host->lock);
 }
 
-void lwqq_async_add_event_listener(LwqqAsyncEvent* event,EVENT_CALLBACK callback,void* data)
+void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
     if(event == NULL){
-        callback(NULL,data);
+        vp_do(cmd,NULL);
+        //callback(NULL,data);
         return ;
     }
-    event->callback = callback;
-    event->data = data;
+    event->cmd = cmd;
+    //event->callback = callback;
+    //event->data = data;
 }
-static void async_call_on_chain(LwqqAsyncEvent* ev,void* data)
+/*static void async_call_on_chain(LwqqAsyncEvent* ev,void* data)
 {
     lwqq_async_event_finish((LwqqAsyncEvent*)data);
-}
+}*/
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
-    lwqq_async_add_event_listener(caller,async_call_on_chain,called);
+    called->lc = caller->lc;
+    lwqq_async_add_event_listener(caller,_C_(p,lwqq_async_event_finish,called));
 }
-void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,EVSET_CALLBACK callback,void* data)
+void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
     if(!evset) return;
-    evset->callback = callback;
-    evset->data = data;
+    /*evset->callback = callback;
+    evset->data = data;*/
+    evset->cmd = cmd;
 }
 
 void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)

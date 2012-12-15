@@ -34,6 +34,8 @@ void vp_do(vp_command,void* retval);
 void vp_func_void(VP_CALLBACK,vp_list*,void*);
 void vp_func_p(VP_CALLBACK,vp_list*,void*);
 void vp_func_2p(VP_CALLBACK,vp_list*,void*);
+void vp_func_3p(VP_CALLBACK,vp_list*,void*);
+void vp_func_4p(VP_CALLBACK,vp_list*,void*);
 void vp_func_pi(VP_CALLBACK,vp_list*,void*);
 void vp_func_2p_i(VP_CALLBACK,vp_list*,void*);
 void vp_func_3p_i(VP_CALLBACK,vp_list*,void*);

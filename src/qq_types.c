@@ -233,4 +233,23 @@ LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
     return lwqq_group_find_group_by_gid(lc, gid);
 #endif
 }
-
+void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
+{
+    typedef void (*f)(void*,void*,void*,void*,long);
+    if( q ){
+        va_list* va = q;
+        vp_init(*vp,sizeof(void*)*4+sizeof(long));
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,void*);
+        vp_push(*vp,*va,int);
+        return ;
+    }
+    void* p1 = vp_arg(*vp,void*);
+    void* p2 = vp_arg(*vp,void*);
+    void* p3 = vp_arg(*vp,void*);
+    void* p4 = vp_arg(*vp,void*);
+    long p5 = vp_arg(*vp,long);
+    ((f)func)(p1,p2,p3,p4,p5);
+}
