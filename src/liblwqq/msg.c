@@ -31,7 +31,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
 static int msg_send_back(LwqqHttpRequest* req,void* data);
-static int upload_cface_back(LwqqHttpRequest *req,void* data);
+static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c);
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
@@ -859,7 +859,7 @@ static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,L
     req->set_header(req,"Host","d.web2.qq.com");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    return req->do_request_async(req, 0, NULL,set_content_picture_data,c);
+    return req->do_request_async(req, 0, NULL,_C_(2p_i,set_content_picture_data,req,c));
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -885,7 +885,7 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     req->set_header(req, "Host", "web2.qq.com");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    return req->do_request_async(req,0,NULL,set_content_picture_data,c);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,set_content_picture_data,req,c));
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -910,7 +910,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    return req->do_request_async(req,0,NULL,set_content_picture_data,c);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,set_content_picture_data,req,c));
 done:
     lwqq_http_request_free(req);
     return NULL;
@@ -944,7 +944,7 @@ static void insert_msg_delay_by_request_content(LwqqAsyncEvset* ev,void* data)
     s_free(data);
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
-    lc->dispatch(vp_func_1p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
+    lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
 }
 /**
  * Parse message received from server
@@ -1178,10 +1178,10 @@ static void *start_poll_msg(void *msg_list)
         }
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121 || retcode == 108){
-            lc->dispatch(vp_func_1p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
             break;
         }else{
-            lc->dispatch(vp_func_1p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
         }
     }
 failed:
@@ -1336,7 +1336,7 @@ static LwqqAsyncEvent* lwqq_msg_upload_offline_pic(
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
 
-    return req->do_request_async(req,0,NULL,upload_offline_pic_back,c);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,upload_offline_pic_back,req,c));
 }
 static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
 {
@@ -1435,17 +1435,13 @@ static LwqqAsyncEvent* lwqq_msg_upload_cface(
     //cface 上传是会占用自定义表情的空间的.这里的fileid是几就是占用第几个格子.
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid","1");
 
-    void **data = s_malloc0(sizeof(void*)*2);
+    /*void **data = s_malloc0(sizeof(void*)*2);
     data[0] = lc;
-    data[1] = c;
-    return req->do_request_async(req,0,NULL,upload_cface_back,data);
+    data[1] = c;*/
+    return req->do_request_async(req,0,NULL,_C_(3p_i,upload_cface_back,req,lc,c));
 }
-static int upload_cface_back(LwqqHttpRequest *req,void* data)
+static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c)
 {
-    void **d = data;
-    LwqqClient* lc = d[0];
-    LwqqMsgContent *c = d[1];
-    s_free(data);
     int ret;
     int errno = 0;
     char msg[256];
@@ -1599,7 +1595,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     
-    return req->do_request_async(req, 1, data,msg_send_back,lc);
+    return req->do_request_async(req, 1, data,_C_(2p_i,msg_send_back,req,lc));
 
 failed:
     lwqq_http_request_free(req);
@@ -1719,7 +1715,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         return NULL;
     }
     lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE,file);
-    return req->do_request_async(req,0,NULL,lwqq_file_download_finish,file);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,lwqq_file_download_finish,req,file));
 }
 
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file)
@@ -1747,7 +1743,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
-    return req->do_request_async(req,0,NULL,upload_offline_file_back,file);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,upload_offline_file_back,req,file));
 }
 
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
@@ -1792,7 +1788,7 @@ LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
             "clientid=%s&psessionid=%s",
             file->to,file->path,file->name,file->to,lc->clientid,lc->psessionid,
             lc->clientid,lc->psessionid);
-    return req->do_request_async(req,1,post,send_offfile_back,file);
+    return req->do_request_async(req,1,post,_C_(2p_i,send_offfile_back,req,file));
 }
 
 static int send_offfile_back(LwqqHttpRequest* req,void* data)
@@ -1882,5 +1878,5 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
             );
     lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    return req->do_request_async(req,0,NULL,dump_resoponse,NULL);
+    return req->do_request_async(req,0,NULL,_C_(2p_i,dump_resoponse,req,NULL));
 }

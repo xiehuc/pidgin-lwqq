@@ -983,7 +983,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
         PurpleConversation* conv = find_conversation(msg->type,who,ac);
 
         if(err == LWQQ_MC_LOST_CONN){
-            ac->qq->dispatch(vp_func_1p,(CALLBACK_FUNC)ac->qq->async_opt->poll_lost,ac->qq);
+            ac->qq->dispatch(vp_func_p,(CALLBACK_FUNC)ac->qq->async_opt->poll_lost,ac->qq);
         }
         if(conv && err > 0){
             if(err == LWQQ_MC_TOO_FAST)

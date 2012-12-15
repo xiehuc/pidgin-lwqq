@@ -29,9 +29,11 @@ typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqClient LwqqClient;
 
 
-//typedef void (*DISPATCH_FUNC)(LwqqClient* lc,vp_list* vp,va_list* va);
 typedef VP_DISPATCH DISPATCH_FUNC;
 typedef VP_CALLBACK CALLBACK_FUNC;
+typedef vp_command  LwqqCommand;
+#define _F_(f) (CALLBACK_FUNC)f
+#define _C_(d,c,...) vp_make_command(vp_func_##d,_F_(c),__VA_ARGS__)
 //return zero means continue.>1 means abort
 typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/

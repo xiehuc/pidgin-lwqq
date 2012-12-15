@@ -21,6 +21,8 @@ static void lwqq_http_add_form(LwqqHttpRequest* request,LWQQ_FORM form,
         const char* name,const char* value);
 static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name,
         const char* filename,const void* data,size_t size,const char* extension);
+static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+        char *body,LwqqCommand);
 
 typedef struct GLOBAL {
     CURLM* multi;
@@ -42,17 +44,14 @@ typedef struct S_ITEM {
     LwqqAsyncIo ev;
 }S_ITEM;
 typedef struct D_ITEM{
-    LwqqAsyncCallback callback;
+    LwqqCommand cmd;
     LwqqHttpRequest* req;
     LwqqAsyncEvent* event;
-    void* data;
+    //void* data;
     LwqqAsyncTimer delay;
     LIST_ENTRY(D_ITEM) entries;
 }D_ITEM;
 /* For async request */
-static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
-        char *body, LwqqAsyncCallback callback,
-                                      void *data);
 
 #define slist_free_all(list) \
 while(list!=NULL){ \
@@ -447,7 +446,7 @@ static void async_complete(D_ITEM* conn)
         request->resp_len = total;
     }
 failed:
-    res = conn->callback(request,conn->data);
+    vp_do(conn->cmd,&res);
     lwqq_async_event_set_result(conn->event,res);
     lwqq_async_event_finish(conn->event);
     return ;
@@ -574,15 +573,15 @@ static int delay_add_handle(void* data)
     return 0;
 }
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
-                                      char *body, LwqqAsyncCallback callback,
-                                      void *data)
+                                      char *body, LwqqCommand command)
 {
     if (!request->req)
         return NULL;
 
     if(LWQQ_SYNC_ENABLED()){
         lwqq_http_do_request(request,method,body);
-        if(callback) callback(request,data);
+        vp_do(command,NULL);
+        //if(callback) callback(request,data);
         return NULL;
     }
 
@@ -613,12 +612,11 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     }
     D_ITEM* di = s_malloc0(sizeof(*di));
     curl_easy_setopt(request->req,CURLOPT_PRIVATE,di);
-    di->callback = callback;
+    di->cmd = command;
     di->req = request;
-    di->data = data;
     di->event = lwqq_async_event_new(request);
     LIST_INSERT_HEAD(&global.conn_link,di,entries);
-    lwqq_async_timer_watch(&di->delay,100,delay_add_handle,di);
+    lwqq_async_timer_watch(&di->delay,10,delay_add_handle,di);
     return di->event;
 
 failed:
@@ -748,7 +746,8 @@ void lwqq_http_global_free()
             curl_multi_remove_handle(global.multi, easy);
             lwqq_http_request_free(item->req);
             //let callback delete data
-            if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            vp_do(item->cmd,NULL);
+            //if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);
@@ -775,7 +774,8 @@ void lwqq_http_cleanup(LwqqClient*lc)
             curl_multi_remove_handle(global.multi, easy);
             lwqq_http_request_free(item->req);
             //let callback delete data
-            if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            //if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
+            vp_do(item->cmd,NULL);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);
