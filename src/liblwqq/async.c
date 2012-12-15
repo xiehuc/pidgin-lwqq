@@ -17,10 +17,10 @@
 #include "http.h"
 #include "logger.h"
 typedef struct async_dispatch_data {
-    DISPATCH_FUNC func;
-    LwqqClient* client;
-    LwqqAsyncTimer handle;
+    DISPATCH_FUNC dsph;
+    CALLBACK_FUNC func;
     vp_list data;
+    LwqqAsyncTimer handle;
 } async_dispatch_data;
 typedef struct _LwqqAsyncEvset{
     int result;///<it must put first
@@ -46,24 +46,25 @@ int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
 static int timeout_come(void* p)
 {
     async_dispatch_data* data = (async_dispatch_data*)p;
-    LwqqClient* lc = data->client;
-    DISPATCH_FUNC func = data->func;
+    DISPATCH_FUNC dsph = data->dsph;
+    CALLBACK_FUNC func = data->func;
     vp_start(data->data);
-    func(lc,&data->data,NULL);
+    dsph(func,&data->data,NULL);
     vp_end(data->data);
 
+    //!!! should we stop first delete later?
     s_free(data);
     //remote handle;
     return 0;
 }
-static void async_dispatch(void* lc,DISPATCH_FUNC func,...)
+static void async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
 {
-    async_dispatch_data* data = malloc(sizeof(async_dispatch_data));
+    async_dispatch_data* data = s_malloc(sizeof(async_dispatch_data));
+    data->dsph = dsph;
     data->func = func;
-    data->client = lc;
     va_list args;
     va_start(args,func);
-    func(NULL,&data->data,&args);
+    dsph(NULL,&data->data,&args);
     va_end(args);
     lwqq_async_timer_watch(&data->handle, 50, timeout_come, data);
 }

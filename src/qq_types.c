@@ -4,32 +4,32 @@
 #include "async.h"
 
 struct dispatch_data{
-    LwqqClient* lc;
-    DISPATCH_FUNC func;
+    DISPATCH_FUNC dsph;
+    CALLBACK_FUNC func;
     vp_list data;
 };
 
 static int did_dispatch(void* param)
 {
     struct dispatch_data *d = param;
-    LwqqClient* lc = d->lc;
-    DISPATCH_FUNC func = d->func;
+    DISPATCH_FUNC dsph = d->dsph;
+    CALLBACK_FUNC func = d->func;
     vp_start(d->data);
-    func(lc,&d->data,NULL);
+    dsph(func,&d->data,NULL);
     vp_end(d->data);
     s_free(d);
     return 0;
 }
 
-static void qq_dispatch(void* lc,DISPATCH_FUNC func,...)
+static void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...)
 {
     struct dispatch_data* d = s_malloc0(sizeof(*d));
-    d->lc = lc;
+    d->dsph = dsph;
     d->func = func;
 
     va_list args;
     va_start(args,func);
-    func(NULL,&d->data,&args);
+    dsph(NULL,&d->data,&args);
     va_end(args);
 
     purple_timeout_add(10,did_dispatch,d);
@@ -155,7 +155,7 @@ static int sys_msg_write(LwqqClient* lc,void* data)
 
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t)
 {
-    ac->qq->dispatch(ac->qq,lwqq_func_1_pointer,sys_msg_write,system_msg_new(m_t,who,ac,msg,type,t));
+    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,who,ac,msg,type,t));
 }
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)

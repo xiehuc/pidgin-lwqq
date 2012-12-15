@@ -512,7 +512,7 @@ static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data
 #ifdef USE_LIBEV
     void **d = data;
     qq_account* ac = d[0];
-    ac->qq->dispatch(ac->qq,lwqq_func_1_pointer,group_message_delay_display,data);
+    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)group_message_delay_display,ac->qq,data);
 
 #else
     group_message_delay_display(NULL,data);
@@ -657,7 +657,7 @@ static void friend_avatar(LwqqAsyncEvent* ev,void* data)
         break;
         case LWQQ_CALLBACK_VALID:
             lwqq_async_event_set_code(ev,LWQQ_CALLBACK_DISPATCH);
-            ac->qq->dispatch(ev,lwqq_func_1_pointer,friend_avatar,data);
+            ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)friend_avatar,ev,data);
             return;
         break;
         case LWQQ_CALLBACK_DISPATCH:
@@ -983,7 +983,7 @@ static void send_receipt(LwqqAsyncEvent* ev,void* data)
         PurpleConversation* conv = find_conversation(msg->type,who,ac);
 
         if(err == LWQQ_MC_LOST_CONN){
-            ac->qq->dispatch(ac->qq,lwqq_func_void,ac->qq->async_opt->poll_lost);
+            ac->qq->dispatch(vp_func_1p,(CALLBACK_FUNC)ac->qq->async_opt->poll_lost,ac->qq);
         }
         if(conv && err > 0){
             if(err == LWQQ_MC_TOO_FAST)

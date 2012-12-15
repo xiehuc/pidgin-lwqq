@@ -22,6 +22,7 @@ set(LWQQ_LIST
   liblwqq/info.c
   liblwqq/lwdb.c
   liblwqq/swsqlite.c
+  liblwqq/vplist.c
   )
 
 add_definitions(-Wall)

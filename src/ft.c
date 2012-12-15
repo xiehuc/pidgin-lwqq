@@ -110,17 +110,21 @@ static void send_file(LwqqAsyncEvent* event,void* d)
     LwqqClient* lc = ac->qq;
     long errno = 0;
 #ifdef USE_LIBEV
-    if(event){
-        errno = lwqq_async_event_get_result(event);
-        data[4] = (void*)errno;
-        lc->dispatch(NULL,(DISPATCH_FUNC)send_file,d);
-        return;
-    }else{
-        errno = (long)data[4];
+    switch(lwqq_async_event_get_code(event)){
+        case LWQQ_CALLBACK_FAILED:
+            s_free(d);
+            break;
+        case LWQQ_CALLBACK_VALID:
+            lwqq_async_event_set_code(event,LWQQ_CALLBACK_DISPATCH);
+            lc->dispatch(vp_func_2p,(CALLBACK_FUNC)send_file,event,d);
+            return;
+            break;
+        case LWQQ_CALLBACK_DISPATCH:
+            break;
+        
     }
-#else
-    errno = lwqq_async_event_get_result(event);
 #endif
+    errno = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = data[1];
     PurpleXfer* xfer = data[2];
     char* name = data[3];
