@@ -20,6 +20,14 @@ typedef struct _AsyncListener AsyncListener;
 #	define UNUSED(x) x
 #endif
 
+#ifdef USE_LIBEV
+//the ev dispatch macro
+//ld:long dispatch,d:lc->dispatch,sd:short dispatch
+#define _EV_(ld,d,sd) ld,d,vp_func_##sd
+#else
+#define _EV_(ld,d,sd) sd
+#endif
+
 #define DISPLAY_VERSION "0.1"
 #define DBGID   "webqq"
 //this is qqnumber of a group

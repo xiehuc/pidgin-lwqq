@@ -325,7 +325,7 @@ static int friend_come(LwqqClient* lc,void* data)
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
-        lwqq_async_add_event_listener(ev,_C_(4p,lc->dispatch,vp_func_2p,friend_avatar,ac,buddy));
+        lwqq_async_add_event_listener(ev,_C_( _EV_(4p,lc->dispatch,2p) ,friend_avatar,ac,buddy));
     } //else {
     //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
@@ -492,20 +492,6 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sen
     group_member_list_come(ac,group);
     return 0;
 }
-#if 0 
-static void group_message_delay_display_wrapper(LwqqAsyncEvent* event,void* data)
-{
-#ifdef USE_LIBEV
-    void **d = data;
-    qq_account* ac = d[0];
-    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)group_message_delay_display,ac->qq,data);
-
-#else
-    group_message_delay_display(NULL,data);
-
-#endif
-}
-#endif
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -627,20 +613,6 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 }
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
 {
-    /*qq_account* ac = lwqq_async_event_get_owner(ev)->data;
-    switch(lwqq_async_event_get_code(ev)){
-        case LWQQ_CALLBACK_FAILED:
-            return ;
-        break;
-        case LWQQ_CALLBACK_VALID:
-            lwqq_async_event_set_code(ev,LWQQ_CALLBACK_DISPATCH);
-            ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)friend_avatar,ev,buddy);
-            return;
-        break;
-        case LWQQ_CALLBACK_DISPATCH:
-        break;
-    }*/
-
     PurpleAccount* account = ac->account;
     if(buddy->avatar_len==0)return ;
 
@@ -784,9 +756,6 @@ int qq_set_basic_info(LwqqClient* lc,void* data)
     //LwqqClient* lc = ac->qq;
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL){
-        /*void **d = s_malloc0(sizeof(void*)*2);
-        d[0] = ac;
-        d[1] = lc->myself;*/
         LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,lc->myself));
     }
