@@ -248,7 +248,7 @@ void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
         vp_push(*vp,*va,void*);
         vp_push(*vp,*va,void*);
         vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,int);
+        vp_push(*vp,*va,long);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);

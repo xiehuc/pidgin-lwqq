@@ -451,19 +451,11 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 
     translate_struct_to_message(ac,msg,buf);
 
-    LwqqErrorCode err;
-    /*void **data = s_malloc0(sizeof(void*)*5);
-    data[0] = ac;
-    data[1] = group;
-    data[2] = s_strdup(msg->group.send);
-    //because buf is not always too long .so it is not slowdown performance.
-    data[3] = s_strdup(buf);
-    data[4] = (void*)msg->time;*/
     //get all member list
     LwqqCommand cmd = _C_(4pl,group_message_delay_display,ac,group,s_strdup(msg->group.send),s_strdup(buf),msg->time);
     if(LIST_EMPTY(&group->members)) {
         //use block method to get list
-        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,&err);
+        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
         lwqq_async_add_event_listener(ev,cmd);
     } else {
         vp_do(cmd,NULL);
@@ -487,10 +479,10 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sen
             who = sender;
     }
 
+    group_member_list_come(ac,group);
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
     s_free(sender);
     s_free(buf);
-    group_member_list_come(ac,group);
     return 0;
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)

@@ -237,16 +237,17 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
     LwqqAsyncTimerWrap* wrap = w->data;
     int stop=1;
-    //!!! note . why wrap is zero ??????
-    /*if(wrap == NULL){
-        lwqq_log(LOG_WARNING,"event shouldn't be null");
-        ev_timer_stop(EV_A_ w);
+    //if wrap is null. so it is be stoped before.
+    //we directly ignore it.
+    if(wrap == NULL){
         return ;
-    }*/
+    }
     if(wrap->callback)
         stop = ! wrap->callback(wrap->data);
     if(stop)
         lwqq_async_timer_stop(w);
+    else
+        ev_timer_again(loop,w);
 }
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
