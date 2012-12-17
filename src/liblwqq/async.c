@@ -93,9 +93,6 @@ LwqqAsyncEvset* lwqq_async_evset_new()
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
 {
-    /*if(event->callback){
-        event->callback(event,event->data);
-    }*/
     vp_do(event->cmd,NULL);
     LwqqAsyncEvset* evset = event->host_lock;
     if(evset !=NULL){
@@ -106,8 +103,6 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
         if(event->result != 0)
             evset->result = event->result;
         if(event->host_lock->ref_count==0){
-            /*if(evset->callback)
-                evset->callback(evset,evset->data);*/
             vp_do(evset->cmd,NULL);
             if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
@@ -135,12 +130,9 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
     if(event == NULL){
         vp_do(cmd,NULL);
-        //callback(NULL,data);
         return ;
     }
     event->cmd = cmd;
-    //event->callback = callback;
-    //event->data = data;
 }
 /*static void async_call_on_chain(LwqqAsyncEvent* ev,void* data)
 {
@@ -154,8 +146,6 @@ void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
     if(!evset) return;
-    /*evset->callback = callback;
-    evset->data = data;*/
     evset->cmd = cmd;
 }
 
@@ -272,18 +262,14 @@ void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 void lwqq_async_global_quit()
 {
     //no need to destroy thread
-    global_quit_lock = 1;
     if(ev_thread_status == THREAD_NOT_CREATED) return ;
+    global_quit_lock = 1;
 
-    /*pthread_cond_signal(&ev_thread_cond);
     if(ev_thread_status == THREAD_NOW_WAITING){
-        ev_thread_status = THREAD_NOT_CREATED;
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
-        ev_thread_status = THREAD_NOT_CREATED;
-        //ev_break(ev_default,EVBREAK_ALL);
+        ev_break(ev_default,EVBREAK_ALL);
     }
-    ev_thread_status = THREAD_NOT_CREATED;*/
     //when ever it is waiting. we send a signal
     pthread_cond_signal(&ev_thread_cond);
     pthread_join(pid,NULL);
@@ -291,6 +277,10 @@ void lwqq_async_global_quit()
     ev_default = NULL;
     global_quit_lock = 0;
     ev_thread_status = THREAD_NOT_CREATED;
+}
+static int lwqq_gdb_still_waiting()
+{
+    return ev_pending_count(ev_default);
 }
 #endif
 #ifdef USE_LIBPURPLE

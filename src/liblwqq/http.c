@@ -32,7 +32,10 @@ typedef struct GLOBAL {
     LwqqAsyncTimer timer_event;
     LIST_HEAD(,D_ITEM) conn_link;
 }GLOBAL;
-GLOBAL global = {0};
+static GLOBAL global = {0};
+static pthread_cond_t async_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t async_lock = PTHREAD_MUTEX_INITIALIZER;
+
 
 typedef struct S_ITEM {
     /**@brief 全局事件循环*/
@@ -736,16 +739,31 @@ void lwqq_http_global_init()
         pthread_mutex_init(&global.share_lock[1],NULL);
     }
 }
+
+static void safe_remove_link(LwqqClient* lc)
+{
+    D_ITEM * item,* tvar;
+    CURL* easy;
+    LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
+        if(lc && (item->req->lc != lc) ) continue;
+        easy = item->req->req;
+        curl_multi_remove_handle(global.multi, easy);
+    }
+    pthread_cond_signal(&async_cond);
+}
 void lwqq_http_global_free()
 {
     if(global.multi){
+        if(!LIST_EMPTY(&global.conn_link)){
+            lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,NULL);
+            pthread_mutex_lock(&async_lock);
+            pthread_cond_wait(&async_cond,&async_lock);
+            pthread_mutex_unlock(&async_lock);
+        }
+
         D_ITEM * item,* tvar;
-        CURL* easy;
         LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
             LIST_REMOVE(item,entries);
-            easy = item->req->req;
-            curl_easy_pause(easy,CURLPAUSE_ALL);
-            curl_multi_remove_handle(global.multi, easy);
             //let callback delete data
             vp_do(item->cmd,NULL);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
@@ -765,13 +783,15 @@ void lwqq_http_global_free()
 void lwqq_http_cleanup(LwqqClient*lc)
 {
     if(global.multi){
+        lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,lc);
+        pthread_mutex_lock(&async_lock);
+        pthread_cond_wait(&async_cond,&async_lock);
+        pthread_mutex_unlock(&async_lock);
+
         D_ITEM * item,* tvar;
-        CURL* easy;
         LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
             if(item->req->lc != lc) continue;
             LIST_REMOVE(item,entries);
-            easy = item->req->req;
-            curl_multi_remove_handle(global.multi, easy);
             //let callback delete data
             vp_do(item->cmd,NULL);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
