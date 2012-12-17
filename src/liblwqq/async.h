@@ -10,6 +10,7 @@
 #ifndef LWQQ_ASYNC_H
 #define LWQQ_ASYNC_H
 #include "type.h"
+#include "msg.h"
 #include <assert.h>
 
 
@@ -159,7 +160,7 @@ struct _LwqqAsyncOption {
     void (*login_verify)(LwqqClient* lc);
     void (*poll_msg)(LwqqClient* lc);
     void (*poll_lost)(LwqqClient* lc);
-    void (*upload_fail)(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c);
+    void (*upload_fail)(LwqqClient* lc,const char* serv_id,struct LwqqMsgContent* c);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);
