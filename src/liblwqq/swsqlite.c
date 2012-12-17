@@ -176,24 +176,21 @@ int sws_query_reset(SwsStmt* stmt)
  * @return 0 if query successfully, else return -1 and stored error
  *         information in errmsg if errmsg is not null.
  */
-int sws_query_next(SwsStmt *stmt, char **errmsg)
+SwsRetCode sws_query_next(SwsStmt *stmt, char **errmsg)
 {
     int ret;
     
     if (!stmt) {
         SET_ERRMSG(errmsg, "Some parameterment is null");
-        return -1;
+        return SWS_FAILED;
     }
 
     ret = sqlite3_step(stmt);
-    if (ret != SQLITE_ROW) {
-        char msg[128];
-        snprintf(msg, sizeof(msg), "Query failed, errcode: %d", ret);
-        SET_ERRMSG(errmsg, msg);
-        return -1;
-    }
-    
-    return 0;
+
+    if(ret == SQLITE_ROW) return SWS_OK;
+    else if (ret == SQLITE_DONE) return SWS_FAILED;
+    else if (ret == SQLITE_OK) return SWS_OK;
+    else return SWS_FAILED;
 }
 
 /** 

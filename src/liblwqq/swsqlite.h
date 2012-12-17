@@ -14,6 +14,16 @@
 typedef void SwsDB;
 typedef void SwsStmt;
 
+typedef enum {
+    SWS_BIND_INT,
+    SWS_BIND_TEXT
+}SwsBindType;
+
+typedef enum {
+    SWS_OK,             /* there are no error or there are data */
+    SWS_FAILED,         /* failed */
+    //SWS_NEXT            /* when there are next line */
+}SwsRetCode;
 /** 
  * Open a sqlite3 database
  * 
@@ -76,10 +86,6 @@ int sws_exec_sql(SwsDB *db, const char *sql, char **errmsg);
  */
 int sws_query_start(SwsDB *db, const char *sql, SwsStmt **stmt, char **errmsg);
 
-typedef enum {
-    SWS_BIND_INT,
-    SWS_BIND_TEXT
-}SwsBindType;
 
 /** index starts from 1 */
 int sws_query_bind(SwsStmt *stmt,int index,SwsBindType type,...);
@@ -95,7 +101,7 @@ int sws_query_reset(SwsStmt* stmt);
  * @return 0 if query successfully, else return -1 and stored error
  *         information in errmsg if errmsg is not null.
  */
-int sws_query_next(SwsStmt *stmt, char **errmsg);
+SwsRetCode sws_query_next(SwsStmt *stmt, char **errmsg);
 
 /** 
  * 
