@@ -184,7 +184,7 @@ static LwqqAsyncEvent* get_verify_code(LwqqClient *lc)
 
 static int get_verify_code_back(LwqqHttpRequest* req)
 {
-    int err;
+    int err = LWQQ_EC_OK;
     char response[256];
     LwqqClient* lc = req->lc;
     if (req->http_code != 200) {
@@ -225,8 +225,10 @@ static int get_verify_code_back(LwqqHttpRequest* req)
         
         /* Parse uin first */
         lc->vc->uin = parse_verify_uin(response);
-        if (!lc->vc->uin)
+        if (!lc->vc->uin){
+            err = LWQQ_EC_ERROR;
             goto failed;
+        }
         
         s = c;
         c = strstr(s, "'");
@@ -283,7 +285,7 @@ static LwqqAsyncEvent* get_verify_image(LwqqClient *lc)
 static int get_verify_image_back(LwqqHttpRequest* req)
 {
     int ret;
-    int err;
+    int err = LWQQ_EC_OK;
     char image_file[256];
     int image_length = 0;
     LwqqClient* lc = req->lc;
@@ -440,7 +442,7 @@ static LwqqAsyncEvent* do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *
 static int do_login_back(LwqqHttpRequest* req)
 {
     LwqqClient* lc = req->lc;
-    int err;
+    int err = LWQQ_EC_OK;
     const char* response;
     if (req->http_code != 200) {
         err = LWQQ_EC_HTTP_ERROR;
@@ -552,16 +554,16 @@ static LwqqAsyncEvent* get_version(LwqqClient *lc, LwqqErrorCode *err)
 }
 static int get_version_back(LwqqHttpRequest* req)
 {
-    int errno;
+    int err = LWQQ_EC_OK;
     char* response = NULL;
     LwqqClient* lc = req->lc;
     if (req->http_code!=200) {
-        errno = LWQQ_EC_NETWORK_ERROR;
+        err = LWQQ_EC_NETWORK_ERROR;
         goto done;
     }
     response = req->response;
     if(response == NULL){
-        errno = LWQQ_EC_NETWORK_ERROR;
+        err = LWQQ_EC_NETWORK_ERROR;
         goto done;
     }
     if (strstr(response, "ptuiV")) {
@@ -570,7 +572,7 @@ static int get_version_back(LwqqHttpRequest* req)
         s = strchr(response, '(');
         t = strchr(response, ')');
         if (!s || !t) {
-            errno = LWQQ_EC_ERROR;
+            err = LWQQ_EC_ERROR;
             goto done;
         }
         s++;
@@ -579,12 +581,12 @@ static int get_version_back(LwqqHttpRequest* req)
         strncpy(v, s, t - s);
         s_free(lc->version);
         lc->version = s_strdup(v);
-        errno = LWQQ_EC_OK;
+        err = LWQQ_EC_OK;
     }
 
 done:
     lwqq_http_request_free(req);
-    return errno;
+    return err;
 }
 
 static char *generate_clientid()
@@ -651,7 +653,7 @@ static LwqqAsyncEvent* set_online_status(LwqqClient *lc,const char *status)
 
 static int set_online_status_back(LwqqHttpRequest* req)
 {
-    int err;
+    int err = LWQQ_EC_OK;
     int ret;
     char* response;
     char* value;

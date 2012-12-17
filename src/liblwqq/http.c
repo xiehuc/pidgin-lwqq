@@ -748,7 +748,6 @@ void lwqq_http_global_free()
             curl_multi_remove_handle(global.multi, easy);
             //let callback delete data
             vp_do(item->cmd,NULL);
-            //if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);

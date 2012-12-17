@@ -1314,8 +1314,8 @@ static void qq_close(PurpleConnection *gc)
     if(g_ref_count == 0){
         lwqq_http_global_free();
         lwqq_async_global_quit();
+        lwdb_global_free();
     }
-    lwdb_global_free();
 }
 //send change markname to server.
 static void qq_change_markname(PurpleConnection* gc,const char* who,const char *alias)
