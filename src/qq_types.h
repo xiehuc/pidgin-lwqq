@@ -86,7 +86,9 @@ struct qq_extra_async_opt {
 };
 
 extern struct qq_extra_async_opt extra_async_opt;
+void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...);
 
+#define try_get(val,fail) (val?val:fail)
 
 int qq_set_basic_info(LwqqClient* lc,void* data);
 
@@ -101,7 +103,7 @@ int open_new_chat(qq_account* ac,LwqqGroup* group);
 #define opend_chat_search(ac,group) open_new_chat(ac,group)
 #define opend_chat_index(ac,id) g_ptr_array_index(ac->opend_chat,id)
 
-void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t);
+void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t);
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac);
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);

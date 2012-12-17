@@ -36,7 +36,6 @@ enum ResetOption{
     RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
     RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
 
-#define try_get(val,fail) (val?val:fail)
 ///###  global data area ###///
 int g_ref_count = 0;
 ///###  global data area ###///

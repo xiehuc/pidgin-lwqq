@@ -21,7 +21,7 @@ static int did_dispatch(void* param)
     return 0;
 }
 
-static void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...)
+void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...)
 {
     struct dispatch_data* d = s_malloc0(sizeof(*d));
     d->dsph = dsph;
@@ -153,9 +153,9 @@ static int sys_msg_write(LwqqClient* lc,void* data)
     return 0;
 }
 
-void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* who,const char* msg,PurpleMessageFlags type,time_t t)
+void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t)
 {
-    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,who,ac,msg,type,t));
+    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
 }
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)
