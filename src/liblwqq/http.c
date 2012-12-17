@@ -839,7 +839,10 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
     LwqqHttpRequest* req = d;
+    time_t ct = time(NULL);
+    if(ct<=req->last_prog) return 0;
 
+    req->last_prog = ct;
     size_t now = dn+un;
     size_t total = dt+ut;
     return req->progress_func(req->prog_data,now,total);
@@ -850,6 +853,7 @@ void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* pro
     curl_easy_setopt(req->req,CURLOPT_PROGRESSFUNCTION,lwqq_http_progress_trans);
     req->progress_func = progress;
     req->prog_data = prog_data;
+    req->last_prog = time(NULL);
     curl_easy_setopt(req->req,CURLOPT_PROGRESSDATA,req);
     curl_easy_setopt(req->req,CURLOPT_NOPROGRESS,0L);
 }

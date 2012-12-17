@@ -90,6 +90,7 @@ typedef struct LwqqHttpRequest {
     void (*add_file_content)(struct LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,const char* extension);
     int (*progress_func)(void* data,size_t now,size_t total);
     void* prog_data;
+    time_t last_prog;
 
 } LwqqHttpRequest;
 
