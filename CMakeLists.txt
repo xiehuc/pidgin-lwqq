@@ -13,6 +13,7 @@ pkg_check_modules(CURL REQUIRED libcurl)
 pkg_check_modules(SQLITE REQUIRED sqlite3)
 #recommand libcurl>=7.22.0
 
+add_definitions(-Wall)
 
 EXEC_PROGRAM("pkg-config --variable=plugindir purple 2>/dev/null"
     OUTPUT_VARIABLE LIB_INSTALL_DIR)

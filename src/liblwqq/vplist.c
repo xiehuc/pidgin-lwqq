@@ -112,6 +112,19 @@ void vp_func_pi(VP_CALLBACK func,vp_list* vp,void* q)
     int p2 = vp_arg(*vp,int);
     ((f)func)(p1,p2);
 }
+void vp_func_p_i(VP_CALLBACK func,vp_list* vp,void* q)
+{
+    typedef int (*f)(void*);
+    if( !func ){
+        va_list* va = q;
+        vp_init(*vp,sizeof(void*)*2);
+        vp_push(*vp,*va,void*);
+        return;
+    }
+    void* p1 = vp_arg(*vp,void*);
+    int ret = ((f)func)(p1);
+    if(q) *(int*)q = ret;
+}
 void vp_func_2p_i(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef int (*f)(void*,void*);

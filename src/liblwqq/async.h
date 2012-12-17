@@ -155,6 +155,8 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
  *
  */
 struct _LwqqAsyncOption {
+    void (*login_complete)(LwqqClient* lc,LwqqErrorCode ec);
+    void (*login_verify)(LwqqClient* lc);
     void (*poll_msg)(LwqqClient* lc);
     void (*poll_lost)(LwqqClient* lc);
     void (*upload_fail)(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c);

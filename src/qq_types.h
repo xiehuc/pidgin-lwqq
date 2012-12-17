@@ -85,12 +85,9 @@ struct qq_extra_async_opt {
     void (*need_verify)(LwqqClient* lc,LwqqErrorCode err);
 };
 
-extern struct qq_extra_async_opt extra_async_opt;
 void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...);
 
 #define try_get(val,fail) (val?val:fail)
-
-int qq_set_basic_info(LwqqClient* lc);
 
 qq_account* qq_account_new(PurpleAccount* account);
 void qq_account_free(qq_account* ac);

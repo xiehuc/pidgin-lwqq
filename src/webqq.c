@@ -28,6 +28,7 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sen
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
+static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
 static void login_stage_2(LwqqClient* lc);
 
 enum ResetOption{
@@ -750,7 +751,7 @@ static void finish_insertion(qq_account* ac)
     lwdb_userdb_commit(ac->db, "insertion");
 }
 
-int qq_set_basic_info(LwqqClient* lc)
+static void login_stage_f(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
 
@@ -762,6 +763,9 @@ int qq_set_basic_info(LwqqClient* lc)
         LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,lc->myself));
     }
+
+    assert(!LIST_EMPTY(&lc->friends));
+    assert(!LIST_EMPTY(&lc->groups));
 
     LwqqAsyncEvent* ev = NULL;
     LwqqAsyncEvset* set = NULL;
@@ -826,7 +830,6 @@ int qq_set_basic_info(LwqqClient* lc)
 
     background_msg_poll(ac);
 
-    return 0;
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
@@ -834,7 +837,10 @@ static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
     const gchar *code;
     code = purple_request_fields_get_string(fields, "code_entry");
     ac->qq->vc->str = s_strdup(code);
-    background_login(ac);
+
+    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
+    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
+    //background_login(ac);
 }
 static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
 {
@@ -843,7 +849,7 @@ static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
                                    PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
                                    _("Login Failed."));
 }
-static void verify_come(LwqqClient* lc,LwqqErrorCode err)
+static void verify_come(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleRequestFieldGroup *field_group;
@@ -882,6 +888,8 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
 }
 
 static LwqqAsyncOption qq_async_opt = {
+    .login_complete = login_stage_1,
+    .login_verify = verify_come,
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
@@ -902,7 +910,6 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    ac->qq->async_opt = &qq_async_opt;
     //background_friends_info(ac);
 
     LwqqAsyncEvset* set = lwqq_async_evset_new();
@@ -926,7 +933,7 @@ static void login_stage_2(LwqqClient* lc)
     //ev = lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
     //lwqq_async_evset_add_event(set,ev);
 
-    lwqq_async_add_evset_listener(set,_C_(p,qq_set_basic_info,lc));
+    lwqq_async_add_evset_listener(set,_C_(p,login_stage_f,lc));
 }
 
 //send back receipt
@@ -1263,6 +1270,7 @@ static void qq_login(PurpleAccount *account)
     }
     g_ref_count ++ ;
     ac->gc = pc;
+    ac->qq->async_opt = &qq_async_opt;
     ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
@@ -1283,7 +1291,10 @@ static void qq_login(PurpleAccount *account)
     client_connect_signals(ac->gc);
 
     lwqq_client_userdata(ac->qq) = ac;
-    background_login(ac);
+    //background_login(ac);
+    
+    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
+    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
 }
 static void qq_close(PurpleConnection *gc)
 {
@@ -1555,10 +1566,6 @@ static void client_connect_signals(PurpleConnection* gc)
     //        PURPLE_CALLBACK(qq_change_group_markname),gc);
 }
 
-struct qq_extra_async_opt extra_async_opt = {
-    .login_complete = login_stage_1,
-    .need_verify = verify_come,
-};
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE,

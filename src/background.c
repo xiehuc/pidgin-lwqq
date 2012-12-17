@@ -14,7 +14,7 @@ do{pthread_t th;\
     pthread_create(&th,NULL,thread,data);\
 }while(0)
 
-
+#if 0
 static void* _background_login(void* data)
 {
     qq_account* ac=(qq_account*)data;
@@ -42,6 +42,7 @@ void background_login(qq_account* ac)
 {
     START_THREAD(_background_login,ac);
 }
+#endif
 void background_msg_poll(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
