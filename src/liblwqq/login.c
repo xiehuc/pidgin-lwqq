@@ -748,6 +748,7 @@ void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err)
 
 static void login_stage_2(LwqqAsyncEvent* ev)
 {
+    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
     int err = lwqq_async_event_get_result(ev);
     if (err) {
@@ -778,6 +779,7 @@ static void login_stage_2(LwqqAsyncEvent* ev)
 
 static void login_stage_3(LwqqAsyncEvent* ev)
 {
+    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
     switch (err) {
@@ -818,6 +820,7 @@ static void login_stage_4(LwqqClient* lc)
 }
 static void login_stage_5(LwqqAsyncEvent* ev)
 {
+    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
     /* Free old value */
@@ -830,6 +833,7 @@ static void login_stage_5(LwqqAsyncEvent* ev)
 }
 static void login_stage_f(LwqqAsyncEvent* ev)
 {
+    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
     lc->async_opt->login_complete(lc,err);

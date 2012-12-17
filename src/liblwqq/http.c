@@ -744,6 +744,7 @@ void lwqq_http_global_free()
         LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
             LIST_REMOVE(item,entries);
             easy = item->req->req;
+            curl_easy_pause(easy,CURLPAUSE_ALL);
             curl_multi_remove_handle(global.multi, easy);
             //let callback delete data
             vp_do(item->cmd,NULL);
