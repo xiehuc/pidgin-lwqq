@@ -289,6 +289,7 @@ void lwqq_async_global_quit()
     ev_loop_destroy(ev_default);
     ev_default = NULL;
     global_quit_lock = 0;
+    ev_thread_status = THREAD_NOT_CREATED;
 }
 #endif
 #ifdef USE_LIBPURPLE

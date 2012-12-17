@@ -69,7 +69,7 @@ typedef struct LwqqMsgContent {
         }cface;
     } data;
     TAILQ_ENTRY(LwqqMsgContent) entries;
-} LwqqMsgContent ;
+}LwqqMsgContent;
 
 typedef struct LwqqMsgMessage {
     LwqqMsgType type;

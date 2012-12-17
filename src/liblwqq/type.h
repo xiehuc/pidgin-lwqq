@@ -27,6 +27,7 @@ typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqClient LwqqClient;
+typedef struct LwqqMsgContent LwqqMsgContent;
 
 
 typedef VP_DISPATCH DISPATCH_FUNC;

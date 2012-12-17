@@ -32,7 +32,7 @@ static void lwqq_msg_message_free(void *opaque);
 static void lwqq_msg_status_free(void *opaque);
 static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c);
-static int upload_offline_pic_back(LwqqHttpRequest* req,void* data);
+static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const char* to);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
@@ -1329,11 +1329,10 @@ static LwqqAsyncEvent* lwqq_msg_upload_offline_pic(
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
 
-    return req->do_request_async(req,0,NULL,_C_(2p_i,upload_offline_pic_back,req,c));
+    return req->do_request_async(req,0,NULL,_C_(3p_i,upload_offline_pic_back,req,c,to));
 }
-static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
+static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const char* to)
 {
-    LwqqMsgContent* c = data;
     json_t* json = NULL;
     if(req->http_code!=200){
         goto done;
@@ -1349,6 +1348,10 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,void* data)
     c->type = LWQQ_CONTENT_OFFPIC;
     c->data.img.size = atol(json_parse_simple_value(json,"filesize"));
     c->data.img.file_path = s_strdup(json_parse_simple_value(json,"filepath"));
+    if(!strcmp(c->data.img.file_path,"")){
+        LwqqClient* lc = req->lc;
+        lc->async_opt->upload_fail(lc,to,c);
+    }
     s_free(c->data.img.name);
     c->data.img.name = s_strdup(json_parse_simple_value(json,"filename"));
     s_free(c->data.img.data);
@@ -1679,6 +1682,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     lwqq_http_set_option(req, LWQQ_HTTP_NOT_FOLLOW,1L);
     req->do_request(req,0,NULL);
     if(req->http_code != 302){
+        lwqq_log(LOG_WARNING, "http_code:%d,msg:%s\n",req->http_code,req->response);
         lwqq_http_request_free(req);
         return NULL;
     }

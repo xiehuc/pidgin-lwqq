@@ -157,7 +157,7 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
 struct _LwqqAsyncOption {
     void (*poll_msg)(LwqqClient* lc);
     void (*poll_lost)(LwqqClient* lc);
-
+    void (*upload_fail)(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);

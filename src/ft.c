@@ -21,7 +21,7 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     purple_xfer_set_size(xfer,total);
     xfer->bytes_sent = now;
     xfer->bytes_remaining = total-now;
-    qq_dispatch(vp_func_p,(CALLBACK_FUNC)purple_xfer_update_progress,xfer);
+    purple_xfer_update_progress(xfer);
     return 0;
 }
 static void recv_file_complete(PurpleXfer* xfer)
@@ -36,7 +36,12 @@ static void recv_file_init(PurpleXfer* xfer)
     const char* filename = purple_xfer_get_local_filename(xfer);
     xfer->start_time = time(NULL);
     LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc,file,filename);
-    if(ev == NULL){ lwqq_puts("file trans error ");return ; }
+    if(ev == NULL){ 
+        lwqq_puts("file trans error ");
+        purple_xfer_error(PURPLE_XFER_RECEIVE, ac->account, purple_xfer_get_remote_user(xfer), "接受文件失败");
+        purple_xfer_cancel_local(xfer);
+        return;
+    }
     lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
     lwqq_async_add_event_listener(ev,_C_(p,recv_file_complete,xfer));
 }
@@ -87,7 +92,7 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
         qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->to, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
     }
     lwqq_msg_offfile_free(file);
-    ac->qq->dispatch(vp_func_pi,(CALLBACK_FUNC)purple_xfer_set_completed,xfer,1);
+    purple_xfer_set_completed(xfer,1);
 }
 
 static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
@@ -106,7 +111,7 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
         qq_sys_msg_write(ac,LWQQ_MT_BUDDY_MSG, file->to,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_offfile_free(file);
         s_free(xfer->data);
-        lc->dispatch(vp_func_pi,(CALLBACK_FUNC)purple_xfer_set_completed,xfer,1);
+        purple_xfer_set_completed(xfer,1);
     } else {
         LwqqAsyncEvent* ev = lwqq_msg_send_offfile(lc,file);
         lwqq_async_add_event_listener(ev,_C_(2p,send_offline_file_receipt,ev,xfer));

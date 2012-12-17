@@ -324,7 +324,7 @@ static int friend_come(LwqqClient* lc,void* data)
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
-        lwqq_async_add_event_listener(ev,_C_( _EV_(4p,lc->dispatch,2p) ,friend_avatar,ac,buddy));
+        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
     } //else {
     //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
     //}
@@ -867,9 +867,20 @@ static void verify_come(LwqqClient* lc,LwqqErrorCode err)
     return ;
 }
 
+static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c)
+{
+    switch(c->type){
+        case LWQQ_CONTENT_OFFPIC:
+            qq_sys_msg_write(lc->data, LWQQ_MT_BUDDY_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
+            break;
+        default:break;
+    }
+}
+
 static LwqqAsyncOption qq_async_opt = {
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
+    .upload_fail = upload_content_fail,
 };
 static void login_complete(LwqqClient* lc,LwqqErrorCode err)
 {

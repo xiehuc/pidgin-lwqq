@@ -122,7 +122,7 @@ int open_new_chat(qq_account* ac,LwqqGroup* group)
     g_ptr_array_add(opend_chat,group);
     return index;
 }
-
+#if 0
 /**m_t == 0 buddy_message m_t == 1 chat_message*/
 static system_msg* system_msg_new(LwqqMsgType m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
 {
@@ -152,10 +152,15 @@ static int sys_msg_write(LwqqClient* lc,void* data)
     system_msg_free(msg);
     return 0;
 }
+#endif
 
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t)
 {
-    ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
+    //ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
+
+    PurpleConversation* conv = find_conversation(m_t,serv_id,ac);
+    if(conv)
+        purple_conversation_write(conv,NULL,msg,type,t);
 }
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)

@@ -449,6 +449,7 @@ failed:
     vp_do(conn->cmd,&res);
     lwqq_async_event_set_result(conn->event,res);
     lwqq_async_event_finish(conn->event);
+    s_free(conn);
     return ;
 }
 
@@ -467,10 +468,10 @@ static void check_multi_info(GLOBAL *g)
 
             LIST_REMOVE(conn,entries);
             curl_multi_remove_handle(g->multi, easy);
+            LwqqClient* lc = conn->req->lc;
 
             //执行完成时候的回调
-            async_complete(conn);
-            s_free(conn);
+            lc->dispatch(vp_func_p,(CALLBACK_FUNC)async_complete,conn);
         }
     }
 }
