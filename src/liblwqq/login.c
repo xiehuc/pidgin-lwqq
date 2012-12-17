@@ -934,10 +934,6 @@ done:
     lwqq_http_request_free(req);    
 }
 
-void lwqq_client_cleanup(LwqqClient* lc)
-{
-    lwqq_http_cleanup(lc);
-}
 
 /*void lwqq_relogin(LwqqClient* lc)
 {

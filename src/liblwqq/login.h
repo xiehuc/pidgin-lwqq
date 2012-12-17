@@ -29,5 +29,4 @@ void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err);
  */
 void lwqq_logout(LwqqClient *client, LwqqErrorCode *err);
 
-void lwqq_client_cleanup(LwqqClient* lc);
 #endif  /* LWQQ_LOGIN_H */

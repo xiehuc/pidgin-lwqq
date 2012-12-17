@@ -772,9 +772,7 @@ void lwqq_http_cleanup(LwqqClient*lc)
             LIST_REMOVE(item,entries);
             easy = item->req->req;
             curl_multi_remove_handle(global.multi, easy);
-            lwqq_http_request_free(item->req);
             //let callback delete data
-            //if(item->callback) item->callback(LWQQ_CALLBACK_FAILED,item->data);
             vp_do(item->cmd,NULL);
             lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);

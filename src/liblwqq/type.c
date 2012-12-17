@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "msg.h"
 #include "async.h"
+#include "http.h"
 
 static void null_action(LwqqClient* lc)
 {
@@ -149,6 +150,9 @@ void lwqq_client_free(LwqqClient *client)
 
     if (!client)
         return ;
+
+    //important remove all http request
+    lwqq_http_cleanup(client);
 
     /* Free LwqqVerifyCode instance */
     s_free(client->username);

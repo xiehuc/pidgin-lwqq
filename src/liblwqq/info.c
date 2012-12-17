@@ -353,6 +353,7 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    assert(!LIST_EMPTY(&lc->friends));
     return 0;
 
 json_error:

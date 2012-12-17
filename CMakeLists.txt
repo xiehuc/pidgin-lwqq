@@ -33,7 +33,7 @@ endif(NLS)
 option(WITH_LIBEV "build in libev for async process" On)
 
 if(WITH_LIBEV)
-        find_package(EV)
+    find_package(EV REQUIRED)
 endif(WITH_LIBEV)
 
 add_subdirectory(src)

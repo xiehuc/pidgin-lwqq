@@ -756,9 +756,6 @@ static void login_stage_f(LwqqClient* lc)
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,lc->myself));
     }
 
-    assert(!LIST_EMPTY(&lc->friends));
-    assert(!LIST_EMPTY(&lc->groups));
-
     LwqqAsyncEvent* ev = NULL;
     LwqqAsyncEvset* set = NULL;
     if(ac->qq_use_qqnum){
