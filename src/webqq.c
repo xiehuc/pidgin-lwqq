@@ -28,6 +28,7 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sen
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
+static void login_stage_2(LwqqClient* lc);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -749,10 +750,13 @@ static void finish_insertion(qq_account* ac)
     lwdb_userdb_commit(ac->db, "insertion");
 }
 
-int qq_set_basic_info(LwqqClient* lc,void* data)
+int qq_set_basic_info(LwqqClient* lc)
 {
-    qq_account* ac = data;
-    //LwqqClient* lc = ac->qq;
+    qq_account* ac = lwqq_client_userdata(lc);
+
+    //we must put this here. avoid group_come stupid add duplicate group
+    purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
+
     purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL){
         LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
@@ -882,7 +886,7 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
 };
-static void login_complete(LwqqClient* lc,LwqqErrorCode err)
+static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
@@ -894,14 +898,35 @@ static void login_complete(LwqqClient* lc,LwqqErrorCode err)
         return ;
     }
 
-    purple_connection_set_state(gc,PURPLE_CONNECTED);
     ac->state = CONNECTED;
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
     ac->qq->async_opt = &qq_async_opt;
-    background_friends_info(ac);
+    //background_friends_info(ac);
+
+    LwqqAsyncEvset* set = lwqq_async_evset_new();
+    LwqqAsyncEvent* ev;
+    ev = lwqq_info_get_friends_info(lc,NULL);
+    lwqq_async_evset_add_event(set,ev);
+    ev = lwqq_info_get_group_name_list(lc,NULL);
+    lwqq_async_evset_add_event(set,ev);
+    lwqq_async_add_evset_listener(set,_C_(p,login_stage_2,lc));
+
     return ;
+}
+static void login_stage_2(LwqqClient* lc)
+{
+    LwqqAsyncEvset* set = lwqq_async_evset_new();
+    LwqqAsyncEvent* ev;
+    ev = lwqq_info_get_discu_name_list(lc);
+    lwqq_async_evset_add_event(set,ev);
+    ev = lwqq_info_get_online_buddies(lc,NULL);
+    lwqq_async_evset_add_event(set,ev);
+    //ev = lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
+    //lwqq_async_evset_add_event(set,ev);
+
+    lwqq_async_add_evset_listener(set,_C_(p,qq_set_basic_info,lc));
 }
 
 //send back receipt
@@ -1531,7 +1556,7 @@ static void client_connect_signals(PurpleConnection* gc)
 }
 
 struct qq_extra_async_opt extra_async_opt = {
-    .login_complete = login_complete,
+    .login_complete = login_stage_1,
     .need_verify = verify_come,
 };
 PurplePluginProtocolInfo webqq_prpl_info = {

@@ -90,7 +90,7 @@ void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...);
 
 #define try_get(val,fail) (val?val:fail)
 
-int qq_set_basic_info(LwqqClient* lc,void* data);
+int qq_set_basic_info(LwqqClient* lc);
 
 qq_account* qq_account_new(PurpleAccount* account);
 void qq_account_free(qq_account* ac);

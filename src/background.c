@@ -42,32 +42,6 @@ void background_login(qq_account* ac)
 {
     START_THREAD(_background_login,ac);
 }
-static void* _background_friends_info(void* data)
-{
-    qq_account* ac=(qq_account*)data;
-    LwqqErrorCode err;
-    LwqqClient* lc=ac->qq;
-
-    LWQQ_SYNC_BEGIN();
-    lwqq_info_get_friends_info(lc,&err);
-    lwqq_info_get_group_name_list(ac->qq,&err);
-    LWQQ_SYNC_END();
-
-    LWQQ_SYNC_BEGIN();
-    lwqq_info_get_online_buddies(ac->qq,&err);
-    lwqq_info_get_discu_name_list(ac->qq);
-    LWQQ_SYNC_END();
-
-    lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
-
-    lc->dispatch(vp_func_2p,(CALLBACK_FUNC)qq_set_basic_info,lc,ac);
-
-    return NULL;
-}
-void background_friends_info(qq_account* ac)
-{
-    START_THREAD(_background_friends_info,ac);
-}
 void background_msg_poll(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
