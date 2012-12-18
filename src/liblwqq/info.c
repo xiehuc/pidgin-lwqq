@@ -38,6 +38,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
 static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
+static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
 
 
 /**
@@ -1361,43 +1362,41 @@ done:
  * @param buddy
  * @param err
  */
-void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
-                                      LwqqErrorCode *err)
+LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy)
 {
     lwqq_log(LOG_DEBUG, "in function.");
 
     char url[512];
     LwqqHttpRequest *req = NULL;
-    int ret;
-    json_t *json = NULL, *json_tmp;
 
     if (!lc || ! buddy) {
-        return ;
+        return NULL;
     }
 
     /* Make sure we know uin. */
     if (!buddy->uin) {
-        if (err)
-            *err = LWQQ_EC_NULL_POINTER;
-        return ;
+        return NULL;
     }
 
     /* Create a GET request */
     snprintf(url, sizeof(url),
              "%s/api/get_friend_info2?tuin=%s&verifysession=&code=&vfwebqq=%s",
              "http://s.web2.qq.com", buddy->uin, lc->vfwebqq);
-    req = lwqq_http_create_default_request(lc,url, err);
-    if (!req) {
-        goto done;
-    }
+    req = lwqq_http_create_default_request(lc,url, NULL);
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-    ret = req->do_request(req, 0, NULL);
-    if (ret || req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
+    return req->do_request_async(req, 0, NULL,_C_(2p_i,get_friend_detail_back,req,buddy));
+}
+
+static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
+{
+    json_t *json = NULL, *json_tmp;
+    int err = LWQQ_EC_OK;
+    int ret;
+    if (req->http_code != 200) {
+        err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
 
@@ -1416,15 +1415,15 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
-        if (err)
-            *err = LWQQ_EC_ERROR;
+        err = LWQQ_EC_ERROR;
         goto done;
     }
 
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
-        goto json_error;
+        err = LWQQ_EC_ERROR;
+        goto done;
     }
 
     /** It seems everything is ok, we start parsing information
@@ -1469,20 +1468,11 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
 #undef SET_BUDDY_INFO
     }
 
-
 done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return ;
-
-json_error:
-    if (err)
-        *err = LWQQ_EC_ERROR;
-    /* Free temporary string */
-    if (json)
-        json_free_value(&json);
-    lwqq_http_request_free(req);
+    return err;
 }
 
 static void update_online_buddies(LwqqClient *lc, json_t *json)

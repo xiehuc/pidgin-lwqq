@@ -42,8 +42,7 @@ LwqqAsyncEvent* lwqq_info_get_discu_name_list(LwqqClient* lc);
  * @param buddy 
  * @param err 
  */
-void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
-                                      LwqqErrorCode *err);
+LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy);
 /**
  * Store QQ face to LwqqBuddy::avatar
  * and save it possibly

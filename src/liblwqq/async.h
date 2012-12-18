@@ -156,11 +156,23 @@ extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
  *
  */
 struct _LwqqAsyncOption {
+    /**
+     * this is login complete .whatever successed or failed
+     * except need verify code
+     */
     void (*login_complete)(LwqqClient* lc,LwqqErrorCode ec);
+    /* this is login complete when need verify code */
     void (*login_verify)(LwqqClient* lc);
+    /* this is very important when poll message come */
     void (*poll_msg)(LwqqClient* lc);
+    /* this is poll lost after recv retcode 112 or 108 */
     void (*poll_lost)(LwqqClient* lc);
+    /* this is upload content failed such as lwqq offline pic */
     void (*upload_fail)(LwqqClient* lc,const char* serv_id,struct LwqqMsgContent* c);
+    /* this is you confirmed a friend request 
+     * you should add buddy to gui level.
+     */
+    void (*request_confirm)(LwqqClient* lc,LwqqBuddy* buddy);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);

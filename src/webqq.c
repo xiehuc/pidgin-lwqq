@@ -280,12 +280,11 @@ static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
 #define buddy_status(bu) ((bu->stat == LWQQ_STATUS_ONLINE && bu->client_type == LWQQ_CLIENT_MOBILE) \
         ? "mobile":lwqq_status_to_str(bu->stat))
 
-static int friend_come(LwqqClient* lc,void* data)
+static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
-    LwqqBuddy* buddy = data;
     PurpleBuddy* bu = NULL;
     LwqqFriendCategory* cate;
 
@@ -334,7 +333,6 @@ static int friend_come(LwqqClient* lc,void* data)
     qq_account_insert_index_node(ac, NODE_IS_BUDDY, buddy);
 
     ac->disable_send_server = 0;
-    return 0;
 }
 static const char* group_name(LwqqGroup* group)
 {
@@ -750,7 +748,8 @@ static void login_stage_f(LwqqClient* lc)
     //we must put this here. avoid group_come stupid add duplicate group
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
 
-    purple_account_set_alias(ac->account,lc->myself->nick);
+    if(!purple_account_get_alias(ac->account))
+        purple_account_set_alias(ac->account,lc->myself->nick);
     if(purple_buddy_icons_find_account_icon(ac->account)==NULL){
         LwqqAsyncEvent* ev=lwqq_info_get_friend_avatar(lc,lc->myself);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,lc->myself));
@@ -879,6 +878,7 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
+    .request_confirm = friend_come,
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
@@ -919,8 +919,13 @@ static void login_stage_2(LwqqClient* lc)
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_online_buddies(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
-    //ev = lwqq_info_get_friend_detail_info(lc,lc->myself,NULL);
-    //lwqq_async_evset_add_event(set,ev);
+    
+    qq_account* ac = lwqq_client_userdata(lc);
+    const char* alias = purple_account_get_alias(ac->account);
+    if(alias == NULL){
+        ev = lwqq_info_get_friend_detail_info(lc,lc->myself);
+        lwqq_async_evset_add_event(set,ev);
+    }
 
     lwqq_async_add_evset_listener(set,_C_(p,login_stage_f,lc));
 }

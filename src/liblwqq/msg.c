@@ -616,6 +616,11 @@ static int parse_kick_message(json_t *json,void *opaque)
     }
     return 0;
 }
+static void confirm_friend_request_notify(LwqqClient* lc,LwqqBuddy* buddy)
+{
+    LIST_INSERT_HEAD(&lc->friends,buddy,entries);
+    lc->async_opt->request_confirm(lc,buddy);
+}
 static int parse_system_message(json_t *json,void* opaque,void* _lc)
 {
     LwqqMsgSystem* system = opaque;
@@ -644,10 +649,14 @@ static int parse_system_message(json_t *json,void* opaque,void* _lc)
         LwqqBuddy* buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(system->from_uin);
         buddy->cate_index = s_strdup(system->verify_pass.group_id);
-        lwqq_info_get_friend_detail_info(lc,buddy,NULL);
-        LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-        //this will raise FRIEND_COME and add target to gui level.
-        lwqq_info_get_friend_qqnumber(lc,buddy);
+
+        LwqqAsyncEvset *set = lwqq_async_evset_new();
+        LwqqAsyncEvent *ev;
+        ev = lwqq_info_get_friend_detail_info(lc,buddy);
+        lwqq_async_evset_add_event(set,ev);
+        ev = lwqq_info_get_friend_qqnumber(lc,buddy);
+        lwqq_async_evset_add_event(set,ev);
+        lwqq_async_add_evset_listener(set,_C_(2p,confirm_friend_request_notify,lc,buddy));
     }
     return 0;
 }
@@ -667,9 +676,12 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
         buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
         buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
-        lwqq_info_get_friend_detail_info(lc,buddy,NULL);
         LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-        lwqq_info_get_friend_qqnumber(lc,buddy);
+        //note in here we didn't trigger request_confirm
+        //you should watch LwqqMsgBlistChange object and read 
+        //simple buddy list.
+        //and get qqnumber by your self.
+        lwqq_info_get_friend_detail_info(lc,buddy);
         ptr = ptr->next;
     }
     ptr = json_find_first_label_all(json,"removed_friends");
