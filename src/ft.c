@@ -21,7 +21,7 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     purple_xfer_set_size(xfer,total);
     xfer->bytes_sent = now;
     xfer->bytes_remaining = total-now;
-    purple_xfer_update_progress(xfer);
+    qq_dispatch(vp_func_p,(CALLBACK_FUNC)purple_xfer_update_progress,xfer);
     return 0;
 }
 static void recv_file_complete(PurpleXfer* xfer)
