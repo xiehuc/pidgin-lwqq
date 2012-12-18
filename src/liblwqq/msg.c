@@ -1127,10 +1127,10 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
     if(req->http_code==200){
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121 || retcode == 108){
-            lc->dispatch(lc,lc->async_opt->poll_lost,NULL);
+            lc->async_opt->poll_lost(lc);
             return 0;
         }else{
-            lc->dispatch(lc,lc->async_opt->poll_msg,NULL);
+            lc->async_opt->poll_msg(lc);
         }
     }
 

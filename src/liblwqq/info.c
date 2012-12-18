@@ -31,7 +31,7 @@ static json_t *get_result_json_object(json_t *json);
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static int get_qqnumber_back(LwqqHttpRequest* req,LwqqGroup* group,LwqqBuddy* buddy);
 static int get_avatar_back(LwqqHttpRequest* req,LwqqBuddy* buddy,LwqqGroup* group);
-static int get_friends_info_back(LwqqHttpRequest* req,void* data);
+static int get_friends_info_back(LwqqHttpRequest* req);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
 static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* group);
@@ -291,7 +291,7 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-    return req->do_request_async(req, 1, msg,_C_(2p_i,get_friends_info_back,req,lc));
+    return req->do_request_async(req, 1, msg,_C_(p_i,get_friends_info_back,req));
 
     /**
      * Here, we got a json object like this:
@@ -302,17 +302,15 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static int get_friends_info_back(LwqqHttpRequest* req,void* data)
+static int get_friends_info_back(LwqqHttpRequest* req)
 {
     json_t *json = NULL, *json_tmp;
     int ret;
-    LwqqErrorCode error;
-    LwqqErrorCode* err = &error;
-    LwqqClient* lc = data;
+    int err;
+    LwqqClient* lc = req->lc;
 
     if (req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
+        err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
     //force end with char zero.
@@ -320,15 +318,15 @@ static int get_friends_info_back(LwqqHttpRequest* req,void* data)
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", req->response);
-        if (err)
-            *err = LWQQ_EC_ERROR;
+        err = LWQQ_EC_ERROR;
         goto done;
     }
 
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
-        goto json_error;
+        err = LWQQ_EC_ERROR;
+        goto done;
     }
     /** It seems everything is ok, we start parsing information
      * now
@@ -351,20 +349,11 @@ static int get_friends_info_back(LwqqHttpRequest* req,void* data)
     }
 
 done:
-    if (json)
-        json_free_value(&json);
-    lwqq_http_request_free(req);
     assert(!LIST_EMPTY(&lc->friends));
-    return 0;
-
-json_error:
-    if (err)
-        *err = LWQQ_EC_ERROR;
-    /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return err;
 }
 
 LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group)

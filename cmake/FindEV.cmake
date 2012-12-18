@@ -10,10 +10,10 @@
 #  EV_LIBRARY, where to find the libev library.
 
 FIND_PATH(EV_INCLUDE_DIR ev.h
-/usr/local/include
-/usr/local/include/libev
 /usr/include
 /usr/include/libev
+/usr/local/include
+/usr/local/include/libev
 )
 
 SET(EV_NAMES ${EV_NAMES} ev)
@@ -45,8 +45,9 @@ SET (NATIVE_EV_INCLUDE_PATH ${EV_INCLUDE_DIR} )
 GET_FILENAME_COMPONENT (NATIVE_EV_LIB_PATH ${EV_LIBRARY} PATH)
 
 SET (EV_LIBRARIES ${EV_LIBRARY})
+SET (EV_INCLUDE_DIRS ${EV_INCLUDE_DIR})
 
 MARK_AS_ADVANCED(
     EV_LIBRARIES
-    EV_INCLUDE_DIR
+    EV_INCLUDE_DIRS
   )

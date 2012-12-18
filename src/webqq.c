@@ -943,15 +943,15 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         static char buf[1024];
         PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
-        if(err == LWQQ_MC_LOST_CONN){
-            ac->qq->dispatch(vp_func_p,(CALLBACK_FUNC)ac->qq->async_opt->poll_lost,ac->qq);
-        }
         if(conv && err > 0){
             if(err == LWQQ_MC_TOO_FAST)
                 snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
-            else
+            else 
                 snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
+        }
+        if(err == LWQQ_MC_LOST_CONN){
+            ac->qq->async_opt->poll_lost(ac->qq);
         }
     }
 
