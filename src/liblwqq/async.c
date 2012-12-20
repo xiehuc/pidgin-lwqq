@@ -41,7 +41,7 @@ typedef struct _LwqqAsyncEvent {
 
 int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
 
-static int timeout_come(void* p)
+static void timeout_come(LwqqAsyncTimerHandle timer,void* p)
 {
     async_dispatch_data* data = (async_dispatch_data*)p;
     DISPATCH_FUNC dsph = data->dsph;
@@ -49,11 +49,10 @@ static int timeout_come(void* p)
     vp_start(data->data);
     dsph(func,&data->data,NULL);
     vp_end(data->data);
+    lwqq_async_timer_stop(timer);
 
     //!!! should we stop first delete later?
     s_free(data);
-    //remote handle;
-    return 0;
 }
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
 {
@@ -134,10 +133,6 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
     }
     event->cmd = cmd;
 }
-/*static void async_call_on_chain(LwqqAsyncEvent* ev,void* data)
-{
-    lwqq_async_event_finish((LwqqAsyncEvent*)data);
-}*/
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
     called->lc = caller->lc;
@@ -157,12 +152,6 @@ typedef struct {
     LwqqAsyncIoCallback callback;
     void* data;
 }LwqqAsyncIoWrap;
-typedef struct {
-    LwqqAsyncTimerCallback callback;
-    void* data;
-    int force_stop;
-    int on_call;
-}LwqqAsyncTimerWrap;
 #ifdef USE_LIBEV
 static enum{
     THREAD_NOT_CREATED,
@@ -174,7 +163,7 @@ pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
 static struct ev_loop* ev_default = NULL;
 static int global_quit_lock = 0;
-LwqqAsyncTimer bomb;
+ev_timer bomb;
 //### global data area ###//
 static void *ev_run_thread(void* data)
 {
@@ -228,7 +217,9 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io)
 }
 static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
-    LwqqAsyncTimerWrap* wrap = w->data;
+    LwqqAsyncTimerHandle timer = (LwqqAsyncTimerHandle)w;
+    timer->func(timer,timer->data);
+/*    LwqqAsyncTimerWrap* wrap = w->data;
     int stop=1;
     //if wrap is null. so it is be stoped before.
     //we directly ignore it.
@@ -250,41 +241,23 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
     }else{
         ev_timer_again(loop,w);
         wrap->on_call = 0;
-    }
+    }*/
 }
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
     if(global_quit_lock) return;
     double second = (timeout_ms) / 1000.0;
-    ev_timer_init(timer,timer_cb_wrap,second,second);
-    LwqqAsyncTimerWrap* wrap = s_malloc0(sizeof(*wrap));
-    wrap->callback = fun;
-    wrap->data = data;
-    if(timer->data) s_free(timer->data);
-    timer->data = wrap;
+    ev_timer_init(&timer->h,timer_cb_wrap,second,second);
+    timer->func = fun;
+    timer->data = data;
     if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
-    ev_timer_start(ev_default,timer);
+    ev_timer_start(ev_default,&timer->h);
     if(ev_thread_status!=THREAD_NOW_RUNNING) 
         start_ev_thread();
 }
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
-    if(timer->data==NULL){
-        ev_timer_stop(ev_default,timer);
-    }else{
-        LwqqAsyncTimerWrap* wrap = timer->data;
-        if(wrap->on_call){
-            ev_timer_stop(ev_default,timer);
-            s_free(timer->data);
-        }else{
-            wrap->force_stop = 1;
-            timer->repeat = 0.;
-            ev_timer_again(ev_default,timer);
-        }
-    }
-    /*s_free(timer->data);
-    timer->data=NULL;
-    ev_timer_stop(ev_default,timer);*/
+    ev_timer_stop(ev_default, &timer->h);
 }
 static void ev_bomb(EV_P_ ev_timer * w,int revents)
 {
@@ -315,6 +288,10 @@ void lwqq_async_global_quit()
 static int lwqq_gdb_still_waiting()
 {
     return ev_pending_count(ev_default);
+}
+void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer)
+{
+    ev_timer_again(ev_default, &timer->h);
 }
 #endif
 #ifdef USE_LIBPURPLE

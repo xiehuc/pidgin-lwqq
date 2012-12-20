@@ -478,38 +478,40 @@ static void check_multi_info(GLOBAL *g)
         }
     }
 }
-static int timer_cb(void* data)
+static void timer_cb(LwqqAsyncTimerHandle timer,void* data)
 {
     //这个表示有超时任务出现.
     GLOBAL* g = data;
     //printf("timeout_come\n");
 
-    if(!g->multi) return 0;
-    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
-    lwqq_log(LOG_NOTICE,"still running:%d\n",g->still_running);
-#if USE_DEBUG
-   if(g->still_running>1){
-        lwqq_gdb_whats_running();
+    if(!g->multi){
+        lwqq_async_timer_stop(timer);
     }
-#endif
+    curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
     check_multi_info(g);
     //this is inner timeout 
     //always keep it
-    return 1;
+    lwqq_async_timer_repeat(timer);
 }
 static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
+    lwqq_log(LOG_NOTICE,"multi_timer,timeout:%ld\n",timeout_ms);
     //this function call only when timeout clock '''changed'''.
     //called by curl
     GLOBAL* g = userp;
     //printf("timer_cb:%ld\n",timeout_ms);
     lwqq_async_timer_stop(&g->timer_event);
+#if USE_DEBUG
+   if(g->still_running>1){
+        lwqq_gdb_whats_running();
+    }
+#endif
     if (timeout_ms > 0) {
         //change time clock
         lwqq_async_timer_watch(&g->timer_event,timeout_ms,timer_cb,g);
     } else{
         //keep time clock
-        timer_cb(g);
+        timer_cb(&g->timer_event,g);
     }
     //close time clock
     //this should always return 0 this is curl!!
@@ -566,7 +568,7 @@ static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
     }
     return 0;
 }
-static int delay_add_handle(void* data)
+static void delay_add_handle(LwqqAsyncTimerHandle timer,void* data)
 {
     D_ITEM* di = data;
     CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
@@ -574,7 +576,7 @@ static int delay_add_handle(void* data)
     if(rc != CURLM_OK){
         lwqq_puts(curl_multi_strerror(rc));
     }
-    return 0;
+    lwqq_async_timer_stop(timer);
 }
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
                                       char *body, LwqqCommand command)

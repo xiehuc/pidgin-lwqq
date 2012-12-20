@@ -20,28 +20,6 @@
 #endif
 #endif
 
-#ifdef USE_LIBPURPLE
-#include <eventloop.h>
-typedef struct{
-    int ev;
-    void* wrap;
-}LwqqAsyncIo;
-typedef int LwqqAsyncTimer;
-typedef LwqqAsyncIo* LwqqAsyncIoHandle;
-typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
-#define LWQQ_ASYNC_READ PURPLE_INPUT_READ
-#define LWQQ_ASYNC_WRITE PURPLE_INPUT_WRITE
-#endif
-
-#ifdef USE_LIBEV
-#include <ev.h>
-typedef ev_timer  LwqqAsyncTimer;
-typedef ev_io     LwqqAsyncIo;
-typedef ev_timer* LwqqAsyncTimerHandle;
-typedef ev_io*    LwqqAsyncIoHandle;
-#define LWQQ_ASYNC_READ EV_READ
-#define LWQQ_ASYNC_WRITE EV_WRITE
-#endif
 
 
 /** 
@@ -75,8 +53,6 @@ void lwqq_async_global_quit();
 /** this api is better than old async api.
  * it is more powerful and easier to use
  */
-typedef void (*EVENT_CALLBACK)(LwqqAsyncEvent* event,void* data);
-typedef void (*EVSET_CALLBACK)(LwqqAsyncEvset* evset,void* data);
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished
  */
@@ -182,6 +158,38 @@ void lwqq_async_init(LwqqClient* lc);
 
 //=========================LWQQ ASYNC LOW LEVEL EVENT LOOP API====================//
 //=======================PLEASE MAKE SURE DONT USED IN YOUR CODE==================//
+/** watch an io socket for special event
+ * implement by libev or libpurple
+ * @param io this is pointer to a LwqqAsyncIo struct
+ * @param fd socket
+ * @param action combination of LWQQ_ASYNC_READ and LWQQ_ASYNC_WRITE
+ */
+#ifdef USE_LIBPURPLE
+#include <eventloop.h>
+typedef struct{
+    int ev;
+    void* wrap;
+}LwqqAsyncIo;
+typedef int LwqqAsyncTimer;
+typedef LwqqAsyncIo* LwqqAsyncIoHandle;
+typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
+#define LWQQ_ASYNC_READ PURPLE_INPUT_READ
+#define LWQQ_ASYNC_WRITE PURPLE_INPUT_WRITE
+#endif
+
+#ifdef USE_LIBEV
+#include <ev.h>
+typedef struct LwqqAsyncTimer{
+    ev_timer  h;
+    void (*func)(struct LwqqAsyncTimer* timer,void* data);
+    void* data;
+}LwqqAsyncTimer;
+typedef ev_io     LwqqAsyncIo;
+typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
+typedef ev_io*    LwqqAsyncIoHandle;
+#define LWQQ_ASYNC_READ EV_READ
+#define LWQQ_ASYNC_WRITE EV_WRITE
+#endif
 /** the call back of io watch 
  * @param data user defined data
  * @param fd the socket
@@ -192,13 +200,7 @@ typedef void (*LwqqAsyncIoCallback)(void* data,int fd,int action);
  * @param data user defined data
  * return 1 to continue timer 0 to stop timer.
  */
-typedef int (*LwqqAsyncTimerCallback)(void* data);
-/** watch an io socket for special event
- * implement by libev or libpurple
- * @param io this is pointer to a LwqqAsyncIo struct
- * @param fd socket
- * @param action combination of LWQQ_ASYNC_READ and LWQQ_ASYNC_WRITE
- */
+typedef void (*LwqqAsyncTimerCallback)(LwqqAsyncTimer* timer,void* data);
 void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback func,void* data);
 /** stop a io watcher */
 void lwqq_async_io_stop(LwqqAsyncIoHandle io);
@@ -209,6 +211,7 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io);
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int ms,LwqqAsyncTimerCallback func,void* data);
 /** stop a timer */
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer);
+void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer);
 //when caller finished . it would raise called finish yet.
 //so it is calld event chain.
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called);
