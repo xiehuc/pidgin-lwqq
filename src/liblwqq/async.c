@@ -172,6 +172,7 @@ pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
 static struct ev_loop* ev_default = NULL;
 static int global_quit_lock = 0;
+LwqqAsyncTimer bomb;
 //### global data area ###//
 static void *ev_run_thread(void* data)
 {
@@ -259,6 +260,11 @@ void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
     timer->data=NULL;
     ev_timer_stop(ev_default,timer);
 }
+static void ev_bomb(EV_P_ ev_timer * w,int revents)
+{
+    ev_timer_stop(loop,w);
+    ev_break(loop,EVBREAK_ALL);
+}
 void lwqq_async_global_quit()
 {
     //no need to destroy thread
@@ -268,15 +274,17 @@ void lwqq_async_global_quit()
     if(ev_thread_status == THREAD_NOW_WAITING){
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
-        ev_break(ev_default,EVBREAK_ALL);
+        ev_timer_init(&bomb,ev_bomb,0.001,0.);
+        ev_timer_start(ev_default,&bomb);
     }
     //when ever it is waiting. we send a signal
     pthread_cond_signal(&ev_thread_cond);
+    ev_thread_status = THREAD_NOT_CREATED;
     pthread_join(pid,NULL);
     ev_loop_destroy(ev_default);
     ev_default = NULL;
+    pid = 0;
     global_quit_lock = 0;
-    ev_thread_status = THREAD_NOT_CREATED;
 }
 static int lwqq_gdb_still_waiting()
 {
