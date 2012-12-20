@@ -746,6 +746,14 @@ static void login_stage_f(LwqqClient* lc)
     qq_account* ac = lwqq_client_userdata(lc);
 
     //we must put this here. avoid group_come stupid add duplicate group
+    if(LIST_EMPTY(&lc->friends)){
+        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取好友列表失败");
+        return;
+    }
+    if(LIST_EMPTY(&lc->groups)){
+        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取群列表失败");
+        return;
+    }
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
 
     if(!purple_account_get_alias(ac->account))

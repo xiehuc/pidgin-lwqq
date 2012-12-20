@@ -349,7 +349,6 @@ static int get_friends_info_back(LwqqHttpRequest* req)
     }
 
 done:
-    assert(!LIST_EMPTY(&lc->friends));
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
@@ -766,7 +765,7 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
 
 
 done:
-    if(!root)
+    if(root)
         json_free_value(&root);
     lwqq_http_request_free(req);
     return errno;
