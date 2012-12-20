@@ -36,6 +36,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const 
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
+static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -1176,12 +1177,14 @@ static void *start_poll_msg(void *msg_list)
 #if USE_MSG_THREAD
     int retcode;
     int ret;
+    int counter = 1;
     while(1) {
         ret = req->do_request(req, 1, msg);
         if (ret || req->http_code != 200) {
             continue;
         }
         retcode = parse_recvmsg_from_json(list, req->response);
+        lwqq_msg_get_msg_tip(lc, counter++);
         if(retcode == 121 || retcode == 108){
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
             break;
@@ -1810,7 +1813,7 @@ done:
     return errno;
 }
 #define rand(n) (rand()%9000+1000)
-int dump_resoponse(LwqqHttpRequest* req,void* data)
+int dump_response(LwqqHttpRequest* req)
 {
     lwqq_http_request_free(req);
     //s_free(data);
@@ -1878,5 +1881,16 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
             );
     lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    return req->do_request_async(req,0,NULL,_C_(2p_i,dump_resoponse,req,NULL));
+    return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
+}
+
+static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter)
+{
+    if(!lc) return NULL;
+    char url[512];
+    snprintf(url, sizeof(url), "http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=%u&lv=3&t=%lu",counter,time(NULL));
+    lwqq_puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
 }

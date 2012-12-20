@@ -160,6 +160,8 @@ typedef struct {
 typedef struct {
     LwqqAsyncTimerCallback callback;
     void* data;
+    int force_stop;
+    int on_call;
 }LwqqAsyncTimerWrap;
 #ifdef USE_LIBEV
 static enum{
@@ -231,14 +233,24 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
     //if wrap is null. so it is be stoped before.
     //we directly ignore it.
     if(wrap == NULL){
+        ev_timer_stop(loop,w);
         return ;
     }
+    wrap->on_call = 1;
     if(wrap->callback)
         stop = ! wrap->callback(wrap->data);
-    if(stop)
-        lwqq_async_timer_stop(w);
-    else
+    //that means you stoped the timer in callback
+    if(w->data == NULL || w->data != wrap){
+        return;
+    }
+    if(stop){
+        ev_timer_stop(loop,w);
+        s_free(w->data);
+        //lwqq_async_timer_stop(w);
+    }else{
         ev_timer_again(loop,w);
+        wrap->on_call = 0;
+    }
 }
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
@@ -248,6 +260,7 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
     LwqqAsyncTimerWrap* wrap = s_malloc0(sizeof(*wrap));
     wrap->callback = fun;
     wrap->data = data;
+    if(timer->data) s_free(timer->data);
     timer->data = wrap;
     if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
     ev_timer_start(ev_default,timer);
@@ -256,9 +269,22 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
 }
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
-    s_free(timer->data);
+    if(timer->data==NULL){
+        ev_timer_stop(ev_default,timer);
+    }else{
+        LwqqAsyncTimerWrap* wrap = timer->data;
+        if(wrap->on_call){
+            ev_timer_stop(ev_default,timer);
+            s_free(timer->data);
+        }else{
+            wrap->force_stop = 1;
+            timer->repeat = 0.;
+            ev_timer_again(ev_default,timer);
+        }
+    }
+    /*s_free(timer->data);
     timer->data=NULL;
-    ev_timer_stop(ev_default,timer);
+    ev_timer_stop(ev_default,timer);*/
 }
 static void ev_bomb(EV_P_ ev_timer * w,int revents)
 {
