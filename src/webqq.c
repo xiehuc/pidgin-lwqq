@@ -457,7 +457,6 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
         lwqq_async_add_event_listener(ev,cmd);
     } else {
         vp_do(cmd,NULL);
-        //group_message_delay_display(ac,group,s_strdup(msg->group.send);
     }
     return SUCCESS;
 }

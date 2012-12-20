@@ -19,7 +19,6 @@
 typedef struct async_dispatch_data {
     DISPATCH_FUNC dsph;
     CALLBACK_FUNC func;
-    LwqqAsyncTimer handle;
     vp_list data;//s:24
 } async_dispatch_data; //s:88
 typedef struct _LwqqAsyncEvset{
@@ -63,7 +62,7 @@ void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
     va_start(args,func);
     dsph(NULL,&data->data,&args);
     va_end(args);
-    lwqq_async_timer_watch(&data->handle, 10, timeout_come, data);
+    lwqq_async_timer_watch(NULL, 10, timeout_come, data);
 }
 
 void lwqq_async_init(LwqqClient* lc)
@@ -77,6 +76,7 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
     event->req = req;
     event->lc = req?event->req->lc:NULL;
     event->failcode = LWQQ_CALLBACK_VALID;
+    event->result = 0;
     return event;
 }
 LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev)
@@ -215,6 +215,18 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io)
     ev_io_stop(ev_default,io);
     s_free(io->data);
 }
+static void release_ev_timer(ev_timer* timer)
+{
+    LwqqAsyncTimerWrap* wrap = timer->data;
+    if(wrap == NULL){
+    }else if(wrap->flags & MALLOCED){
+        free(timer->data);
+        free(timer);
+    }else{
+        free(timer->data);
+        timer->data = NULL;
+    }
+}
 static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
     LwqqAsyncTimerHandle timer = (LwqqAsyncTimerHandle)w;
@@ -227,18 +239,23 @@ static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
         ev_timer_stop(loop,w);
         return ;
     }
-    wrap->on_call = 1;
-    if(wrap->callback)
-        stop = ! wrap->callback(wrap->data);
-    //that means you stoped the timer in callback
-    if(w->data == NULL || w->data != wrap){
+    if(wrap->flags & FORCE_STOP){
+        ev_timer_stop(loop,w);
+        release_ev_timer(w);
         return;
     }
-    if(stop){
+    wrap->flags |= ON_CALL;
+    if(wrap->callback)
+       ret = wrap->callback(wrap->data);
+    //that means you stoped the timer in callback
+    if(w->data != wrap){
+        return;
+    }
+    if(ret == 0 || (wrap->flags & FORCE_STOP)){
         ev_timer_stop(loop,w);
-        s_free(w->data);
-        //lwqq_async_timer_stop(w);
+        release_ev_timer(w);
     }else{
+        wrap->flags &= ~ON_CALL;
         ev_timer_again(loop,w);
         wrap->on_call = 0;
     }*/

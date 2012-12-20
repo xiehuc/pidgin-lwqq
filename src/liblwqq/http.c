@@ -513,6 +513,10 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
         //keep time clock
         timer_cb(&g->timer_event,g);
     }
+    if(g->still_running){
+        lwqq_log(LOG_NOTICE,"still running:%d,timeout:%ld\n",g->still_running,timeout_ms);
+        if(g->still_running>1)lwqq_gdb_whats_running();
+    }
     //close time clock
     //this should always return 0 this is curl!!
     return 0;
