@@ -20,6 +20,7 @@ typedef struct async_dispatch_data {
     DISPATCH_FUNC dsph;
     CALLBACK_FUNC func;
     vp_list data;//s:24
+    LwqqAsyncTimer timer;
 } async_dispatch_data; //s:88
 typedef struct _LwqqAsyncEvset{
     int result;///<it must put first
@@ -37,6 +38,7 @@ typedef struct _LwqqAsyncEvent {
     LwqqCommand cmd;
     LwqqHttpRequest* req;
 }_LwqqAsyncEvent;
+
 
 int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
 
@@ -62,7 +64,7 @@ void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
     va_start(args,func);
     dsph(NULL,&data->data,&args);
     va_end(args);
-    lwqq_async_timer_watch(NULL, 10, timeout_come, data);
+    lwqq_async_timer_watch(&data->timer, 10, timeout_come, data);
 }
 
 void lwqq_async_init(LwqqClient* lc)
@@ -130,8 +132,10 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
     if(event == NULL){
         vp_do(cmd,NULL);
         return ;
-    }
-    event->cmd = cmd;
+    }else if(event->cmd.func== NULL)
+        event->cmd = cmd;
+    else
+        vp_link(&event->cmd,&cmd);
 }
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
@@ -144,6 +148,33 @@ void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
     evset->cmd = cmd;
 }
 
+LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func)
+{
+    LwqqAsyncEntry* entry;
+    LIST_FOREACH(entry,queue,entries){
+        if(entry->func == func) return entry->ev;
+    }
+    return NULL;
+}
+void lwqq_async_queue_add(LwqqAsyncQueue* queue,void* func,LwqqAsyncEvent* ev)
+{
+    LwqqAsyncEntry* entry = s_malloc0(sizeof(*entry));
+    entry->func = func;
+    entry->ev = ev;
+    LIST_INSERT_HEAD(queue,entry,entries);
+}
+void lwqq_async_queue_rm(LwqqAsyncQueue* queue,void* func)
+{
+    LwqqAsyncEntry* entry;
+    LIST_FOREACH(entry,queue,entries){
+        if(entry->func == func){
+            LIST_REMOVE(entry,entries);
+            s_free(entry);
+            return;
+        }
+    }
+}
+
 void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)
 {
     lwqq_http_on_progress(event->req,callback,data);
@@ -152,6 +183,10 @@ typedef struct {
     LwqqAsyncIoCallback callback;
     void* data;
 }LwqqAsyncIoWrap;
+
+
+
+
 #ifdef USE_LIBEV
 static enum{
     THREAD_NOT_CREATED,
@@ -215,6 +250,7 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io)
     ev_io_stop(ev_default,io);
     s_free(io->data);
 }
+/*
 static void release_ev_timer(ev_timer* timer)
 {
     LwqqAsyncTimerWrap* wrap = timer->data;
@@ -227,6 +263,7 @@ static void release_ev_timer(ev_timer* timer)
         timer->data = NULL;
     }
 }
+*/
 static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
     LwqqAsyncTimerHandle timer = (LwqqAsyncTimerHandle)w;

@@ -27,6 +27,7 @@ typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
 typedef struct _LwqqClient LwqqClient;
+typedef LIST_HEAD(,LwqqAsyncEntry) LwqqAsyncQueue;
 
 
 typedef VP_DISPATCH DISPATCH_FUNC;
@@ -174,7 +175,7 @@ typedef struct LwqqGroup {
 
     LIST_ENTRY(LwqqGroup) entries;
     LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
-    LIST_HEAD(, LwqqAsyncEventQueue) ev_queue;
+    LwqqAsyncQueue ev_queue;
 } LwqqGroup;
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 #define lwqq_group_is_qun(group) (group->type==LWQQ_GROUP_QUN)

@@ -20,7 +20,11 @@
 #endif
 #endif
 
-
+typedef struct LwqqAsyncEntry {
+    void* func;
+    LwqqAsyncEvent* ev;
+    LIST_ENTRY(LwqqAsyncEntry) entries;
+}LwqqAsyncEntry;
 
 /** 
  * call this function when you quit your program.
@@ -107,6 +111,10 @@ do{\
 LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev);
 /** this return one of errno of event in set ,so do not use it*/
 #define lwqq_async_evset_get_result(ev) (ev?*((int*)ev):-1)
+
+LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func);
+void lwqq_async_queue_add(LwqqAsyncQueue* queue,void* func,LwqqAsyncEvent* ev);
+void lwqq_async_queue_rm(LwqqAsyncQueue* queue,void* func);
 
 extern int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED;
 #define LWQQ_SYNC_BEGIN() { LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 1;

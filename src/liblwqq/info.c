@@ -1084,6 +1084,9 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         return NULL;
     }
 
+    LwqqAsyncEvent* ev = lwqq_async_queue_find(&group->ev_queue,lwqq_info_get_group_detail_info);
+    if(ev) return ev;
+
     if(group->type == LWQQ_GROUP_QUN){
         /* Make sure we know code. */
         if (!group->code) {
@@ -1097,9 +1100,6 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
                 "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s&t=%ld",
                 "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));
         req = lwqq_http_create_default_request(lc,url, err);
-        if (!req) {
-            goto done;
-        }
         req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
 
     }else if(group->type == LWQQ_GROUP_DISCU){
@@ -1112,14 +1112,14 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     }
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-    return req->do_request_async(req, 0, NULL,_C_(3p_i,group_detail_back,req,lc,group));
-done:
-    lwqq_http_request_free(req);
-    return NULL;
+    ev = req->do_request_async(req, 0, NULL,_C_(3p_i,group_detail_back,req,lc,group));
+    lwqq_async_queue_add(&group->ev_queue,lwqq_info_get_group_detail_info,ev);
+    return ev;
 }
 
 static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* group)
 {
+    lwqq_async_queue_rm(&group->ev_queue,lwqq_info_get_group_detail_info);
     if(group->type == LWQQ_GROUP_DISCU){
         return get_discu_detail_info_back(req,lc,group);
     }
