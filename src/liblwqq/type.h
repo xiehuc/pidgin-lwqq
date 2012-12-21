@@ -174,6 +174,7 @@ typedef struct LwqqGroup {
 
     LIST_ENTRY(LwqqGroup) entries;
     LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
+    LIST_HEAD(, LwqqAsyncEventQueue) ev_queue;
 } LwqqGroup;
 #define lwqq_member_is_founder(member,group) (strcmp(member->uin,group->owner)==0)
 #define lwqq_group_is_qun(group) (group->type==LWQQ_GROUP_QUN)

@@ -14,7 +14,7 @@
 typedef struct {void* st;void* cur; size_t sz;}vp_list;
 typedef void (*VP_CALLBACK)(void);
 typedef void (*VP_DISPATCH)(VP_CALLBACK,vp_list*,void*);
-typedef struct {VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;}vp_command;
+typedef struct vp_command{VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;struct vp_command* next;}vp_command;
 
 #define vp_init(vp,size) do{(vp).st = (vp).cur = malloc(size);(vp).sz = size;}while(0)
 #define _ptr_self_inc(ptr,sz) ((ptr+=sz)-sz)

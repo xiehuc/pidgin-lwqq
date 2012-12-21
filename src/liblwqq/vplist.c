@@ -10,6 +10,7 @@ vp_command vp_make_command(VP_DISPATCH dsph,VP_CALLBACK func,...)
     vp_command ret;
     ret.dsph = dsph;
     ret.func = func;
+    ret.next = NULL;
     va_list args;
     va_start(args,func);
     dsph(NULL,&ret.data,&args);
@@ -24,6 +25,27 @@ void vp_do(vp_command cmd,void* retval)
     vp_end(cmd.data);
     cmd.dsph = (VP_DISPATCH)NULL;
     cmd.func = (VP_CALLBACK)NULL;
+    vp_command* n = cmd.next;
+    cmd.next = NULL;
+    vp_command* p;
+    while(n){
+        vp_start(n->data);
+        n->dsph(n->func,&n->data,NULL);
+        vp_end(n->data);
+        p = n;
+        n = n->next;
+        free(p);
+    }
+}
+void vp_link(vp_command* head,vp_command* elem)
+{
+    vp_command* cmd = head;
+    while(cmd->next)
+        cmd = cmd->next;
+    vp_command* item = malloc(sizeof(vp_command));
+    memcpy(item,elem,sizeof(vp_command));
+    memset(elem,sizeof(vp_command),0);
+    cmd->next = item;
 }
 
 void vp_func_void(VP_CALLBACK func,vp_list* vp,void* q)
