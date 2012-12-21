@@ -65,7 +65,6 @@ while(list!=NULL){ \
 #define slist_append(list,node) \
 (node->next = list,node)
 
-#if USE_DEBUG
 static int lwqq_gdb_whats_running()
 {
     D_ITEM* item;
@@ -76,7 +75,6 @@ static int lwqq_gdb_whats_running()
     }
     return 0;
 }
-#endif
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                 const char *value)
@@ -512,10 +510,6 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
     } else{
         //keep time clock
         timer_cb(&g->timer_event,g);
-    }
-    if(g->still_running){
-        lwqq_log(LOG_NOTICE,"still running:%d,timeout:%ld\n",g->still_running,timeout_ms);
-        if(g->still_running>1)lwqq_gdb_whats_running();
     }
     //close time clock
     //this should always return 0 this is curl!!
