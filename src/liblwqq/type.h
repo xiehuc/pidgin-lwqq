@@ -232,6 +232,7 @@ struct _LwqqClient {
     struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
 
+    LwqqAsyncQueue ev_queue;
 
     LwqqBuddy* (*find_buddy_by_uin)(LwqqClient* lc,const char* uin);
     LwqqBuddy* (*find_buddy_by_qqnumber)(LwqqClient* lc,const char* qqnumber);

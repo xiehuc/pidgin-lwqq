@@ -37,6 +37,7 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
+static int get_msg_tip_back(LwqqHttpRequest* req);
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -1887,10 +1888,24 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
 static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter)
 {
     if(!lc) return NULL;
+    LwqqAsyncEvent* ev = lwqq_async_queue_find(&lc->ev_queue, lwqq_msg_get_msg_tip);
+    if(ev) return ev;
     char url[512];
     snprintf(url, sizeof(url), "http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=%u&lv=3&t=%lu",counter,time(NULL));
     lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Referer","http://web2.qq.com/");
-    return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
+    ev = req->do_request_async(req,0,NULL,_C_(p_i,get_msg_tip_back,req));
+    lwqq_async_queue_add(&lc->ev_queue,lwqq_msg_get_msg_tip,ev);
+    return ev;
 }
+
+static int get_msg_tip_back(LwqqHttpRequest* req)
+{
+    LwqqClient* lc = req->lc;
+    lwqq_async_queue_rm(&lc->ev_queue,lwqq_msg_get_msg_tip);
+
+    lwqq_http_request_free(req);
+    return 0;
+}
+
