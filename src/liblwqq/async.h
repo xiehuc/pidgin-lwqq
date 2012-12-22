@@ -191,6 +191,7 @@ typedef struct LwqqAsyncTimer{
     ev_timer  h;
     void (*func)(struct LwqqAsyncTimer* timer,void* data);
     void* data;
+    int on_call;
 }LwqqAsyncTimer;
 typedef ev_io     LwqqAsyncIo;
 typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;

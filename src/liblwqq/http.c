@@ -31,10 +31,14 @@ typedef struct GLOBAL {
     int still_running;
     LwqqAsyncTimer timer_event;
     LIST_HEAD(,D_ITEM) conn_link;
+    int pipe_fd[2];
+    LwqqAsyncIo add_listener;
+    LIST_HEAD(,D_ITEM) add_link;
 }GLOBAL;
 static GLOBAL global = {0};
 static pthread_cond_t async_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t async_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t add_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 typedef struct S_ITEM {
@@ -566,15 +570,23 @@ static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
     }
     return 0;
 }
-static void delay_add_handle(LwqqAsyncTimerHandle timer,void* data)
+static void delay_add_handle(void* data,int fd,int act)
 {
-    D_ITEM* di = data;
-    CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
+    pthread_mutex_lock(&add_lock);
+    char buf[16];
+    //remove from pipe
+    read(fd,buf,sizeof(buf));
+    D_ITEM* di,*tvar;
+    LIST_FOREACH_SAFE(di,&global.add_link,entries,tvar){
+        LIST_REMOVE(di,entries);
+        LIST_INSERT_HEAD(&global.conn_link,di,entries);
+        CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
 
-    if(rc != CURLM_OK){
-        lwqq_puts(curl_multi_strerror(rc));
+        if(rc != CURLM_OK){
+            lwqq_puts(curl_multi_strerror(rc));
+        }
     }
-    lwqq_async_timer_stop(timer);
+    pthread_mutex_unlock(&add_lock);
 }
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
                                       char *body, LwqqCommand command)
@@ -619,8 +631,12 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->cmd = command;
     di->req = request;
     di->event = lwqq_async_event_new(request);
-    LIST_INSERT_HEAD(&global.conn_link,di,entries);
-    lwqq_async_timer_watch(&di->delay,10,delay_add_handle,di);
+    pthread_mutex_lock(&add_lock);
+    LIST_INSERT_HEAD(&global.add_link,di,entries);
+    write(global.pipe_fd[1],"ok",3);
+    pthread_mutex_unlock(&add_lock);
+    //LIST_INSERT_HEAD(&global.conn_link,di,entries);
+    //lwqq_async_timer_watch(&di->delay,10,delay_add_handle,di);
     return di->event;
 
 failed:
@@ -726,6 +742,8 @@ void lwqq_http_global_init()
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
         curl_multi_setopt(global.multi, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
         curl_multi_setopt(global.multi, CURLMOPT_TIMERDATA, &global);
+        pipe(global.pipe_fd);
+        lwqq_async_io_watch(&global.add_listener, global.pipe_fd[0], LWQQ_ASYNC_READ, delay_add_handle, NULL);
     }
     if(global.share==NULL){
         global.share = curl_share_init();
@@ -773,6 +791,9 @@ void lwqq_http_global_free()
         }
         curl_multi_cleanup(global.multi);
         global.multi = NULL;
+        lwqq_async_io_stop(&global.add_listener);
+        close(global.pipe_fd[0]);
+        close(global.pipe_fd[1]);
     }
     if(global.share){
         curl_share_cleanup(global.share);
