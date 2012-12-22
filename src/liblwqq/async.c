@@ -198,7 +198,7 @@ pthread_cond_t ev_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_t pid = 0;
 static struct ev_loop* ev_default = NULL;
 static int global_quit_lock = 0;
-ev_timer bomb;
+static ev_timer bomb;
 //### global data area ###//
 static void *ev_run_thread(void* data)
 {
@@ -219,6 +219,7 @@ static void *ev_run_thread(void* data)
 }
 static void start_ev_thread()
 {
+    if(global_quit_lock) return;
     if(ev_thread_status == THREAD_NOW_WAITING){
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOT_CREATED){
@@ -250,52 +251,11 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io)
     ev_io_stop(ev_default,io);
     s_free(io->data);
 }
-/*
-static void release_ev_timer(ev_timer* timer)
-{
-    LwqqAsyncTimerWrap* wrap = timer->data;
-    if(wrap == NULL){
-    }else if(wrap->flags & MALLOCED){
-        free(timer->data);
-        free(timer);
-    }else{
-        free(timer->data);
-        timer->data = NULL;
-    }
-}
-*/
 static void timer_cb_wrap(EV_P_ ev_timer* w,int revents)
 {
+    if(global_quit_lock) return;
     LwqqAsyncTimerHandle timer = (LwqqAsyncTimerHandle)w;
     timer->func(timer,timer->data);
-/*    LwqqAsyncTimerWrap* wrap = w->data;
-    int stop=1;
-    //if wrap is null. so it is be stoped before.
-    //we directly ignore it.
-    if(wrap == NULL){
-        ev_timer_stop(loop,w);
-        return ;
-    }
-    if(wrap->flags & FORCE_STOP){
-        ev_timer_stop(loop,w);
-        release_ev_timer(w);
-        return;
-    }
-    wrap->flags |= ON_CALL;
-    if(wrap->callback)
-       ret = wrap->callback(wrap->data);
-    //that means you stoped the timer in callback
-    if(w->data != wrap){
-        return;
-    }
-    if(ret == 0 || (wrap->flags & FORCE_STOP)){
-        ev_timer_stop(loop,w);
-        release_ev_timer(w);
-    }else{
-        wrap->flags &= ~ON_CALL;
-        ev_timer_again(loop,w);
-        wrap->on_call = 0;
-    }*/
 }
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
@@ -315,6 +275,7 @@ void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 }
 static void ev_bomb(EV_P_ ev_timer * w,int revents)
 {
+    lwqq_puts("boom!!");
     ev_timer_stop(loop,w);
     ev_break(loop,EVBREAK_ALL);
 }
@@ -327,11 +288,9 @@ void lwqq_async_global_quit()
     if(ev_thread_status == THREAD_NOW_WAITING){
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
-        ev_timer_init(&bomb,ev_bomb,0.001,0.);
+        ev_timer_init(&bomb,ev_bomb,0.002,0.002);
         ev_timer_start(ev_default,&bomb);
     }
-    //when ever it is waiting. we send a signal
-    pthread_cond_signal(&ev_thread_cond);
     ev_thread_status = THREAD_NOT_CREATED;
     pthread_join(pid,NULL);
     ev_loop_destroy(ev_default);
