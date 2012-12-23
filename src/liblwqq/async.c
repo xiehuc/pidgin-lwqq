@@ -229,6 +229,7 @@ static void start_ev_thread()
 }
 static void event_cb_wrap(EV_P_ ev_io *w,int action)
 {
+    if(global_quit_lock) return;
     LwqqAsyncIoWrap* wrap = w->data;
     if(wrap->callback)
         wrap->callback(wrap->data,w->fd,action);

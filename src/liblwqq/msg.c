@@ -39,6 +39,10 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
 static int get_msg_tip_back(LwqqHttpRequest* req);
 
+typedef struct LwqqRecvMsgListPri {
+    struct LwqqRecvMsgList parent;
+    LwqqAsyncTimer tip_loop;
+} LwqqRecvMsgListPri;
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -50,7 +54,8 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
 {
     LwqqRecvMsgList *list;
 
-    list = s_malloc0(sizeof(*list));
+    list = s_malloc0(sizeof(LwqqRecvMsgListPri));
+    list->count = 0;
     list->lc = client;
     pthread_mutex_init(&list->mutex, NULL);
     TAILQ_INIT(&list->head);
@@ -1140,6 +1145,14 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
     return 0;
 }
 #endif
+
+void get_msg_tip_loop(LwqqAsyncTimerHandle timer,void* data)
+{
+    LwqqClient* lc = data;
+    LwqqRecvMsgList* list = lc->msg_list;
+    lwqq_msg_get_msg_tip(lc,++list->count);
+    lwqq_async_timer_repeat(timer);
+}
 /**
  * Poll to receive message.
  * 
@@ -1175,17 +1188,19 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+
+    LwqqAsyncTimerHandle timer = &((LwqqRecvMsgListPri*)list)->tip_loop;
+    lwqq_async_timer_watch(timer, 60*1000, get_msg_tip_loop, lc);
+
 #if USE_MSG_THREAD
     int retcode;
     int ret;
-    int counter = 1;
     while(1) {
         ret = req->do_request(req, 1, msg);
         if (ret || req->http_code != 200) {
             continue;
         }
         retcode = parse_recvmsg_from_json(list, req->response);
-        lwqq_msg_get_msg_tip(lc, counter++);
         if(retcode == 121 || retcode == 108){
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
             break;

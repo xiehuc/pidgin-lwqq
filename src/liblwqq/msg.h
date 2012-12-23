@@ -268,7 +268,6 @@ typedef struct LwqqRecvMsg {
     LwqqMsg *msg;
     TAILQ_ENTRY(LwqqRecvMsg) entries;
 } LwqqRecvMsg;
-
 typedef struct LwqqRecvMsgList {
     int count;                  /**< Number of message  */
     pthread_t tid;
