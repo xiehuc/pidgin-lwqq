@@ -329,14 +329,28 @@ void lwqq_async_io_stop(LwqqAsyncIoHandle io)
     io->ev = 0;
     s_free(io->wrap);
 }
+static int timer_wrapper(void* data)
+{
+    LwqqAsyncTimerHandle timer = data;
+    timer->ret = 0;
+    timer->func(timer,timer->data);
+    return timer->ret;
+}
 void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
 {
-    *timer = purple_timeout_add(timeout_ms,fun,data);
+    timer->func = fun;
+    timer->data = data;
+    timer->h = purple_timeout_add(timeout_ms,timer_wrapper,timer);
 }
 void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
 {
-    purple_timeout_remove(*timer);
-    *timer = 0;
+    purple_timeout_remove(timer->h);
+    timer->h = 0;
+    timer->ret = 0;
+}
+void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer)
+{
+    timer->ret = 1;
 }
 void lwqq_async_global_quit() {}
 #endif

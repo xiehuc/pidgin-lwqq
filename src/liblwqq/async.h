@@ -178,7 +178,12 @@ typedef struct{
     int ev;
     void* wrap;
 }LwqqAsyncIo;
-typedef int LwqqAsyncTimer;
+typedef struct LwqqAsyncTimer{
+    int h;
+    void (*func)(struct LwqqAsyncTimer* timer,void* data);
+    void *data;
+    int ret;
+}LwqqAsyncTimer;
 typedef LwqqAsyncIo* LwqqAsyncIoHandle;
 typedef LwqqAsyncTimer* LwqqAsyncTimerHandle;
 #define LWQQ_ASYNC_READ PURPLE_INPUT_READ

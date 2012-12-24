@@ -1189,8 +1189,8 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    LwqqAsyncTimerHandle timer = &((LwqqRecvMsgListPri*)list)->tip_loop;
-    lwqq_async_timer_watch(timer, 60*1000, get_msg_tip_loop, lc);
+    //LwqqAsyncTimerHandle timer = &((LwqqRecvMsgListPri*)list)->tip_loop;
+    //lwqq_async_timer_watch(timer, 60*1000, get_msg_tip_loop, lc);
 
 #if USE_MSG_THREAD
     int retcode;
