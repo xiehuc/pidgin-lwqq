@@ -1265,6 +1265,7 @@ static void qq_login(PurpleAccount *account)
     qq_account* ac = qq_account_new(account);
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
+    translate_global_init();
     if(password==NULL||strcmp(password,"")==0) {
         purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
         return;

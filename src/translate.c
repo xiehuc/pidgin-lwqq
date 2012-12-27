@@ -15,12 +15,9 @@
 #endif
 
 #define FACE_DIR INST_PREFIX"/share/pixmaps/pidgin/emotes/webqq/"
-static GHashTable* smily_table;
+static GHashTable* smily_hash;
 static TRex* _regex;
 static TRex* hs_regex;
-const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
-    ":\\)|:-D|:-\\(|;-\\)|:P|=-O|:-\\*|8-\\)|:-\\[|"
-    ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
 struct smile_entry{
     int id;
     const char* smile[6];
@@ -141,7 +138,7 @@ static char* build_smiley_exp()
 {
     char* exp = s_malloc0(2048);
     char* spec_char = "()[]*$\\|";
-    strcpy(exp,"<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]");
+    strcpy(exp,"<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|/\\S+");
     struct smile_entry* entry = &smile_tables[0];
     const char* smiley,*beg,*end;
     int i;
@@ -149,13 +146,12 @@ static char* build_smiley_exp()
         for(i=0;i<6;i++){
             smiley = entry->smile[i];
             if(smiley==0)break;
-            //if(smiley[0]=='/')continue;
+            if(smiley[0]=='/')continue;
             strcat(exp,"|");
             beg = smiley;
             do{
                 end=strpbrk(beg,spec_char);
                 if(end==NULL) strcat(exp,beg);
-                if(*end=='/') continue;
                 else {
                     strncat(exp, beg, end-beg);
                     strcat(exp,"\\");
@@ -248,8 +244,8 @@ static LwqqMsgContent* build_face_content(const char* face,int len)
     buf[len]= '\0';
     strcpy(buf,face);
     LwqqMsgContent* c;
-    if(smily_table==NULL) translate_global_init();
-    int num = (long)g_hash_table_lookup(smily_table,buf);
+    if(smily_hash==NULL) translate_global_init();
+    int num = (long)g_hash_table_lookup(smily_hash,buf);
     if(num==0) return NULL;
     //unshift face because when build it we shift it.
     num--;
@@ -316,9 +312,11 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
         }else if(begin[0]=='&'){
         }else if(begin[0]=='/'){
             c = build_face_content(m.begin, m.len);
+            if(c==NULL) c = build_string_content(begin, end, mmsg);
         }else{
             //other face
             c = build_face_content(m.begin,m.len);
+            if(c==NULL) c = build_string_content(begin, end, mmsg);
         }
         ptr = end;
         if(c!=NULL)
@@ -418,7 +416,7 @@ void translate_global_init()
         if(err){lwqq_puts(err);assert(0);}
         assert(_regex!=NULL);
     }
-    if(smily_table ==NULL){
+    if(smily_hash ==NULL){
         GHashTable *t = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
         struct smile_entry* entry = &smile_tables[0];
         long id,i;
@@ -434,7 +432,7 @@ void translate_global_init()
             }
             entry++;
         }
-        smily_table = t;
+        smily_hash = t;
 
         purple_smiley_new_from_file("[FACE_14]",FACE_DIR"0.gif");
         purple_smiley_new_from_file("[FACE_1]",FACE_DIR"1.gif");
@@ -557,9 +555,9 @@ void translate_global_free()
         trex_free(hs_regex);
         hs_regex = NULL;
     }
-    if(smily_table) {
-        g_hash_table_remove_all(smily_table);
-        smily_table = NULL;
+    if(smily_hash) {
+        g_hash_table_remove_all(smily_hash);
+        smily_hash = NULL;
         GList* list = purple_smileys_get_all();
         g_list_foreach(list,remove_all_smiley,NULL);
         g_list_free(list);
