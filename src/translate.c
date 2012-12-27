@@ -5,8 +5,6 @@
 #include <assert.h>
 #include <smiley.h>
 #include <accountopt.h>
-//#include <gtk/gtk.h>
-//#include <gtksmiley.h>
 #include "translate.h"
 #include "trex.h"
 #include "async.h"
@@ -23,12 +21,153 @@ static TRex* hs_regex;
 const char* SMILY_EXP = "<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|"
     ":\\)|:-D|:-\\(|;-\\)|:P|=-O|:-\\*|8-\\)|:-\\[|"
     ":'\\(|:-/|O:-\\)|:-x|:-\\$|:-!";
-    //:'( error
+struct smile_entry{
+    int id;
+    const char* smile[6];
+};
+static struct smile_entry smile_tables[] = {
+    {14,    {   ":)",   ":-)",      "/微笑",    "/wx",      0}},
+    {1,     {   ":~",   "/撇嘴",    "/pz",      0}},
+	{2,     {   ":B",   "/色",      "/se",      0}},
+    {3,     {   ":|",   "/发呆",    "/fd",      0}},
+    {4,     {   "8-)",  "/得意",    "/dy",      0}},
+    {5,     {   ":[",   "/流泪",    "/ll",      0}},
+    {6,     {   ":$",   "/含羞",    "/hx",      0}},
+    {7,     {   ":X",	"/闭嘴",	"/bz",      0}},
+    {8,     {   ":Z",	"/睡", 	    "/shui",    0}},
+    {9,     {   ":'(",  ":'-(",	    "/大哭",	"/dk",      0}},
+    {10,    {   ":-|",	"/尴尬",	"/gg",      0}},
+    {11,    {   ":@",	"/发怒",	"/fn",      0}},
+    {12,    {   ";-)",  ";)",		":P",		"/调皮",	"/tp",      0}},
+    {13,    {   ":D",   "/呲牙",	"/cy",      0}},
+    {0,     {   ":O",	"/惊讶",	"/jy",      0}},
+    {50,    {   ":-(",  ":(",		"/难过",	"/ng",      0}},
+    {51,    {   "8-)",	":+",		"/酷",		"/kuk",     0}},
+    {96,    {   "--b",	"/冷汗",	"/lengh",   0}},
+    {53,    {   ":Q",	"/抓狂",	"/zk",      0}},
+    {54,    {   ":T",	"/吐",		"/tuu",     0}},
+    {73,    {   ":p",	"/偷笑",	"/tx",      0}},
+    {74,    {   ":-D",	"/可爱",	"/ka",      0}},
+    {75,    {   ":d",	"/白眼",	"/baiy",    0}},
+    {76,    {   ":o",	"/傲慢",	"/am",      0}},
+    {77,    {   ":g",	"/饥饿",	"/jie",     0}},
+    {78,    {   "|-)",	"/困",		"/kun",     0}},
+    {55,    {   ":!",	"/惊恐",	"/jk",      0}},
+    {56,    {   ":L",	"/流汗",	"/lh",      0}},
+    {57,    {   ":}",	"/憨笑",	"/hx",      0}},
+    {58,    {   ":;",	"/大兵",	"/dab",     0}},
+    {79,    {   ":f",	"/奋斗",	"/fendou",  0}},
+    {80,    {   ":-S",	"/咒骂",	"/zhm",     0}},
+    {81,    {   "/?",	"/yiw",	    "/yiw",     0}},
+    {82,    {   ";X",	"/嘘",		"/xu",      0}},
+    {83,    {   ";@",	"/晕",		"/yun",     0}},
+    {84,    {   ":8",	"/折磨",	"/zhem",    0}},
+    {85,    {   ":b",	"/哀",		"/shuai",   0}},
+    {86,    {   "/!!!",	"/骷髅",	"/kl",      0}},
+    {87,    {   "/xx",	"/敲打",	"/qiao",    0}},
+    {88,    {   "/bye",	"/再见",	"/zj",      0}},
+    {97,    {   "/wipe","/擦汗",	"/ch",      0}},
+    {98,    {   "/dig",	"/抠鼻",	"/kb",      0}},
+    {99,    {   "/handclap",        "/鼓掌",	"/gz",      0}},
+    {100,   {	"&-(",	"/糗大了",	"/qd",      0}},
+    {101,   {	"B-)",	"/坏笑",	"/huaix",   0}},
+    {102,   {	"[@",	"/左哼哼",	"/zhh",     0}},
+    {103,   {	"@]",	"/右哼哼",	"/yhh",     0}},
+    {104,   {	":-O",	"/哈欠",	"/hq",      0}},
+    {105,   {	"]-|",	"/鄙视",	"/bs",      0}},
+    {106,   {	"P-(",	"/委屈",	"/wq",      0}},
+    {107,   {	":'|",	"/快哭了",	"/kk",      0}},
+    {108,   {	"X-)",	"/阴险",	"/yx",      0}},
+    {109,   {	":*",	"/亲亲",	"/qq",      0}},
+    {110,   {	"@x",	"/吓",		"/xia",     0}},
+    {111,   {	"/8*",	"/可怜",	"/kel",     0}},
+    {112,   {	"/pd",	"/菜刀",	"/cd",      0}},
+    {32,    {	"/[w]",	"/西瓜",	"/xig",     0}},
+    {113,   {	"/beer","/啤酒",	"/pj",      0}},
+    {114,   {	"/basketb",		    "/篮球",    "/lq",      0}},
+    {115,   {	"/oo",	"/乒乓",	"/pp",      0}},
+    {63,    {	"/coffee",			"/咖啡",	"/kf",      0}},
+    {59,    {	"/pig",	"/猪头",	"/zt",      0}},
+    {33,    {	"/rose","/玫瑰",	"/mg",      0}},
+    {34,    {	"/fade","/凋谢",	"/dx",      0}},
+    {116,   {	":-*",	"/示爱",	"/sa",      0}},
+    {36,    {	"/heart",           "/爱心", 	"/xin",     0}},
+    {37,    {	"/break",           "/心碎", 	"/xs",      0}},
+    {38,    {	"/cake","/蛋糕",	"/dg",      0}},
+    {91,    {	"/li",	"/闪电",	"/shd",     0}},
+    {92,    {	"/bomb","/炸弹",	"/zhd",     0}},
+    {93,    {	"/kn",	"/刀",		"/dao",     0}},
+    {29,    {	"/footb",	        "/足球",	"/zq",      0}},
+    {117,   {	"/瓢虫",            "/pch",     0}},
+    {72,    {	"/ww",	"/便便",	"/bb",      0}},
+    {45,    {	"/moon","/月亮",	"/yl",      0}},
+    {42,    {	"/sun",	"/太阳",	"/ty",      0}},
+    {39,    {	"/gift","/礼物",	"/lw",      0}},
+    {62,    {	"/hug",	"/拥抱",	"/yb",      0}},
+    {46,    {	"/强",	"/qiang",   0}},
+    {47,    {	"/weak","/弱",		"/ruo",     0}},
+    {71,    {	"/share",	        "/握手",	"/ws",      0}},
+    {95,    {	"/v",	"/胜利",	"/shl",     0}},
+    {118,   {	"@)",	"/抱拳",	"/bq",      0}},
+    {119,   {	"/jj",	"/勾引",	"/gy",      0}},
+    {120,   {	"@@",	"/拳头",	"/qt",      0}},
+    {121,   {	"/bad",	"/差劲",	"/cj",      0}},
+    {122,   {	"/loveu",	        "/爱你",	"/aini",    0}},
+    {123,   {	"/NO",	"/no",		"/bm",      0}},
+    {124,   {	"/OK",	"/ok",		"/hd",      0}},
+    {27,    {	"/love","/爱情",	"/aiq",     0}},
+    {21,    {	"/[L]",	"/飞吻",	"/fw",      0}},
+    {23,    {	"/jump","/跳跳",	"/tiao",    0}},
+    {25,    {	"/shake",           "/发抖",	"/fad",     0}},
+    {26,    {	"/[o]",	"/怄火",	"/oh",      0}},
+    {125,   {	"/转圈","/zhq",     0}},
+    {126,   {	"/磕头","/kt",      0}},
+    {127,   {	"/回头","/ht",      0}},
+    {128,   {	"/跳绳","/tsh",     0}},
+    {129,   {	"/oY",	"/挥手",	"/hsh",     0}},
+    {130,   {	"#-O",	"/激动",	"/jd",      0}},
+    {131,   {	"/街舞","/jw",	    0}},
+    {132,   {	"/kiss","/献吻",	"/xw",      0}},
+    {133,   {	"/<&",	"/左太极",	"/ztj",     0}},
+    {134,   {	"/&>",	"/右太极",	"/ytj",     0}},
+    {-1,    {   0   }}
+};
 const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
 //font size map space : pidgin:[1,7] to webqq[8:20]
 #define sizemap(num) (6+2*num)
 //font size map space : webqq[8:22] to pidgin [1:8]
 #define sizeunmap(px) ((px-6)/2)
+static char* build_smiley_exp()
+{
+    char* exp = s_malloc0(2048);
+    char* spec_char = "()[]*$\\|";
+    strcpy(exp,"<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]");
+    struct smile_entry* entry = &smile_tables[0];
+    const char* smiley,*beg,*end;
+    int i;
+    while(entry->id !=-1){
+        for(i=0;i<6;i++){
+            smiley = entry->smile[i];
+            if(smiley==0)break;
+            //if(smiley[0]=='/')continue;
+            strcat(exp,"|");
+            beg = smiley;
+            do{
+                end=strpbrk(beg,spec_char);
+                if(end==NULL) strcat(exp,beg);
+                if(*end=='/') continue;
+                else {
+                    strncat(exp, beg, end-beg);
+                    strcat(exp,"\\");
+                    strncat(exp,end,1);
+                    beg = end+1;
+                }
+            }while(end);
+        }
+        entry++;
+    }
+    return exp;
+}
 static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
@@ -107,13 +246,15 @@ static LwqqMsgContent* build_face_content(const char* face,int len)
     static char buf[20];
     memcpy(buf,face,len);
     buf[len]= '\0';
+    strcpy(buf,face);
     LwqqMsgContent* c;
     if(smily_table==NULL) translate_global_init();
     int num = (long)g_hash_table_lookup(smily_table,buf);
     if(num==0) return NULL;
+    //unshift face because when build it we shift it.
+    num--;
     c = s_malloc0(sizeof(*c));
     c->type = LWQQ_CONTENT_FACE;
-    if(num==-1)num++;
     c->data.face = num;
     return c;
 }
@@ -173,6 +314,8 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             sscanf(begin,"[FACE_%d]",&img_id);
             c = build_face_direct(img_id);
         }else if(begin[0]=='&'){
+        }else if(begin[0]=='/'){
+            c = build_face_content(m.begin, m.len);
         }else{
             //other face
             c = build_face_content(m.begin,m.len);
@@ -263,7 +406,9 @@ void translate_global_init()
 {
     if(_regex==NULL){
         const char* err = NULL;
-        _regex = trex_compile(_TREXC(SMILY_EXP),&err);
+        char* smiley_exp = build_smiley_exp();
+        _regex = trex_compile(_TREXC(smiley_exp),&err);
+        free(smiley_exp);
         if(err) {lwqq_puts(err);assert(0);}
         assert(_regex!=NULL);
     }
@@ -274,25 +419,23 @@ void translate_global_init()
         assert(_regex!=NULL);
     }
     if(smily_table ==NULL){
-#define GPOINTER(n) (gpointer)n
         GHashTable *t = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
-        g_hash_table_insert(t,":)",GPOINTER(14));
-        g_hash_table_insert(t,":-D",GPOINTER(13));
-        g_hash_table_insert(t,":-(",GPOINTER(50));
-        g_hash_table_insert(t,":(",GPOINTER(50));
-        g_hash_table_insert(t,";-)",GPOINTER(12));
-        g_hash_table_insert(t,":P",GPOINTER(12));
-        g_hash_table_insert(t,"=-O",GPOINTER(57));
-        g_hash_table_insert(t,":-*",GPOINTER(116));
-        g_hash_table_insert(t,"8-)",GPOINTER(51));
-        g_hash_table_insert(t,":-[",GPOINTER(74));
-        g_hash_table_insert(t,":'(",GPOINTER(9));
-        g_hash_table_insert(t,":-/",GPOINTER(76));
-        g_hash_table_insert(t,"O:-)",GPOINTER(58));
-        g_hash_table_insert(t,":-x",GPOINTER(106));
-        g_hash_table_insert(t,":-$",GPOINTER(107));
-        g_hash_table_insert(t,":-!",GPOINTER(85));
+        struct smile_entry* entry = &smile_tables[0];
+        long id,i;
+        char* smiley;
+        
+        while(entry->id!=-1){
+            //shift id let 0 means failed
+            id = entry->id+1;
+            for(i=0;i<6;i++){
+                smiley = (char*)entry->smile[i];
+                if(smiley==0) break;
+                g_hash_table_insert(t,smiley,(gpointer)id);
+            }
+            entry++;
+        }
         smily_table = t;
+
         purple_smiley_new_from_file("[FACE_14]",FACE_DIR"0.gif");
         purple_smiley_new_from_file("[FACE_1]",FACE_DIR"1.gif");
         purple_smiley_new_from_file("[FACE_2]",FACE_DIR"2.gif");
@@ -422,37 +565,38 @@ void translate_global_free()
         g_list_free(list);
     }
 }
-#define MAP(face,str) \
+const char* translate_smile(int face)
+{
+#define SMILE_MAP(face,str) \
     case face:\
     ret=str;\
     break;
-const char* translate_smile(int face)
-{
     const char* ret;
     static char piece[20];
     switch(face) {
-        MAP(14,":)");
-        MAP(13,":-D");
-        MAP(50,":-(");
-        MAP(12,";-)");
-        //MAP(12,":P");
-        MAP(57,"=-O");
-        MAP(116,":-*");
-        MAP(51,"8-)");
-        MAP(74,":-[");
-        MAP(9,":'(");
-        MAP(76,":-/");
-        MAP(58,"O:-)");
-        MAP(106,":-x");
-        MAP(107,":-$");
-        MAP(85,":-!");
-        MAP(110,":-!");
+        SMILE_MAP(14,":)");
+        SMILE_MAP(13,":-D");
+        SMILE_MAP(50,":-(");
+        SMILE_MAP(12,";-)");
+        //SMILE_MAP(12,":P");
+        SMILE_MAP(57,"=-O");
+        SMILE_MAP(116,":-*");
+        SMILE_MAP(51,"8-)");
+        SMILE_MAP(74,":-[");
+        SMILE_MAP(9,":'(");
+        SMILE_MAP(76,":-/");
+        SMILE_MAP(58,"O:-)");
+        SMILE_MAP(106,":-x");
+        SMILE_MAP(107,":-$");
+        SMILE_MAP(85,":-!");
+        SMILE_MAP(110,":-!");
     default:
         snprintf(piece,sizeof(piece),"[FACE_%d]",face);
         ret = piece;
         break;
     }
     return ret;
+#undef SMILE_MAP
 }
 
 void add_smiley(void* data,void* userdata)
