@@ -140,13 +140,16 @@ static char* build_smiley_exp()
     char* spec_char = "()[]*$\\|";
     strcpy(exp,"<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|/\\S+");
     struct smile_entry* entry = &smile_tables[0];
-    const char* smiley,*beg,*end;
-    int i;
+    const char *smiley,*beg,*end;
+    const char** ptr;
     while(entry->id !=-1){
-        for(i=0;i<6;i++){
-            smiley = entry->smile[i];
-            if(smiley==0)break;
-            if(smiley[0]=='/')continue;
+        ptr = entry->smile;
+        while(*ptr){
+            smiley = *ptr;
+            if(smiley[0]=='/'){
+                ptr++;
+                continue;
+            }
             strcat(exp,"|");
             beg = smiley;
             do{
@@ -159,6 +162,7 @@ static char* build_smiley_exp()
                     beg = end+1;
                 }
             }while(end);
+            ptr++;
         }
         entry++;
     }
@@ -242,7 +246,6 @@ static LwqqMsgContent* build_face_content(const char* face,int len)
     static char buf[20];
     memcpy(buf,face,len);
     buf[len]= '\0';
-    strcpy(buf,face);
     LwqqMsgContent* c;
     if(smily_hash==NULL) translate_global_init();
     int num = (long)g_hash_table_lookup(smily_hash,buf);
@@ -419,16 +422,18 @@ void translate_global_init()
     if(smily_hash ==NULL){
         GHashTable *t = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
         struct smile_entry* entry = &smile_tables[0];
-        long id,i;
+        long id;
+        const char** ptr;
         char* smiley;
         
         while(entry->id!=-1){
             //shift id let 0 means failed
             id = entry->id+1;
-            for(i=0;i<6;i++){
-                smiley = (char*)entry->smile[i];
-                if(smiley==0) break;
+            ptr = entry->smile;
+            while(*ptr){
+                smiley = (char*)(*ptr);
                 g_hash_table_insert(t,smiley,(gpointer)id);
+                ptr++;
             }
             entry++;
         }
