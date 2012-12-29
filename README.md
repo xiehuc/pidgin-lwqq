@@ -34,6 +34,9 @@ Build Option
   put all http io waiting to libev thread.
   avoid block main ui thread. so would be smoothly.
 
+- VERBOSE[=0]
+> set the verbose level .0 means no verbose,3 means max verbose.
+
 See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detail install guide.
 
 

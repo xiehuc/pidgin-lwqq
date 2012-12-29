@@ -36,6 +36,12 @@ if(WITH_LIBEV)
     find_package(EV REQUIRED)
 endif(WITH_LIBEV)
 
+if(VERBOSE)
+    add_definitions(-DLWQQ_VERBOSE_LEVEL=${VERBOSE})
+else(VERBOSE)
+    add_definitions(-DLWQQ_VERBOSE_LEVEL=0)
+endif(VERBOSE)
+
 add_subdirectory(src)
 add_subdirectory(res)
 
