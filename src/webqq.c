@@ -491,11 +491,13 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     } else {
         vp_do(cmd,NULL);
     }*/
-    group_message_delay_display(ac, group, msg->group.send, buf, msg->time);
     if(LIST_EMPTY(&group->members)) {
         LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
         lwqq_async_add_event_listener(ev,_C_(2p,rewrite_whole_message_list,ac,group));
+    }else{
+        group_member_list_come(ac, group);
     }
+    group_message_delay_display(ac, group, msg->group.send, buf, msg->time);
     return SUCCESS;
 }
 static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t)
@@ -1202,17 +1204,17 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
     GList* users = NULL;
     GList* flags = NULL;
     GList* extra_msgs = NULL;
-    //////debug test
-    char path[50];
-    snprintf(path,sizeof(path),"%s_%lu.log",group->account,time(NULL));
-    FILE* f = fopen(path,"w");
-    //////debug test
 
     PurpleConversation* conv = purple_find_chat(
                                    purple_account_get_connection(ac->account),opend_chat_search(ac,group));
     PurpleConvChat* chat = PURPLE_CONV_CHAT(conv);
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
+        //////debug test
+        char path[50];
+        snprintf(path,sizeof(path),"%s_%lu.log",group->account,time(NULL));
+        FILE* f = fopen(path,"w");
+        //////debug test
         LIST_FOREACH(member,&group->members,entries) {
             ///debug
             fprintf(f,"%s:%s\n",member->nick,member->uin);
@@ -1238,10 +1240,10 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
         g_list_free(users);
         g_list_free(flags);
         g_list_free(extra_msgs);
+        ///debug
+        fclose(f);
+        ///debug
     }
-    ///debug
-    fclose(f);
-    ///debug
     return ;
 }
 static void qq_group_join(PurpleConnection *gc, GHashTable *data)
