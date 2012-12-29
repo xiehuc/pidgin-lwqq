@@ -24,7 +24,7 @@
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(qq_account* ac,LwqqGroup* group);
-static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sender,char* buf,time_t t);
+static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t);
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
@@ -435,6 +435,38 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
         serv_got_joined_chat(gc,open_new_chat(ac,group),key);
     }
 }
+
+static void rewrite_whole_message_list(qq_account* ac,LwqqGroup* group)
+{
+    group_member_list_come(ac,group);
+
+    PurpleConnection* pc = ac->gc;
+    PurpleConversation* conv = purple_find_chat(pc, opend_chat_search(ac,group));
+    GList* list = purple_conversation_get_message_history(conv);
+    GList* newlist = NULL;
+    PurpleConvMessage* message,* newmsg;
+    while(list){
+        message = list->data;
+        newmsg = s_malloc0(sizeof(*newmsg));
+        newmsg->what = s_strdup(message->what);
+        newmsg->who = s_strdup(message->who);
+        newmsg->when = message->when;
+        newlist = g_list_prepend(newlist,newmsg);
+        list = list->next;
+    }
+    purple_conversation_clear_message_history(conv);
+    list = newlist;
+    while(list){
+        message = list->data;
+        group_message_delay_display(ac, group, message->who, message->what, message->when);
+        s_free(message->what);
+        s_free(message->who);
+        list = list->next;
+    }
+    g_list_free(newlist);
+}
+
+
 static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -451,17 +483,22 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     translate_struct_to_message(ac,msg,buf);
 
     //get all member list
-    LwqqCommand cmd = _C_(4pl,group_message_delay_display,ac,group,s_strdup(msg->group.send),s_strdup(buf),msg->time);
+    /*LwqqCommand cmd = _C_(4pl,group_message_delay_display,ac,group,s_strdup(msg->group.send),s_strdup(buf),msg->time);
     if(LIST_EMPTY(&group->members)) {
         //use block method to get list
         LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
         lwqq_async_add_event_listener(ev,cmd);
     } else {
         vp_do(cmd,NULL);
+    }*/
+    group_message_delay_display(ac, group, msg->group.send, buf, msg->time);
+    if(LIST_EMPTY(&group->members)) {
+        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
+        lwqq_async_add_event_listener(ev,_C_(2p,rewrite_whole_message_list,ac,group));
     }
     return SUCCESS;
 }
-static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sender,char* buf,time_t t)
+static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t)
 {
     PurpleConnection* pc = ac->gc;
     const char* who;
@@ -477,10 +514,10 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,char* sen
             who = sender;
     }
 
-    group_member_list_come(ac,group);
+    //group_member_list_come(ac,group);
     serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
-    s_free(sender);
-    s_free(buf);
+    //s_free(sender);
+    //s_free(buf);
     return 0;
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
@@ -1165,7 +1202,11 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
     GList* users = NULL;
     GList* flags = NULL;
     GList* extra_msgs = NULL;
-
+    //////debug test
+    char path[50];
+    snprintf(path,sizeof(path),"%s_%lu.log",group->account,time(NULL));
+    FILE* f = fopen(path,"w");
+    //////debug test
 
     PurpleConversation* conv = purple_find_chat(
                                    purple_account_get_connection(ac->account),opend_chat_search(ac,group));
@@ -1173,6 +1214,9 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
         LIST_FOREACH(member,&group->members,entries) {
+            ///debug
+            fprintf(f,"%s:%s\n",member->nick,member->uin);
+            ///debug
             extra_msgs = g_list_append(extra_msgs,NULL);
             flag = 0;
 
@@ -1195,6 +1239,9 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
         g_list_free(flags);
         g_list_free(extra_msgs);
     }
+    ///debug
+    fclose(f);
+    ///debug
     return ;
 }
 static void qq_group_join(PurpleConnection *gc, GHashTable *data)
