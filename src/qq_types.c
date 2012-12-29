@@ -67,6 +67,11 @@ qq_account* qq_account_new(PurpleAccount* account)
 }
 void qq_account_free(qq_account* ac)
 {
+    int i;
+    PurpleConnection* gc = purple_account_get_connection(ac->account);
+    for(i=0;i<ac->opend_chat->len;i++){
+        purple_conversation_destroy(purple_find_chat(gc, i));
+    }
     g_ptr_array_free(ac->opend_chat,0);
 #if QQ_USE_FAST_INDEX
     g_hash_table_destroy(ac->fast_index.qqnum_index);
