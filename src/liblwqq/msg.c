@@ -993,6 +993,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     if(retcode_str)
         retcode = atoi(retcode_str);
 
+    if(retcode == 102)
+        goto done;
+
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", str);
@@ -1201,6 +1204,7 @@ static void *start_poll_msg(void *msg_list)
             continue;
         }
         retcode = parse_recvmsg_from_json(list, req->response);
+        if(retcode == 102) continue;
         if(retcode == 121 || retcode == 108){
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
             break;

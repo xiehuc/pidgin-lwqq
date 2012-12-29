@@ -633,7 +633,7 @@ static void lost_connection(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = ac->gc;
-    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,请重新登录");
+    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,正在重新登录,请等待一会儿再重试");
 }
 void qq_msg_check(LwqqClient* lc)
 {
@@ -1202,10 +1202,10 @@ static void qq_group_join(PurpleConnection *gc, GHashTable *data)
     LwqqClient* lc = ac->qq;
     LwqqGroup* group = NULL;
 
-    if(ac->state != LOAD_COMPLETED) {
+    /*if(ac->state != LOAD_COMPLETED) {
         purple_notify_warning(gc,NULL,"加载尚未完成","请稍后重新尝试打开");
         return;
-    }
+    }*/
 
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     if(key==NULL) return;
