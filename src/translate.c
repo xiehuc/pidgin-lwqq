@@ -243,18 +243,24 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 }
 static LwqqMsgContent* build_face_content(const char* face,int len)
 {
-    static char buf[20];
-    memcpy(buf,face,len);
-    buf[len]= '\0';
+    char buf[20];
+    char* ptr = buf;
+    if(len>=20){
+        ptr = s_malloc(len+2);
+    }
+    memcpy(ptr,face,len);
+    ptr[len]= '\0';
     LwqqMsgContent* c;
     if(smily_hash==NULL) translate_global_init();
-    int num = (long)g_hash_table_lookup(smily_hash,buf);
+    int num = (long)g_hash_table_lookup(smily_hash,ptr);
     if(num==0) return NULL;
     //unshift face because when build it we shift it.
     num--;
     c = s_malloc0(sizeof(*c));
     c->type = LWQQ_CONTENT_FACE;
     c->data.face = num;
+    if(len>=20)
+        s_free(ptr);
     return c;
 }
 static LwqqMsgContent* build_face_direct(int num)
