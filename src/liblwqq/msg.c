@@ -56,6 +56,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
 
     list = s_malloc0(sizeof(LwqqRecvMsgListPri));
     list->count = 0;
+    list->poll_flags = POLL_AUTO_REQUEST_PIC&POLL_AUTO_REQUEST_CFACE;
     list->lc = client;
     pthread_mutex_init(&list->mutex, NULL);
     TAILQ_INIT(&list->head);
@@ -188,6 +189,7 @@ static void lwqq_msg_message_free(void *opaque)
                 s_free(c->data.cface.name);
                 s_free(c->data.cface.file_id);
                 s_free(c->data.cface.key);
+                s_free(c->data.cface.direct_url);
                 break;
             default:
                 break;
@@ -832,9 +834,8 @@ const char* get_host_of_url(const char* url,char* buffer)
         strncpy(buffer,ptr,end-ptr);
     return buffer;
 }
-static int set_content_picture_data(LwqqHttpRequest* req,void* data)
+static int set_content_picture_data(LwqqHttpRequest* req,LwqqMsgContent* c)
 {
-    LwqqMsgContent* c = data;
     int errno = 0;
     if((req->http_code!=200)){
         errno = LWQQ_EC_HTTP_ERROR;
@@ -853,6 +854,24 @@ static int set_content_picture_data(LwqqHttpRequest* req,void* data)
         break;
     }
     req->response = NULL;
+done:
+    lwqq_http_request_free(req);
+    return errno;
+}
+static int set_content_picture_url(LwqqHttpRequest* req,LwqqMsgContent* c)
+{
+    int errno = 0;
+    if(req->http_code!=200){
+        errno = LWQQ_EC_HTTP_ERROR;
+        goto done;
+    }
+    switch(c->type){
+        case LWQQ_CONTENT_CFACE:
+            c->data.cface.direct_url = s_strdup(req->location);
+            break;
+        default:
+            break;
+    }
 done:
     lwqq_http_request_free(req);
     return errno;
@@ -901,7 +920,7 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     }
     req->set_header(req, "Referer", "http://web2.qq.com/");
     ///this is very important!!!!!!!!!
-    req->set_header(req, "Host", "web2.qq.com");
+    //req->set_header(req, "Host", "web2.qq.com");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     return req->do_request_async(req,0,NULL,_C_(2p_i,set_content_picture_data,req,c));
@@ -1722,10 +1741,6 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
         return NULL;
     }
     char * follow_url = req->location;
-    int len = strlen(follow_url);
-    //remove the last \r\n
-    follow_url[len-1] = 0;
-    follow_url[len-2] = 0;
     req->location = NULL;
     name = url_whole_encode(follow_url);
     s_free(follow_url);

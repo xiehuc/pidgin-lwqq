@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <accountopt.h>
 #include <ft.h>
+#include <imgstore.h>
 
 #include <type.h>
 #include <async.h>
@@ -435,7 +436,10 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
         serv_got_joined_chat(gc,open_new_chat(ac,group),key);
     }
 }
-
+struct rewrite_pic_entry {
+    int ori_id;
+    int new_id;
+};
 static void rewrite_whole_message_list(qq_account* ac,LwqqGroup* group)
 {
     group_member_list_come(ac,group);
@@ -445,12 +449,46 @@ static void rewrite_whole_message_list(qq_account* ac,LwqqGroup* group)
     GList* list = purple_conversation_get_message_history(conv);
     GList* newlist = NULL;
     PurpleConvMessage* message,* newmsg;
+    const char* pic;
+    char buf[6];
     while(list){
         message = list->data;
         newmsg = s_malloc0(sizeof(*newmsg));
         newmsg->what = s_strdup(message->what);
+        pic = newmsg->what;
+        if(strstr(pic,"<IMG")==NULL){
+        }else{
+            char* beg;
+            beg = message->what;
+            //inplace replace id num with new id;
+            while((pic = strstr(pic,"<IMG")) != NULL){
+                int id,new_id = 0;
+                sscanf(pic,"<IMG ID=\"%d\"",&id);
+                GList* item = ac->rewrite_pic_list;
+                struct rewrite_pic_entry* entry;
+                while(item){
+                    entry = item->data;
+                    if(entry->ori_id == id){
+                        new_id = entry->new_id;
+                        s_free(entry);
+                        ac->rewrite_pic_list = g_list_remove_link(ac->rewrite_pic_list,item);
+                        break;
+                    }
+                    item = item->next;
+                }
+                if(new_id == 0){
+                    pic++;
+                    continue;
+                }
+                beg = strchr(pic,'"')+1;
+                snprintf(buf,sizeof(buf),"%4d",new_id);
+                memcpy(beg,buf,4);
+                pic++;
+            }
+        }
         newmsg->who = s_strdup(message->who);
         newmsg->when = message->when;
+        pic = newmsg->what;
         newlist = g_list_prepend(newlist,newmsg);
         list = list->next;
     }
@@ -458,6 +496,7 @@ static void rewrite_whole_message_list(qq_account* ac,LwqqGroup* group)
     list = newlist;
     while(list){
         message = list->data;
+        pic = message->what;
         group_message_delay_display(ac, group, message->who, message->what, message->when);
         s_free(message->what);
         s_free(message->who);
@@ -492,6 +531,21 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
         vp_do(cmd,NULL);
     }*/
     if(LIST_EMPTY(&group->members)) {
+        const char* pic = buf;
+        while((pic = strstr(pic,"<IMG"))!=NULL){
+            int id;
+            sscanf(pic, "<IMG ID=\"%d\">",&id);
+            PurpleStoredImage* img = purple_imgstore_find_by_id(id);
+            size_t len = purple_imgstore_get_size(img);
+            void * img_data = s_malloc(len);
+            memcpy(img_data,purple_imgstore_get_data(img),len);
+            int new_id = purple_imgstore_add_with_id(img_data, len, NULL);
+            struct rewrite_pic_entry* entry = s_malloc0(sizeof(*entry));
+            entry->ori_id = id;
+            entry->new_id = new_id;
+            ac->rewrite_pic_list = g_list_append(ac->rewrite_pic_list,entry);
+            pic++;
+        }
         LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
         lwqq_async_add_event_listener(ev,_C_(2p,rewrite_whole_message_list,ac,group));
     }else{
@@ -1210,15 +1264,7 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
     PurpleConvChat* chat = PURPLE_CONV_CHAT(conv);
     //only there are no member we add it.
     if(purple_conv_chat_get_users(PURPLE_CONV_CHAT(conv))==NULL) {
-        //////debug test
-        char path[50];
-        snprintf(path,sizeof(path),"%s_%lu.log",group->account,time(NULL));
-        FILE* f = fopen(path,"w");
-        //////debug test
         LIST_FOREACH(member,&group->members,entries) {
-            ///debug
-            fprintf(f,"%s:%s\n",member->nick,member->uin);
-            ///debug
             extra_msgs = g_list_append(extra_msgs,NULL);
             flag = 0;
 
@@ -1240,9 +1286,6 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
         g_list_free(users);
         g_list_free(flags);
         g_list_free(extra_msgs);
-        ///debug
-        fclose(f);
-        ///debug
     }
     return ;
 }

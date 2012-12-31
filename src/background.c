@@ -46,6 +46,7 @@ void background_login(qq_account* ac)
 void background_msg_poll(qq_account* ac)
 {
     LwqqRecvMsgList *l = (LwqqRecvMsgList *)ac->qq->msg_list;
+    l->poll_flags = 0;
 
     /* Poll to receive message */
     l->poll_msg(l);

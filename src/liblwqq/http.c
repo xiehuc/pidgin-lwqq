@@ -195,6 +195,10 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
         if(strncmp(str,"Location",strlen("Location"))==0){
             const char* location = str+strlen("Location: ");
             request->location = s_strdup(location);
+            int len = strlen(request->location);
+            //remove the last \r\n
+            request->location[len-1] = 0;
+            request->location[len-2] = 0;
         }
         return size*nmemb;
     }

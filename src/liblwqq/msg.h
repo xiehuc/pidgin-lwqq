@@ -66,6 +66,7 @@ typedef struct LwqqMsgContent {
             char* key;
             char serv_ip[24];
             char serv_port[8];
+            char* direct_url;
         }cface;
     } data;
     TAILQ_ENTRY(LwqqMsgContent) entries;
@@ -260,6 +261,10 @@ void lwqq_msg_free(LwqqMsg *msg);
 
 /************************************************************************/
 /* LwqqRecvMsg API */
+typedef enum {
+    POLL_AUTO_REQUEST_PIC = 1<<1,
+    POLL_AUTO_REQUEST_CFACE = 1<<2,
+}LwqqPollFlag;
 /**
  * Lwqq Receive Message object, used by receiving message
  *
@@ -273,6 +278,7 @@ typedef struct LwqqRecvMsgList {
     pthread_t tid;
     pthread_attr_t attr;
     pthread_mutex_t mutex;
+    int poll_flags;
     TAILQ_HEAD(RecvMsgListHead, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
