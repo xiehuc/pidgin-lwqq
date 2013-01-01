@@ -931,7 +931,8 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
 done:
     if (json)
         json_free_value(&json);
-    lwqq_http_request_free(req);    
+    lwqq_http_request_free(req);
+    client->stat = LWQQ_STATUS_LOGOUT;
 }
 
 

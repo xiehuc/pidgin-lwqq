@@ -448,6 +448,6 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else if(strcmp(str,"busy")==0) return LWQQ_STATUS_BUSY;
     else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
     else if(strcmp(str,"slient")==0) return LWQQ_STATUS_SLIENT;
-    else return LWQQ_STATUS_UNKNOW;
+    else return LWQQ_STATUS_LOGOUT;
 }
 

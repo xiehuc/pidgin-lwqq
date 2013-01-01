@@ -918,8 +918,7 @@ static void login_stage_f(LwqqClient* lc)
 
     ac->state = LOAD_COMPLETED;
 
-    background_msg_poll(ac);
-
+    lc->msg_list->poll_msg(lc->msg_list);
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
@@ -1402,10 +1401,9 @@ static void qq_close(PurpleConnection *gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
 
-    if(ac->qq->status!=NULL&&strcmp(ac->qq->status,"online")==0) {
-        background_msg_drain(ac);
+    if(lwqq_client_logined(ac->qq))
         lwqq_logout(ac->qq,&err);
-    }
+    ac->qq->msg_list->poll_close(ac->qq->msg_list);
     lwqq_client_free(ac->qq);
     lwdb_userdb_free(ac->db);
     qq_account_free(ac);

@@ -25,6 +25,7 @@
 
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
+static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list);
 static json_t *get_result_json_object(json_t *json);
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
@@ -61,6 +62,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     pthread_mutex_init(&list->mutex, NULL);
     TAILQ_INIT(&list->head);
     list->poll_msg = lwqq_recvmsg_poll_msg;
+    list->poll_close = lwqq_recvmsg_poll_close;
     
     return list;
 }
@@ -1012,7 +1014,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     if(retcode_str)
         retcode = atoi(retcode_str);
 
-    if(retcode == 102)
+    if(retcode == 102 || retcode == 121)
         goto done;
 
     json_tmp = get_result_json_object(json);
@@ -1219,10 +1221,12 @@ static void *start_poll_msg(void *msg_list)
     int ret;
     while(1) {
         ret = req->do_request(req, 1, msg);
-        if (ret || req->http_code != 200) {
-            continue;
-        }
+
+        if(!lwqq_client_logined(lc)) break;
+
+        if (ret || req->http_code != 200) continue;
         retcode = parse_recvmsg_from_json(list, req->response);
+        if(!lwqq_client_logined(lc)) break;
         if(retcode == 102) continue;
         if(retcode == 121 || retcode == 108){
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
@@ -1232,7 +1236,8 @@ static void *start_poll_msg(void *msg_list)
         }
     }
 failed:
-    pthread_exit(NULL);
+    if(req) lwqq_http_request_free(req);
+    return NULL;
 #else
     void ** data = s_malloc0(sizeof(void*)*2);
     data[0] = list;
@@ -1248,13 +1253,20 @@ failed:
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
 #if USE_MSG_THREAD
-    pthread_attr_init(&list->attr);
-    pthread_attr_setdetachstate(&list->attr, PTHREAD_CREATE_DETACHED);
+    //pthread_attr_init(&list->attr);
+    //pthread_attr_setdetachstate(&list->attr, PTHREAD_CREATE_DETACHED);
 
-    pthread_create(&list->tid, &list->attr, start_poll_msg, list);
+    pthread_create(&list->tid, NULL/*&list->attr*/, start_poll_msg, list);
 #else
     start_poll_msg(list);
 #endif
+}
+
+static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
+{
+    if(list->tid == 0) return;
+    pthread_join(list->tid,NULL);
+    list->tid = 0;
 }
 
 ///low level special char mapping

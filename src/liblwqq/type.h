@@ -54,7 +54,7 @@ typedef struct LwqqFriendCategory {
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
 typedef enum LWQQ_STATUS{
-    LWQQ_STATUS_UNKNOW = 0,
+    LWQQ_STATUS_LOGOUT = 0,
     LWQQ_STATUS_ONLINE = 10,
     LWQQ_STATUS_OFFLINE = 20,
     LWQQ_STATUS_AWAY = 30,
@@ -275,6 +275,7 @@ typedef enum {
 LwqqClient *lwqq_client_new(const char *username, const char *password);
 
 #define lwqq_client_valid(lc) (lc!=0&&lc->magic==LWQQ_MAGIC)
+#define lwqq_client_logined(lc) (lc->stat != LWQQ_STATUS_LOGOUT)
 
 /** 
  * Get cookies needby by webqq server
