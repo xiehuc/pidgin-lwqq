@@ -59,12 +59,19 @@ void lwqq_async_global_quit();
  */
 
 typedef struct _LwqqAsyncEvent {
-    int result;///<it must put first
+    /** 0 : success
+     *  >0: errno form webqq server
+     *  <0: errno from lwqq inner
+     */
+    int result;
     LwqqCallbackCode failcode; ///<it must put second
     LwqqClient* lc;
 }_LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset{
-    int result;///<it must put first
+    /** 0 : no error
+     *  >0: number of errors
+     */
+    int result;
 }_LwqqAsyncEvset;
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished

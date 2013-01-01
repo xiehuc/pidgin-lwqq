@@ -30,7 +30,7 @@ static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* 
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
-static void login_stage_2(LwqqClient* lc);
+static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -840,14 +840,14 @@ static void login_stage_f(LwqqClient* lc)
     qq_account* ac = lwqq_client_userdata(lc);
 
     //we must put this here. avoid group_come stupid add duplicate group
-    if(LIST_EMPTY(&lc->friends)){
+    /*if(LIST_EMPTY(&lc->friends)){
         purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取好友列表失败");
         return;
     }
     if(LIST_EMPTY(&lc->groups)){
         purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取群列表失败");
         return;
-    }
+    }*/
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
 
     if(!purple_account_get_alias(ac->account))
@@ -1009,12 +1009,18 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
-    lwqq_async_add_evset_listener(set,_C_(p,login_stage_2,lc));
+    lwqq_async_add_evset_listener(set,_C_(2p,login_stage_2,set,lc));
 
     return ;
 }
-static void login_stage_2(LwqqClient* lc)
+static void login_stage_2(LwqqAsyncEvset* evset,LwqqClient* lc)
 {
+    int errnum = lwqq_async_evset_get_result(evset);
+    if(errnum > 0){
+        qq_account* ac = lc->data;
+        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取好友|群列表失败");
+        return;
+    }
     LwqqAsyncEvset* set = lwqq_async_evset_new();
     LwqqAsyncEvent* ev;
     ev = lwqq_info_get_discu_name_list(lc);

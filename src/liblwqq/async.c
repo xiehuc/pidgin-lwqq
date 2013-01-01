@@ -98,7 +98,7 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
         //this store evset result.
         //it can only store one error number.
         if(event->result != 0)
-            evset->parent.result = event->result;
+            evset->parent.result ++;
         if(((_LwqqAsyncEvsetInternal*) internal->host_lock)->ref_count==0){
             vp_do(evset->cmd,NULL);
             if(evset->cond_waiting)
