@@ -75,7 +75,8 @@ static int lwqq_gdb_whats_running()
     char* url;
     LIST_FOREACH(item,&global.conn_link,entries){
         curl_easy_getinfo(item->req->req,CURLINFO_EFFECTIVE_URL,&url);
-        lwqq_puts(url);
+        //lwqq_puts(url);
+        lwqq_verbose(4,"%s\n",url);
     }
     return 0;
 }

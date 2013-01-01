@@ -440,8 +440,9 @@ struct rewrite_pic_entry {
     int ori_id;
     int new_id;
 };
-static void rewrite_whole_message_list(qq_account* ac,LwqqGroup* group)
+static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGroup* group)
 {
+    if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) return;
     group_member_list_come(ac,group);
 
     PurpleConnection* pc = ac->gc;
@@ -547,7 +548,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
             pic++;
         }
         LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
-        lwqq_async_add_event_listener(ev,_C_(2p,rewrite_whole_message_list,ac,group));
+        lwqq_async_add_event_listener(ev,_C_(3p,rewrite_whole_message_list,ev,ac,group));
     }else{
         group_member_list_come(ac, group);
     }

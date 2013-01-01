@@ -22,22 +22,20 @@ typedef struct async_dispatch_data {
     vp_list data;//s:24
     LwqqAsyncTimer timer;
 } async_dispatch_data; //s:88
-typedef struct _LwqqAsyncEvset{
-    int result;///<it must put first
+typedef struct _LwqqAsyncEvsetInternal {
+    LwqqAsyncEvset parent;
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int cond_waiting;
     int ref_count;
     LwqqCommand cmd;
-}_LwqqAsyncEvset;
-typedef struct _LwqqAsyncEvent {
-    int result;///<it must put first
-    LwqqCallbackCode failcode; ///<it must put second
-    LwqqClient* lc;
+}_LwqqAsyncEvsetInternal;
+typedef struct _LwqqAsyncEventInternal {
+    LwqqAsyncEvent parent;
     LwqqAsyncEvset* host_lock;
     LwqqCommand cmd;
     LwqqHttpRequest* req;
-}_LwqqAsyncEvent;
+}_LwqqAsyncEventInternal;
 
 
 int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
@@ -74,36 +72,34 @@ void lwqq_async_init(LwqqClient* lc)
 
 LwqqAsyncEvent* lwqq_async_event_new(void* req)
 {
-    LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent));
-    event->req = req;
-    event->lc = req?event->req->lc:NULL;
+    LwqqAsyncEvent* event = s_malloc0(sizeof(_LwqqAsyncEventInternal));
+    _LwqqAsyncEventInternal* internal = (_LwqqAsyncEventInternal*)event;
+    internal->req = req;
+    event->lc = req?internal->req->lc:NULL;
     event->failcode = LWQQ_CALLBACK_VALID;
     event->result = 0;
     return event;
 }
-LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev)
-{
-    return ev->lc;
-}
 LwqqAsyncEvset* lwqq_async_evset_new()
 {
-    LwqqAsyncEvset* l = s_malloc0(sizeof(*l));
+    _LwqqAsyncEvsetInternal* l = s_malloc0(sizeof(_LwqqAsyncEvsetInternal));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
-    return l;
+    return (LwqqAsyncEvset*)l;
 }
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
 {
-    vp_do(event->cmd,NULL);
-    LwqqAsyncEvset* evset = event->host_lock;
+    _LwqqAsyncEventInternal* internal = (_LwqqAsyncEventInternal*)event;
+    vp_do(internal->cmd,NULL);
+    _LwqqAsyncEvsetInternal* evset = (_LwqqAsyncEvsetInternal*)internal->host_lock;
     if(evset !=NULL){
         pthread_mutex_lock(&evset->lock);
         evset->ref_count--;
         //this store evset result.
         //it can only store one error number.
         if(event->result != 0)
-            evset->result = event->result;
-        if(event->host_lock->ref_count==0){
+            evset->parent.result = event->result;
+        if(((_LwqqAsyncEvsetInternal*) internal->host_lock)->ref_count==0){
             vp_do(evset->cmd,NULL);
             if(evset->cond_waiting)
                 pthread_cond_signal(&evset->cond);
@@ -121,21 +117,23 @@ void lwqq_async_event_finish(LwqqAsyncEvent* event)
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
 {
     if(!host || !handle) return;
-    pthread_mutex_lock(&host->lock);
-    handle->host_lock = host;
-    host->ref_count++;
-    pthread_mutex_unlock(&host->lock);
+    _LwqqAsyncEvsetInternal* internal = (_LwqqAsyncEvsetInternal*) host;
+    pthread_mutex_lock(&internal->lock);
+    ((_LwqqAsyncEventInternal*)handle)->host_lock = host;
+    internal->ref_count++;
+    pthread_mutex_unlock(&internal->lock);
 }
 
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
+    _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
     if(event == NULL){
         vp_do(cmd,NULL);
         return ;
-    }else if(event->cmd.func== NULL)
-        event->cmd = cmd;
+    }else if(_event->cmd.func== NULL)
+        _event->cmd = cmd;
     else
-        vp_link(&event->cmd,&cmd);
+        vp_link(&_event->cmd,&cmd);
 }
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
@@ -144,8 +142,9 @@ void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 }
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
+    _LwqqAsyncEvsetInternal* _evset = (_LwqqAsyncEvsetInternal*)evset;
     if(!evset) return;
-    evset->cmd = cmd;
+    _evset->cmd = cmd;
 }
 
 LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func)
@@ -177,7 +176,8 @@ void lwqq_async_queue_rm(LwqqAsyncQueue* queue,void* func)
 
 void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)
 {
-    lwqq_http_on_progress(event->req,callback,data);
+    _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
+    lwqq_http_on_progress(_event->req,callback,data);
 }
 typedef struct {
     LwqqAsyncIoCallback callback;

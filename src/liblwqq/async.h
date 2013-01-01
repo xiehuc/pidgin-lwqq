@@ -57,6 +57,15 @@ void lwqq_async_global_quit();
 /** this api is better than old async api.
  * it is more powerful and easier to use
  */
+
+typedef struct _LwqqAsyncEvent {
+    int result;///<it must put first
+    LwqqCallbackCode failcode; ///<it must put second
+    LwqqClient* lc;
+}_LwqqAsyncEvent;
+typedef struct _LwqqAsyncEvset{
+    int result;///<it must put first
+}_LwqqAsyncEvset;
 /** return a new evset. a evset can link multi of event.
  * you can wait a evset. means it would block ultil all event is finished
  */
@@ -93,24 +102,14 @@ void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,
  * ensure LwqqAsyncEvent first member is a int.
  */
 #define type_assert(what,type) {type ptr = what;assert(ptr);}
-#define lwqq_async_event_set_result(ev,res)\
-do{\
-    type_assert(ev,LwqqAsyncEvent*);\
-    *((int*)ev) = res;\
-}while(0)
-
-#define lwqq_async_event_set_code(ev,code) \
-    do{\
-        type_assert(ev,LwqqAsyncEvent*);\
-        *(((int*)ev)+1) = code;\
-    }while(0)
+#define lwqq_async_event_set_result(ev,res) (ev->result = res)
+#define lwqq_async_event_set_code(ev,code)  (ev->failcode = code)
 /** this return a errno of a event. */
-#define lwqq_async_event_get_result(ev) (ev?*((int*)ev):-1)
-
-#define lwqq_async_event_get_code(ev) (ev?*(((int*)ev)+1):LWQQ_CALLBACK_FAILED)
-LwqqClient* lwqq_async_event_get_owner(LwqqAsyncEvent* ev);
+#define lwqq_async_event_get_result(ev)     (ev?ev->result:-1)
+#define lwqq_async_event_get_code(ev)       (ev?ev->failcode:LWQQ_CALLBACK_FAILED)
+#define lwqq_async_event_get_owner(ev)      (ev->lc)
 /** this return one of errno of event in set ,so do not use it*/
-#define lwqq_async_evset_get_result(ev) (ev?*((int*)ev):-1)
+#define lwqq_async_evset_get_result(ev)     (ev?ev->result:-1)
 
 LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func);
 void lwqq_async_queue_add(LwqqAsyncQueue* queue,void* func,LwqqAsyncEvent* ev);
