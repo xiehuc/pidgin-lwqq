@@ -862,24 +862,6 @@ done:
     lwqq_http_request_free(req);
     return errno;
 }
-static int set_content_picture_url(LwqqHttpRequest* req,LwqqMsgContent* c)
-{
-    int errno = 0;
-    if(req->http_code!=200){
-        errno = LWQQ_EC_HTTP_ERROR;
-        goto done;
-    }
-    switch(c->type){
-        case LWQQ_CONTENT_CFACE:
-            c->data.cface.direct_url = s_strdup(req->location);
-            break;
-        default:
-            break;
-    }
-done:
-    lwqq_http_request_free(req);
-    return errno;
-}
 static LwqqAsyncEvent* request_content_offpic(LwqqClient* lc,const char* f_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
@@ -1276,6 +1258,7 @@ static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
     if(internal->tid == 0) return;
     internal->on_quit = 1;
     pthread_join(internal->tid,NULL);
+    internal->on_quit = 0;
     internal->tid = 0;
 }
 

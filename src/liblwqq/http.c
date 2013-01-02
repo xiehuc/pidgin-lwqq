@@ -73,12 +73,13 @@ static int lwqq_gdb_whats_running()
 {
     D_ITEM* item;
     char* url;
+    int num = 0;
     LIST_FOREACH(item,&global.conn_link,entries){
         curl_easy_getinfo(item->req->req,CURLINFO_EFFECTIVE_URL,&url);
-        //lwqq_puts(url);
-        lwqq_verbose(4,"%s\n",url);
+        lwqq_puts(url);
+        num++;
     }
-    return 0;
+    return num;
 }
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -509,7 +510,7 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
     GLOBAL* g = userp;
     //printf("timer_cb:%ld\n",timeout_ms);
     lwqq_async_timer_stop(&g->timer_event);
-#if USE_DEBUG
+#if USE_DEBUG && LWQQ_VERBOSE_LEVEL>3
    if(g->still_running>1){
         lwqq_gdb_whats_running();
     }
