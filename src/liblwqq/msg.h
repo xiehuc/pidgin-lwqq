@@ -276,8 +276,9 @@ typedef struct LwqqRecvMsg {
 typedef struct LwqqRecvMsgList {
     int count;                  /**< Number of message  */
     pthread_t tid;
-    pthread_attr_t attr;
+    //pthread_attr_t attr;
     pthread_mutex_t mutex;
+    int on_quit;
     int poll_flags;
     TAILQ_HEAD(RecvMsgListHead, LwqqRecvMsg) head;
     void *lc;                   /**< Lwqq Client reference */

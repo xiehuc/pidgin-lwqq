@@ -40,10 +40,11 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
 static int get_msg_tip_back(LwqqHttpRequest* req);
 
-typedef struct LwqqRecvMsgListPri {
+typedef struct LwqqRecvMsgListInternal {
     struct LwqqRecvMsgList parent;
     LwqqAsyncTimer tip_loop;
-} LwqqRecvMsgListPri;
+    int on_quit;
+} LwqqRecvMsgListInternal;
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -55,7 +56,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
 {
     LwqqRecvMsgList *list;
 
-    list = s_malloc0(sizeof(LwqqRecvMsgListPri));
+    list = s_malloc0(sizeof(LwqqRecvMsgListInternal));
     list->count = 0;
     list->poll_flags = POLL_AUTO_REQUEST_PIC&POLL_AUTO_REQUEST_CFACE;
     list->lc = client;
@@ -1177,6 +1178,11 @@ void get_msg_tip_loop(LwqqAsyncTimerHandle timer,void* data)
     lwqq_msg_get_msg_tip(lc,++list->count);
     lwqq_async_timer_repeat(timer);
 }
+static int poll_progress(void * data,size_t now,size_t total)
+{
+    LwqqRecvMsgListInternal* list = data;
+    return list->on_quit;
+}
 /**
  * Poll to receive message.
  * 
@@ -1219,6 +1225,7 @@ static void *start_poll_msg(void *msg_list)
 #if USE_MSG_THREAD
     int retcode;
     int ret;
+    lwqq_http_on_progress(req, poll_progress, list);
     while(1) {
         ret = req->do_request(req, 1, msg);
 
@@ -1265,6 +1272,8 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
 {
     if(list->tid == 0) return;
+    LwqqRecvMsgListInternal* internal = list;
+    internal->on_quit = 1;
     pthread_join(list->tid,NULL);
     list->tid = 0;
 }
