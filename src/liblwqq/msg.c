@@ -43,6 +43,7 @@ static int get_msg_tip_back(LwqqHttpRequest* req);
 typedef struct LwqqRecvMsgListInternal {
     struct LwqqRecvMsgList parent;
     LwqqAsyncTimer tip_loop;
+    pthread_t tid;
     int on_quit;
 } LwqqRecvMsgListInternal;
 /**
@@ -1260,10 +1261,9 @@ failed:
 static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 {
 #if USE_MSG_THREAD
-    //pthread_attr_init(&list->attr);
-    //pthread_attr_setdetachstate(&list->attr, PTHREAD_CREATE_DETACHED);
+    LwqqRecvMsgListInternal* internal = (LwqqRecvMsgListInternal*)list;
 
-    pthread_create(&list->tid, NULL/*&list->attr*/, start_poll_msg, list);
+    pthread_create(&internal->tid, NULL/*&list->attr*/, start_poll_msg, list);
 #else
     start_poll_msg(list);
 #endif
@@ -1271,11 +1271,12 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
 {
-    if(list->tid == 0) return;
-    LwqqRecvMsgListInternal* internal = list;
+    if(!list) return;
+    LwqqRecvMsgListInternal* internal = (LwqqRecvMsgListInternal*)list;
+    if(internal->tid == 0) return;
     internal->on_quit = 1;
-    pthread_join(list->tid,NULL);
-    list->tid = 0;
+    pthread_join(internal->tid,NULL);
+    internal->tid = 0;
 }
 
 ///low level special char mapping
