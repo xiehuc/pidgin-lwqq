@@ -1634,7 +1634,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
     }
     errno = s_atoi(retcode);
     void** d = data;
-    long type = (long)d[0];
+    long type = data ? (long)d[0] : 0;
     if(errno==0&&data!=NULL){
         switch(type){
             case CHANGE_BUDDY_MARKNAME:
