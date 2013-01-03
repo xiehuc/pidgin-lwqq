@@ -33,7 +33,7 @@ static int get_qqnumber_back(LwqqHttpRequest* req,LwqqGroup* group,LwqqBuddy* bu
 static int get_avatar_back(LwqqHttpRequest* req,LwqqBuddy* buddy,LwqqGroup* group);
 static int get_friends_info_back(LwqqHttpRequest* req);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
-static int get_group_name_list_back(LwqqHttpRequest* req,void* data);
+static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc);
 static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* group);
 static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
@@ -305,8 +305,8 @@ done:
 static int get_friends_info_back(LwqqHttpRequest* req)
 {
     json_t *json = NULL, *json_tmp;
-    int ret;
-    int err;
+    int ret = 0;
+    int err = 0;
     LwqqClient* lc = req->lc;
 
     if (req->http_code != 200) {
@@ -623,17 +623,14 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static int get_group_name_list_back(LwqqHttpRequest* req,void* data)
+static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc)
 {
     json_t *json = NULL, *json_tmp;
-    int ret;
-    LwqqClient* lc = data;
-    LwqqErrorCode error;
-    LwqqErrorCode* err = &error;
+    int ret=0;
+    int err=0;
 
     if (req->http_code != 200) {
-        if (err)
-            *err = LWQQ_EC_HTTP_ERROR;
+        err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
 
@@ -652,15 +649,15 @@ static int get_group_name_list_back(LwqqHttpRequest* req,void* data)
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
-        if (err)
-            *err = LWQQ_EC_ERROR;
+        err = LWQQ_EC_ERROR;
         goto done;
     }
 
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
-        goto json_error;
+        err = LWQQ_EC_ERROR;
+        goto done;
     }
 
     /** It seems everything is ok, we start parsing information
@@ -680,16 +677,8 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return 0;
+    return err;
 
-json_error:
-    if (err)
-        *err = LWQQ_EC_ERROR;
-    /* Free temporary string */
-    if (json)
-        json_free_value(&json);
-    lwqq_http_request_free(req);
-    return 0;
 }
 
 LwqqAsyncEvent* lwqq_info_get_discu_name_list(LwqqClient* lc)
@@ -1381,7 +1370,7 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
 {
     json_t *json = NULL, *json_tmp;
-    int err = LWQQ_EC_OK;
+    int err = 0;
     int ret;
     if (req->http_code != 200) {
         err = LWQQ_EC_HTTP_ERROR;
@@ -1614,7 +1603,7 @@ done:
 static int info_commom_back(LwqqHttpRequest* req,void* data)
 {
     json_t* root=NULL;
-    int errno;
+    int errno = 0;
     int ret;
 
     if(req->http_code!=200){
