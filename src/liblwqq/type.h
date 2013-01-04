@@ -36,6 +36,8 @@ typedef vp_command  LwqqCommand;
 #define _F_(f) (CALLBACK_FUNC)f
 #define _C_2(d,c,...) vp_make_command(vp_func_##d,_F_(c),__VA_ARGS__)
 #define _C_(d,c,...) _C_2(d,c,__VA_ARGS__)
+#define _P_2(d,...) vp_make_params(vp_func_##d,__VA_ARGS__)
+#define _P_(d,...) _P_2(d,__VA_ARGS__)
 //return zero means continue.>1 means abort
 typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
@@ -187,7 +189,9 @@ typedef struct LwqqVerifyCode {
     char *img;
     char *uin;
     char *data;
+    char *verifysession;
     size_t size;
+    LwqqCommand cmd;
 } LwqqVerifyCode ;
 
 typedef struct LwqqCookies {

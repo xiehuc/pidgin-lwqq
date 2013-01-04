@@ -105,7 +105,9 @@ void lwqq_vc_free(LwqqVerifyCode *vc)
         s_free(vc->type);
         s_free(vc->img);
         s_free(vc->uin);
+        s_free(vc->verifysession);
         s_free(vc);
+
     }
 }
 
@@ -480,7 +482,6 @@ void lwqq_update_cookie(LwqqClient* lc,const char* key,const char* value)
     } else {
         lwqq_log(LOG_WARNING, "No this cookie: %s\n", key);
     }
-    s_free(value);
 
     if (update_cache) {
         char buf[4096] = {0};           /* 4K is enough for cookies. */

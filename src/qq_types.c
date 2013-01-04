@@ -249,11 +249,11 @@ void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
     if( q ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*4+sizeof(long));
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,long);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,long);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);

@@ -732,6 +732,7 @@ static void lost_connection(LwqqClient* lc)
 }
 void qq_msg_check(LwqqClient* lc)
 {
+    if(!lwqq_client_valid(lc)) return;
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg,*prev;
 
@@ -976,6 +977,47 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
     }
 }
 
+static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
+{
+    const gchar *value;
+    value = purple_request_fields_get_string(fields, "code_entry");
+    code->str = s_strdup(value);
+
+    vp_do(code->cmd,NULL);
+}
+
+static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
+{
+    vp_do(code->cmd,NULL);
+}
+
+static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+    PurpleRequestFieldGroup *field_group;
+    PurpleRequestField *code_entry;
+    PurpleRequestField *code_pic;
+    PurpleRequestFields *fields;
+
+    fields = purple_request_fields_new();
+    field_group = purple_request_field_group_new((gchar*)0);
+    purple_request_fields_add_group(fields, field_group);
+
+    code_pic = purple_request_field_image_new("code_pic", _("Confirmation code"), code->data, code->size);
+    purple_request_field_group_add_field(field_group, code_pic);
+
+    code_entry = purple_request_field_string_new("code_entry", _("Please input the code"), "", FALSE);
+    purple_request_field_set_required(code_entry,TRUE);
+    purple_request_field_group_add_field(field_group, code_entry);
+
+    purple_request_fields(ac->account, NULL,
+                          "验证码", NULL,
+                          fields, "确认", G_CALLBACK(input_verify_image),
+                          "取消", G_CALLBACK(cancel_verify_image),
+                          ac->account, NULL, NULL, code);
+
+    return ;
+}
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
@@ -983,6 +1025,7 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
+    .need_verify2 = show_verify_image,
 };
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
@@ -1576,7 +1619,9 @@ static void qq_visit_qzone(PurpleBlistNode* node)
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
-    //qq_account* ac = purple_connection_get_protocol_data(pc);
+    qq_account* ac = purple_connection_get_protocol_data(pc);
+    const char* qqnum = purple_buddy_get_name(buddy);
+    lwqq_info_add_friend(ac->qq,qqnum);
     //LwqqVerifyCode* code = lwqq_info_add_friend_get_image(ac->qq);
 }
 #if 0

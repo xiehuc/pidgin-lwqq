@@ -17,6 +17,15 @@ vp_command vp_make_command(VP_DISPATCH dsph,VP_CALLBACK func,...)
     va_end(args);
     return ret;
 }
+vp_list* vp_make_params(VP_DISPATCH dsph,...)
+{
+    vp_list* list = malloc(sizeof(*list));
+    va_list args;
+    va_start(args,dsph);
+    dsph(NULL,list,&args);
+    va_end(args);
+    return list;
+}
 void vp_do(vp_command cmd,void* retval)
 {
     if(cmd.dsph==NULL||cmd.func==NULL) return;
@@ -63,7 +72,7 @@ void vp_func_p(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*));
-        vp_push(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -77,8 +86,8 @@ void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
         va_list va;
         va_copy(va,*(va_list*)q);
         vp_init(*vp,sizeof(void*)*2);
-        vp_push(*vp,va,void*);
-        vp_push(*vp,va,void*);
+        vp_dump(*vp,va,void*);
+        vp_dump(*vp,va,void*);
         va_end(va);
         return ;
     }
@@ -92,9 +101,9 @@ void vp_func_3p(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*3);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -108,10 +117,10 @@ void vp_func_4p(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*4);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
         return ;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -126,8 +135,8 @@ void vp_func_pi(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)+sizeof(int));
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,int);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,int);
         return;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -140,7 +149,7 @@ void vp_func_p_i(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*2);
-        vp_push(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
         return;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -153,8 +162,8 @@ void vp_func_2p_i(VP_CALLBACK func,vp_list* vp,void* q)
     if( !func ){
         va_list* va = q;
         vp_init(*vp,sizeof(void*)*2);
-        vp_push(*vp,*va,void*);
-        vp_push(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
         return;
     }
     void* p1 = vp_arg(*vp,void*);
@@ -169,9 +178,9 @@ void vp_func_3p_i(VP_CALLBACK func,vp_list* vp,void* q)
         va_list va;
         va_copy(va,*(va_list*)q);
         vp_init(*vp,sizeof(void*)*3);
-        vp_push(*vp,va,void*);
-        vp_push(*vp,va,void*);
-        vp_push(*vp,va,void*);
+        vp_dump(*vp,va,void*);
+        vp_dump(*vp,va,void*);
+        vp_dump(*vp,va,void*);
         va_end(va);
         return;
     }

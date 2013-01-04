@@ -18,7 +18,7 @@ typedef struct vp_command{VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;struct 
 
 #define vp_init(vp,size) do{(vp).st = (vp).cur = malloc(size);(vp).sz = size;}while(0)
 #define _ptr_self_inc(ptr,sz) ((ptr+=sz)-sz)
-#define vp_push(vp,va,type) do{type t = va_arg((va),type);memcpy(_ptr_self_inc((vp).cur,sizeof(type)),&t,sizeof(type));}while(0)
+#define vp_dump(vp,va,type) do{type t = va_arg((va),type);memcpy(_ptr_self_inc((vp).cur,sizeof(type)),&t,sizeof(type));}while(0)
 #define vp_start(vp) (vp).cur = (vp).st
 #define vp_arg(vp,type) *(type*)(_ptr_self_inc((vp).cur,sizeof(type)))
 #define vp_end(vp) do{free((vp).st),(vp).cur=(vp).st=NULL;(vp).sz=0;}while(0)
@@ -26,6 +26,8 @@ typedef struct vp_command{VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;struct 
 vp_command vp_make_command(VP_DISPATCH,VP_CALLBACK,...);
 void vp_do(vp_command,void* retval);
 void vp_link(vp_command* head,vp_command* elem);
+
+vp_list* vp_make_params(VP_DISPATCH,...);
 /**
  * p : pointer
  * i : int

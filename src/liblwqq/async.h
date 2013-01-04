@@ -163,6 +163,7 @@ struct _LwqqAsyncOption {
      * you should add buddy to gui level.
      */
     void (*request_confirm)(LwqqClient* lc,LwqqBuddy* buddy);
+    void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);
