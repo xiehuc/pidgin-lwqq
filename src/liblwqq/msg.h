@@ -38,6 +38,13 @@ typedef enum {
     LWQQ_MC_LOST_CONN = 121
 }LwqqMsgRetcode;
 
+typedef enum {
+    WEBQQ_OK = 0,
+    WEBQQ_NO_MESSAGE = 102,
+    WEBQQ_NEW_PTVALUE = 116,
+    WEBQQ_LOST_CONN = 121,
+}WebqqRetCode;
+
 typedef struct LwqqMsgContent {
     enum {
         LWQQ_CONTENT_STRING,

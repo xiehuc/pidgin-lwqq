@@ -7,6 +7,8 @@ Intro
  a pidgin plugin based on [lwqq](https://github.com/mathslinux/lwqq).
  a excellent safe useful library for webqq protocol.   
 
+ some webqq proto detail comes from [qicq5](http://www.qicq5.com/) and [qqxieyi](http://bbs.qqxieyi.com/)
+
 License: GPLv3
 
 

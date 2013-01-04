@@ -981,7 +981,7 @@ static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* m
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
 {
     int ret;
-    int retcode = 0;
+    WebqqRetCode retcode = 0;
     json_t *json = NULL, *json_tmp, *cur;
 
     ret = json_parse_document(&json, (char *)str);
@@ -998,8 +998,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     if(retcode_str)
         retcode = atoi(retcode_str);
 
-    if(retcode == 102 || retcode == 121)
-        goto done;
+    /*if(retcode == 102 || retcode == 121)
+        goto done;*/
+    if(retcode != WEBQQ_OK) goto done;
 
     json_tmp = get_result_json_object(json);
     if (!json_tmp) {
@@ -1217,12 +1218,28 @@ static void *start_poll_msg(void *msg_list)
         if (ret || req->http_code != 200) continue;
         retcode = parse_recvmsg_from_json(list, req->response);
         if(!lwqq_client_logined(lc)) break;
-        if(retcode == 102) continue;
-        if(retcode == 121 || retcode == 108){
-            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
-            break;
-        }else{
-            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+        switch(retcode){
+            case WEBQQ_OK:
+                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+                break;
+            case WEBQQ_NO_MESSAGE:
+                continue;
+                break;
+            case WEBQQ_LOST_CONN:
+                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+                break;
+            case WEBQQ_NEW_PTVALUE:
+                {
+                char * end,* value = req->response;
+                value = strstr(value,"\"p\":");
+                value += 5;
+                end = strchr(value,'"');
+                *end = 0;
+                
+                lwqq_update_cookie(lc, "ptwebqq", value);
+                req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+                }
+                break;
         }
     }
 failed:

@@ -98,9 +98,22 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
     opt[name_len+1] = ' ';
     strcpy(opt+name_len+2,value);
 
-    request->header = curl_slist_append((struct curl_slist*)request->header,opt);
-    curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
+    int use_old = 0;
+    struct curl_slist* list = request->header;
+    while(list){
+        if(!strncmp(list->data,name,strlen(name))){
+            s_free(list->data);
+            list->data = strdup(opt);
+            use_old = 1;
+            break;
+        }
+        list = list->next;
+    }
+    if(!use_old){
+        request->header = curl_slist_append((struct curl_slist*)request->header,opt);
+    }
 
+    curl_easy_setopt(request->req,CURLOPT_HTTPHEADER,request->header);
     s_free(opt);
 }
 

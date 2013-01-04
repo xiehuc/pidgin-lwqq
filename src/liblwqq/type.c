@@ -451,3 +451,79 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else return LWQQ_STATUS_LOGOUT;
 }
 
+void lwqq_update_cookie(LwqqClient* lc,const char* key,const char* value)
+{
+    if(!lc || lc->cookies) return;
+    LwqqCookies* cookies = lc->cookies;
+    int update_cache = 1;
+#define FREE_AND_STRDUP(k,v) \
+    s_free(k);\
+    k=s_strdup(v);
+    if (!strcmp(key, "ptvfsession")) {
+        FREE_AND_STRDUP(cookies->ptvfsession, value);
+    } else if (!strcmp(key, "ptcz")) {
+        FREE_AND_STRDUP(cookies->ptcz, value);
+    } else if (!strcmp(key, "skey")) {
+        FREE_AND_STRDUP(cookies->skey, value);
+    } else if (!strcmp(key, "ptwebqq")) {
+        FREE_AND_STRDUP(cookies->ptwebqq, value);
+    } else if (!strcmp(key, "ptuserinfo")) {
+        FREE_AND_STRDUP(cookies->ptuserinfo, value);
+    } else if (!strcmp(key, "uin")) {
+        FREE_AND_STRDUP(cookies->uin, value);
+    } else if (!strcmp(key, "ptisp")) {
+        FREE_AND_STRDUP(cookies->ptisp, value);
+    } else if (!strcmp(key, "pt2gguin")) {
+        FREE_AND_STRDUP(cookies->pt2gguin, value);
+    } else if (!strcmp(key, "verifysession")) {
+        FREE_AND_STRDUP(cookies->verifysession, value);
+    } else {
+        lwqq_log(LOG_WARNING, "No this cookie: %s\n", key);
+    }
+    s_free(value);
+
+    if (update_cache) {
+        char buf[4096] = {0};           /* 4K is enough for cookies. */
+        int buflen = 0;
+        if (cookies->ptvfsession) {
+            snprintf(buf, sizeof(buf), "ptvfsession=%s; ", cookies->ptvfsession);
+            buflen = strlen(buf);
+        }
+        if (cookies->ptcz) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "ptcz=%s; ", cookies->ptcz);
+            buflen = strlen(buf);
+        }
+        if (cookies->skey) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "skey=%s; ", cookies->skey);
+            buflen = strlen(buf);
+        }
+        if (cookies->ptwebqq) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "ptwebqq=%s; ", cookies->ptwebqq);
+            buflen = strlen(buf);
+        }
+        if (cookies->ptuserinfo) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "ptuserinfo=%s; ", cookies->ptuserinfo);
+            buflen = strlen(buf);
+        }
+        if (cookies->uin) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "uin=%s; ", cookies->uin);
+            buflen = strlen(buf);
+        }
+        if (cookies->ptisp) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "ptisp=%s; ", cookies->ptisp);
+            buflen = strlen(buf);
+        }
+        if (cookies->pt2gguin) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "pt2gguin=%s; ", cookies->pt2gguin);
+            buflen = strlen(buf);
+        }
+        if (cookies->verifysession) {
+            snprintf(buf + buflen, sizeof(buf) - buflen, "verifysession=%s; ", cookies->verifysession);
+            buflen = strlen(buf);
+        }
+        
+        FREE_AND_STRDUP(cookies->lwcookies, buf);
+    }
+#undef FREE_AND_STRDUP
+}
+
