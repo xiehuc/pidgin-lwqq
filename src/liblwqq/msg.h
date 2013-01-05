@@ -43,6 +43,7 @@ typedef enum {
     WEBQQ_NO_MESSAGE = 102,
     WEBQQ_NEW_PTVALUE = 116,
     WEBQQ_LOST_CONN = 121,
+    WEBQQ_FATAL = 100000
 }WebqqRetCode;
 
 typedef struct LwqqMsgContent {
