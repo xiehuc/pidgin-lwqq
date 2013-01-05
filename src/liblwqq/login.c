@@ -176,6 +176,7 @@ static LwqqAsyncEvent* get_verify_code(LwqqClient *lc)
     snprintf(url, sizeof(url), "%s%s?uin=%s&appid=%s", LWQQ_URL_CHECK_HOST,
              VCCHECKPATH, lc->username, APPID);
     req = lwqq_http_create_default_request(lc,url,NULL);
+    lwqq_puts(url);
     
     snprintf(chkuin, sizeof(chkuin), "chkuin=%s", lc->username);
     req->set_header(req, "Cookie", chkuin);
@@ -242,7 +243,7 @@ static int get_verify_code_back(LwqqHttpRequest* req)
         lc->vc->str = s_strdup(s);
 
         /* We need get the ptvfsession from the header "Set-Cookie" */
-        update_cookies(lc->cookies, req, "ptvfsession", 1);
+        //update_cookies(lc->cookies, req, "ptvfsession", 1);
         lwqq_log(LOG_NOTICE, "Verify code: %s\n", lc->vc->str);
     } else if (*c == '1') {
         /* We need get the verify image. */
@@ -298,7 +299,7 @@ static int get_verify_image_back(LwqqHttpRequest* req)
     if (content_length) {
         image_length = atoi(content_length);
     }
-    update_cookies(lc->cookies, req, "verifysession", 1);
+    //update_cookies(lc->cookies, req, "verifysession", 1);
     snprintf(image_file, sizeof(image_file), "/tmp/%s.jpeg", lc->username);
     /* Delete old file first */
     unlink(image_file);
@@ -398,7 +399,7 @@ static char *lwqq_enc_pwd(const char *pwd, const char *vc, const char *uin)
     lwqq_puts(buf);
     return s_strdup(buf);
 }
-
+/*
 static int sava_cookie(LwqqClient *lc, LwqqHttpRequest *req, LwqqErrorCode *err)
 {
     update_cookies(lc->cookies, req, "ptcz", 0);
@@ -410,7 +411,7 @@ static int sava_cookie(LwqqClient *lc, LwqqHttpRequest *req, LwqqErrorCode *err)
     update_cookies(lc->cookies, req, "pt2gguin", 1);
     
     return 0;
-}
+}*/
 
 /** 
  * Do really login
@@ -432,6 +433,7 @@ static LwqqAsyncEvent* do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *
              "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
 
     req = lwqq_http_create_default_request(lc,url, err);
+    lwqq_puts(url);
     /* Setup http header */
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
@@ -468,7 +470,7 @@ static int do_login_back(LwqqHttpRequest* req)
 
     switch (status) {
     case 0:
-        sava_cookie(lc, req, NULL);
+        //sava_cookie(lc, req, NULL);
         err = LWQQ_EC_OK;
         break;
         

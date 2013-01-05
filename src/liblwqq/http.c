@@ -10,7 +10,8 @@
 #include "logger.h"
 #include "queue.h"
 
-#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
+//#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
+#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
 
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -127,7 +128,7 @@ void lwqq_http_set_default_header(LwqqHttpRequest *request)
     //lwqq_http_set_header(request, "Accept-Charset", "GBK, utf-8, utf-16, *;q=0.1");
     lwqq_http_set_header(request, "Accept-Encoding", "deflate, gzip, x-gzip, "
                          "identity, *;q=0");
-    //lwqq_http_set_header(request, "Connection", "Keep-Alive");
+    lwqq_http_set_header(request, "Connection", "keep-alive");
 }
 
 static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
@@ -223,6 +224,9 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
         struct cookie_list * node = s_malloc0(sizeof(*node));
         sscanf(str,"Set-Cookie: %[^=]=%[^;];",node->name,node->value);
         request->cookie = slist_append(request->cookie,node);
+        LwqqClient* lc = request->lc;
+        if(!lc->cookies) lc->cookies = s_malloc0(sizeof(LwqqCookies));
+        lwqq_set_cookie(lc->cookies, node->name, node->value);
     }
     return size*nmemb;
 }
@@ -291,7 +295,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
     //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
     //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
-    //curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
+    curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,10);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -563,6 +567,8 @@ static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
         lwqq_async_io_stop(&f->ev);
     //since read+write works fine. we find out 'kind' not worked when have time
     lwqq_async_io_watch(&f->ev,f->sockfd,LWQQ_ASYNC_READ|LWQQ_ASYNC_WRITE,event_cb,g);
+    //lwqq_async_io_watch(&f->ev,f->sockfd,kind,event_cb,g);
+
     f->evset=1;
 }
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)

@@ -453,78 +453,40 @@ LWQQ_STATUS lwqq_status_from_str(const char* str)
     else return LWQQ_STATUS_LOGOUT;
 }
 
-void lwqq_update_cookie(LwqqClient* lc,const char* key,const char* value)
+
+void lwqq_set_cookie(LwqqCookies* c,const char* key,const char* value)
 {
-    if(!lc || lc->cookies) return;
-    LwqqCookies* cookies = lc->cookies;
-    int update_cache = 1;
-#define FREE_AND_STRDUP(k,v) \
-    s_free(k);\
-    k=s_strdup(v);
-    if (!strcmp(key, "ptvfsession")) {
-        FREE_AND_STRDUP(cookies->ptvfsession, value);
-    } else if (!strcmp(key, "ptcz")) {
-        FREE_AND_STRDUP(cookies->ptcz, value);
-    } else if (!strcmp(key, "skey")) {
-        FREE_AND_STRDUP(cookies->skey, value);
-    } else if (!strcmp(key, "ptwebqq")) {
-        FREE_AND_STRDUP(cookies->ptwebqq, value);
-    } else if (!strcmp(key, "ptuserinfo")) {
-        FREE_AND_STRDUP(cookies->ptuserinfo, value);
-    } else if (!strcmp(key, "uin")) {
-        FREE_AND_STRDUP(cookies->uin, value);
-    } else if (!strcmp(key, "ptisp")) {
-        FREE_AND_STRDUP(cookies->ptisp, value);
-    } else if (!strcmp(key, "pt2gguin")) {
-        FREE_AND_STRDUP(cookies->pt2gguin, value);
-    } else if (!strcmp(key, "verifysession")) {
-        FREE_AND_STRDUP(cookies->verifysession, value);
-    } else {
-        lwqq_log(LOG_WARNING, "No this cookie: %s\n", key);
+    if(!c) return;
+#define SET_COOKIE_IF_MATCH(k) if(!strncmp(key,#k,strlen(#k))){\
+    s_free(c->k);c->k = s_strdup(value);\
+    goto done;\
     }
-
-    if (update_cache) {
-        char buf[4096] = {0};           /* 4K is enough for cookies. */
-        int buflen = 0;
-        if (cookies->ptvfsession) {
-            snprintf(buf, sizeof(buf), "ptvfsession=%s; ", cookies->ptvfsession);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptcz) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptcz=%s; ", cookies->ptcz);
-            buflen = strlen(buf);
-        }
-        if (cookies->skey) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "skey=%s; ", cookies->skey);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptwebqq) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptwebqq=%s; ", cookies->ptwebqq);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptuserinfo) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptuserinfo=%s; ", cookies->ptuserinfo);
-            buflen = strlen(buf);
-        }
-        if (cookies->uin) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "uin=%s; ", cookies->uin);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptisp) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptisp=%s; ", cookies->ptisp);
-            buflen = strlen(buf);
-        }
-        if (cookies->pt2gguin) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "pt2gguin=%s; ", cookies->pt2gguin);
-            buflen = strlen(buf);
-        }
-        if (cookies->verifysession) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "verifysession=%s; ", cookies->verifysession);
-            buflen = strlen(buf);
-        }
-        
-        FREE_AND_STRDUP(cookies->lwcookies, buf);
-    }
-#undef FREE_AND_STRDUP
+    SET_COOKIE_IF_MATCH(ptvfsession);
+    SET_COOKIE_IF_MATCH(ptcz);
+    SET_COOKIE_IF_MATCH(skey);
+    SET_COOKIE_IF_MATCH(ptwebqq);
+    SET_COOKIE_IF_MATCH(ptuserinfo);
+    SET_COOKIE_IF_MATCH(uin);
+    SET_COOKIE_IF_MATCH(ptisp);
+    SET_COOKIE_IF_MATCH(pt2gguin);
+    SET_COOKIE_IF_MATCH(verifysession);
+    SET_COOKIE_IF_MATCH(RK);
+    lwqq_log(LOG_ERROR,"No this cookie:%s\n",key);
+done:
+    s_free(c->lwcookies);
+    char buf[4096]={0};
+#define PUT_COOKIE_KEY(k) if(c->k){strcat(buf,#k"=");strcat(buf,c->k);strcat(buf,"; ");}
+    PUT_COOKIE_KEY(ptvfsession);
+    PUT_COOKIE_KEY(ptcz);
+    PUT_COOKIE_KEY(skey);
+    PUT_COOKIE_KEY(ptwebqq);
+    PUT_COOKIE_KEY(ptuserinfo);
+    PUT_COOKIE_KEY(uin);
+    PUT_COOKIE_KEY(ptisp);
+    PUT_COOKIE_KEY(pt2gguin);
+    PUT_COOKIE_KEY(verifysession);
+    PUT_COOKIE_KEY(RK);
+    c->lwcookies = s_strdup(buf);
+#undef SET_COOKIE_IF_MATCH
+#undef PUT_COOKIE_KEY
 }
-

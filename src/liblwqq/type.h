@@ -204,6 +204,7 @@ typedef struct LwqqCookies {
     char *ptisp;
     char *pt2gguin;
     char *verifysession;
+    char *RK;
     char *lwcookies;
 } LwqqCookies;
 /* LwqqClient API */
@@ -290,7 +291,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password);
  */
 const char *lwqq_get_cookies(LwqqClient *lc);
 
-void lwqq_update_cookie(LwqqClient* lc,const char* key,const char* value);
+void lwqq_set_cookie(LwqqCookies* ,const char* key,const char* value);
 /** 
  * Free LwqqVerifyCode object
  * 

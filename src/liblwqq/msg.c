@@ -1236,7 +1236,7 @@ static void *start_poll_msg(void *msg_list)
                 end = strchr(value,'"');
                 *end = 0;
                 
-                lwqq_update_cookie(lc, "ptwebqq", value);
+                lwqq_set_cookie(lc->cookies, "ptwebqq", value);
                 req->set_header(req, "Cookie", lwqq_get_cookies(lc));
                 }
                 break;
