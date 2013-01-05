@@ -164,6 +164,7 @@ struct _LwqqAsyncOption {
      */
     void (*request_confirm)(LwqqClient* lc,LwqqBuddy* buddy);
     void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
+    void (*need_confirm)(LwqqClient* lc,LwqqConfirmTable* table);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);

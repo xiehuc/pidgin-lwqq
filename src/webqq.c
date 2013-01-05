@@ -1003,10 +1003,10 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
     field_group = purple_request_field_group_new((gchar*)0);
     purple_request_fields_add_group(fields, field_group);
 
-    code_pic = purple_request_field_image_new("code_pic", _("Confirmation code"), code->data, code->size);
+    code_pic = purple_request_field_image_new("code_pic", "code", code->data, code->size);
     purple_request_field_group_add_field(field_group, code_pic);
 
-    code_entry = purple_request_field_string_new("code_entry", _("Please input the code"), "", FALSE);
+    code_entry = purple_request_field_string_new("code_entry", "input", "", FALSE);
     purple_request_field_set_required(code_entry,TRUE);
     purple_request_field_group_add_field(field_group, code_entry);
 
@@ -1018,6 +1018,35 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
 
     return ;
 }
+
+static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestField* fields)
+{
+    table->answer = LWQQ_YES;
+    vp_do(table->cmd,NULL);
+}
+static void confirm_table_no(LwqqConfirmTable* table,PurpleRequestField* fields)
+{
+    table->answer = LWQQ_NO;
+    vp_do(table->cmd,NULL);
+}
+static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+    PurpleRequestFields *fields;
+    PurpleRequestFieldGroup *field_group;
+
+    fields = purple_request_fields_new();
+    field_group = purple_request_field_group_new((gchar*)0);
+    purple_request_fields_add_group(fields, field_group);
+
+    purple_request_field_group_add_field(field_group, purple_request_field_label_new ("body", table->body));
+
+    purple_request_fields(ac->account, NULL,
+                          table->title, NULL,
+                          fields, "确认", G_CALLBACK(confirm_table_yes),
+                          "取消", G_CALLBACK(confirm_table_no),
+                          ac->account, NULL, NULL, table);
+}
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
@@ -1026,6 +1055,7 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
     .need_verify2 = show_verify_image,
+    .need_confirm = show_confirm_table,
 };
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
@@ -1621,8 +1651,7 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
     const char* qqnum = purple_buddy_get_name(buddy);
-    lwqq_info_add_friend(ac->qq,qqnum);
-    //LwqqVerifyCode* code = lwqq_info_add_friend_get_image(ac->qq);
+    lwqq_info_add_friend_by_qqnum(ac->qq,qqnum);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)

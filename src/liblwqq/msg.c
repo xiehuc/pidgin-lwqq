@@ -1225,6 +1225,7 @@ static void *start_poll_msg(void *msg_list)
             case WEBQQ_NO_MESSAGE:
                 continue;
                 break;
+            case 109:
             case WEBQQ_LOST_CONN:
                 lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
                 break;

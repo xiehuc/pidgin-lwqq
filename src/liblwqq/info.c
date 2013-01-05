@@ -39,10 +39,11 @@ static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
-static int add_friend_back(LwqqHttpRequest* req,char* qqnum);
+static int add_friend_stage_1(LwqqHttpRequest* req,char* qqnum);
 static void add_friend_stage_2(LwqqClient* lc,LwqqVerifyCode* code,char* qqnum);
 static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum);
-static int add_friend_stage_4(LwqqHttpRequest* req);
+static void add_friend_stage_4(LwqqClient* lc,LwqqConfirmTable* table,char* qqnum,char* token);
+static int add_friend_stage_5(LwqqHttpRequest* req);
 
 
 /**
@@ -1918,7 +1919,7 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
     data[2] = (char*)lwqq_status_to_str(status);
     return req->do_request_async(req,0,NULL,_C_(2p_i,info_commom_back,req,data));
 }
-void lwqq_info_add_friend(LwqqClient* lc,const char* qqnum)
+void lwqq_info_add_friend_by_qqnum(LwqqClient* lc,const char* qqnum)
 {
     char url[512];
 
@@ -1931,9 +1932,9 @@ void lwqq_info_add_friend(LwqqClient* lc,const char* qqnum)
     req->set_header(req,"Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Connection","keep-alive");
-    req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_back,req,s_strdup(qqnum)));
+    req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_1,req,s_strdup(qqnum)));
 }
-static int add_friend_back(LwqqHttpRequest* req,char* qqnum)
+static int add_friend_stage_1(LwqqHttpRequest* req,char* qqnum)
 {
     int err = 0;
     if(req->http_code!=200){
@@ -1993,8 +1994,34 @@ static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
     json_tmp = json_find_first_label(root, "result");
     json_tmp = json_tmp->child;
     char* token = json_parse_simple_value(json_tmp, "token");
-
+    LwqqConfirmTable* table = s_malloc0(sizeof(*table));
     LwqqClient* lc = req->lc;
+    table->cmd = _C_(4p,add_friend_stage_4,lc,table,qqnum,strdup(token));
+    table->title = s_strdup("好友确认");
+    char body[1024] = {0};
+    //format_append(body,"生日:%s-%s-%s\n");
+    format_append(body,"昵称:%s\n",json_parse_simple_value(json_tmp,"nick"));
+    format_append(body,"QQ:%s\n",json_parse_simple_value(json_tmp,"account"));
+    format_append(body,"国籍:%s\n",json_parse_simple_value(json_tmp,"country"));
+    format_append(body,"城市:%s\n",json_parse_simple_value(json_tmp,"city"));
+    format_append(body,"生肖:%s\n",json_parse_simple_value(json_tmp,"shengxiao"));
+    format_append(body,"email:%s\n",json_parse_simple_value(json_tmp,"email"));
+    format_append(body,"手机:%s\n",json_parse_simple_value(json_tmp,"mobile"));
+    table->body = s_strdup(body);
+    lc->async_opt->need_confirm(lc,table);
+
+done:
+    if(root){
+        json_free_value(&root);
+    }
+    lwqq_http_request_free(req);
+    return err;
+}
+static void add_friend_stage_4(LwqqClient* lc,LwqqConfirmTable* table,char* qqnum,char* token)
+{
+    if(table->answer==LWQQ_NO){
+        goto done;
+    }
     char url[512];
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/add_need_verify2");
     char post[1024];
@@ -2003,22 +2030,18 @@ static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
             "\"groupid\":0,\"msg\":\"pidginlwqqtest\","
             "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",qqnum,token,lc->vfwebqq);
     lwqq_puts(post);
-    s_free(qqnum);
-    LwqqHttpRequest* req2 = lwqq_http_create_default_request(lc,url,NULL);
-    lwqq_http_set_option(req2, LWQQ_HTTP_VERBOSE,1L);
-    req->set_header(req2,"Cookie",lwqq_get_cookies(lc));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1L);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     //req->set_header(req2,"Origin","http://s.web2.qq.com");
-    req->set_header(req2,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
-    req->do_request_async(req2,1,post,_C_(p_i,add_friend_stage_4,req2));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
+    req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
 done:
-    if(root){
-        json_free_value(&root);
-    }
-    lwqq_http_request_free(req);
-    return err;
+    s_free(qqnum);
+    s_free(token);
+    lwqq_ct_free(table);
 }
-
-static int add_friend_stage_4(LwqqHttpRequest* req)
+static int add_friend_stage_5(LwqqHttpRequest* req)
 {
     int err = 0;
     if(req->http_code!=200){

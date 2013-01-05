@@ -124,7 +124,7 @@ LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,
 LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const char* markname);
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin);
 LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status);
-void lwqq_info_add_friend(LwqqClient* lc,const char* qqnum);
+void lwqq_info_add_friend_by_qqnum(LwqqClient* lc,const char* qqnum);
 LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK mask);
 
 
