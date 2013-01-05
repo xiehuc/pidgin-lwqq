@@ -302,6 +302,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     }
 
     const char* key = try_get(buddy->qqnumber,buddy->uin);
+    const char* disp = try_get(buddy->markname,buddy->nick);
     bu = purple_find_buddy(account,key);
     if(bu == NULL) {
         bu = purple_buddy_new(ac->account,key,(buddy->markname)?buddy->markname:buddy->nick);
@@ -309,17 +310,10 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         //if there isn't a qqnumber we shouldn't save it.
         if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
-    //flush new alias
-    /*const char* alias = purple_buddy_get_alias_only(bu);
-    if(buddy->markname){
-        if(alias==NULL||strcmp(alias,buddy->markname)!=0)
-            purple_blist_alias_buddy(bu,buddy->markname);
-    }else if(alias==NULL||strcmp(alias,buddy->nick)!=0){
-        purple_blist_alias_buddy(bu,buddy->nick);
-    }*/
-    if(purple_buddy_get_group(bu)!=group) {
+    if(purple_buddy_get_group(bu)!=group) 
         purple_blist_add_buddy(bu,NULL,group,NULL);
-    }
+    if(!bu->alias || strcmp(bu->alias,disp) )
+        purple_blist_alias_buddy(bu,disp);
     if(buddy->stat)
         purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
     //download avatar
@@ -696,6 +690,43 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
     }
 }
+
+static void write_buddy_to_db(LwqqClient* lc,LwqqBuddy* buddy)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+
+    lwdb_userdb_insert_buddy_info(ac->db, buddy);
+    friend_come(lc,buddy);
+}
+static void write_group_to_db(LwqqClient* lc,LwqqGroup* group)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+
+    lwdb_userdb_insert_group_info(ac->db, group);
+    group_come(lc,group);
+}
+static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
+{
+    LwqqSimpleBuddy* sb;
+    LwqqBuddy* buddy;
+    LwqqAsyncEvent* ev;
+    LwqqAsyncEvset* set;
+    LIST_FOREACH(sb,&blist->added_friends,entries){
+        //in this. we didn't add it to fast cache.
+        buddy = lwqq_buddy_find_buddy_by_uin(lc, sb->uin);
+        if(!buddy->qqnumber){
+            set = lwqq_async_evset_new();
+            ev = lwqq_info_get_friend_qqnumber(lc,buddy);
+            lwqq_async_evset_add_event(set, ev);
+            ev = lwqq_info_get_friend_detail_info(lc, buddy);
+            lwqq_async_evset_add_event(set, ev);
+            lwqq_async_add_evset_listener(set,_C_(2p,write_buddy_to_db,lc,buddy));
+        }else{
+            friend_come(lc, buddy);
+        }
+
+    }
+}
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
 {
     PurpleAccount* account = ac->account;
@@ -767,7 +798,7 @@ void qq_msg_check(LwqqClient* lc)
                 system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
                 break;
             case LWQQ_MT_BLIST_CHANGE:
-                //do no thing. it will raise friend_come
+                blist_change(lc,(LwqqMsgBlistChange*)msg->msg->opaque);
                 break;
             case LWQQ_MT_OFFFILE:
                 offline_file(lc,(LwqqMsgOffFile*)msg->msg->opaque);
@@ -814,28 +845,11 @@ void qq_msg_check(LwqqClient* lc)
         purple_blist_remove_buddy(bu);
     }
 }*/
-static void write_buddy_to_db(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
-{
-    LwqqClient* lc = lwqq_async_event_get_owner(ev);
-    qq_account* ac = lwqq_client_userdata(lc);
-
-    lwdb_userdb_insert_buddy_info(ac->db, buddy);
-    friend_come(lc,buddy);
-}
-static void write_group_to_db(LwqqAsyncEvent* ev,LwqqGroup* group)
-{
-    LwqqClient* lc = lwqq_async_event_get_owner(ev);
-    qq_account* ac = lwqq_client_userdata(lc);
-
-    lwdb_userdb_insert_group_info(ac->db, group);
-    group_come(lc,group);
-}
 
 static void finish_insertion(qq_account* ac)
 {
     lwdb_userdb_commit(ac->db, "insertion");
 }
-
 static void login_stage_f(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -888,7 +902,7 @@ static void login_stage_f(LwqqClient* lc)
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(ac->qq_use_qqnum && ! buddy->qqnumber){
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
-            lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,ev,buddy));
+            lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,lc,buddy));
             lwqq_async_evset_add_event(set, ev);
         }
         else{
@@ -899,7 +913,7 @@ static void login_stage_f(LwqqClient* lc)
     LIST_FOREACH(group,&lc->groups,entries) {
         if(ac->qq_use_qqnum && ! group->account){
             ev = lwqq_info_get_group_qqnumber(lc,group);
-            lwqq_async_add_event_listener(ev,_C_(2p,write_group_to_db,ev,group));
+            lwqq_async_add_event_listener(ev,_C_(2p,write_group_to_db,lc,group));
             lwqq_async_evset_add_event(set, ev);
         }else{
             group_come(lc,group);

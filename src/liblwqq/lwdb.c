@@ -854,6 +854,9 @@ void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
     }
     sws_query_end(stmt,NULL);
 }
+void lwdb_userdb_query_qqnum(LwdbUserDB* db,LwqqBuddy* buddy)
+{
+}
 void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
 {
     if(!lc || !db) return;

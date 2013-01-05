@@ -1376,6 +1376,8 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
 
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
 {
+    //{"retcode":0,"result":{"face":567,"birthday":{"month":6,"year":1991,"day":14},"occupation":"","phone":"","allow":1,"college":"","uin":289056851,"constel":5,"blood":0,"homepage":"","stat":10,"vip_info":0,"country":"中国","city":"威海","personal":"","nick":"d3dd","shengxiao":8,"email":"","client_type":41,"province":"山东","gender":"male","mobile":""}}
+    //
     json_t *json = NULL, *json_tmp;
     int err = 0;
     int ret;
@@ -1422,6 +1424,7 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
             buddy->key = s_strdup(json_parse_simple_value(json, name)); \
         }
         SET_BUDDY_INFO(uin, "uin");
+        SET_BUDDY_INFO(nick, "nick");
         SET_BUDDY_INFO(face, "face");
         /* SET_BUDDY_INFO(birthday, "birthday"); */
         SET_BUDDY_INFO(occupation, "occupation");

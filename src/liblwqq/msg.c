@@ -629,15 +629,16 @@ static int parse_kick_message(json_t *json,void *opaque)
     }
     return 0;
 }
+/*
 static void confirm_friend_request_notify(LwqqClient* lc,LwqqBuddy* buddy)
 {
     LIST_INSERT_HEAD(&lc->friends,buddy,entries);
     lc->async_opt->request_confirm(lc,buddy);
-}
+}*/
 static int parse_system_message(json_t *json,void* opaque,void* _lc)
 {
     LwqqMsgSystem* system = opaque;
-    LwqqClient* lc = _lc;
+    //LwqqClient* lc = _lc;
     system->seq = s_strdup(json_parse_simple_value(json,"seq"));
     const char* type = json_parse_simple_value(json,"type");
     if(strcmp(type,"verify_required")==0) system->type = VERIFY_REQUIRED;
@@ -659,7 +660,7 @@ static int parse_system_message(json_t *json,void* opaque,void* _lc)
         system->added_buddy_sig.sig = json_unescape(json_parse_simple_value(json,"sig"));
     }else if(system->type==VERIFY_PASS||system->type==VERIFY_PASS_ADD){
         system->verify_pass.group_id = s_strdup(json_parse_simple_value(json,"group_id"));
-        LwqqBuddy* buddy = lwqq_buddy_new();
+        /*LwqqBuddy* buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(system->from_uin);
         buddy->cate_index = s_strdup(system->verify_pass.group_id);
 
@@ -669,7 +670,7 @@ static int parse_system_message(json_t *json,void* opaque,void* _lc)
         lwqq_async_evset_add_event(set,ev);
         ev = lwqq_info_get_friend_qqnumber(lc,buddy);
         lwqq_async_evset_add_event(set,ev);
-        lwqq_async_add_evset_listener(set,_C_(2p,confirm_friend_request_notify,lc,buddy));
+        lwqq_async_add_evset_listener(set,_C_(2p,confirm_friend_request_notify,lc,buddy));*/
     }
     return 0;
 }
@@ -694,7 +695,7 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
         //you should watch LwqqMsgBlistChange object and read 
         //simple buddy list.
         //and get qqnumber by your self.
-        lwqq_info_get_friend_detail_info(lc,buddy);
+        //lwqq_info_get_friend_detail_info(lc,buddy);
         ptr = ptr->next;
     }
     ptr = json_find_first_label_all(json,"removed_friends");
