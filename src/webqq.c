@@ -289,8 +289,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     PurpleBuddy* bu = NULL;
     LwqqFriendCategory* cate;
 
-    int cate_index;
-    cate_index = (buddy->cate_index) ? atoi(buddy->cate_index) : 0;
+    int cate_index = buddy->cate_index;
     PurpleGroup* group = purple_group_new(QQ_DEFAULT_CATE);
     if(cate_index != 0) {
         LIST_FOREACH(cate,&lc->categories,entries) {
@@ -1735,11 +1734,12 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     qq_account* ac = purple_connection_get_protocol_data(pc);
     const char* qqnum = purple_buddy_get_name(buddy);
     LwqqBuddy* friend = lwqq_buddy_new();
+    LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
+    if(cate == NULL){
+        friend->cate_index = 0;
+    }else
+        friend->cate_index = cate->index;
     LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
-    if(group){
-        LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
-        //friend->cate_index = cate->index;
-    }
     lwqq_async_add_event_listener(ev, _C_(3p,search_buddy_receipt,ev,friend,s_strdup(message)));
 }
 #if 0

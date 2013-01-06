@@ -223,7 +223,7 @@ static void parse_marknames_child(LwqqClient *lc, json_t *json)
 static void parse_friends_child(LwqqClient *lc, json_t *json)
 {
     LwqqBuddy *buddy;
-    char *uin, *cate_index;
+    char *uin;
     json_t *cur;
 
     /* Make json point "info" reference */
@@ -242,7 +242,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     for (cur = json->child; cur != NULL; cur = cur->next) {
         LwqqFriendCategory *c_entry;
         uin = json_parse_simple_value(cur, "uin");
-        cate_index = json_parse_simple_value(cur, "categories");
+        int cate_index = s_atoi(json_parse_simple_value(cur, "categories"),0);
         if (!uin || !cate_index)
             continue;
 
@@ -251,11 +251,11 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
             continue;
 
         LIST_FOREACH(c_entry, &lc->categories, entries) {
-            if (c_entry->index == s_atoi(cate_index,0)) {
+            if (c_entry->index == cate_index) {
                 c_entry->count++;
             }
         }
-        buddy->cate_index = s_strdup(cate_index);
+        buddy->cate_index = cate_index;
     }
 }
 
@@ -1645,8 +1645,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
             case MODIFY_BUDDY_CATEGORY:
                 {
                     LwqqBuddy* buddy = d[1];
-                    char* cate_idx = d[2];
-                    s_free(buddy->cate_index);
+                    long cate_idx = (long)d[2];
                     buddy->cate_index = cate_idx;
                 } break;
             case CHANGE_STATUS:
@@ -1731,7 +1730,7 @@ LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,con
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate)
 {
     if(!lc||!buddy||!new_cate) return NULL;
-    int cate_idx = -1;
+    long cate_idx = -1;
     LwqqFriendCategory *c;
     LIST_FOREACH(c,&lc->categories,entries){
         if(strcmp(c->name,new_cate)==0){
@@ -1747,7 +1746,7 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     if(req==NULL){
         goto done;
     }
-    snprintf(post,sizeof(post),"tuin=%s&newid=%d&vfwebqq=%s",
+    snprintf(post,sizeof(post),"tuin=%s&newid=%ld&vfwebqq=%s",
             buddy->uin,cate_idx,lc->vfwebqq );
     lwqq_puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
@@ -1755,9 +1754,7 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     void** data = s_malloc0(sizeof(void*)*3);
     data[0] = (void*)MODIFY_BUDDY_CATEGORY;
     data[1] = buddy;
-    char* cate_index = s_malloc0(11);
-    snprintf(cate_index,11,"%d",cate_idx);
-    data[2] = cate_index;
+    data[2] = (void*)cate_idx;
     return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,req,data));
 done:
     lwqq_http_request_free(req);
@@ -2019,7 +2016,7 @@ LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char*
     char post[1024];
     //r:{"account":291205909,"myallow":1,"groupid":0,"msg":"xxx","token":"0a74690f4e7fb3df33de80b679515306f8def8cf7987251a","vfwebqq":"c674f106453f333320cd04a6499123807c7fc25137eac4137f564bdbe516b5ecfe143b8969707d30"}
     snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
-            "\"groupid\":%s,\"msg\":\"%s\","
+            "\"groupid\":%d,\"msg\":\"%s\","
             "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
     lwqq_puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);

@@ -689,7 +689,7 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
         LIST_INSERT_HEAD(&change->added_friends,simple,entries);
         buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(json_parse_simple_value(ptr,"uin"));
-        buddy->cate_index = s_strdup(json_parse_simple_value(ptr,"groupid"));
+        buddy->cate_index = s_atoi(json_parse_simple_value(ptr,"groupid"),0);
         LIST_INSERT_HEAD(&lc->friends,buddy,entries);
         //note in here we didn't trigger request_confirm
         //you should watch LwqqMsgBlistChange object and read 

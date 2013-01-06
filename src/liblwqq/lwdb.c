@@ -45,8 +45,9 @@ static LwqqErrorCode lwdb_userdb_update_buddy_info(
 static char *database_path;
 static char *global_database_name;
 
+///when save friend info need update version
+//to clean old error
 #define LWDB_VERSION 1001
-#define LWDB_G_STMT_SIZE 10
 #define VAL(v) #v
 #define STR(v) VAL(v)
 
@@ -88,7 +89,7 @@ static const char *create_user_db_sql =
     "    vip_info default '',"
     "    markname default '',"
     "    flag default '',"
-    "    cate_index default '',"
+    "    cate_index int default 0,"
     "    last_modify timestamp default 0);"
     
     "create table if not exists categories("
@@ -570,7 +571,7 @@ static LwqqBuddy* read_buddy_from_stmt(SwsStmt* stmt)
         GET_BUDDY_MEMBER_VALUE(19, vip_info);
         GET_BUDDY_MEMBER_VALUE(20, markname);
         GET_BUDDY_MEMBER_VALUE(21, flag);
-        GET_BUDDY_MEMBER_VALUE(22, cate_index);
+        GET_BUDDY_MEMBER_INT(22, cate_index);
         GET_BUDDY_MEMBER_VALUE(23, qqnumber);
 #undef GET_BUDDY_MEMBER_VALUE
 #undef GET_BUDDY_MEMBER_INT
@@ -740,7 +741,7 @@ static LwqqErrorCode lwdb_userdb_update_buddy_info(
     UBI_CONSTRUCT_SQL(vip_info);
     UBI_CONSTRUCT_SQL(markname);
     UBI_CONSTRUCT_SQL(flag);
-    UBI_CONSTRUCT_SQL(cate_index);
+    UBI_CONSTRUCT_SQL_INT(cate_index);
     UBI_CONSTRUCT_SQL_INT(client_type);
 #undef UBI_CONSTRUCT_SQL
 #undef UBI_CONSTRUCT_SQL_INT

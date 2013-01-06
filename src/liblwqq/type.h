@@ -115,7 +115,7 @@ typedef struct LwqqBuddy {
     char *avatar;
     size_t avatar_len;
 
-    char *cate_index;           /**< Index of the category */
+    int cate_index;           /**< Index of the category */
     char *token;                /**< Only used in add friend */
 
     /*
