@@ -134,7 +134,7 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
     /* add the default category */
     cate = s_malloc0(sizeof(*cate));
     cate->index = 0;
-    cate->name = s_strdup("My Friends");
+    cate->name = s_strdup(LWQQ_DEFAULT_CATE);
     LIST_INSERT_HEAD(&lc->categories, cate, entries);
 }
 
@@ -2019,8 +2019,8 @@ LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char*
     char post[1024];
     //r:{"account":291205909,"myallow":1,"groupid":0,"msg":"xxx","token":"0a74690f4e7fb3df33de80b679515306f8def8cf7987251a","vfwebqq":"c674f106453f333320cd04a6499123807c7fc25137eac4137f564bdbe516b5ecfe143b8969707d30"}
     snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
-            "\"groupid\":0,\"msg\":\"%s\","
-            "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,message,buddy->token,lc->vfwebqq);
+            "\"groupid\":%s,\"msg\":\"%s\","
+            "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
     lwqq_puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));

@@ -23,6 +23,8 @@
 #define USE_DEBUG 0
 #endif
 
+#define LWQQ_DEFAULT_CATE "My Friends"
+
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
@@ -355,6 +357,9 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy);
  */
 LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin);
 LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber);
+
+
+LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name,const char* def_name);
 
 /* LwqqBuddy API END*/
 

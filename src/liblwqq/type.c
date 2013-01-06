@@ -319,6 +319,16 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnum)
     }
     return NULL;
 }
+LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name,const char* def_name)
+{
+    if(!lc||!name||!def_name) return NULL;
+    LwqqFriendCategory* cate;
+    if(!strcmp(name,def_name)) name = LWQQ_DEFAULT_CATE;
+    LIST_FOREACH(cate,&lc->categories,entries){
+        if(cate->name && !strcmp(cate->name,name)) return cate;
+    }
+    return NULL;
+}
 
 /* LwqqBuddy API END*/
 /************************************************************************/
