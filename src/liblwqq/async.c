@@ -128,6 +128,7 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
     _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
     if(event == NULL){
+        event->failcode = LWQQ_CALLBACK_FAILED;
         vp_do(cmd,NULL);
         return ;
     }else if(_event->cmd.func== NULL)

@@ -263,6 +263,7 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->cate_index);
     
     s_free(buddy->avatar);
+    s_free(buddy->token);
     
     s_free(buddy);
 }

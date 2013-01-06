@@ -42,10 +42,7 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
 static int add_friend_stage_1(LwqqHttpRequest* req,LwqqAsyncEvent* ev,LwqqBuddy* out);
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
 static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out);
-static void add_friend_stage_4(LwqqClient* lc,LwqqConfirmTable* table,char* qqnum,char* token);
 static int add_friend_stage_5(LwqqHttpRequest* req);
-static void add_friend_vc_error(LwqqAsyncEvent* ev,char* qqnum);
-static void add_friend_search_fail(LwqqConfirmTable*table,char* qqnum);
 
 
 /**
@@ -1997,25 +1994,9 @@ static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out)
         goto done;
     }
     json_tmp = json_find_first_label(root, "result");
-    LwqqConfirmTable* table = s_malloc0(sizeof(*table));
-    table->title = s_strdup("好友确认");
-    //LwqqClient* lc = req->lc;
     if(json_tmp != NULL){
         json_tmp = json_tmp->child;
         parse_friend_detail_by_json(out,json_tmp);
-        /*char* token = json_parse_simple_value(json_tmp, "token");
-        table->cmd = _C_(4p,add_friend_stage_4,lc,table,qqnum,strdup(token));
-        char body[1024] = {0};
-        //format_append(body,"生日:%s-%s-%s\n");
-        format_append(body,"昵称:%s\n",json_parse_simple_value(json_tmp,"nick"));
-        format_append(body,"QQ:%s\n",json_parse_simple_value(json_tmp,"account"));
-        format_append(body,"国籍:%s\n",json_parse_simple_value(json_tmp,"country"));
-        format_append(body,"城市:%s\n",json_parse_simple_value(json_tmp,"city"));
-        format_append(body,"生肖:%s\n",json_parse_simple_value(json_tmp,"shengxiao"));
-        format_append(body,"email:%s\n",json_parse_simple_value(json_tmp,"email"));
-        format_append(body,"手机:%s\n",json_parse_simple_value(json_tmp,"mobile"));
-        table->body = s_strdup(body);*/
-        //lc->async_opt->need_confirm(lc,table);
     }
 
 done:
@@ -2025,32 +2006,25 @@ done:
     lwqq_http_request_free(req);
     return err;
 }
-static void add_friend_search_fail(LwqqConfirmTable*table,char* qqnum)
+LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy)
 {
-    s_free(qqnum);
-    lwqq_ct_free(table);
-}
-static void add_friend_stage_4(LwqqClient* lc,LwqqConfirmTable* table,char* qqnum,char* token)
-{
-    if(table->answer==LWQQ_NO){
-        goto done;
+    if(!lc||!buddy) return NULL;
+    if(!buddy->token){
+        return NULL;
     }
+
     char url[512];
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/add_need_verify2");
     char post[1024];
     //r:{"account":291205909,"myallow":1,"groupid":0,"msg":"xxx","token":"0a74690f4e7fb3df33de80b679515306f8def8cf7987251a","vfwebqq":"c674f106453f333320cd04a6499123807c7fc25137eac4137f564bdbe516b5ecfe143b8969707d30"}
     snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
             "\"groupid\":0,\"msg\":\"pidginlwqqtest\","
-            "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",qqnum,token,lc->vfwebqq);
+            "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->token,lc->vfwebqq);
     lwqq_puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
-    req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
-done:
-    s_free(qqnum);
-    s_free(token);
-    lwqq_ct_free(table);
+    return req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
 }
 static int add_friend_stage_5(LwqqHttpRequest* req)
 {
@@ -2060,7 +2034,7 @@ static int add_friend_stage_5(LwqqHttpRequest* req)
         goto done;
     }
     lwqq_puts(req->response);
-    json_t *root = NULL,*json_tmp;
+    json_t *root = NULL;
     if(json_parse_document(&root, req->response)!=JSON_OK){
         lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);
         err = LWQQ_EC_ERROR;

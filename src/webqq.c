@@ -1051,10 +1051,13 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     field_group = purple_request_field_group_new((gchar*)0);
     purple_request_fields_add_group(fields, field_group);
 
-    purple_request_field_group_add_field(field_group, purple_request_field_label_new ("body", table->body));
+
+    PurpleRequestField* str = purple_request_field_string_new("body", table->title, table->body, TRUE);
+    purple_request_field_string_set_editable(str, FALSE);
+    purple_request_field_group_add_field(field_group, str);
 
     purple_request_fields(ac->account, NULL,
-                          table->title, NULL,
+                          "确认请求", NULL,
                           fields, "确认", G_CALLBACK(confirm_table_yes),
                           "取消", G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
@@ -1660,26 +1663,48 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     }
 }
 
-static void add_friend(void* data)
+static void add_friend_receipt(LwqqAsyncEvent* ev,LwqqBuddy* b)
 {
+    int err = ev->result;
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(err == 6 ){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","添加好友过于频繁\n请等一段时间再试\n",NULL,NULL,NULL);
+    }
+    lwqq_buddy_free(b);
 }
 
-static void add_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
+static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b)
+{
+    if(c->answer == LWQQ_NO){
+        lwqq_buddy_free(b);
+        goto done;
+    }
+    LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b);
+    lwqq_async_add_event_listener(ev, _C_(2p,add_friend_receipt,ev,b));
+done:
+    lwqq_ct_free(c);
+}
+
+static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
 {
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(err == WEBQQ_FATAL){
         LwqqAsyncEvent* event = lwqq_info_search_friend_by_qq(lc,buddy->qqnumber,buddy);
-        lwqq_async_add_event_listener(event, _C_(2p,add_buddy_receipt,event,buddy));
+        lwqq_async_add_event_listener(event, _C_(2p,search_buddy_receipt,event,buddy));
         return;
     }
     if(!buddy->token){
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","好友信息获取失败",NULL,NULL,NULL);
+        lwqq_buddy_free(buddy);
         return;
     }
-    PurpleNotifyUserInfo* user = purple_notify_user_info_new();
-#define ADD_INFO(k,v) if(v) purple_notify_user_info_add_pair_plaintext(user,k,v)
+    LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
+    confirm->title = s_strdup("好友确认");
+    char body[1024] = {0};
+#define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
     ADD_INFO("QQ", buddy->qqnumber);
     ADD_INFO("昵称", buddy->nick);
     ADD_INFO("签名", buddy->personal);
@@ -1699,8 +1724,9 @@ static void add_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
     ADD_INFO("主页", buddy->homepage);
     //ADD_INFO("说明", buddy->);
 #undef ADD_INFO
-    purple_notify_userinfo(ac->gc, buddy->qqnumber, user, add_friend, buddy);
-
+    confirm->body = s_strdup(body);
+    confirm->cmd = _C_(3p,add_friend,lc,confirm,buddy);
+    lc->async_opt->need_confirm(lc,confirm);
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
@@ -1708,7 +1734,7 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     const char* qqnum = purple_buddy_get_name(buddy);
     LwqqBuddy* friend = lwqq_buddy_new();
     LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
-    lwqq_async_add_event_listener(ev, _C_(2p,add_buddy_receipt,ev,friend));
+    lwqq_async_add_event_listener(ev, _C_(2p,search_buddy_receipt,ev,friend));
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
