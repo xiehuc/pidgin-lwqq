@@ -1659,8 +1659,48 @@ static void qq_visit_qzone(PurpleBlistNode* node)
         }
     }
 }
+
+static void add_friend(void* data)
+{
+}
+
 static void add_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
 {
+    int err = ev->result;
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(err == WEBQQ_FATAL){
+        LwqqAsyncEvent* event = lwqq_info_search_friend_by_qq(lc,buddy->qqnumber,buddy);
+        lwqq_async_add_event_listener(event, _C_(2p,add_buddy_receipt,event,buddy));
+        return;
+    }
+    if(!buddy->token){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","好友信息获取失败",NULL,NULL,NULL);
+        return;
+    }
+    PurpleNotifyUserInfo* user = purple_notify_user_info_new();
+#define ADD_INFO(k,v) if(v) purple_notify_user_info_add_pair_plaintext(user,k,v)
+    ADD_INFO("QQ", buddy->qqnumber);
+    ADD_INFO("昵称", buddy->nick);
+    ADD_INFO("签名", buddy->personal);
+    ADD_INFO("性别", buddy->gender);
+    ADD_INFO("生肖", buddy->shengxiao);
+    ADD_INFO("星座", buddy->constel);
+    ADD_INFO("血型", buddy->blood);
+    //ADD_INFO("生日", buddy->birthday);
+    ADD_INFO("国籍", buddy->country);
+    ADD_INFO("省份", buddy->province);
+    ADD_INFO("城市", buddy->city);
+    ADD_INFO("电话", buddy->phone);
+    ADD_INFO("手机", buddy->mobile);
+    ADD_INFO("邮箱", buddy->email);
+    ADD_INFO("职业", buddy->occupation);
+    ADD_INFO("学校", buddy->college);
+    ADD_INFO("主页", buddy->homepage);
+    //ADD_INFO("说明", buddy->);
+#undef ADD_INFO
+    purple_notify_userinfo(ac->gc, buddy->qqnumber, user, add_friend, buddy);
+
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {

@@ -1972,20 +1972,9 @@ static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqB
     req->set_header(req,"Connection","keep-alive");
     LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_3,req,out));
     lwqq_async_add_event_chain(ev, called);
-    //lwqq_async_add_event_listener(ev, _C_(2p,add_friend_vc_error,ev,qqnum));
 done:
     lwqq_vc_free(code);
 }
-/*
-static void add_friend_vc_error(LwqqAsyncEvent* ev,char* qqnum)
-{
-    int err = lwqq_async_event_get_result(ev);
-    LwqqClient* lc = ev->lc;
-    if(err==WEBQQ_FATAL){
-        lwqq_info_add_friend_by_qqnum(lc, qqnum);
-        s_free(qqnum);
-    }
-}*/
 static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out)
 {
     int err = 0;
