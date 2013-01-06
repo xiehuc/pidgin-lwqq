@@ -1663,7 +1663,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     }
 }
 
-static void add_friend_receipt(LwqqAsyncEvent* ev,LwqqBuddy* b)
+static void add_friend_receipt(LwqqAsyncEvent* ev)
 {
     int err = ev->result;
     LwqqClient* lc = ev->lc;
@@ -1671,34 +1671,36 @@ static void add_friend_receipt(LwqqAsyncEvent* ev,LwqqBuddy* b)
     if(err == 6 ){
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","添加好友过于频繁\n请等一段时间再试\n",NULL,NULL,NULL);
     }
-    lwqq_buddy_free(b);
 }
 
-static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b)
+static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message)
 {
     if(c->answer == LWQQ_NO){
         lwqq_buddy_free(b);
         goto done;
     }
-    LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b);
-    lwqq_async_add_event_listener(ev, _C_(2p,add_friend_receipt,ev,b));
+    LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b,message);
+    lwqq_async_add_event_listener(ev, _C_(p,add_friend_receipt,ev));
 done:
     lwqq_ct_free(c);
+    lwqq_buddy_free(b);
+    s_free(message);
 }
 
-static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
+static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* message)
 {
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(err == WEBQQ_FATAL){
         LwqqAsyncEvent* event = lwqq_info_search_friend_by_qq(lc,buddy->qqnumber,buddy);
-        lwqq_async_add_event_listener(event, _C_(2p,search_buddy_receipt,event,buddy));
+        lwqq_async_add_event_listener(event, _C_(3p,search_buddy_receipt,event,buddy,message));
         return;
     }
     if(!buddy->token){
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","好友信息获取失败",NULL,NULL,NULL);
         lwqq_buddy_free(buddy);
+        s_free(message);
         return;
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
@@ -1725,7 +1727,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
     //ADD_INFO("说明", buddy->);
 #undef ADD_INFO
     confirm->body = s_strdup(body);
-    confirm->cmd = _C_(3p,add_friend,lc,confirm,buddy);
+    confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
     lc->async_opt->need_confirm(lc,confirm);
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
@@ -1734,7 +1736,7 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     const char* qqnum = purple_buddy_get_name(buddy);
     LwqqBuddy* friend = lwqq_buddy_new();
     LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
-    lwqq_async_add_event_listener(ev, _C_(2p,search_buddy_receipt,ev,friend));
+    lwqq_async_add_event_listener(ev, _C_(3p,search_buddy_receipt,ev,friend,s_strdup(message)));
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)

@@ -127,7 +127,7 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status);
 LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask mask);
 
 LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out);
-LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* out);
+LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* out,const char* message);
 
 
 #endif  /* LWQQ_INFO_H */
