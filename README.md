@@ -67,6 +67,7 @@ Function list
 * support block group message
 * support recv file trans
 * support local qqnumber cache
+* support add friend
 
 ### empathy support (via telepathy-haze)
 
@@ -142,6 +143,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持群消息屏蔽
 * 支持接受文件传输
 * 支持本地QQ号缓存机制
+* 支持添加好友
 
 ### empathy support (via telepathy-haze)
 

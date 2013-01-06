@@ -128,6 +128,8 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
 
 LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out);
 LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* out,const char* message);
+LwqqAsyncEvent* lwqq_info_search_group_by_qq(LwqqClient* lc,const char* qq,LwqqGroup* out);
+LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* group,const char* msg);
 
 
 #endif  /* LWQQ_INFO_H */

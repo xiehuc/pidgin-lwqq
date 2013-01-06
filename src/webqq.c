@@ -31,6 +31,7 @@ static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
 static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
+static void add_friend_receipt(LwqqAsyncEvent* ev);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -204,6 +205,74 @@ static void visit_my_qq_center(PurplePluginAction* action)
 
 }
 
+static void add_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
+{
+    int err = ev->result;
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(err == 6 ){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","添加群过于频繁\n请等一段时间再试\n",NULL,NULL,NULL);
+    }
+    lwqq_group_free(g);
+}
+static void add_group(LwqqClient* lc,LwqqConfirmTable* c,LwqqGroup* g,char* message)
+{
+    if(c->answer == LWQQ_NO){
+        goto done;
+    }
+    LwqqAsyncEvent* ev = lwqq_info_add_group(lc, g,message);
+    lwqq_async_add_event_listener(ev, _C_(2p,add_group_receipt,ev,g));
+done:
+    lwqq_ct_free(c);
+    s_free(message);
+}
+static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
+{
+    int err = ev->result;
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(err == WEBQQ_FATAL){
+        LwqqAsyncEvent* event = lwqq_info_search_group_by_qq(lc,g->qq,g);
+        lwqq_async_add_event_listener(event, _C_(2p,search_group_receipt,ev,g));
+        return;
+    }
+    if(err == LWQQ_EC_NO_RESULT){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","群信息获取失败",NULL,NULL,NULL);
+        lwqq_group_free(g);
+        return;
+    }
+    LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
+    confirm->title = s_strdup("群确认");
+    char body[1024] = {0};
+#define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
+    ADD_INFO("QQ",g->qq);
+    ADD_INFO("名称",g->name);
+#undef ADD_INFO
+    confirm->body = s_strdup(body);
+    confirm->cmd = _C_(4p,add_group,lc,confirm,g,NULL);
+    lc->async_opt->need_confirm(lc,confirm);
+}
+
+static void search_group(qq_account* ac,const char* text)
+{
+    LwqqGroup* g = lwqq_group_new(LWQQ_GROUP_QUN);
+    LwqqAsyncEvent* ev;
+    ev = lwqq_info_search_group_by_qq(ac->qq, text, g);
+    lwqq_async_add_event_listener(ev, _C_(2p,search_group_receipt,ev,g));
+}
+static void do_no_thing(void* data,const char* text)
+{
+}
+static void qq_add_group(PurplePluginAction* action)
+{
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+
+
+    purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
+            "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+}
+
 static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
 {
 
@@ -220,6 +289,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("好友管理",visit_my_qq_center);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("添加群",qq_add_group);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
     m = g_list_append(m, act);
@@ -1675,7 +1746,6 @@ static void add_friend_receipt(LwqqAsyncEvent* ev)
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message)
 {
     if(c->answer == LWQQ_NO){
-        lwqq_buddy_free(b);
         goto done;
     }
     LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b,message);
@@ -1823,7 +1893,9 @@ static void client_connect_signals(PurpleConnection* gc)
 
     void* h = &handle;
     purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
-                          PURPLE_CALLBACK(on_create),gc);
+            PURPLE_CALLBACK(on_create),gc);
+    //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
+            //PURPLE_CALLBACK(catch_to_add_chat),gc);
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
     //        PURPLE_CALLBACK(qq_change_group_markname),gc);
 }
@@ -1858,7 +1930,9 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .group_buddy=       qq_change_category  /* change buddy category on server */,
     .rename_group=      qq_rename_category,
     .remove_buddy=      qq_remove_buddy,
+
     .add_buddy_with_invite=qq_add_buddy_with_invite,
+
     .struct_size=       sizeof(PurplePluginProtocolInfo)
 };
 

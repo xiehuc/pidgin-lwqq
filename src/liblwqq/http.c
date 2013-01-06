@@ -499,6 +499,7 @@ static void check_multi_info(GLOBAL *g)
             LwqqClient* lc = conn->req->lc;
 
             //执行完成时候的回调
+            if(lwqq_client_valid(lc))
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)async_complete,conn);
         }
     }

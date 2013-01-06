@@ -136,10 +136,16 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
     else
         vp_link(&_event->cmd,&cmd);
 }
+static void on_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
+{
+    called->result = caller->result;
+    called->failcode = caller->failcode;
+    lwqq_async_event_finish(called);
+}
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
     called->lc = caller->lc;
-    lwqq_async_add_event_listener(caller,_C_(p,lwqq_async_event_finish,called));
+    lwqq_async_add_event_listener(caller,_C_(2p,on_chain,caller,called));
 }
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {

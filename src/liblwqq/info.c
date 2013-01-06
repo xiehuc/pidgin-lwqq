@@ -24,6 +24,7 @@
 #include "smemory.h"
 #include "json.h"
 #include "async.h"
+#include "util.h"
 
 #define LWQQ_CACHE_DIR "/tmp/lwqq/"
 
@@ -39,10 +40,12 @@ static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
-static int add_friend_stage_1(LwqqHttpRequest* req,LwqqAsyncEvent* ev,LwqqBuddy* out);
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
 static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out);
 static int add_friend_stage_5(LwqqHttpRequest* req);
+static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGroup* g);
+static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
+static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g);
 
 
 /**
@@ -1916,45 +1919,23 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status)
 LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out)
 {
     if(!lc||!qq||!out) return NULL;
-    char url[512];
 
-    double random = drand48();
-    snprintf(url,sizeof(url),"%s/getimage?"
-            "aid=1003901&%.16lf",
-            "http://captcha.qq.com",random);
-    lwqq_puts(url);
-    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    req->set_header(req,"Cookie", lwqq_get_cookies(lc));
-    req->set_header(req,"Referer","http://web2.qq.com/");
-    req->set_header(req,"Connection","keep-alive");
     s_free(out->qqnumber);
     out->qqnumber = s_strdup(qq);
-    LwqqAsyncEvent* ev = lwqq_async_event_new(req);
-    req->do_request_async(req,0,NULL,_C_(3p_i,add_friend_stage_1,req,ev,out));
+    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+    ev->lc = lc;
+    LwqqVerifyCode* c = s_malloc0(sizeof(*c));
+    c->cmd = _C_(3p,add_friend_stage_2,ev,c,out);
+    lwqq_util_request_captcha(lc, c);
     return ev;
-}
-static int add_friend_stage_1(LwqqHttpRequest* req,LwqqAsyncEvent* ev,LwqqBuddy* out)
-{
-    int err = 0;
-    if(req->http_code!=200){
-        err = -1;
-        goto done;
-    }
-    LwqqClient* lc = req->lc;
-    LwqqVerifyCode* code = s_malloc0(sizeof(*code));
-    code->data = req->response;
-    code->size = req->resp_len;
-    req->response = NULL;
-    code->cmd = _C_(3p,add_friend_stage_2,ev,code,out);
-    lc->async_opt->need_verify2(lc,code);
-
-done:
-    lwqq_http_request_free(req);
-    return err;
 }
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out)
 {
-    if(!code->str) goto done;
+    if(!code->str){
+        called->result = LWQQ_EC_ERROR;
+        lwqq_async_event_finish(called);
+        goto done;
+    }
     char url[512];
     LwqqClient* lc = called->lc;
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/search_qq_by_uin2?tuin=%s&verifysession=%s&code=%s&vfwebqq=%s&t=%ld",
@@ -2048,10 +2029,99 @@ done:
     return err;
 }
 
-LwqqAsyncEvent* lwqq_info_add_friend_need_verify(LwqqClient* lc,LwqqGroup* group)
+LwqqAsyncEvent* lwqq_info_search_group_by_qq(LwqqClient* lc,const char* qq,LwqqGroup* group)
 {
-    return NULL;
+    if(!lc||!qq||!group) return NULL;
+
+    s_free(group->qq);
+    group->qq = s_strdup(qq);
+    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+    ev->lc = lc;
+    LwqqVerifyCode* code = s_malloc0(sizeof(*code));
+    code->cmd = _C_(3p,add_group_stage_1,ev,code,group);
+    lwqq_util_request_captcha(lc, code);
+    return ev;
 }
+
+static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGroup* g)
+{
+    if(!code->str) goto done;
+    char url[512];
+    LwqqClient* lc = called->lc;
+    snprintf(url,sizeof(url),
+            "http://cgi.web2.qq.com/keycgi/qqweb/group/search.do?"
+            "pg=1&perpage=10&all=%s&c1=0&c2=0&c3=0&st=0&vfcode=%s&type=1&vfwebqq=%s&t=%ld",
+            g->qq,code->str,lc->vfwebqq,time(NULL));
+    lwqq_puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=1");
+    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,add_group_stage_2,req,g));
+    lwqq_async_add_event_chain(ev, called);
+done:
+    lwqq_vc_free(code);
+}
+
+static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g)
+{
+    //{"result":[{"GC":"","GD":"","GE":3090888,"GF":"","TI":"永远的电子商务033班","GA":"","BU":"","GB":"","DT":"","RQ":"","QQ":"","MD":"","TA":"","HF":"","UR":"","HD":"","HE":"","HB":"","HC":"","HA":"","LEVEL":0,"PD":"","TX":"","PA":"","PB":"","CL":"","GEX":1013409473,"PC":""}],"retcode":0,"responseHeader":{"CostTime":18,"Status":0,"TotalNum":1,"CurrentNum":1,"CurrentPage":1}}
+    int err = 0;
+    lwqq_util_valid_http_request(req);
+    json_t* root = NULL,*result;
+    lwqq_util_valid_and_parse_json(root,req->response);
+    int retcode = lwqq_util_json_get_retcode(root);
+    if(retcode != WEBQQ_OK) {err = LWQQ_EC_ERROR;goto done;}
+    result = json_find_first_label(root, "result");
+    if(result && result->child && result->child->child){
+        result = result->child->child;
+        g->name = json_unescape(json_parse_simple_value(result, "TI"));
+        g->code = s_strdup(json_parse_simple_value(result, "GEX"));
+    }else{
+        err = LWQQ_EC_NO_RESULT;
+    }
+done:
+    if(root) json_free_value(&root);
+    lwqq_http_request_free(req);
+    return err;
+}
+
+LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* g,const char* msg)
+{
+    if(!lc||!g) return NULL;
+    if(msg==NULL) msg = "";
+    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+    ev->lc = lc;
+    LwqqVerifyCode* c = s_malloc0(sizeof(*c));
+    c->cmd = _C_(3p,add_group_stage_4,ev,c,g);
+    lwqq_util_request_captcha(lc, c);
+    return ev;
+}
+
+static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g)
+{
+    if(c->str==NULL){
+        called->result = LWQQ_EC_ERROR;
+        lwqq_async_event_finish(called);
+        goto done;
+    }
+    char url[256];
+    char post[512];
+    LwqqClient* lc = called->lc;
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/apply_join_group2");
+    snprintf(post,sizeof(post),"r={\"gcode\":%s,\"code\":\"%s\",\"vfy\":\"%s\","
+            "\"msg\":\"%s\",\"vfwebqq\":\"%s\"}",
+            g->code,c->str,lc->cookies->verifysession,"",lc->vfwebqq);
+    lwqq_puts(post);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
+    lwqq_async_add_event_chain(ev, called);
+done:
+    lwqq_vc_free(c);
+}
+
+
 LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask mask)
 {
     if(!lc||!group) return NULL;
