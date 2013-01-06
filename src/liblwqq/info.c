@@ -41,8 +41,7 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
-static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out);
-static int add_friend_stage_5(LwqqHttpRequest* req);
+static int process_result_default(LwqqHttpRequest* req);
 static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGroup* g);
 static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
 static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g);
@@ -1406,6 +1405,7 @@ static void parse_friend_detail_by_json(LwqqBuddy* buddy,json_t* json)
         SET_BUDDY_INFO(token, "token");
 #undef SET_BUDDY_INFO
 }
+/*
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
 {
     json_t *json = NULL, *json_tmp;
@@ -1416,7 +1416,7 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
         goto done;
     }
 
-    /**
+    // **
      * Here, we got a json object like this:
      * {"retcode":0,"result":{"face":519,"birthday":
      * {"month":9,"year":1988,"day":26},"occupation":"学生",
@@ -1427,7 +1427,7 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
      * "shengxiao":5,"email":"avata@126.com","client_type":41,
      * "province":"陕西","gender":"male","mobile":"139********"}}
      *
-     */
+     * /
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
@@ -1442,9 +1442,9 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
         goto done;
     }
 
-    /** It seems everything is ok, we start parsing information
+    / ** It seems everything is ok, we start parsing information
      * now
-     */
+     * /
     if (json_tmp->child) {
         json_tmp = json_tmp->child;
         parse_friend_detail_by_json(buddy, json_tmp);
@@ -1455,7 +1455,7 @@ done:
         json_free_value(&json);
     lwqq_http_request_free(req);
     return err;
-}
+}*/
 
 static void update_online_buddies(LwqqClient *lc, json_t *json)
 {
@@ -1945,12 +1945,12 @@ static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqB
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
     req->set_header(req,"Connection","keep-alive");
-    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_3,req,out));
+    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,get_friend_detail_back,req,out));
     lwqq_async_add_event_chain(ev, called);
 done:
     lwqq_vc_free(code);
 }
-static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out)
+static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* out)
 {
     int err = 0;
     if(req->http_code!=200){
@@ -2003,10 +2003,11 @@ LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char*
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
-    return req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
+    return req->do_request_async(req,1,post,_C_(p_i,process_result_default,req));
 }
-static int add_friend_stage_5(LwqqHttpRequest* req)
+static int process_result_default(LwqqHttpRequest* req)
 {
+    //{"retcode":0,"result":{"ret":0}}
     int err = 0;
     if(req->http_code!=200){
         err = LWQQ_EC_ERROR;
@@ -2115,7 +2116,7 @@ static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
-    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,add_friend_stage_5,req));
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_result_default,req));
     lwqq_async_add_event_chain(ev, called);
 done:
     lwqq_vc_free(c);
@@ -2147,3 +2148,29 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,req,data));
 }
 
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* buddy)
+{
+    if(!lc||!msg||!buddy) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->request_join.request_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
+    lwqq_puts(url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    return req->do_request_async(req,0,NULL,_C_(2p,get_friend_detail_back,req,buddy));
+}
+
+LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMsg* msg ,LwqqAnswer answer,const char* reason)
+{
+    if(!lc||!msg) return NULL;
+    if(reason==NULL) reason="";
+    char url[512];
+    int op = (answer)?2:3;
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/op_group_join_req?"
+            "group_uin=%s&req_uin=%s&msg=%s&op_type=%d&clientid=%s&psessionid=%s&t=%ld",
+            msg->group_uin,msg->request_join.request_uin,reason,op,lc->clientid,lc->psessionid,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    return req->do_request_async(req,0,NULL,_C_(p_i,process_result_default,req));
+}

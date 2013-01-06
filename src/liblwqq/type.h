@@ -199,11 +199,9 @@ typedef struct LwqqVerifyCode {
     LwqqCommand cmd;
 } LwqqVerifyCode ;
 
+typedef enum {LWQQ_NO,LWQQ_YES} LwqqAnswer;
 typedef struct LwqqConfirmTable {
-    enum {
-        LWQQ_NO=0,
-        LWQQ_YES=1
-    } answer;
+    LwqqAnswer answer;
     char* title;
     char* body;
     LwqqCommand cmd;

@@ -32,6 +32,7 @@ static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
 static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
 static void add_friend_receipt(LwqqAsyncEvent* ev);
+static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -486,6 +487,76 @@ static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
     PurpleConnection* pc = ac->gc;
     serv_got_typing(pc,serv_id_to_local(ac,input->from),5,PURPLE_TYPING);
 }
+static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
+{
+    char body_[1024] = {0};
+#define ADD_INFO(k,v)  format_append(body_,k":%s\n",v)
+    ADD_INFO("QQ", buddy->qqnumber);
+    ADD_INFO("昵称", buddy->nick);
+    ADD_INFO("签名", buddy->personal);
+    ADD_INFO("性别", buddy->gender);
+    ADD_INFO("生肖", buddy->shengxiao);
+    ADD_INFO("星座", buddy->constel);
+    ADD_INFO("血型", buddy->blood);
+    //ADD_INFO("生日", buddy->birthday);
+    ADD_INFO("国籍", buddy->country);
+    ADD_INFO("省份", buddy->province);
+    ADD_INFO("城市", buddy->city);
+    ADD_INFO("电话", buddy->phone);
+    ADD_INFO("手机", buddy->mobile);
+    ADD_INFO("邮箱", buddy->email);
+    ADD_INFO("职业", buddy->occupation);
+    ADD_INFO("学校", buddy->college);
+    ADD_INFO("主页", buddy->homepage);
+    //ADD_INFO("说明", buddy->);
+#undef ADD_INFO
+    strcat(body,body_);
+}
+static void request_join_confirm(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqConfirmTable* ct)
+{
+    lwqq_info_answer_request_join_group(lc, msg,ct->answer, "");
+    lwqq_ct_free(ct);
+    lwqq_msg_sys_g_msg_free(msg);
+}
+static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* msg)
+{
+    char body[1024]={0};
+    LwqqGroup* g = find_group_by_gid(lc, msg->group_uin);
+    format_append(body,"申请的群:%s\n申请理由:%s\n",g->name,msg->request_join.msg);
+    format_body_from_buddy(body,buddy);
+    LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+    ct->title = s_strdup("群申请确认");
+    ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
+    ct->body = s_strdup(body);
+    show_confirm_table(lc,ct);
+    lwqq_buddy_free(buddy);
+}
+static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
+{
+    qq_account* ac = lc->data;
+    switch(msg->type){
+        case GROUP_CREATE:
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
+            break;
+        case GROUP_JOIN:
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您被一个群加入了", NULL, NULL, NULL);
+            break;
+        case GROUP_LEAVE:
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您离开了一个群", NULL, NULL, NULL);
+            break;
+        case GROUP_REQUEST_JOIN:
+            {
+                LwqqBuddy* buddy = lwqq_buddy_new();
+                LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
+                lwqq_msg_move(msg,nmsg);
+                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
+                lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
+
+            } break;
+        default:
+            break;
+    }
+}
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
@@ -882,6 +953,9 @@ void qq_msg_check(LwqqClient* lc)
                 break;
             case LWQQ_MT_INPUT_NOTIFY:
                 input_notify(lc,(LwqqMsgInputNotify*)msg->msg->opaque);
+                break;
+            case LWQQ_MT_SYS_G_MSG:
+                sys_g_message(lc,(LwqqMsgSysGMsg*)msg->msg->opaque);
                 break;
             default:
                 lwqq_puts("unknow message\n");
@@ -1755,7 +1829,6 @@ done:
     lwqq_buddy_free(b);
     s_free(message);
 }
-
 static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* message)
 {
     int err = ev->result;
@@ -1775,26 +1848,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* messa
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup("好友确认");
     char body[1024] = {0};
-#define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
-    ADD_INFO("QQ", buddy->qqnumber);
-    ADD_INFO("昵称", buddy->nick);
-    ADD_INFO("签名", buddy->personal);
-    ADD_INFO("性别", buddy->gender);
-    ADD_INFO("生肖", buddy->shengxiao);
-    ADD_INFO("星座", buddy->constel);
-    ADD_INFO("血型", buddy->blood);
-    //ADD_INFO("生日", buddy->birthday);
-    ADD_INFO("国籍", buddy->country);
-    ADD_INFO("省份", buddy->province);
-    ADD_INFO("城市", buddy->city);
-    ADD_INFO("电话", buddy->phone);
-    ADD_INFO("手机", buddy->mobile);
-    ADD_INFO("邮箱", buddy->email);
-    ADD_INFO("职业", buddy->occupation);
-    ADD_INFO("学校", buddy->college);
-    ADD_INFO("主页", buddy->homepage);
-    //ADD_INFO("说明", buddy->);
-#undef ADD_INFO
+    format_body_from_buddy(body, buddy);
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
     lc->async_opt->need_confirm(lc,confirm);

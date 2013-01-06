@@ -238,6 +238,16 @@ static void lwqq_msg_system_free(void* opaque)
     }
     s_free(system);
 }
+void lwqq_msg_sys_g_msg_free(LwqqMsgSysGMsg* gmsg)
+{
+    if(gmsg){
+        s_free(gmsg->gcode);
+        s_free(gmsg->group_uin);
+        s_free(gmsg->request_join.request_uin);
+        s_free(gmsg->request_join.msg);
+    }
+    s_free(gmsg);
+}
 void lwqq_msg_offfile_free(void* opaque)
 {
     LwqqMsgOffFile* of = opaque;
@@ -299,11 +309,7 @@ void lwqq_msg_free(LwqqMsg *msg)
         s_free(blist);
     }
     else if(msg->type==LWQQ_MT_SYS_G_MSG){
-        LwqqMsgSysGMsg* gmsg = msg->opaque;
-        if(gmsg){
-            s_free(gmsg->gcode);
-        }
-        s_free(gmsg);
+        lwqq_msg_sys_g_msg_free(msg->opaque);
     }else if(msg->type==LWQQ_MT_OFFFILE){
         lwqq_msg_offfile_free(msg->opaque);
     }else if(msg->type==LWQQ_MT_FILETRANS){
@@ -721,13 +727,21 @@ static int parse_sys_g_msg(json_t *json,void* opaque)
 
       group leave
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":51488,"from_uin":1528509098,"to_uin":350512021,"msg_id2":180256,"msg_type":34,"reply_ip":176882139,"type":"group_leave","gcode":2676780935,"t_gcode":249818602,"op_type":2,"old_member":574849996,"t_old_member":""}}]}
+      group request
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":10899,"from_uin":3060007976,"to_uin":350512021,"msg_id2":693883,"msg_type":35,"reply_ip":176752016,"type":"group_request_join","gcode":406247342,"t_gcode":249818602,"request_uin":2297680537,"t_request_uin":"","msg":""}}]}
       */
     LwqqMsgSysGMsg* msg = opaque;
     const char* type = json_parse_simple_value(json,"type");
     if(strcmp(type,"group_create")==0)msg->type = GROUP_CREATE;
     else if(strcmp(type,"group_join")==0)msg->type = GROUP_JOIN;
     else if(strcmp(type,"group_leave")==0)msg->type = GROUP_LEAVE;
+    else if(strcmp(type,"group_request_join")==0){
+        msg->type = GROUP_REQUEST_JOIN;
+        msg->request_join.request_uin = s_strdup(json_parse_simple_value(json, "request_uin"));
+        msg->request_join.msg = json_unescape(json_parse_simple_value(json, "msg"));
+    }
     else msg->type = GROUP_UNKNOW;
+    msg->group_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
     msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
     return 0;
 
@@ -1211,7 +1225,8 @@ static void *start_poll_msg(void *msg_list)
     int retcode;
     int ret;
     lwqq_http_on_progress(req, poll_progress, list);
-    while(1) {
+    int quit = 0;
+    while(!quit) {
         ret = req->do_request(req, 1, msg);
 
         if(!lwqq_client_logined(lc)) break;
@@ -1221,7 +1236,8 @@ static void *start_poll_msg(void *msg_list)
         if(!lwqq_client_logined(lc)) break;
         switch(retcode){
             case WEBQQ_OK:
-                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+                if(!lwqq_client_valid(lc)) quit = 1;
+                else lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
                 break;
             case WEBQQ_NO_MESSAGE:
                 continue;

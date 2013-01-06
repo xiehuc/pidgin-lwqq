@@ -155,9 +155,17 @@ typedef struct LwqqMsgSysGMsg{
         GROUP_CREATE,
         GROUP_JOIN,
         GROUP_LEAVE,
-        GROUP_UNKNOW
+        GROUP_REQUEST_JOIN,
+        GROUP_UNKNOW,
     }type;
+    char* group_uin;
     char* gcode;
+    union{
+        struct {
+            char* request_uin;
+            char* msg;
+        }request_join;
+    };
 }LwqqMsgSysGMsg;
 typedef struct LwqqMsgBlistChange{
     LIST_HEAD(,LwqqSimpleBuddy) added_friends;
@@ -370,6 +378,9 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 
 LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id);
+#define lwqq_msg_move(from,to) {memcpy(to,from,sizeof(*from));memset(from,0,sizeof(*from));}
+void lwqq_msg_sys_g_msg_free(LwqqMsgSysGMsg* gmsg);
+
 
 /************************************************************************/
 /*  LwqqSendMsg API */
