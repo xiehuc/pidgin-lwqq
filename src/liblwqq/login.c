@@ -54,99 +54,6 @@ static void login_stage_4(LwqqClient* lc);
 static void login_stage_5(LwqqAsyncEvent* ev);
 static void login_stage_f(LwqqAsyncEvent* ev);
 
-/** 
- * Update the cookies needed by webqq
- *
- * @param req  
- * @param key 
- * @param value 
- * @param update_cache Weather update lwcookies member
- */
-static void update_cookies(LwqqCookies *cookies, LwqqHttpRequest *req,
-                           const char *key, int update_cache)
-{
-    if (!cookies || !req || !key) {
-        lwqq_log(LOG_ERROR, "Null pointer access\n");
-        return ;
-    }
-
-    char *value = req->get_cookie(req, key);
-    if (!value)
-        return ;
-    
-#define FREE_AND_STRDUP(a, b)                   \
-    if (a)                                      \
-        s_free(a);                              \
-    a = s_strdup(b);
-    
-    if (!strcmp(key, "ptvfsession")) {
-        FREE_AND_STRDUP(cookies->ptvfsession, value);
-    } else if (!strcmp(key, "ptcz")) {
-        FREE_AND_STRDUP(cookies->ptcz, value);
-    } else if (!strcmp(key, "skey")) {
-        FREE_AND_STRDUP(cookies->skey, value);
-    } else if (!strcmp(key, "ptwebqq")) {
-        FREE_AND_STRDUP(cookies->ptwebqq, value);
-    } else if (!strcmp(key, "ptuserinfo")) {
-        FREE_AND_STRDUP(cookies->ptuserinfo, value);
-    } else if (!strcmp(key, "uin")) {
-        FREE_AND_STRDUP(cookies->uin, value);
-    } else if (!strcmp(key, "ptisp")) {
-        FREE_AND_STRDUP(cookies->ptisp, value);
-    } else if (!strcmp(key, "pt2gguin")) {
-        FREE_AND_STRDUP(cookies->pt2gguin, value);
-    } else if (!strcmp(key, "verifysession")) {
-        FREE_AND_STRDUP(cookies->verifysession, value);
-    } else {
-        lwqq_log(LOG_WARNING, "No this cookie: %s\n", key);
-    }
-    s_free(value);
-
-    if (update_cache) {
-        char buf[4096] = {0};           /* 4K is enough for cookies. */
-        int buflen = 0;
-        if (cookies->ptvfsession) {
-            snprintf(buf, sizeof(buf), "ptvfsession=%s; ", cookies->ptvfsession);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptcz) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptcz=%s; ", cookies->ptcz);
-            buflen = strlen(buf);
-        }
-        if (cookies->skey) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "skey=%s; ", cookies->skey);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptwebqq) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptwebqq=%s; ", cookies->ptwebqq);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptuserinfo) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptuserinfo=%s; ", cookies->ptuserinfo);
-            buflen = strlen(buf);
-        }
-        if (cookies->uin) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "uin=%s; ", cookies->uin);
-            buflen = strlen(buf);
-        }
-        if (cookies->ptisp) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "ptisp=%s; ", cookies->ptisp);
-            buflen = strlen(buf);
-        }
-        if (cookies->pt2gguin) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "pt2gguin=%s; ", cookies->pt2gguin);
-            buflen = strlen(buf);
-        }
-        if (cookies->verifysession) {
-            snprintf(buf + buflen, sizeof(buf) - buflen, "verifysession=%s; ", cookies->verifysession);
-            buflen = strlen(buf);
-        }
-        
-        FREE_AND_STRDUP(cookies->lwcookies, buf);
-    }
-#undef FREE_AND_STRDUP
-}
-
 // ptui_checkVC('0','!IJG, ptui_checkVC('0','!IJG', '\x00\x00\x00\x00\x54\xb3\x3c\x53');
 static char *parse_verify_uin(const char *str)
 {
@@ -399,19 +306,6 @@ static char *lwqq_enc_pwd(const char *pwd, const char *vc, const char *uin)
     lwqq_puts(buf);
     return s_strdup(buf);
 }
-/*
-static int sava_cookie(LwqqClient *lc, LwqqHttpRequest *req, LwqqErrorCode *err)
-{
-    update_cookies(lc->cookies, req, "ptcz", 0);
-    update_cookies(lc->cookies, req, "skey",  0);
-    update_cookies(lc->cookies, req, "ptwebqq", 0);
-    update_cookies(lc->cookies, req, "ptuserinfo", 0);
-    update_cookies(lc->cookies, req, "uin", 0);
-    update_cookies(lc->cookies, req, "ptisp", 0);
-    update_cookies(lc->cookies, req, "pt2gguin", 1);
-    
-    return 0;
-}*/
 
 /** 
  * Do really login
@@ -736,7 +630,7 @@ done:
  * @param client Lwqq Client 
  * @param err Error code
  */
-void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err)
+void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err)
 {
     if (!client || !status) {
         lwqq_log(LOG_ERROR, "Invalid pointer\n");

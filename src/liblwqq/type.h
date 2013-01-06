@@ -47,15 +47,7 @@ typedef enum {
     LWQQ_CALLBACK_FAILED = 0x0,
     LWQQ_CALLBACK_VALID,
 }LwqqCallbackCode;
-
-typedef struct LwqqFriendCategory {
-    int index;
-    int sort;
-    char *name;
-    int count;
-    LIST_ENTRY(LwqqFriendCategory) entries;
-} LwqqFriendCategory;
-typedef enum LWQQ_STATUS{
+typedef enum {
     LWQQ_STATUS_LOGOUT = 0,
     LWQQ_STATUS_ONLINE = 10,
     LWQQ_STATUS_OFFLINE = 20,
@@ -64,12 +56,29 @@ typedef enum LWQQ_STATUS{
     LWQQ_STATUS_BUSY = 50,
     LWQQ_STATUS_CALLME = 60,
     LWQQ_STATUS_SLIENT = 70
-}LWQQ_STATUS;
-typedef enum LWQQ_CTYPE{
+}LwqqStatus;
+typedef enum {
     LWQQ_CLIENT_DESKTOP=1,
     LWQQ_CLIENT_MOBILE=21,
     LWQQ_CLIENT_WEBQQ=41,
-}LWQQ_CTYPE;
+}LwqqClientType;
+typedef enum { 
+    LWQQ_MASK_NONE = 0,
+    LWQQ_MASK_1 = 1,
+    LWQQ_MASK_ALL=2 
+}LwqqMask;
+enum {
+    LWQQ_MEMBER_IS_ADMIN = 0x1,
+};
+typedef int LwqqMemberFlags;
+
+typedef struct LwqqFriendCategory {
+    int index;
+    int sort;
+    char *name;
+    int count;
+    LIST_ENTRY(LwqqFriendCategory) entries;
+} LwqqFriendCategory;
 
 /* QQ buddy */
 typedef struct LwqqBuddy {
@@ -84,7 +93,6 @@ typedef struct LwqqBuddy {
     char *constel;
     char *blood;
     char *homepage;
-    LWQQ_STATUS stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
     char *country;
     char *city;
     char *personal;
@@ -97,6 +105,8 @@ typedef struct LwqqBuddy {
     char *mobile;
     char *vip_info;
     char *markname;
+    LwqqStatus stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
+    time_t birthday;
 
     char *flag;
 
@@ -104,42 +114,35 @@ typedef struct LwqqBuddy {
     size_t avatar_len;
 
     char *cate_index;           /**< Index of the category */
+    char *token;                /**< Only used in add friend */
 
     /*
      * 1 : Desktop client
      * 21: Mobile client
      * 41: Web QQ Client
      */
-    LWQQ_CTYPE client_type;
+    LwqqClientType client_type;
 
 
     int ref;
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
-enum LWQQ_FLAG_ENUM{
-    LWQQ_MEMBER_IS_ADMIN = 0x1,
-};
-typedef int LWQQ_FLAG;
+typedef LIST_HEAD(LwqqFriendList,LwqqBuddy) 
+    LwqqFriendList;
 typedef struct LwqqSimpleBuddy{
     char* uin;
     char* qq;
     char* nick;
     char* card;                 /* 群名片 */
-    LWQQ_CTYPE client_type;
-    //char* stat;
-    LWQQ_STATUS stat;
-    LWQQ_FLAG mflag;
+    LwqqClientType client_type;
+    LwqqStatus stat;
+    LwqqMemberFlags mflag;
     char* cate_index;
     char* group_sig;            /* only use at sess message */
     LIST_ENTRY(LwqqSimpleBuddy) entries;
 }LwqqSimpleBuddy;
 
-typedef enum LWQQ_MASK{ 
-    LWQQ_MASK_NONE = 0,
-    LWQQ_MASK_1 = 1,
-    LWQQ_MASK_ALL=2 
-}LWQQ_MASK;
 /* QQ group */
 typedef struct LwqqGroup {
     enum{
@@ -168,7 +171,7 @@ typedef struct LwqqGroup {
     char *owner;                 /** < owner's QQ number  */
     char *flag;
     char *option;
-    LWQQ_MASK mask;             /** < group mask */
+    LwqqMask mask;             /** < group mask */
 
     char *group_sig;            /** < use in sess msg */
 
@@ -237,10 +240,10 @@ struct _LwqqClient {
     const LwqqAsyncOption* async_opt;
     LwqqCookies *cookies;
     const char *status;
-    LWQQ_STATUS stat;
+    LwqqStatus stat;
     char *error_description;
 
-    LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
+    LwqqFriendList friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
     LIST_HEAD(, LwqqGroup) discus; /**< QQ discus */
@@ -400,7 +403,7 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 /************************************************************************/
 
-const char* lwqq_status_to_str(LWQQ_STATUS status);
-LWQQ_STATUS lwqq_status_from_str(const char* str);
+const char* lwqq_status_to_str(LwqqStatus status);
+LwqqStatus lwqq_status_from_str(const char* str);
 
 #endif  /* LWQQ_TYPE_H */

@@ -436,7 +436,7 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
     return NULL;
 }
 
-const char* lwqq_status_to_str(LWQQ_STATUS status)
+const char* lwqq_status_to_str(LwqqStatus status)
 {
     switch(status){
         case LWQQ_STATUS_ONLINE: return "online";break;
@@ -449,7 +449,7 @@ const char* lwqq_status_to_str(LWQQ_STATUS status)
         default: return "unknow";break;
     }
 }
-LWQQ_STATUS lwqq_status_from_str(const char* str)
+LwqqStatus lwqq_status_from_str(const char* str)
 {
     if(strcmp(str,"online")==0) return LWQQ_STATUS_ONLINE;
     else if(strcmp(str,"offline")==0) return LWQQ_STATUS_OFFLINE;

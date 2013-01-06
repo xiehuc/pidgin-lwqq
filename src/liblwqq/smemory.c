@@ -83,15 +83,13 @@ int s_asprintf(char **buf, const char *format, ...)
 
     return rv;
 }
-int s_atoi(const char* s)
+int s_atoi(const char* s,int init)
 {
     if(s) return strtol(s,NULL,10);
-    perror("atoi failed");
-    return 0;
+    return init;
 }
-int s_atol(const char* s)
+int s_atol(const char* s,int init)
 {
     if(s) return strtol(s,NULL,10);
-    perror("atol failed");
-    return 0;
+    return init;
 }

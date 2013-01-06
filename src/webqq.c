@@ -321,9 +321,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
-    } //else {
-    //purple_buddy_set_icon(purple_find_buddy(account,key),icon);
-    //}
+    }
 
     qq_account_insert_index_node(ac, NODE_IS_BUDDY, buddy);
 
@@ -1661,11 +1659,16 @@ static void qq_visit_qzone(PurpleBlistNode* node)
         }
     }
 }
+static void add_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy)
+{
+}
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
     const char* qqnum = purple_buddy_get_name(buddy);
-    lwqq_info_add_friend_by_qqnum(ac->qq,qqnum);
+    LwqqBuddy* friend = lwqq_buddy_new();
+    LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
+    lwqq_async_add_event_listener(ev, _C_(2p,add_buddy_receipt,ev,friend));
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)

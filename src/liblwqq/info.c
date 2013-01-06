@@ -39,9 +39,9 @@ static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
 static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy);
-static int add_friend_stage_1(LwqqHttpRequest* req,char* qqnum);
-static void add_friend_stage_2(LwqqClient* lc,LwqqVerifyCode* code,char* qqnum);
-static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum);
+static int add_friend_stage_1(LwqqHttpRequest* req,LwqqAsyncEvent* ev,LwqqBuddy* out);
+static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
+static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out);
 static void add_friend_stage_4(LwqqClient* lc,LwqqConfirmTable* table,char* qqnum,char* token);
 static int add_friend_stage_5(LwqqHttpRequest* req);
 static void add_friend_vc_error(LwqqAsyncEvent* ev,char* qqnum);
@@ -111,7 +111,6 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
 {
     LwqqFriendCategory *cate;
     json_t *cur;
-    char *index, *sort, *name;
 
     /* Make json point category reference */
     while (json) {
@@ -126,19 +125,10 @@ static void parse_categories_child(LwqqClient *lc, json_t *json)
 
     json = json->child;    //point to the array.[]
     for (cur = json->child; cur != NULL; cur = cur->next) {
-        index = json_parse_simple_value(cur, "index");
-        sort = json_parse_simple_value(cur, "sort");
-        name = json_parse_simple_value(cur, "name");
         cate = s_malloc0(sizeof(*cate));
-        if (index) {
-            cate->index = s_atoi(index);
-        }
-        if (sort) {
-            cate->sort = s_atoi(sort);
-        }
-        if (name) {
-            cate->name = s_strdup(name);
-        }
+        cate->index = s_atoi(json_parse_simple_value(cur, "index"),0);
+        cate->sort = s_atoi(json_parse_simple_value(cur, "sort"),0);
+        cate->name = s_strdup(json_parse_simple_value(cur, "name"));
 
         /* Add to categories list */
         LIST_INSERT_HEAD(&lc->categories, cate, entries);
@@ -264,7 +254,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
             continue;
 
         LIST_FOREACH(c_entry, &lc->categories, entries) {
-            if (c_entry->index == s_atoi(cate_index)) {
+            if (c_entry->index == s_atoi(cate_index,0)) {
                 c_entry->count++;
             }
         }
@@ -548,7 +538,7 @@ static void parse_groups_gmasklist_child(LwqqClient *lc, json_t *json)
     LwqqGroup* group;
     while(json){
         gid = json_parse_simple_value(json,"gid");
-        mask = s_atoi(json_parse_simple_value(json,"mask"));
+        mask = s_atoi(json_parse_simple_value(json,"mask"),LWQQ_MASK_NONE);
 
         group = lwqq_group_find_group_by_gid(lc,gid);
         if(group){
@@ -730,7 +720,7 @@ static void parse_discus_discu_child(LwqqClient* lc,json_t* root)
     LwqqGroup* group;
     while(json){
         did = json_parse_simple_value(json,"did");
-        mask = s_atoi(json_parse_simple_value(json,"mask"));
+        mask = s_atoi(json_parse_simple_value(json,"mask"),LWQQ_MASK_NONE);
         group = lwqq_group_find_group_by_gid(lc,did);
         if(group!=NULL) group->mask = mask;
         json = json->next;
@@ -979,7 +969,7 @@ static void parse_groups_ginfo_members_child(LwqqClient *lc, LwqqGroup *group,  
     LwqqSimpleBuddy* sb;
     while(members){
         uin = json_parse_simple_value(members,"muin");
-        mflag = s_atoi(json_parse_simple_value(members,"mflag"));
+        mflag = s_atoi(json_parse_simple_value(members,"mflag"),0);
         sb = lwqq_group_find_group_member_by_uin(group,uin);
         if(sb) sb->mflag = mflag;
 
@@ -1055,8 +1045,8 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_group_find_group_member_by_uin(group, uin);
         if (!member)
             continue;
-        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"));
-        member->stat = s_atoi(json_parse_simple_value(cur, "stat"));
+        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"),LWQQ_CLIENT_DESKTOP);
+        member->stat = s_atoi(json_parse_simple_value(cur, "stat"),LWQQ_STATUS_LOGOUT);
 
     }
 }
@@ -1230,7 +1220,7 @@ static void parse_discus_other_child(LwqqClient* lc,LwqqGroup* discu,json_t* roo
     while(json){
         uin = json_parse_simple_value(json,"uin");
         LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(discu,uin);
-        sb->client_type = s_atoi(json_parse_simple_value(json,"client_type"));
+        sb->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_DESKTOP);
         sb->stat = lwqq_status_from_str(json_parse_simple_value(json,"status"));
         json = json->next;
     }
@@ -1315,7 +1305,7 @@ static int get_qqnumber_back(LwqqHttpRequest* req,LwqqGroup* group,LwqqBuddy* bu
         goto done;
     }
     retcode = json_parse_simple_value(json,"retcode");
-    errno = s_atoi(retcode);
+    errno = s_atoi(retcode,1);
     if(errno!=0){
         lwqq_log(LOG_ERROR," qqnumber fetch error: retcode %s\n",retcode);
         goto done;
@@ -1373,11 +1363,51 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 0, NULL,_C_(2p_i,get_friend_detail_back,req,buddy));
 }
-
-static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
+static void parse_friend_detail_by_json(LwqqBuddy* buddy,json_t* json)
 {
     //{"retcode":0,"result":{"face":567,"birthday":{"month":6,"year":1991,"day":14},"occupation":"","phone":"","allow":1,"college":"","uin":289056851,"constel":5,"blood":0,"homepage":"","stat":10,"vip_info":0,"country":"中国","city":"威海","personal":"","nick":"d3dd","shengxiao":8,"email":"","client_type":41,"province":"山东","gender":"male","mobile":""}}
     //
+#define  SET_BUDDY_INFO(key, name) {                                    \
+            s_free(buddy->key);                                         \
+            buddy->key = s_strdup(json_parse_simple_value(json, name)); \
+        }
+        SET_BUDDY_INFO(uin, "uin");
+        SET_BUDDY_INFO(face, "face");
+        json_t* birth_tmp = json_find_first_label(json, "birthday");
+        if(birth_tmp && birth_tmp->child ){
+            birth_tmp = birth_tmp->child;
+            struct tm tm_ = {0};
+            tm_.tm_year = s_atoi(json_parse_simple_value(birth_tmp, "year"),1991)-1900;
+            tm_.tm_mon = s_atoi(json_parse_simple_value(birth_tmp, "month"), 1) -1;
+            tm_.tm_mday = s_atoi(json_parse_simple_value(birth_tmp, "day"), 1);
+            time_t t = mktime(&tm_);
+            buddy->birthday = t;
+        }
+        SET_BUDDY_INFO(occupation, "occupation");
+        SET_BUDDY_INFO(phone, "phone");
+        SET_BUDDY_INFO(allow, "allow");
+        SET_BUDDY_INFO(college, "college");
+        SET_BUDDY_INFO(reg_time, "reg_time");
+        SET_BUDDY_INFO(constel, "constel");
+        SET_BUDDY_INFO(blood, "blood");
+        SET_BUDDY_INFO(homepage, "homepage");
+        buddy->stat = s_atoi(json_parse_simple_value(json,"stat"),LWQQ_STATUS_LOGOUT);
+        SET_BUDDY_INFO(vip_info, "vip_info");
+        SET_BUDDY_INFO(country, "country");
+        SET_BUDDY_INFO(city, "city");
+        SET_BUDDY_INFO(personal, "personal");
+        SET_BUDDY_INFO(nick, "nick");
+        SET_BUDDY_INFO(shengxiao, "shengxiao");
+        SET_BUDDY_INFO(email, "email");
+        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_DESKTOP);
+        SET_BUDDY_INFO(province, "province");
+        SET_BUDDY_INFO(gender, "gender");
+        SET_BUDDY_INFO(mobile, "mobile");
+        SET_BUDDY_INFO(token, "token");
+#undef SET_BUDDY_INFO
+}
+static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
+{
     json_t *json = NULL, *json_tmp;
     int err = 0;
     int ret;
@@ -1417,42 +1447,7 @@ static int get_friend_detail_back(LwqqHttpRequest* req,LwqqBuddy* buddy)
      */
     if (json_tmp->child) {
         json_tmp = json_tmp->child;
-#define  SET_BUDDY_INFO(key, name) {                                    \
-            if (buddy->key) {                                           \
-                s_free(buddy->key);                                     \
-            }                                                           \
-            buddy->key = s_strdup(json_parse_simple_value(json, name)); \
-        }
-        SET_BUDDY_INFO(uin, "uin");
-        SET_BUDDY_INFO(nick, "nick");
-        SET_BUDDY_INFO(face, "face");
-        /* SET_BUDDY_INFO(birthday, "birthday"); */
-        SET_BUDDY_INFO(occupation, "occupation");
-        SET_BUDDY_INFO(phone, "phone");
-        SET_BUDDY_INFO(allow, "allow");
-        SET_BUDDY_INFO(college, "college");
-        SET_BUDDY_INFO(reg_time, "reg_time");
-        SET_BUDDY_INFO(constel, "constel");
-        SET_BUDDY_INFO(blood, "blood");
-        SET_BUDDY_INFO(homepage, "homepage");
-        //SET_BUDDY_INFO(stat, "stat");
-        buddy->stat = s_atoi(json_parse_simple_value(json,"stat"));
-        /*if(buddy->status) s_free(buddy->status);
-        buddy->status = NULL;
-        buddy->status = s_strdup(lwqq_status_to_str(s_atoi(buddy->stat)));*/
-        SET_BUDDY_INFO(vip_info, "vip_info");
-        SET_BUDDY_INFO(country, "country");
-        SET_BUDDY_INFO(city, "city");
-        SET_BUDDY_INFO(personal, "personal");
-        SET_BUDDY_INFO(nick, "nick");
-        SET_BUDDY_INFO(shengxiao, "shengxiao");
-        SET_BUDDY_INFO(email, "email");
-        //SET_BUDDY_INFO(client_type, "client_type");
-        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"));
-        SET_BUDDY_INFO(province, "province");
-        SET_BUDDY_INFO(gender, "gender");
-        SET_BUDDY_INFO(mobile, "mobile");
-#undef SET_BUDDY_INFO
+        parse_friend_detail_by_json(buddy, json_tmp);
     }
 
 done:
@@ -1483,7 +1478,7 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
         if (b) {
             b->stat = lwqq_status_from_str(status);
             if (client_type) {
-                b->client_type = s_atoi(client_type);
+                b->client_type = s_atoi(client_type,LWQQ_CLIENT_DESKTOP);
             }
         }
     }
@@ -1631,7 +1626,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    errno = s_atoi(retcode);
+    errno = s_atoi(retcode,1);
     void** d = data;
     long type = data ? (long)d[0] : 0;
     if(errno==0&&data!=NULL){
@@ -1667,7 +1662,7 @@ static int info_commom_back(LwqqHttpRequest* req,void* data)
             case CHANGE_MASK:
                 {
                     LwqqGroup* group = d[1];
-                    LWQQ_MASK mask = (LWQQ_MASK)d[2];
+                    LwqqMask mask = (LwqqMask)d[2];
                     group->mask = mask;
                 } break;
         }
@@ -1904,7 +1899,7 @@ done:
     lwqq_http_request_free(req);
 }
 
-LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
+LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status)
 {
     if(!lc||!status) return NULL;
     char url[512];
@@ -1924,8 +1919,9 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LWQQ_STATUS status)
     data[2] = (char*)lwqq_status_to_str(status);
     return req->do_request_async(req,0,NULL,_C_(2p_i,info_commom_back,req,data));
 }
-void lwqq_info_add_friend_by_qqnum(LwqqClient* lc,const char* qqnum)
+LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out)
 {
+    if(!lc||!qq||!out) return NULL;
     char url[512];
 
     double random = drand48();
@@ -1937,9 +1933,13 @@ void lwqq_info_add_friend_by_qqnum(LwqqClient* lc,const char* qqnum)
     req->set_header(req,"Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Connection","keep-alive");
-    req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_1,req,s_strdup(qqnum)));
+    s_free(out->qqnumber);
+    out->qqnumber = s_strdup(qq);
+    LwqqAsyncEvent* ev = lwqq_async_event_new(req);
+    req->do_request_async(req,0,NULL,_C_(3p_i,add_friend_stage_1,req,ev,out));
+    return ev;
 }
-static int add_friend_stage_1(LwqqHttpRequest* req,char* qqnum)
+static int add_friend_stage_1(LwqqHttpRequest* req,LwqqAsyncEvent* ev,LwqqBuddy* out)
 {
     int err = 0;
     if(req->http_code!=200){
@@ -1951,31 +1951,32 @@ static int add_friend_stage_1(LwqqHttpRequest* req,char* qqnum)
     code->data = req->response;
     code->size = req->resp_len;
     req->response = NULL;
-    //code->verifysession = req->get_cookie(req,"verifysession");
-//    lwqq_update_cookie(lc, "verifysession", req->get_cookie(req,"verifysession"));
-    code->cmd = _C_(3p,add_friend_stage_2,lc,code,qqnum);
+    code->cmd = _C_(3p,add_friend_stage_2,ev,code,out);
     lc->async_opt->need_verify2(lc,code);
 
 done:
     lwqq_http_request_free(req);
     return err;
 }
-static void add_friend_stage_2(LwqqClient* lc,LwqqVerifyCode* code,char* qqnum)
+static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out)
 {
     if(!code->str) goto done;
     char url[512];
+    LwqqClient* lc = called->lc;
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/search_qq_by_uin2?tuin=%s&verifysession=%s&code=%s&vfwebqq=%s&t=%ld",
-            qqnum,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
+            out->qqnumber,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
     lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
     req->set_header(req,"Connection","keep-alive");
-    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_3,req,qqnum));
-    lwqq_async_add_event_listener(ev, _C_(2p,add_friend_vc_error,ev,qqnum));
+    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,add_friend_stage_3,req,out));
+    lwqq_async_add_event_chain(ev, called);
+    //lwqq_async_add_event_listener(ev, _C_(2p,add_friend_vc_error,ev,qqnum));
 done:
     lwqq_vc_free(code);
 }
+/*
 static void add_friend_vc_error(LwqqAsyncEvent* ev,char* qqnum)
 {
     int err = lwqq_async_event_get_result(ev);
@@ -1984,8 +1985,8 @@ static void add_friend_vc_error(LwqqAsyncEvent* ev,char* qqnum)
         lwqq_info_add_friend_by_qqnum(lc, qqnum);
         s_free(qqnum);
     }
-}
-static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
+}*/
+static int add_friend_stage_3(LwqqHttpRequest* req,LwqqBuddy* out)
 {
     int err = 0;
     if(req->http_code!=200){
@@ -2000,7 +2001,7 @@ static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
         err = LWQQ_EC_ERROR;
         goto done;
     }
-    int retcode = s_atoi(json_parse_simple_value(root, "retcode"));
+    int retcode = s_atoi(json_parse_simple_value(root, "retcode"),LWQQ_EC_ERROR);
     //WEBQQ_FATAL:验证码输入错误.
     if(retcode != WEBQQ_OK){
         err = retcode;
@@ -2009,13 +2010,11 @@ static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
     json_tmp = json_find_first_label(root, "result");
     LwqqConfirmTable* table = s_malloc0(sizeof(*table));
     table->title = s_strdup("好友确认");
-    LwqqClient* lc = req->lc;
-    if(json_tmp == NULL){
-        table->body = s_strdup("获取好友信息失败");
-        table->cmd = _C_(2p,add_friend_search_fail,table,qqnum);
-    }else{
+    //LwqqClient* lc = req->lc;
+    if(json_tmp != NULL){
         json_tmp = json_tmp->child;
-        char* token = json_parse_simple_value(json_tmp, "token");
+        parse_friend_detail_by_json(out,json_tmp);
+        /*char* token = json_parse_simple_value(json_tmp, "token");
         table->cmd = _C_(4p,add_friend_stage_4,lc,table,qqnum,strdup(token));
         char body[1024] = {0};
         //format_append(body,"生日:%s-%s-%s\n");
@@ -2026,9 +2025,9 @@ static int add_friend_stage_3(LwqqHttpRequest* req,char* qqnum)
         format_append(body,"生肖:%s\n",json_parse_simple_value(json_tmp,"shengxiao"));
         format_append(body,"email:%s\n",json_parse_simple_value(json_tmp,"email"));
         format_append(body,"手机:%s\n",json_parse_simple_value(json_tmp,"mobile"));
-        table->body = s_strdup(body);
+        table->body = s_strdup(body);*/
+        //lc->async_opt->need_confirm(lc,table);
     }
-    lc->async_opt->need_confirm(lc,table);
 
 done:
     if(root){
@@ -2072,17 +2071,27 @@ static int add_friend_stage_5(LwqqHttpRequest* req)
         goto done;
     }
     lwqq_puts(req->response);
+    json_t *root = NULL,*json_tmp;
+    if(json_parse_document(&root, req->response)!=JSON_OK){
+        lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
+    int retcode = s_atoi(json_parse_simple_value(root, "retcode"),LWQQ_EC_ERROR);
+    if(retcode != WEBQQ_OK){
+        err = retcode;
+    }
 done:
+    if(root) json_free_value(&root);
     lwqq_http_request_free(req);
     return err;
-    return 0;
 }
 
 LwqqAsyncEvent* lwqq_info_add_friend_need_verify(LwqqClient* lc,LwqqGroup* group)
 {
     return NULL;
 }
-LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LWQQ_MASK mask)
+LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask mask)
 {
     if(!lc||!group) return NULL;
     char url[512];
