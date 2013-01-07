@@ -207,6 +207,13 @@ static struct ev_loop* ev_default = NULL;
 static int global_quit_lock = 0;
 static ev_timer bomb;
 //### global data area ###//
+static void build_global_loop()
+{
+    if(ev_default) return;
+    ev_default = ev_loop_new(EVBACKEND_EPOLL);
+    ev_set_timeout_collect_interval(ev_default, 0.1);
+    ev_set_io_collect_interval(ev_default, 0.05);
+}
 static void *ev_run_thread(void* data)
 {
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -249,7 +256,7 @@ void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallb
     wrap->callback = fun;
     wrap->data = data;
     io->data = wrap;
-    if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
+    if(!ev_default) build_global_loop();
     ev_io_start(ev_default,io);
     if(ev_thread_status!=THREAD_NOW_RUNNING) 
         start_ev_thread();
@@ -272,7 +279,7 @@ void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,L
     ev_timer_init(&timer->h,timer_cb_wrap,second,second);
     timer->func = fun;
     timer->data = data;
-    if(!ev_default) ev_default = ev_loop_new(EVBACKEND_POLL);
+    if(!ev_default) build_global_loop();
     ev_timer_start(ev_default,&timer->h);
     if(ev_thread_status!=THREAD_NOW_RUNNING) 
         start_ev_thread();
