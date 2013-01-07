@@ -104,7 +104,7 @@ static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
     while(list){
         if(!strncmp(list->data,name,strlen(name))){
             s_free(list->data);
-            list->data = strdup(opt);
+            list->data = s_strdup(opt);
             use_old = 1;
             break;
         }

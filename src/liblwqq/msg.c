@@ -1017,6 +1017,8 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         char * pt = json_parse_simple_value(json, "p");
         LwqqClient* lc = list->lc;
         lwqq_set_cookie(lc->cookies, "ptwebqq", pt);
+        lwqq_puts(pt);
+        lwqq_puts(lwqq_get_cookies(lc));
     }
     if(retcode != WEBQQ_OK) goto done;
 
@@ -1228,8 +1230,7 @@ static void *start_poll_msg(void *msg_list)
     int retcode;
     int ret;
     lwqq_http_on_progress(req, poll_progress, list);
-    int quit = 0;
-    while(!quit) {
+    while(1) {
         ret = req->do_request(req, 1, msg);
 
         if(!lwqq_client_logined(lc)) break;
@@ -1239,8 +1240,7 @@ static void *start_poll_msg(void *msg_list)
         if(!lwqq_client_logined(lc)) break;
         switch(retcode){
             case WEBQQ_OK:
-                if(!lwqq_client_valid(lc)) quit = 1;
-                else lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
                 break;
             case WEBQQ_NO_MESSAGE:
                 continue;
