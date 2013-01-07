@@ -1013,8 +1013,11 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     if(retcode_str)
         retcode = atoi(retcode_str);
 
-    /*if(retcode == 102 || retcode == 121)
-        goto done;*/
+    if(retcode == WEBQQ_NEW_PTVALUE){
+        char * pt = json_parse_simple_value(json, "p");
+        LwqqClient* lc = list->lc;
+        lwqq_set_cookie(lc->cookies, "ptwebqq", pt);
+    }
     if(retcode != WEBQQ_OK) goto done;
 
     json_tmp = get_result_json_object(json);
@@ -1247,16 +1250,7 @@ static void *start_poll_msg(void *msg_list)
                 lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
                 break;
             case WEBQQ_NEW_PTVALUE:
-                {
-                char * end,* value = req->response;
-                value = strstr(value,"\"p\":");
-                value += 5;
-                end = strchr(value,'"');
-                *end = 0;
-                
-                lwqq_set_cookie(lc->cookies, "ptwebqq", value);
                 req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-                }
                 break;
         }
     }
