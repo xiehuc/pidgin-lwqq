@@ -37,8 +37,6 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const 
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
-static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
-static int get_msg_tip_back(LwqqHttpRequest* req);
 
 typedef struct LwqqRecvMsgListInternal {
     struct LwqqRecvMsgList parent;
@@ -1002,7 +1000,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     ret = json_parse_document(&json, (char *)str);
 
     char* dbg_str = json_unescape((char*)str);
-    lwqq_puts(dbg_str);
+    lwqq_verbose(2,"[%s]%s\n",TIME_,dbg_str);
     s_free(dbg_str);
     
     if (ret != JSON_OK) {
@@ -1175,13 +1173,6 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
 }
 #endif
 
-void get_msg_tip_loop(LwqqAsyncTimerHandle timer,void* data)
-{
-    LwqqClient* lc = data;
-    LwqqRecvMsgList* list = lc->msg_list;
-    lwqq_msg_get_msg_tip(lc,++list->count);
-    lwqq_async_timer_repeat(timer);
-}
 static int poll_progress(void * data,size_t now,size_t total)
 {
     LwqqRecvMsgListInternal* list = data;
@@ -1222,9 +1213,6 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-
-    //LwqqAsyncTimerHandle timer = &((LwqqRecvMsgListPri*)list)->tip_loop;
-    //lwqq_async_timer_watch(timer, 60*1000, get_msg_tip_loop, lc);
 
 #if USE_MSG_THREAD
     int retcode;
@@ -1953,6 +1941,18 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
     return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
 }
 
+#if 0
+//msg_tip is advertisement about.
+//so this is unnecessary
+void get_msg_tip_loop(LwqqAsyncTimerHandle timer,void* data)
+{
+    LwqqClient* lc = data;
+    LwqqRecvMsgList* list = lc->msg_list;
+    lwqq_msg_get_msg_tip(lc,++list->count);
+    lwqq_async_timer_repeat(timer);
+}
+static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter);
+static int get_msg_tip_back(LwqqHttpRequest* req);
 static LwqqAsyncEvent* lwqq_msg_get_msg_tip(LwqqClient* lc,unsigned int counter)
 {
     if(!lc) return NULL;
@@ -1976,4 +1976,4 @@ static int get_msg_tip_back(LwqqHttpRequest* req)
     lwqq_http_request_free(req);
     return 0;
 }
-
+#endif

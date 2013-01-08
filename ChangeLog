@@ -1,6 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
-dev (01/06/2012):
+dev (01/07/2013):
+	* enhancement: slow down cpu rate by add libev time interval
+
+dev (01/06/2013):
 	* new feature: add friend
 	* new feature: less lost connection
 	* enhancement: refine original old api

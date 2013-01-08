@@ -42,7 +42,8 @@
  */
 void lwqq_log(int level, const char *file, int line,
               const char *function, const char* msg, ...);
-
+const char* lwqq_log_time();
+#define TIME_ lwqq_log_time()
 #define lwqq_verbose(l,str,...) if(l<=LWQQ_VERBOSE_LEVEL) fprintf(stderr,str,__VA_ARGS__)
 #define lwqq_puts(str) lwqq_verbose(1,"%s\n",str)
 

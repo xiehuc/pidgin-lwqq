@@ -56,3 +56,11 @@ void lwqq_log(int level, const char *file, int line,
 	fprintf(stderr, "%s", buf);
 }
 
+const char* lwqq_log_time()
+{
+    static char tm_str[64];
+    time_t t_ = time(NULL);
+    struct tm *tm_ = localtime(&t_);
+    strftime(tm_str,sizeof(tm_str),"%X",tm_);
+    return tm_str;
+}
