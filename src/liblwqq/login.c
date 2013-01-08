@@ -566,6 +566,7 @@ static int set_online_status_back(LwqqHttpRequest* req)
      * 
      */
     response = req->response;
+    lwqq_puts(response);
     ret = json_parse_document(&json, response);
     if (ret != JSON_OK) {
         err = LWQQ_EC_ERROR;
@@ -598,7 +599,7 @@ static int set_online_status_back(LwqqHttpRequest* req)
     }
 
     if ((value = json_parse_simple_value(json, "status"))) {
-        lc->status = lwqq_status_to_str(lc->stat);
+        lc->stat = lwqq_status_from_str(value);
     }
 
     if ((value = json_parse_simple_value(json, "vfwebqq"))) {
@@ -734,6 +735,7 @@ static void login_stage_f(LwqqAsyncEvent* ev)
     if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    if(!lwqq_client_valid(lc)) return;
     lc->async_opt->login_complete(lc,err);
     lwqq_vc_free(lc->vc);
     lc->vc = NULL;

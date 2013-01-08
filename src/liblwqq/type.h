@@ -43,7 +43,15 @@ typedef vp_command  LwqqCommand;
 //return zero means continue.>1 means abort
 typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
-/* Struct defination */
+
+//=========================INSTRUCTION=================================//
+/**
+ * LWQQ head is defined local enum
+ * WEBQQ head is defined server enum
+ * that is it's value same as Server
+ *
+ * there are some old LWQQ head that should be WEBQQ
+ */
 
 typedef enum {
     LWQQ_CALLBACK_FAILED = 0x0,
@@ -74,6 +82,16 @@ enum {
 };
 typedef int LwqqMemberFlags;
 
+typedef enum {
+    WEBQQ_OK = 0,
+    WEBQQ_NO_MESSAGE = 102,
+    WEBQQ_108 = 108,
+    WEBQQ_NEW_PTVALUE = 116,
+    WEBQQ_LOST_CONN = 121,
+    WEBQQ_FATAL = 100000
+}WebqqRetCode;
+
+/* Struct defination */
 typedef struct LwqqFriendCategory {
     int index;
     int sort;
@@ -239,7 +257,7 @@ struct _LwqqClient {
     char *gface_sig;                  /**<use at cfage */
     const LwqqAsyncOption* async_opt;
     LwqqCookies *cookies;
-    const char *status;
+    //const char *status;
     LwqqStatus stat;
     char *error_description;
 
@@ -266,7 +284,7 @@ struct _LwqqClient {
 
 /* Lwqq Error Code */
 typedef enum {
-    LWQQ_EC_OK,
+    LWQQ_EC_OK = 0,
     LWQQ_EC_ERROR,
     LWQQ_EC_NULL_POINTER,
     LWQQ_EC_FILE_NOT_EXIST,

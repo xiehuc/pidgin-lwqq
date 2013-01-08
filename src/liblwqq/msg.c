@@ -1242,6 +1242,7 @@ static void *start_poll_msg(void *msg_list)
                 break;
         }
     }
+    lwqq_puts("quit the msg_thread");
 failed:
     if(req) lwqq_http_request_free(req);
     return NULL;

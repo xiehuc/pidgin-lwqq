@@ -95,6 +95,22 @@ void vp_func_2p(VP_CALLBACK func,vp_list* vp,void* q)
     void* p2 = vp_arg(*vp,void*);
     ((f)func)(p1,p2);
 }
+void vp_func_2pi(VP_CALLBACK func,vp_list* vp,void* q)
+{
+    typedef void (*f)(void*,void*,int);
+    if( !func ){
+        va_list* va = q;
+        vp_init(*vp,sizeof(void*)*2+sizeof(int));
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,void*);
+        vp_dump(*vp,*va,int);
+        return ;
+    }
+    void* p1 = vp_arg(*vp,void*);
+    void* p2 = vp_arg(*vp,void*);
+    int p3 = vp_arg(*vp,int);
+    ((f)func)(p1,p2,p3);
+}
 void vp_func_3p(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*,void*);

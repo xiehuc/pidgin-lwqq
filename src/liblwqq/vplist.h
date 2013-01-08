@@ -37,6 +37,7 @@ vp_list* vp_make_params(VP_DISPATCH,...);
 void vp_func_void(VP_CALLBACK,vp_list*,void*);
 void vp_func_p(VP_CALLBACK,vp_list*,void*);
 void vp_func_2p(VP_CALLBACK,vp_list*,void*);
+void vp_func_2pi(VP_CALLBACK,vp_list*,void*);
 void vp_func_3p(VP_CALLBACK,vp_list*,void*);
 void vp_func_4p(VP_CALLBACK,vp_list*,void*);
 void vp_func_pi(VP_CALLBACK,vp_list*,void*);

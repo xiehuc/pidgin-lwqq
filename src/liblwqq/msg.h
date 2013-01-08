@@ -32,19 +32,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_INPUT_NOTIFY,
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
-typedef enum {
-    LWQQ_MC_OK = 0,
-    LWQQ_MC_TOO_FAST = 108,             //< send message too fast
-    LWQQ_MC_LOST_CONN = 121
-}LwqqMsgRetcode;
 
-typedef enum {
-    WEBQQ_OK = 0,
-    WEBQQ_NO_MESSAGE = 102,
-    WEBQQ_NEW_PTVALUE = 116,
-    WEBQQ_LOST_CONN = 121,
-    WEBQQ_FATAL = 100000
-}WebqqRetCode;
 
 typedef struct LwqqMsgContent {
     enum {
