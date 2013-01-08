@@ -35,7 +35,6 @@ static int get_friends_info_back(LwqqHttpRequest* req);
 static int get_online_buddies_back(LwqqHttpRequest* req,void* data);
 static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc);
 static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* group);
-static int info_commom_back(LwqqHttpRequest* req,void* data);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
@@ -84,6 +83,11 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
 {
     lwqq_util_return_if_ev_fail(ev);
     g->mask = m;
+}
+static void do_delete_friend(LwqqAsyncEvent* ev,LwqqBuddy* b)
+{
+    lwqq_util_return_if_ev_fail(ev);
+    LIST_REMOVE(b,entries);
 }
 
 /**
@@ -1616,13 +1620,6 @@ json_error:
     lwqq_http_request_free(req);
     return 0;
 }
-enum CHANGE{
-    CHANGE_BUDDY_MARKNAME,
-    CHANGE_GROUP_MARKNAME,
-    MODIFY_BUDDY_CATEGORY,
-    CHANGE_STATUS,
-    CHANGE_MASK
-};
 LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias)
 {
     if(!lc||!buddy||!alias) return NULL;
@@ -1638,82 +1635,6 @@ LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,
     return ev;
 }
 
-static int info_commom_back(LwqqHttpRequest* req,void* data)
-{
-    json_t* root=NULL;
-    int errno = 0;
-    int ret;
-
-    if(req->http_code!=200){
-        errno = LWQQ_EC_HTTP_ERROR;
-        goto done;
-    }
-    lwqq_puts(req->response);
-    ret = json_parse_document(&root,req->response);
-    if(ret!=JSON_OK){
-        errno = LWQQ_EC_ERROR;
-        goto done;
-    }
-    const char* retcode = json_parse_simple_value(root,"retcode");
-    if(retcode==NULL){
-        errno = 1;
-        goto done;
-    }
-    errno = s_atoi(retcode,1);
-    void** d = data;
-    long type = data ? (long)d[0] : 0;
-    if(errno==0&&data!=NULL){
-        switch(type){
-            case CHANGE_BUDDY_MARKNAME:
-                {
-                    LwqqBuddy* buddy = d[1];
-                    char* alias = d[2];
-                    s_free(buddy->markname);
-                    buddy->markname = alias;
-                } break;
-            case CHANGE_GROUP_MARKNAME:
-                {
-                    LwqqGroup* group = d[1];
-                    char* alias = d[2];
-                    s_free(group->markname);
-                    group->markname = alias;
-                } break;
-            case MODIFY_BUDDY_CATEGORY:
-                {
-                    LwqqBuddy* buddy = d[1];
-                    long cate_idx = (long)d[2];
-                    buddy->cate_index = cate_idx;
-                } break;
-            case CHANGE_STATUS:
-                {
-                    LwqqClient* lc = d[1];
-                    const char* status = d[2];
-                    lc->stat = lwqq_status_from_str(status);
-                    //lc->status = lwqq_status_to_str(lc->stat);
-                } break;
-            case CHANGE_MASK:
-                {
-                    LwqqGroup* group = d[1];
-                    LwqqMask mask = (LwqqMask)d[2];
-                    group->mask = mask;
-                } break;
-        }
-    }else if(errno == 108){
-        switch(type){
-            case CHANGE_STATUS:
-                {
-                } break;
-        }
-    }
-done:
-    s_free(data);
-    if(root)
-        json_free_value(&root);
-    lwqq_http_request_free(req);
-    return errno;
-}
-
-
 LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,const char* alias)
 {
     if(!lc||!group||!alias) return NULL;
@@ -1726,10 +1647,6 @@ LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,
     lwqq_puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    void** data = s_malloc0(sizeof(void*)*3);
-    data[0] = (void*)CHANGE_GROUP_MARKNAME;
-    data[1] = group;
-    data[2] = s_strdup(alias);
     LwqqAsyncEvent* ev;
     ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(4p,do_change_markname,ev,NULL,group,s_strdup(alias)));
@@ -1776,106 +1693,56 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     lwqq_puts(post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    void** data = s_malloc0(sizeof(void*)*3);
-    data[0] = (void*)MODIFY_BUDDY_CATEGORY;
-    data[1] = buddy;
-    data[2] = (void*)cate_idx;
     LwqqAsyncEvent* ev;
     ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(2pi,do_modify_category,ev,buddy,cate_idx));
     return ev;
 }
 
-LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LWQQ_DEL_FRIEND_TYPE del_type)
+LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LwqqDelFriendType del_type)
 {
     if(!lc||!buddy) return NULL;
     char url[512];
     char post[256];
     snprintf(url,sizeof(url),"%s/api/delete_friend","http://s.web2.qq.com");
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    if(req==NULL){
-        goto done;
-    }
     snprintf(post,sizeof(post),"tuin=%s&delType=%d&vfwebqq=%s",
             buddy->uin,del_type,lc->vfwebqq );
     lwqq_puts(post);
-    req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,req,NULL));
-done:
-    lwqq_http_request_free(req);
-    return NULL;
+    LwqqAsyncEvent* ev;
+    ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    lwqq_async_add_event_listener(ev, _C_(2p,do_delete_friend,ev,buddy));
+    return ev;
 }
-
-//account is qqnumber
-LwqqAsyncEvent* lwqq_info_allow_added_request(LwqqClient* lc,const char* account)
+LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra)
 {
-    if(!lc||!account) return NULL;
+    if(!lc||!qq) return NULL;
     char url[512];
     char post[256];
-    snprintf(url,sizeof(url),"%s/api/allow_added_request2","http://s.web2.qq.com");
+    switch(allow){
+        case LWQQ_DENY:
+            snprintf(url,sizeof(url),"%s/api/deny_added_request2","http://s.web2.qq.com");
+            snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\",\"msg\":\"%s\"}",
+                    qq,lc->vfwebqq,extra?extra:"");
+        break;
+        case LWQQ_ALLOW:
+            snprintf(url,sizeof(url),"%s/api/allow_added_request2","http://s.web2.qq.com");
+            snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"}",
+                    qq,lc->vfwebqq );
+        break;
+        case LWQQ_ALLOW_AND_ADD:
+            snprintf(url,sizeof(url),"%s/api/allow_and_add2","http://s.web2.qq.com");
+            snprintf(post,sizeof(post),"r={\"account\":%s,\"gid\":0,\"vfwebqq\":\"%s\"",
+                    qq,lc->vfwebqq);
+            if(extra)
+                format_append(post,",\"mname\",\"%s\"",extra);
+            strcat(post,"}");
+        break;
+    }
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    if(req==NULL){
-        goto done;
-    }
-    snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"}",
-            account,lc->vfwebqq );
-    lwqq_puts(post);
-    req->set_header(req,"Origin","http://s.web2.qq.com");
-    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,NULL));
-done:
-    lwqq_http_request_free(req);
-    return NULL;
-}
-
-LwqqAsyncEvent* lwqq_info_deny_added_request(LwqqClient* lc,const char* account,const char* reason)
-{
-    if(!lc||!account) return NULL;
-    char url[512];
-    char post[256];
-    snprintf(url,sizeof(url),"%s/api/deny_added_request2","http://s.web2.qq.com");
-    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    if(req==NULL){
-        goto done;
-    }
-    snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"",
-            account,lc->vfwebqq );
-    if(reason){
-        format_append(post,",\"msg\":\"%s\"",reason);
-    }
-    format_append(post,"}");
-    lwqq_puts(post);
-    req->set_header(req,"Origin","http://s.web2.qq.com");
-    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,req,NULL));
-done:
-    lwqq_http_request_free(req);
-    return NULL;
-}
-LwqqAsyncEvent* lwqq_info_allow_and_add(LwqqClient* lc,const char* account,const char* markname)
-{
-    if(!lc||!account) return NULL;
-    char url[512];
-    char post[256];
-    snprintf(url,sizeof(url),"%s/api/allow_and_add2","http://s.web2.qq.com");
-    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    if(req==NULL){
-        goto done;
-    }
-    snprintf(post,sizeof(post),"r={\"account\":%s,\"gid\":0,\"vfwebqq\":\"%s\"",
-            account,lc->vfwebqq );
-    if(markname){
-        format_append(post,",\"mname\":\"%s\"",markname);
-    }
-    format_append(post,"}");
-    lwqq_puts(post);
-    req->set_header(req,"Origin","http://s.web2.qq.com");
-    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
-    return req->do_request_async(req,1,post,_C_(2p_i,info_commom_back,req,NULL));
-done:
-    lwqq_http_request_free(req);
-    return NULL;
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    return req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
 }
 
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)

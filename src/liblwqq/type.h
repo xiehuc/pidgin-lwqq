@@ -77,10 +77,12 @@ typedef enum {
     LWQQ_MASK_1 = 1,
     LWQQ_MASK_ALL=2 
 }LwqqMask;
-enum {
+typedef enum {
     LWQQ_MEMBER_IS_ADMIN = 0x1,
-};
-typedef int LwqqMemberFlags;
+}LwqqMemberFlags;
+typedef enum {
+    LWQQ_DEL_FROM_OTHER = 2/* delete buddy and remove myself from other buddy list */
+}LwqqDelFriendType;
 
 typedef enum {
     WEBQQ_OK = 0,
@@ -218,6 +220,7 @@ typedef struct LwqqVerifyCode {
 } LwqqVerifyCode ;
 
 typedef enum {LWQQ_NO,LWQQ_YES} LwqqAnswer;
+typedef enum {LWQQ_DENY,LWQQ_ALLOW,LWQQ_ALLOW_AND_ADD} LwqqAllow;
 typedef struct LwqqConfirmTable {
     LwqqAnswer answer;
     char* title;

@@ -783,13 +783,11 @@ static void verify_required_confirm(void* data,PurpleRequestFields* root)
     s_free(data);
     LwqqClient* lc = ac->qq;
     int answer = purple_request_fields_get_choice(root,"answer");
-    if(answer == 0) {
-        lwqq_info_allow_and_add(lc,account,NULL);
-    } else if(answer == 1) {
-        lwqq_info_allow_added_request(lc,account);
-    } else if(answer == 2) {
-        lwqq_info_deny_added_request(lc,account,"no reason");
-    }
+    LwqqAllow allow;
+    if(answer == 0) allow = LWQQ_ALLOW_AND_ADD;
+    else if(answer == 1) allow = LWQQ_ALLOW;
+    else allow = LWQQ_DENY;
+    lwqq_info_answer_request_friend(lc, account, allow, NULL);
     s_free(account);
 }
 static void verify_required_cancel(void* data,PurpleRequestFields* root)
