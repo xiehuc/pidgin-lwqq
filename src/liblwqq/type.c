@@ -17,6 +17,16 @@
 #include "msg.h"
 #include "async.h"
 #include "http.h"
+static struct LwqqStrMapEntry_ status_type_map[] = {
+    {"online",      LWQQ_STATUS_ONLINE},
+    {"offline",     LWQQ_STATUS_OFFLINE},
+    {"away",        LWQQ_STATUS_AWAY},
+    {"hidden",      LWQQ_STATUS_HIDDEN},
+    {"busy",        LWQQ_STATUS_BUSY},
+    {"callme",      LWQQ_STATUS_CALLME},
+    {"slient",      LWQQ_STATUS_SLIENT},
+    {NULL,          LWQQ_STATUS_LOGOUT}
+};
 
 static void null_action(LwqqClient* lc)
 {
@@ -448,27 +458,29 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
 
 const char* lwqq_status_to_str(LwqqStatus status)
 {
-    switch(status){
-        case LWQQ_STATUS_ONLINE: return "online";break;
-        case LWQQ_STATUS_OFFLINE: return "offline";break;
-        case LWQQ_STATUS_AWAY: return "away";break;
-        case LWQQ_STATUS_HIDDEN: return "hidden";break;
-        case LWQQ_STATUS_BUSY: return "busy";break;
-        case LWQQ_STATUS_CALLME: return "callme";break;
-        case LWQQ_STATUS_SLIENT: return "slient";break;
-        default: return "unknow";break;
-    }
+    return lwqq_map_to_str_(status_type_map, status);
 }
 LwqqStatus lwqq_status_from_str(const char* str)
 {
-    if(strcmp(str,"online")==0) return LWQQ_STATUS_ONLINE;
-    else if(strcmp(str,"offline")==0) return LWQQ_STATUS_OFFLINE;
-    else if(strcmp(str,"away")==0) return LWQQ_STATUS_AWAY;
-    else if(strcmp(str,"hidden")==0) return LWQQ_STATUS_HIDDEN;
-    else if(strcmp(str,"busy")==0) return LWQQ_STATUS_BUSY;
-    else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
-    else if(strcmp(str,"slient")==0) return LWQQ_STATUS_SLIENT;
-    else return LWQQ_STATUS_LOGOUT;
+    return lwqq_map_to_type_(status_type_map, str);
+}
+
+int lwqq_map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key)
+{
+    while(maps->str != NULL){
+        if(!strncmp(maps->str,key,strlen(maps->str))) return maps->type;
+        maps++;
+    }
+    return maps->type;
+}
+
+const char* lwqq_map_to_str_(const struct LwqqStrMapEntry_* maps,int type)
+{
+    while(maps->str != NULL){
+        if(maps->type == type) return maps->str;
+        maps++;
+    }
+    return NULL;
 }
 
 

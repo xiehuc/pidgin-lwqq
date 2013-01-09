@@ -44,6 +44,26 @@ typedef struct LwqqRecvMsgListInternal {
     pthread_t tid;
     int on_quit;
 } LwqqRecvMsgListInternal;
+
+static struct LwqqStrMapEntry_ msg_type_map[] = {
+    {"message",                 LWQQ_MT_BUDDY_MSG},
+    {"group_message",           LWQQ_MT_GROUP_MSG},
+    {"discu_message",           LWQQ_MT_DISCU_MSG},
+    {"sess_message",            LWQQ_MT_SESS_MSG },
+    {"buddies_status_change",   LWQQ_MT_STATUS_CHANGE},
+    {"kick_message",            LWQQ_MT_KICK_MESSAGE},
+    {"system_message",          LWQQ_MT_SYSTEM},
+    {"buddylist_change",        LWQQ_MT_BLIST_CHANGE},
+    {"sys_g_msg",               LWQQ_MT_SYS_G_MSG},
+    {"push_offfile",            LWQQ_MT_OFFFILE},
+    {"filesrv_transfer",        LWQQ_MT_FILETRANS},
+    {"file_message",            LWQQ_MT_FILE_MSG},
+    {"notify_offfile",          LWQQ_MT_NOTIFY_OFFFILE},
+    {"input_notify",            LWQQ_MT_INPUT_NOTIFY},
+    {"unknow",                  LWQQ_MT_UNKNOWN},
+    {NULL,                      LWQQ_MT_UNKNOWN}
+};
+
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -402,38 +422,7 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     if (!msg_type) {
         return type;
     }
-    if (!strncmp(msg_type, "message", strlen("message"))) {
-        type = LWQQ_MT_BUDDY_MSG;
-    } else if (!strncmp(msg_type, "group_message", strlen("group_message"))) {
-        type = LWQQ_MT_GROUP_MSG;
-    }else if(!strncmp(msg_type,"discu_message",strlen("discu_message"))){
-        type = LWQQ_MT_DISCU_MSG;
-    }else if(!strncmp(msg_type,"sess_message",strlen("sess_message"))){
-        type = LWQQ_MT_SESS_MSG;
-    } else if (!strncmp(msg_type, "buddies_status_change",
-                        strlen("buddies_status_change"))) {
-        type = LWQQ_MT_STATUS_CHANGE;
-    } else if(!strncmp(msg_type,"kick_message",strlen("kick_message"))){
-        type = LWQQ_MT_KICK_MESSAGE;
-    } else if(!strncmp(msg_type,"system_message",strlen("system_message"))){
-        type = LWQQ_MT_SYSTEM;
-    }else if(!strncmp(msg_type,"buddylist_change",strlen("buddylist_change"))){
-        type = LWQQ_MT_BLIST_CHANGE;
-    }else if(!strncmp(msg_type,"sys_g_msg",strlen("sys_g_msg"))){
-        type = LWQQ_MT_SYS_G_MSG;
-    }else if(!strncmp(msg_type,"push_offfile",strlen("push_offfile"))){
-        type = LWQQ_MT_OFFFILE;
-    }else if(!strncmp(msg_type,"filesrv_transfer",strlen("filesrv_transfer"))){
-        type = LWQQ_MT_FILETRANS;
-    }else if(!strncmp(msg_type,"file_message",strlen("file_message"))){
-        type = LWQQ_MT_FILE_MSG;
-    }else if(!strncmp(msg_type,"notify_offfile",strlen("file_message"))){
-        type = LWQQ_MT_NOTIFY_OFFFILE;
-    }else if(!strncmp(msg_type,"input_notify",strlen("input_notify"))){
-        type = LWQQ_MT_INPUT_NOTIFY;
-    }else
-        type = LWQQ_MT_UNKNOWN;
-    return type;
+    return lwqq_map_to_type_(msg_type_map, msg_type);
 }
 static int parse_content(json_t *json, void *opaque)
 {
@@ -707,6 +696,9 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
     while(ptr!=NULL){
         const char* uin = json_parse_simple_value(ptr,"uin");
         ptr = ptr->next;
+        //we first put these guys to removed_friends
+        //give upper level a chance do some thing.
+        //after when blist delete. these guys would free as well.
 
         buddy = lwqq_buddy_find_buddy_by_uin(lc,uin);
         if(buddy == NULL) continue;
@@ -1220,6 +1212,7 @@ static void *start_poll_msg(void *msg_list)
     lwqq_http_on_progress(req, poll_progress, list);
     while(1) {
         ret = req->do_request(req, 1, msg);
+        lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,0L);
 
         if(!lwqq_client_logined(lc)) break;
 
@@ -1238,6 +1231,7 @@ static void *start_poll_msg(void *msg_list)
                 lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
                 break;
             case WEBQQ_NEW_PTVALUE:
+                lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1L);
                 req->set_header(req, "Cookie", lwqq_get_cookies(lc));
                 break;
         }

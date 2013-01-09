@@ -8,6 +8,7 @@ LwqqAsyncEvent* lwqq_util_request_captcha(LwqqClient* lc,LwqqVerifyCode* c);
     if(json_parse_document(&json,str)!=JSON_OK){\
         lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);\
         err = LWQQ_EC_ERROR; goto done;  }
+#define lwqq_util_jump_if_retcode_fail(retcode) if(retcode != WEBQQ_OK) goto done;
 
 #define lwqq_util_return_if_ev_fail(ev) do{\
     if(ev->failcode == LWQQ_CALLBACK_FAILED) return;\

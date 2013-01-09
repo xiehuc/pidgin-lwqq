@@ -102,6 +102,10 @@ typedef struct LwqqFriendCategory {
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
 
+struct LwqqStrMapEntry_ {
+    const char* str;
+    int type;
+};
 /* QQ buddy */
 typedef struct LwqqBuddy {
     char *uin;                  /**< Uin. Change every login */
@@ -430,5 +434,9 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LwqqStatus status);
 LwqqStatus lwqq_status_from_str(const char* str);
+
+
+int lwqq_map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key);
+const char* lwqq_map_to_str_(const struct LwqqStrMapEntry_* maps,int type);
 
 #endif  /* LWQQ_TYPE_H */
