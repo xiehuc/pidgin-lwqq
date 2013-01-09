@@ -1460,7 +1460,7 @@ done:
 
 LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group)
 {
-    if (!lc || !(group && buddy) ) return NULL;
+    if (!lc || !(group || buddy) ) return NULL;
     const char* uin = NULL;
     uin = (buddy)?buddy->uin:group->code;
     char url[512];
