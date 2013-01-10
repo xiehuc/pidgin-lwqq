@@ -17,6 +17,7 @@
 #include "msg.h"
 #include "async.h"
 #include "http.h"
+#include "internal.h"
 static struct LwqqStrMapEntry_ status_type_map[] = {
     {"online",      LWQQ_STATUS_ONLINE},
     {"offline",     LWQQ_STATUS_OFFLINE},
@@ -465,23 +466,6 @@ LwqqStatus lwqq_status_from_str(const char* str)
     return lwqq_map_to_type_(status_type_map, str);
 }
 
-int lwqq_map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key)
-{
-    while(maps->str != NULL){
-        if(!strncmp(maps->str,key,strlen(maps->str))) return maps->type;
-        maps++;
-    }
-    return maps->type;
-}
-
-const char* lwqq_map_to_str_(const struct LwqqStrMapEntry_* maps,int type)
-{
-    while(maps->str != NULL){
-        if(maps->type == type) return maps->str;
-        maps++;
-    }
-    return NULL;
-}
 
 
 void lwqq_set_cookie(LwqqCookies* c,const char* key,const char* value)
