@@ -295,11 +295,12 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
-    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
-    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
     curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,10);
     //set normal operate timeout to 30.official value.
-    curl_easy_setopt(request->req,CURLOPT_TIMEOUT,30);
+    //curl_easy_setopt(request->req,CURLOPT_TIMEOUT,30);
+    //5B/s
+    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,8*5);
+    curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,30);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -490,22 +491,37 @@ static void check_multi_info(GLOBAL *g)
     CURLMsg *msg=NULL;
     int msgs_left;
     D_ITEM *conn;
+    LwqqHttpRequest* req;
+    LwqqAsyncEvent* ev;
     CURL *easy;
-    long err;
+    CURLcode ret;
 
     //printf("still_running:%d\n",g->still_running);
     while ((msg = curl_multi_info_read(g->multi, &msgs_left))) {
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
+            ret = msg->data.result;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
-            err = 0;
-            curl_easy_getinfo(easy, CURLINFO_OS_ERRNO,&err);
-            lwqq_verbose(2,"err:%ld\n",err);
+            req = conn->req;
+            ev = conn->event;
+            lwqq_verbose(1,"async retcode:%d\n",ret);
+            if(ret == CURLE_OPERATION_TIMEDOUT){
+                req->retry --;
+                if(req->retry == 0){
+                    ev->failcode = LWQQ_CALLBACK_TIMEOUT;
+                }else{
+                    //re add it to libcurl
+                    curl_multi_remove_handle(g->multi, easy);
+                    curl_multi_add_handle(g->multi, easy);
+                    continue;
+                }
+            }
 
             LIST_REMOVE(conn,entries);
-            curl_multi_remove_handle(g->multi, easy);
             LwqqClient* lc = conn->req->lc;
 
+            //if this handle doesn't timeout.so we restore it retry times
+            if(ev->failcode != LWQQ_CALLBACK_TIMEOUT) req->retry = LWQQ_RETRY_VALUE;
             //执行完成时候的回调
             if(lwqq_client_valid(lc))
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)async_complete,conn);
@@ -965,7 +981,7 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
     va_start(args,opt);
     switch(opt){
         case LWQQ_HTTP_TIMEOUT:
-            curl_easy_setopt(req->req,CURLOPT_TIMEOUT,va_arg(args,unsigned long));
+            curl_easy_setopt(req->req,CURLOPT_LOW_SPEED_TIME,va_arg(args,unsigned long));
             break;
         case LWQQ_HTTP_NOT_FOLLOW:
             curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,long));

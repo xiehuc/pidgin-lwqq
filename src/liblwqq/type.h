@@ -56,6 +56,7 @@ typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 typedef enum {
     LWQQ_CALLBACK_FAILED = 0x0,
     LWQQ_CALLBACK_VALID,
+    LWQQ_CALLBACK_TIMEOUT,
 }LwqqCallbackCode;
 typedef enum {
     LWQQ_STATUS_LOGOUT = 0,
@@ -95,6 +96,7 @@ typedef enum {
 /* Lwqq Error Code */
 typedef enum {
     LWQQ_EC_ERROR = -1,                 //<general error
+    //old uncleard api
     LWQQ_EC_OK = 0,
     LWQQ_EC_NULL_POINTER,
     LWQQ_EC_FILE_NOT_EXIST,
