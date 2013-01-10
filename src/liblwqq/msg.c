@@ -1218,6 +1218,10 @@ static void *start_poll_msg(void *msg_list)
             lwqq_verbose(2,"poll_msg:err:%d\n",ret);
         }
         if(!lwqq_client_logined(lc)) break;
+        if(ret == LWQQ_EC_TIMEOUT_OVER){
+            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+            break;
+        }
 
         if (ret || req->http_code != 200) continue;
         retcode = parse_recvmsg_from_json(list, req->response);

@@ -504,7 +504,9 @@ static void check_multi_info(GLOBAL *g)
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
             req = conn->req;
             ev = conn->event;
-            lwqq_verbose(1,"async retcode:%d\n",ret);
+            if(ret != 0){
+                lwqq_log(LOG_WARNING,"async retcode:%d\n",ret);
+            }
             if(ret == CURLE_OPERATION_TIMEDOUT){
                 req->retry --;
                 if(req->retry == 0){
@@ -735,7 +737,7 @@ retry:
         request->retry --;
         if(request->retry == 0){
             lwqq_log(LOG_WARNING,"do_request retry used out\n");
-            return LWQQ_EC_NETWORK_ERROR;
+            return LWQQ_EC_TIMEOUT_OVER;
         }
         goto retry;
     }
