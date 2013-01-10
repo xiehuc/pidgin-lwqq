@@ -23,6 +23,7 @@
 #include "async.h"
 #include "info.h"
 #include "internal.h"
+#include "util.h"
 
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
@@ -1438,41 +1439,38 @@ done:
     lwqq_http_request_free(req);
     return 0;
 }
-static int query_gface_sig(LwqqClient* lc)
+static int process_gface_sig(LwqqHttpRequest* req)
 {
-    LwqqHttpRequest *req;
+    int err = 0;
+    json_t* json = NULL;
+    lwqq_util_jump_if_http_fail(req,err);
+    lwqq_util_jump_if_json_fail(json,req->response,err);
+    LwqqClient* lc = req->lc;
+
+    lc->gface_key = s_strdup(json_parse_simple_value(json,"gface_key"));
+    lc->gface_sig = s_strdup(json_parse_simple_value(json,"gface_sig"));
+    
+done:
+    lwqq_util_clean_json_and_req(json,req);
+    return err;
+}
+static LwqqAsyncEvent* query_gface_sig(LwqqClient* lc)
+{
+    if(!lc||(lc->gface_key&&lc->gface_sig)){
+        return NULL;
+    }
     LwqqErrorCode err;
     char url[512];
-    int ret;
-    int succ = 0;
-    if(lc->gface_key&&lc->gface_sig){
-        return 1;
-    }
 
-    //https://d.web2.qq.com/channel/get_gface_sig2?clientid=30179476&psessionid=8368046764001e636f6e6e7365727665725f77656271714031302e3132382e36362e31313500006158000000c4036e04005c821a956d0000000a4065466637416b7142666d00000028fdd28eddedb8dd0cd414fdcb13af93532615ebe10b93f55182189da5c557360fee73da41ebf0c9fc&t=1343198241175
     snprintf(url,sizeof(url),"%s/get_gface_sig2?clientid=%s&psessionid=%s&t=%ld",
             "https://d.web2.qq.com/channel",lc->clientid,lc->psessionid,time(NULL));
-    req = lwqq_http_create_default_request(lc,url,&err);
-    req->set_header(req,"Host","d.web2.qq.com");
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,&err);
     req->set_header(req,"Referer","https://d.web2.qq.com/cfproxy.html?v=20110331002&callback=1");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
-    ret = req->do_request(req,0,NULL);
-    if(ret||req->http_code !=200){
-        goto done;
-    }
-    json_t* json = NULL;
-    json_parse_document(&json,req->response);
-    lc->gface_key = s_strdup(json_parse_simple_value(json,"gface_key"));
-    lc->gface_sig = s_strdup(json_parse_simple_value(json,"gface_sig"));
-    succ = 1;
-    
-done:
-    if(json)
-        json_free_value(&json);
-    lwqq_http_request_free(req);
-    return succ;
+    return req->do_request_async(req,0,NULL,_C_(p,process_gface_sig,req));
 }
+
 static LwqqAsyncEvent* lwqq_msg_upload_cface(
         LwqqClient* lc,LwqqMsgContent* c,LwqqMsgType type)
 {
@@ -1546,15 +1544,16 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent*
     c->data.cface.name = s_strdup(file);
     c->data.cface.size = 0;
 
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    /*static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_lock(&mutex);
     if(!lc->gface_sig)
         query_gface_sig(lc);
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);*/
 done:
     lwqq_http_request_free(req);
     return errno;
 }
+/*
 static LwqqAsyncEvent* lwqq_msg_upload_content(
         LwqqClient* lc,LwqqMsgMessage* msg,LwqqMsgContent* c)
 {
@@ -1565,6 +1564,7 @@ static LwqqAsyncEvent* lwqq_msg_upload_content(
         return lwqq_msg_upload_offline_pic(lc,c,msg->to);
     return NULL;
 }
+*/
 
 void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsg* msg,LwqqAsyncEvent* event)
 {
@@ -1602,7 +1602,13 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     LwqqAsyncEvent* event;
     LwqqAsyncEvset* evset = lwqq_async_evset_new();
     TAILQ_FOREACH(c,&mmsg->content,entries){
-        event = lwqq_msg_upload_content(lc,mmsg,c);
+        event = NULL;
+        if(c->type == LWQQ_CONTENT_CFACE && c->data.cface.data > 0){
+            event = lwqq_msg_upload_cface(lc,c,mmsg->type);
+            if(!lc->gface_sig) lwqq_async_evset_add_event(evset,query_gface_sig(lc));
+        } else if(c->type == LWQQ_CONTENT_OFFPIC && c->data.img.data > 0)
+            event = lwqq_msg_upload_offline_pic(lc,c,mmsg->to);
+        //event = lwqq_msg_upload_content(lc,mmsg,c);
         lwqq_async_evset_add_event(evset,event);
         will_upload |= (event!=NULL);
     }

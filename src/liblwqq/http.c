@@ -519,6 +519,7 @@ static void check_multi_info(GLOBAL *g)
                 }
             }
 
+            curl_multi_remove_handle(g->multi, easy);
             LIST_REMOVE(conn,entries);
             LwqqClient* lc = conn->req->lc;
 
@@ -538,6 +539,7 @@ static void timer_cb(LwqqAsyncTimerHandle timer,void* data)
 
     if(!g->multi){
         lwqq_async_timer_stop(timer);
+        return;
     }
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
     check_multi_info(g);
@@ -744,7 +746,7 @@ retry:
     if(ret == CURLE_ABORTED_BY_CALLBACK ){
     }
     if(ret != CURLE_OK){
-        lwqq_log(LOG_ERROR,"do_request fail:%d\n",ret);
+        lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
         return ret;
     }
     request->retry = LWQQ_RETRY_VALUE;
