@@ -189,6 +189,7 @@ void lwqq_client_free(LwqqClient *client)
     s_free(client->port);
     s_free(client->vfwebqq);
     s_free(client->psessionid);
+    s_free(client->new_ptwebqq);
     lwqq_buddy_free(client->myself);
         
     /* Free friends list */

@@ -112,7 +112,9 @@ static json_t *parse_retcode_result(json_t *json,int* retcode)
      * if success it would return result;
      * if failed it would return NULL;
      */
-    return json_find_first_label_all(json, "result");
+    json_t* result = json_find_first_label_all(json, "result");
+    if(result == NULL) return NULL;
+    return result->child;
 }
 static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
 {
@@ -531,8 +533,8 @@ static int get_friends_info_back(LwqqHttpRequest* req)
     /** It seems everything is ok, we start parsing information
      * now
      */
-    if (json_tmp->child && json_tmp->child->child ) {
-        json_tmp = json_tmp->child->child;
+    if (json_tmp->child) {
+        json_tmp = json_tmp->child;
 
         /* Parse friend category information */
         parse_categories_child(lc, json_tmp);
@@ -864,8 +866,8 @@ static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc)
     /** It seems everything is ok, we start parsing information
      * now
      */
-    if (json_tmp->child && json_tmp->child->child ) {
-        json_tmp = json_tmp->child->child;
+    if (json_tmp->child ) {
+        json_tmp = json_tmp->child;
 
         /* Parse friend category information */
         parse_groups_gnamelist_child(lc, json_tmp);
@@ -948,9 +950,7 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
     json_temp = parse_retcode_result(root, &retcode);
     if(!json_temp || retcode != WEBQQ_OK) {err=1;goto done;}
 
-    if (json_temp->child && json_temp->child->child ) {
-
-        json_temp = json_temp->child;
+    if (json_temp ) {
         parse_discus_discu_child(lc,json_temp);
     }
 
@@ -1302,7 +1302,6 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         req = lwqq_http_create_default_request(lc,url,NULL);
         req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     }
-    lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1L);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     ev = req->do_request_async(req, 0, NULL,_C_(3p_i,group_detail_back,req,lc,group));
     lwqq_async_queue_add(&group->ev_queue,lwqq_info_get_group_detail_info,ev);
@@ -1345,8 +1344,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     req->response[req->resp_len] = '\0';
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
-        //lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
-        lwqq_puts("group_detail_back err");
+        lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
         errno = LWQQ_EC_ERROR;
         goto done;
     }
@@ -1361,8 +1359,8 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     /** It seems everything is ok, we start parsing information
      * now
      */
-    if (json_tmp->child && json_tmp->child->child ) {
-        json_tmp = json_tmp->child->child;
+    if (json_tmp->child ) {
+        json_tmp = json_tmp->child;
 
         /* first , get group information */
         parse_groups_ginfo_child(lc, group, json_tmp);

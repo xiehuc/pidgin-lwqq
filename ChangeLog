@@ -1,5 +1,8 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+dev (01/10/2013):
+	* enhancement: add timeout retry 3 times.
+
 dev (01/07/2013):
 	* enhancement: slow down cpu rate by add libev time interval
 
