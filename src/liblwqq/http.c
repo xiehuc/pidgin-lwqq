@@ -723,9 +723,11 @@ retry:
         }
         goto retry;
     }
+    if(ret == CURLE_ABORTED_BY_CALLBACK ){
+    }
     if(ret != CURLE_OK){
         lwqq_log(LOG_ERROR,"do_request fail:%d\n",ret);
-        return LWQQ_EC_ERROR;
+        return ret;
     }
     request->retry = LWQQ_RETRY_VALUE;
     have_read_bytes = request->resp_len;

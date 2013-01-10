@@ -92,6 +92,20 @@ typedef enum {
     WEBQQ_LOST_CONN = 121,
     WEBQQ_FATAL = 100000
 }WebqqRetCode;
+/* Lwqq Error Code */
+typedef enum {
+    LWQQ_EC_ERROR = -1,                 //<general error
+    LWQQ_EC_OK = 0,
+    LWQQ_EC_NULL_POINTER,
+    LWQQ_EC_FILE_NOT_EXIST,
+    LWQQ_EC_LOGIN_NEED_VC = 10,
+    LWQQ_EC_LOGIN_ABNORMAL = 60,///<登录需要解禁
+    LWQQ_EC_NETWORK_ERROR = 20,
+    LWQQ_EC_HTTP_ERROR = 30,
+    LWQQ_EC_DB_EXEC_FAIELD = 50,
+    LWQQ_EC_DB_CLOSE_FAILED,
+    LWQQ_EC_NO_RESULT
+} LwqqErrorCode;
 
 /* Struct defination */
 typedef struct LwqqFriendCategory {
@@ -286,20 +300,6 @@ struct _LwqqClient {
 } ;
 #define lwqq_client_userdata(lc) (lc->data)
 
-/* Lwqq Error Code */
-typedef enum {
-    LWQQ_EC_OK = 0,
-    LWQQ_EC_ERROR,
-    LWQQ_EC_NULL_POINTER,
-    LWQQ_EC_FILE_NOT_EXIST,
-    LWQQ_EC_LOGIN_NEED_VC = 10,
-    LWQQ_EC_LOGIN_ABNORMAL = 60,///<登录需要解禁
-    LWQQ_EC_NETWORK_ERROR = 20,
-    LWQQ_EC_HTTP_ERROR = 30,
-    LWQQ_EC_DB_EXEC_FAIELD = 50,
-    LWQQ_EC_DB_CLOSE_FAILED,
-    LWQQ_EC_NO_RESULT
-} LwqqErrorCode;
 
 /* Struct defination end */
 
