@@ -138,7 +138,9 @@ static char* build_smiley_exp()
 {
     char* exp = s_malloc0(2048);
     char* spec_char = "()[]*$\\|";
-    strcpy(exp,"<IMG ID=\"\\d+\">|\\[FACE_\\d+\\]|/\\S+");
+    //<IMG ID=''> is belongs to <.*?>
+    //first html label .then smiley
+    strcpy(exp,"<[^>]+>|\\[FACE_\\d+\\]|/\\S+");
     struct smile_entry* entry = &smile_tables[0];
     const char *smiley,*beg,*end;
     const char** ptr;
@@ -213,7 +215,8 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
             strcpy(write,">");
             write++;
         }else if(begin[0]=='<'){
-            if(begin[1]!='/'){
+            if(begin[1]=='/'){
+            }else{
                 if(begin[1]=='b')msg->f_style.b = 1;
                 else if(begin[1]=='i')msg->f_style.i = 1;
                 else if(begin[1]=='u')msg->f_style.u = 1;

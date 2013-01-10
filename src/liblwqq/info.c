@@ -1303,6 +1303,7 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     }
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,90L);
     ev = req->do_request_async(req, 0, NULL,_C_(3p_i,group_detail_back,req,lc,group));
     lwqq_async_queue_add(&group->ev_queue,lwqq_info_get_group_detail_info,ev);
     return ev;
@@ -1345,6 +1346,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
+        assert(0);
         errno = LWQQ_EC_ERROR;
         goto done;
     }
