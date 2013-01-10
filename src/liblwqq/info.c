@@ -1447,9 +1447,7 @@ static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGr
     req->response[req->resp_len] = '\0';
     json_parse_document(&root,req->response);
     json = parse_retcode_result(root, &retcode);
-    if(json && json->child) {
-        json = json->child;
-
+    if(json) {
         parse_discus_info_child(lc,discu,json);
         parse_discus_other_child(lc,discu,json);
     }
