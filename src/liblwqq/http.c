@@ -10,9 +10,10 @@
 #include "logger.h"
 #include "queue.h"
 
-//#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
-#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
+#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
+//#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
 
+#define LWQQ_RETRY_VALUE 3
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                  const char *value);
@@ -277,6 +278,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     request = s_malloc0(sizeof(*request));
     
     request->req = curl_easy_init();
+    request->retry = LWQQ_RETRY_VALUE;
     if (!request->req) {
         /* Seem like request->req must be non null. FIXME */
         goto failed;
@@ -296,6 +298,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
     //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
     curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,10);
+    //set normal operate timeout to 30.official value.
+    curl_easy_setopt(request->req,CURLOPT_TIMEOUT,30);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;
@@ -487,12 +491,16 @@ static void check_multi_info(GLOBAL *g)
     int msgs_left;
     D_ITEM *conn;
     CURL *easy;
+    long err;
 
     //printf("still_running:%d\n",g->still_running);
     while ((msg = curl_multi_info_read(g->multi, &msgs_left))) {
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
+            err = 0;
+            curl_easy_getinfo(easy, CURLINFO_OS_ERRNO,&err);
+            lwqq_verbose(2,"err:%ld\n",err);
 
             LIST_REMOVE(conn,entries);
             curl_multi_remove_handle(g->multi, easy);
@@ -677,6 +685,9 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
 {
     if (!request->req)
         return -1;
+    CURLcode ret;
+retry:
+    ret=0;
 
     int have_read_bytes = 0;
     char **resp = &request->response;
@@ -701,7 +712,22 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         goto failed;
     }
 
-    curl_easy_perform(request->req);
+    ret = curl_easy_perform(request->req);
+    //perduce timeout.
+    if(ret == CURLE_OPERATION_TIMEDOUT ){
+        lwqq_log(LOG_WARNING,"do_request timeout\n");
+        request->retry --;
+        if(request->retry == 0){
+            lwqq_log(LOG_WARNING,"do_request retry used out\n");
+            return LWQQ_EC_NETWORK_ERROR;
+        }
+        goto retry;
+    }
+    if(ret != CURLE_OK){
+        lwqq_log(LOG_ERROR,"do_request fail:%d\n",ret);
+        return LWQQ_EC_ERROR;
+    }
+    request->retry = LWQQ_RETRY_VALUE;
     have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
 

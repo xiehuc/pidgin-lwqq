@@ -513,7 +513,7 @@ static int get_friends_info_back(LwqqHttpRequest* req)
     req->response[req->resp_len] = '\0';
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
-        lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", req->response);
+        lwqq_log(LOG_ERROR, "Parse json object of friends error: \n%s\n", req->response);
         err = LWQQ_EC_ERROR;
         goto done;
     }

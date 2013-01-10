@@ -45,6 +45,7 @@ typedef struct LwqqHttpRequest {
      * after do_request() called.
      */
     long http_code;
+    int retry;
 
     /* Server response, used when do async request */
     char *location;

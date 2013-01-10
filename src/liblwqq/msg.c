@@ -1205,6 +1205,8 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    //long poll timeout is 90s.official value
+    lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,90);
 
 #if USE_MSG_THREAD
     int retcode;
@@ -1212,8 +1214,9 @@ static void *start_poll_msg(void *msg_list)
     lwqq_http_on_progress(req, poll_progress, list);
     while(1) {
         ret = req->do_request(req, 1, msg);
-        lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,0L);
-
+        if(ret != 0){
+            lwqq_verbose(2,"poll_msg:err:%d\n",ret);
+        }
         if(!lwqq_client_logined(lc)) break;
 
         if (ret || req->http_code != 200) continue;
