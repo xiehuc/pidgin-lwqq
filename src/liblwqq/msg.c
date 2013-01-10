@@ -1544,27 +1544,10 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent*
     c->data.cface.name = s_strdup(file);
     c->data.cface.size = 0;
 
-    /*static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&mutex);
-    if(!lc->gface_sig)
-        query_gface_sig(lc);
-    pthread_mutex_unlock(&mutex);*/
 done:
     lwqq_http_request_free(req);
     return errno;
 }
-/*
-static LwqqAsyncEvent* lwqq_msg_upload_content(
-        LwqqClient* lc,LwqqMsgMessage* msg,LwqqMsgContent* c)
-{
-    if(!c || !lc ) return NULL;
-    if(c->type == LWQQ_CONTENT_CFACE && c->data.cface.data > 0)
-        return lwqq_msg_upload_cface(lc,c,msg->type);
-    else if(c->type == LWQQ_CONTENT_OFFPIC && c->data.img.data > 0)
-        return lwqq_msg_upload_offline_pic(lc,c,msg->to);
-    return NULL;
-}
-*/
 
 void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsg* msg,LwqqAsyncEvent* event)
 {

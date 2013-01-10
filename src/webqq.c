@@ -1931,11 +1931,13 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
-        if(group->mask == LWQQ_MASK_NONE)
-            action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
-        else
-            action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
-        act = g_list_append(act,action);
+        if(group){
+            if(group->mask == LWQQ_MASK_NONE)
+                action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
+            else
+                action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
+            act = g_list_append(act,action);
+        }
     }
     return act;
 }
