@@ -5,7 +5,8 @@ Intro
 -----
  provide qq protocol for pidgin on linux. based on webqq service.  
  a pidgin plugin based on [lwqq](https://github.com/mathslinux/lwqq).
- a excellent safe useful library for webqq protocol.   
+ a excellent compact useful library for webqq protocol.   
+ since the name may confused. lwqq is linux webqq
 
 License: GPLv3
 
@@ -65,7 +66,7 @@ Function list
 * support block group message
 * support recv file trans
 * support local qqnumber cache
-* support add friend
+* support add friend/group
 
 ### empathy support (via telepathy-haze)
 
@@ -86,7 +87,8 @@ Known Issue
 -----
 为linux的pidgin提供qq协议,基于webqq服务.
 是在[lwqq](https://github.com/mathslinux/lwqq)基础上开发而来.
-lwqq库是一个非常安全有效的webqq协议的库.  
+lwqq库是一个非常严谨有效的webqq协议的库.  
+lwqq 即是 linux webqq 之意
 
 快速安装
 --------
@@ -141,7 +143,7 @@ lwqq库是一个非常安全有效的webqq协议的库.
 * 支持群消息屏蔽
 * 支持接受文件传输
 * 支持本地QQ号缓存机制
-* 支持添加好友
+* 支持添加好友|群
 
 ### empathy support (via telepathy-haze)
 
