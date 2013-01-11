@@ -98,7 +98,7 @@ typedef struct LwqqMsgMessage {
     } f_style;
     char *f_color;
 
-    TAILQ_HEAD(, LwqqMsgContent) content;
+    TAILQ_HEAD(LwqqMsgContentHead, LwqqMsgContent) content;
 } LwqqMsgMessage;
 
 typedef struct LwqqMsgStatusChange {

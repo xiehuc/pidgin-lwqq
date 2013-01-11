@@ -173,19 +173,25 @@ static char* build_smiley_exp()
 static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
-    c = s_malloc0(sizeof(*c));
-    c->type = LWQQ_CONTENT_STRING;
-    if(to){
-        c->data.str = s_malloc0(to-from+1);
-        strncpy(c->data.str,from,to-from);
-        c->data.str[to-from]='\0';
+    LwqqMsgContent* last;
+    const char *begin,*end,*read;
+    char* write;
+    if(to==NULL)to = from+strlen(from)+1;
+    last = TAILQ_LAST(&msg->content,LwqqMsgContentHead);
+    if(last && last->type == LWQQ_CONTENT_STRING){
+        c = NULL;//return NULL
+        size_t sz = strlen(last->data.str);
+        last->data.str = s_realloc(last->data.str,sz+to-from+3);
+        read = write = last->data.str+sz;
     }else{
-        c->data.str = s_malloc(strlen(from)+3);
-        strcpy(c->data.str,from);
+        c = s_malloc0(sizeof(*c));
+        c->type = LWQQ_CONTENT_STRING;
+        c->data.str = s_malloc0(to-from+3);
+        read = write = c->data.str;
     }
-    const char *begin,*end;
-    const char *read = c->data.str;
-    char *write = c->data.str;
+    //initial value
+    strncpy(write,from,to-from);
+    write[to-from]='\0';
     const char *ptr;
     while(*read!='\0'){
         if(!trex_search(hs_regex,read,&begin,&end)){
@@ -290,7 +296,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
         if(!trex_search(x,ptr,&begin,&end)){
             ///last part.
             c = build_string_content(ptr,NULL,mmsg);
-            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+            if(c) TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
             //this is finished yet.
             break;
         }
@@ -299,7 +305,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //because insert_tail is a macro.
             c = build_string_content(ptr,begin,mmsg);
             //you should insert twice now. like |inserted|begin|
-            TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+            if(c) TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
         }
         trex_getsubexp(x,0,&m);
         if(strstr(begin,"<IMG")==begin){
