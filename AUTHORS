@@ -1,0 +1,21 @@
+pidgin-lwqq -- A Linux WebQQ Protocol Plugin for Pidgin and Empathy
+====================================================================
+
+This Project is based on mathslinux's lwqq project.
+i add many useful function to it.
+and wrap it to libpurple. so let pidgin can use it.
+and refine some api to provide powerful and more 
+easy to use 
+
+lwqq
+----
+mathslinux      <riegamaths@gmail.com>
+
+pidgin-lwqq
+-----------
+xiehuc          <xiehuc@gmail.com>
+
+thanks to
+---------
+felixonmars     <felixonmars@gmail.com>     test,package for arch
+lainme          <lainme993@gmail.com>       test,package for ubuntu
