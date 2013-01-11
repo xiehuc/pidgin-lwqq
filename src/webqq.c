@@ -680,8 +680,14 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
             ac->rewrite_pic_list = g_list_append(ac->rewrite_pic_list,entry);
             pic++;
         }
-        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
-        lwqq_async_add_event_listener(ev,_C_(3p,rewrite_whole_message_list,ev,ac,group));
+        //first check there is a event on queue.
+        //if it is. it would do anything.
+        //so we didn't do in this.
+        LwqqAsyncEvent* ev = lwqq_async_queue_find(&group->ev_queue,lwqq_info_get_group_detail_info);
+        if(ev == NULL){
+            ev = lwqq_info_get_group_detail_info(lc,group,NULL);
+            lwqq_async_add_event_listener(ev,_C_(3p,rewrite_whole_message_list,ev,ac,group));
+        }
     }else{
         group_member_list_come(ac, group);
     }
