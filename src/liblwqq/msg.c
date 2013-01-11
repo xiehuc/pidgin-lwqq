@@ -933,11 +933,10 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
              "http://d.web2.qq.com",
              msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
     req = lwqq_http_create_default_request(lc,url, err);
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     if (!req) {
         goto done;
     }
-    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1);
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
@@ -1415,7 +1414,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const 
     if(req->http_code!=200){
         goto done;
     }
-    lwqq_puts(req->response);
+    lwqq_verbose(3,"%s\n",req->response);
 
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
@@ -1517,7 +1516,7 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent*
     int errno = 0;
     char msg[256];
 
-    if(req->response)lwqq_puts(req->response);
+    lwqq_verbose(3,"%s\n",req->response);
     if(req->http_code!=200){
         errno = 1;
         goto done;
@@ -1634,7 +1633,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
             content,lc->msg_id,lc->clientid,lc->psessionid);
     format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
     if(strlen(data)+1==sizeof(data)) return NULL;
-    lwqq_puts(data);
+    lwqq_verbose(3,"%s\n",data);
 
     /* Create a POST request */
     char url[512];
@@ -1664,7 +1663,7 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto failed;
     }
-    lwqq_puts(req->response);
+    lwqq_verbose(3,"%s\n",req->response);
 
     //we check result if ok return 1,fail return 0;
     ret = json_parse_document(&root,req->response);
@@ -1678,8 +1677,6 @@ static int msg_send_back(LwqqHttpRequest* req,void* data)
 failed:
     if(root)
         json_free_value(&root);
-    if(errno)
-        lwqq_puts(req->response);
     lwqq_http_request_free(req);
     return errno;
 }
@@ -1738,7 +1735,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
             msg->session_id,name,msg->from,lc->psessionid,time(NULL),lc->clientid);
     s_free(name);
     //s_free(gbk);
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
@@ -1805,7 +1802,7 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    lwqq_puts(req->response);
+    lwqq_verbose(3,"%s\n",req->response);
 
     char *end = strchr(req->response,'}');
     *(end+1) = '\0';
@@ -1849,7 +1846,7 @@ static int send_offfile_back(LwqqHttpRequest* req,void* data)
         errno = 1;
         goto done;
     }
-    lwqq_puts(req->response);
+    lwqq_verbose(3,"%s\n",req->response);
     json_parse_document(&json, req->response);
     errno = atoi(json_parse_simple_value(json, "retcode"));
 done:
@@ -1873,7 +1870,7 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
     snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%ld/%s/%s/1/f/1/0/0?psessionid=%s",
             file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
@@ -1926,7 +1923,7 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/input_notify2?to_uin=%s&clientid=%s&psessionid=%s&t=%ld",
             serv_id,lc->clientid,lc->psessionid,time(NULL)
             );
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
 }

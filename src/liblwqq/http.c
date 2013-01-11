@@ -550,13 +550,13 @@ static void timer_cb(LwqqAsyncTimerHandle timer,void* data)
 static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
     //lwqq_log(LOG_NOTICE,"multi_timer,timeout:%ld\n",timeout_ms);
-    lwqq_verbose(3,"multi_timer,timeout:%ld\n",timeout_ms);
+    lwqq_verbose(4,"multi_timer,timeout:%ld\n",timeout_ms);
     //this function call only when timeout clock '''changed'''.
     //called by curl
     GLOBAL* g = userp;
     //printf("timer_cb:%ld\n",timeout_ms);
     lwqq_async_timer_stop(&g->timer_event);
-#if USE_DEBUG && LWQQ_VERBOSE_LEVEL>3
+#if USE_DEBUG && LWQQ_VERBOSE_LEVEL>=5
    if(g->still_running>1){
         lwqq_gdb_whats_running();
     }

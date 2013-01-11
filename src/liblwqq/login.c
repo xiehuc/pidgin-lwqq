@@ -83,7 +83,7 @@ static LwqqAsyncEvent* get_verify_code(LwqqClient *lc)
     snprintf(url, sizeof(url), "%s%s?uin=%s&appid=%s", LWQQ_URL_CHECK_HOST,
              VCCHECKPATH, lc->username, APPID);
     req = lwqq_http_create_default_request(lc,url,NULL);
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     
     snprintf(chkuin, sizeof(chkuin), "chkuin=%s", lc->username);
     req->set_header(req, "Cookie", chkuin);
@@ -303,7 +303,6 @@ static char *lwqq_enc_pwd(const char *pwd, const char *vc, const char *uin)
     upcase_string(buf, strlen(buf));
 
     /* OK, seems like every is OK */
-    lwqq_puts(buf);
     return s_strdup(buf);
 }
 
@@ -327,7 +326,7 @@ static LwqqAsyncEvent* do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *
              "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
 
     req = lwqq_http_create_default_request(lc,url, err);
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     /* Setup http header */
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
@@ -566,7 +565,7 @@ static int set_online_status_back(LwqqHttpRequest* req)
      * 
      */
     response = req->response;
-    lwqq_puts(response);
+    lwqq_verbose(3,"%s\n",response);
     ret = json_parse_document(&json, response);
     if (ret != JSON_OK) {
         err = LWQQ_EC_ERROR;

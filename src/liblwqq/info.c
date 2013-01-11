@@ -801,8 +801,6 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
 LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
 {
 
-    lwqq_log(LOG_DEBUG, "in function.");
-
     char msg[256];
     char url[512];
     LwqqHttpRequest *req = NULL;
@@ -1266,8 +1264,6 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
                                      LwqqErrorCode *err)
 {
-    lwqq_log(LOG_DEBUG, "in function.");
-
     char url[512];
     LwqqHttpRequest *req = NULL;
 
@@ -1346,7 +1342,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
-        assert(0);
+        //assert(0);
         errno = LWQQ_EC_ERROR;
         goto done;
     }
@@ -1485,8 +1481,6 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup
  */
 LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy)
 {
-    lwqq_log(LOG_DEBUG, "in function.");
-
     char url[512];
     LwqqHttpRequest *req = NULL;
 
