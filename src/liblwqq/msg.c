@@ -912,8 +912,6 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
         goto done;
     }
     req->set_header(req, "Referer", "http://web2.qq.com/");
-    ///this is very important!!!!!!!!!
-    //req->set_header(req, "Host", "web2.qq.com");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
 
     return req->do_request_async(req,0,NULL,_C_(2p_i,set_content_picture_data,req,c));

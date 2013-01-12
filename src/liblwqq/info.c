@@ -1286,8 +1286,12 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         snprintf(url, sizeof(url),
                 "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s&t=%ld",
                 "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));
+        /*snprintf(url, sizeof(url),
+                "%s/api/get_group_info?gcode=%%5B%s%%5D&retainKey=minfo&vfwebqq=%s&t=%ld",
+                "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));*/
         req = lwqq_http_create_default_request(lc,url, err);
         req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+        lwqq_verbose(3,"%s\n",url);
 
     }else if(group->type == LWQQ_GROUP_DISCU){
 
@@ -1882,10 +1886,24 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
 
     mask_type = (group->type == LWQQ_GROUP_QUN)? "groupmask":"discumask";
 
-    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{"
-            "\"%s\":\"%d\",\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
-            mask_type,group->gid,mask,lc->index,lc->port,lc->vfwebqq);
-    lwqq_puts(post);
+    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{",mask_type);
+    LwqqMask mask_ori = group->mask;
+    group->mask = mask;
+    if(group->type == LWQQ_GROUP_QUN){
+        LwqqGroup* g;
+        LIST_FOREACH(g,&lc->groups,entries){
+            format_append(post,"\"%s\":\"%d\",",g->gid,g->mask);
+        }
+    }else{
+        LwqqGroup* d;
+        LIST_FOREACH(d,&lc->discus,entries){
+            format_append(post,"\"%s\":\"%d\",",d->did,d->mask);
+        }
+    }
+    group->mask = mask_ori;
+    format_append(post,"\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
+            lc->index,lc->port,lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");

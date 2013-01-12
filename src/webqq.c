@@ -1389,6 +1389,8 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 static unsigned int qq_send_typing(PurpleConnection* gc,const char* local_id,PurpleTypingState state)
 {
     if(state != PURPLE_TYPING) return 0;
+    //if it is whisper we ignore it.
+    if(strstr(local_id," ### ")!=NULL) return 0;
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     lwqq_msg_input_notify(ac->qq,local_id_to_serv(ac,local_id));
     return 0;

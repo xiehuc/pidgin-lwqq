@@ -396,6 +396,8 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){
                     int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
+                    //let it freed by purple
+                    c->data.img.data = NULL;
                     //make it room to change num if necessary.
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
@@ -406,6 +408,8 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
             case LWQQ_CONTENT_CFACE:
                 if(c->data.cface.size>0){
                     int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+                    //let it freed by purple
+                    c->data.cface.data = NULL;
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
                 }else if(c->data.cface.direct_url){
