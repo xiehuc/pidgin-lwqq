@@ -1879,7 +1879,7 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
 {
     if(!lc||!group) return NULL;
     char url[512];
-    char post[512];
+    char post[2048];
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
     lwqq_puts(url);
     const char* mask_type;
