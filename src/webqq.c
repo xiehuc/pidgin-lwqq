@@ -548,7 +548,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
             if(chat){
                 purple_blist_remove_chat(chat);
-            //purple_chat_destroy(chat);
+                //purple_chat_destroy(chat);
             }
             }
             break;
@@ -1942,6 +1942,63 @@ static void qq_unblock_chat(PurpleBlistNode* node)
             lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE),
             _C_(p,flush_group_name,chat));
 }
+static void self_card_ok(vp_list* list,PurpleRequestFields* root)
+{
+    vp_start(*list);
+    LwqqBusinessCard* c = vp_arg(*list,LwqqBusinessCard*);
+    LwqqClient* lc = vp_arg(*list,LwqqClient*);
+    vp_end(*list);
+    s_free(list);
+    const char* value = purple_request_fields_get_string(root, "name");
+    if(value){ s_free(c->name); c->name = s_strdup(value);}
+    value = purple_request_fields_get_string(root,"phone");
+    if(value){ s_free(c->phone); c->phone = s_strdup(value);}
+    value = purple_request_fields_get_string(root, "email");
+    if(value){ s_free(c->email); c->email = s_strdup(value);}
+    value = purple_request_fields_get_string(root, "remark");
+    if(value){ s_free(c->remark); c->remark = s_strdup(value);}
+    lwqq_info_set_self_card(lc, c);
+    lwqq_card_free(c);
+}
+static void self_card_cancel(vp_list* list,PurpleRequestFields* root)
+{
+    vp_start(*list);
+    LwqqBusinessCard* c = vp_arg(*list,LwqqBusinessCard*);
+    vp_end(*list);
+    s_free(list);
+    lwqq_card_free(c);
+}
+static void qq_display_self_card(LwqqClient* lc,LwqqBusinessCard* card)
+{
+    PurpleRequestFields* fields = purple_request_fields_new();
+    PurpleRequestFieldGroup* g = purple_request_field_group_new("cards");
+    purple_request_fields_add_group(fields, g);
+    PurpleRequestField* f;
+    f = purple_request_field_string_new("name", "名称", card->name, FALSE);
+    purple_request_field_group_add_field(g, f);
+    f = purple_request_field_string_new("phone", "电话", card->phone, FALSE);
+    purple_request_field_group_add_field(g, f);
+    f = purple_request_field_string_new("email", "邮箱", card->email, FALSE);
+    purple_request_field_group_add_field(g, f);
+    f = purple_request_field_string_new("remark", "备注", card->remark, TRUE);
+    purple_request_field_group_add_field(g, f);
+
+    qq_account* ac = lc->data;
+    purple_request_fields(ac->gc, "群名片", NULL, NULL, fields,
+            "更新", G_CALLBACK(self_card_ok), "取消", G_CALLBACK(self_card_cancel), 
+            ac->account, NULL, NULL, _P_(2p,card,lc));
+}
+static void qq_set_self_card(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group = find_group_by_chat(chat);
+    LwqqBusinessCard* card = s_malloc0(sizeof(*card));
+    LwqqAsyncEvent* ev = lwqq_info_get_self_card(lc, group, card);
+    lwqq_async_add_event_listener(ev, _C_(2p,qq_display_self_card,lc,card));
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -1961,6 +2018,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
                 action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
             act = g_list_append(act,action);
         }
+        action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
+        act = g_list_append(act,action);
     }
     return act;
 }

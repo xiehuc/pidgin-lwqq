@@ -28,7 +28,7 @@
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
-typedef struct _LwqqClient LwqqClient;
+//typedef struct _LwqqClient LwqqClient;
 typedef LIST_HEAD(,LwqqAsyncEntry) LwqqAsyncQueue;
 
 
@@ -93,6 +93,11 @@ typedef enum {
     WEBQQ_LOST_CONN = 121,
     WEBQQ_FATAL = 100000
 }WebqqRetCode;
+
+typedef enum {
+    LWQQ_FEMALE = 1,
+    LWQQ_MALE = 2
+}LwqqGender;
 /* Lwqq Error Code */
 typedef enum {
     LWQQ_EC_ERROR = -1,                 //<general error
@@ -259,7 +264,7 @@ typedef struct LwqqCookies {
     char *lwcookies;
 } LwqqCookies;
 /* LwqqClient API */
-struct _LwqqClient {
+typedef struct LwqqClient {
     char *username;             /**< Username */
     char *password;             /**< Password */
     LwqqBuddy *myself;          /**< Myself */
@@ -291,8 +296,8 @@ struct _LwqqClient {
 
     LwqqAsyncQueue ev_queue;
 
-    LwqqBuddy* (*find_buddy_by_uin)(LwqqClient* lc,const char* uin);
-    LwqqBuddy* (*find_buddy_by_qqnumber)(LwqqClient* lc,const char* qqnumber);
+    LwqqBuddy* (*find_buddy_by_uin)(struct LwqqClient* lc,const char* uin);
+    LwqqBuddy* (*find_buddy_by_qqnumber)(struct LwqqClient* lc,const char* qqnumber);
 
     /** non data area **/
 
@@ -300,7 +305,7 @@ struct _LwqqClient {
     void (*dispatch)(DISPATCH_FUNC,CALLBACK_FUNC,...);
 
     int magic;          /**< 0x4153 **/
-} ;
+} LwqqClient;
 #define lwqq_client_userdata(lc) (lc->data)
 
 

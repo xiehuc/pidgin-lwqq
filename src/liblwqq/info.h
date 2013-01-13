@@ -14,6 +14,16 @@
 #include "type.h"
 #include "msg.h"
 
+typedef struct LwqqBusinessCard {
+    char* phone;
+    char* uin;
+    char* email;
+    char* remark;
+    char* gcode;
+    char* name;
+    LwqqGender gender;
+} LwqqBusinessCard;
+
 /** 
  * Get QQ friends information. These information include basic friend
  * information, friends group information, and so on
@@ -129,5 +139,8 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
 LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra);
 
 LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g);
+void lwqq_card_free(LwqqBusinessCard* card);
+LwqqAsyncEvent* lwqq_info_get_self_card(LwqqClient* lc,LwqqGroup* g,LwqqBusinessCard* card);
+LwqqAsyncEvent* lwqq_info_set_self_card(LwqqClient* lc,LwqqBusinessCard* card);
 
 #endif  /* LWQQ_INFO_H */

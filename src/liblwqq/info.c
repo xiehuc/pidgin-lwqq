@@ -87,8 +87,19 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
     char* s=json_parse_simple_value(json,v);\
     if(s){\
         s_free(k);\
-        k=json_unescape(s);\
+        k=s_strdup(s);\
     }\
+}
+#define parse_key_string(k,v) {\
+    char* s = json_parse_simple_value(json,v);\
+    if(s){\
+        s_free(k);\
+        k = json_unescape(s);\
+    }\
+}
+#define parse_key_int(k,v,d) {\
+    char* s = json_parse_simple_value(json,v);\
+    if(s) k = s_atoi(s,d);\
 }
 
 /**
@@ -208,9 +219,22 @@ static void parse_group_info(json_t* json,LwqqGroup* g)
     parse_key_value(g->face,"face");
     parse_key_value(g->flag,"flag");
     parse_key_value(g->gid,"gid");
-    parse_key_value(g->name,"name");
+    parse_key_string(g->name,"name");
     parse_key_value(g->option,"option");
     parse_key_value(g->owner,"owner");
+}
+
+static void parse_business_card(json_t* json,LwqqBusinessCard* c)
+{
+    //{"phone":"","muin":350512021,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}
+    if(!json) return;
+    parse_key_value(c->phone,"phone");
+    parse_key_value(c->uin,"muin");
+    parse_key_value(c->email,"email");
+    parse_key_string(c->remark,"remark");
+    parse_key_value(c->gcode,"gcode");
+    parse_key_string(c->name,"name");
+    parse_key_int(c->gender,"gender",LWQQ_MALE);
 }
 /**
  * this process simple result;
@@ -313,6 +337,24 @@ static int process_group_info(LwqqHttpRequest*req,LwqqGroup* g)
     lwqq_util_jump_if_retcode_fail(err);
     if(result){
         parse_group_info(parse_key_child(result, "ginfo"),g);
+    }
+done:
+    lwqq_util_clean_json_and_req(root,req);
+    return err;
+}
+
+static int process_business_card(LwqqHttpRequest* req,LwqqBusinessCard* card)
+{
+    //{"retcode":0,"result":{"phone":"","muin":350512021,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}}
+    int err = 0;
+    json_t *root = NULL,*result;
+    lwqq_util_jump_if_http_fail(req,err);
+    lwqq_verbose(3,"%s\n",req->response);
+    lwqq_util_jump_if_json_fail(root,req->response,err);
+    result = parse_retcode_result(root, &err);
+    lwqq_util_jump_if_retcode_fail(err);
+    if(result){
+        parse_business_card(result,card);
     }
 done:
     lwqq_util_clean_json_and_req(root,req);
@@ -1935,4 +1977,50 @@ LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g)
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
     return req->do_request_async(req,0,NULL,_C_(2p_i,process_group_info,req,g));
 
+}
+
+void lwqq_card_free(LwqqBusinessCard* card)
+{
+    if(card){
+        s_free(card->phone);
+        s_free(card->uin);
+        s_free(card->email);
+        s_free(card->remark);
+        s_free(card->gcode);
+        s_free(card->name);
+        s_free(card);
+    }
+}
+LwqqAsyncEvent* lwqq_info_get_self_card(LwqqClient* lc,LwqqGroup* g,LwqqBusinessCard* card)
+{
+    if(!lc||!g||!card) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_self_business_card2?gcode=%s&vfwebqq=%s&t=%ld",
+            g->code,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    lwqq_verbose(3,"%s\n",url);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
+    return req->do_request_async(req,0,NULL,_C_(2p_i,process_business_card,req,card));
+}
+
+LwqqAsyncEvent* lwqq_info_set_self_card(LwqqClient* lc,LwqqBusinessCard* card)
+{
+    if(!lc||!card) return NULL;
+    char url[512];
+    char post[1024];
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/update_group_business_card2");
+    snprintf(post,sizeof(post),"r={\"gcode\":\"%s\",",card->gcode);
+    if(card->phone) format_append(post,"\"phone\":\"%s\",",card->phone);
+    if(card->email) format_append(post,"\"email\":\"%s\",",card->email);
+    if(card->remark) format_append(post,"\"remark\":\"%s\",",card->remark);
+    if(card->name) format_append(post,"\"name\":\"%s\",",card->name);
+    if(card->gender) format_append(post,"\"name\":\"%d\",",card->gender);
+    format_append(post,"\"vfwebqq\":\"%s\"}",lc->vfwebqq);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
+    return req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
 }
