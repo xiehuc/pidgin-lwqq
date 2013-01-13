@@ -648,6 +648,7 @@ static void login_stage_2(LwqqAsyncEvent* ev)
 {
     if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    if(!lwqq_client_valid(lc)) return;
     int err = lwqq_async_event_get_result(ev);
     if (err) {
         lwqq_log(LOG_ERROR, "Get webqq version error\n");
@@ -680,6 +681,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
     if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    if(!lwqq_client_valid(lc)) return;
     switch (err) {
         case LWQQ_EC_LOGIN_NEED_VC:
             lwqq_log(LOG_WARNING, "Need to enter verify code\n");
@@ -707,6 +709,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
 
 static void login_stage_4(LwqqClient* lc)
 {
+    if(!lwqq_client_valid(lc)) return;
     /* Third: calculate the md5 */
     char *md5 = lwqq_enc_pwd(lc->password, lc->vc->str, lc->vc->uin);
 
@@ -721,6 +724,7 @@ static void login_stage_5(LwqqAsyncEvent* ev)
     if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
+    if(!lwqq_client_valid(lc)) return;
     /* Free old value */
 
     if(err != LWQQ_EC_OK){
