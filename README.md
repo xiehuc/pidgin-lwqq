@@ -59,7 +59,7 @@ Function list
 * confirm buddy added request
 * visit buddy qzone
 * group whisper message
-* change status
+* change status/business card
 * support multi webqq account
 * support send/recv offline file
 * support font style
@@ -136,7 +136,7 @@ lwqq 即是 linux webqq 之意
 * 支持确认添加好友请求
 * 支持群的临时会话
 * 支持访问QQ空间
-* 支持更改在线状态
+* 支持更改在线状态|群名片
 * 支持多账户登录
 * 支持发送接受离线文件
 * 支持文本样式

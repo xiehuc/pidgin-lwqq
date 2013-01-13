@@ -1,5 +1,8 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+dev (01/13/2013):
+	* new feature: change self business card for group.
+
 dev (01/10/2013):
 	* enhancement: add timeout retry 3 times.
 
