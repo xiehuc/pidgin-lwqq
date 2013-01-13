@@ -409,12 +409,11 @@ static const char* group_name(LwqqGroup* group)
         strcat(gname,"(屏蔽)");
     return gname;
 }
-static int group_come(LwqqClient* lc,void* data)
+static int group_come(LwqqClient* lc,LwqqGroup* group)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
-    LwqqGroup* group = data;
     PurpleGroup* qun = purple_group_new("QQ群");
     PurpleGroup* talk = purple_group_new("讨论组");
     GHashTable* components;
@@ -459,7 +458,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     strcpy(buf,"");
 
     translate_struct_to_message(ac,msg,buf);
-    serv_got_im(pc, serv_id_to_local(ac,msg->from), buf, PURPLE_MESSAGE_RECV, msg->time);
+    serv_got_im(pc, serv_id_to_local(ac,msg->super.from), buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
@@ -470,7 +469,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
              "到期时间:%s"
              "<a href=\"%s\">点此下载</a>",
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
-    serv_got_im(pc,serv_id_to_local(ac,msg->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,serv_id_to_local(ac,msg->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
 {
@@ -479,7 +478,7 @@ static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
     char buf[512];
     const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
     snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
-    serv_got_im(pc,serv_id_to_local(ac,notify->from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,serv_id_to_local(ac,notify->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
 {
@@ -516,7 +515,7 @@ static void request_join_confirm(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqConfirmT
 {
     lwqq_info_answer_request_join_group(lc, msg,ct->answer, "");
     lwqq_ct_free(ct);
-    lwqq_msg_sys_g_msg_free(msg);
+    lwqq_msg_free((LwqqMsg*)msg);
 }
 static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* msg)
 {
@@ -534,15 +533,24 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
 static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
 {
     qq_account* ac = lc->data;
+    char body[1024];
     switch(msg->type){
         case GROUP_CREATE:
             purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
             break;
         case GROUP_JOIN:
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您被一个群加入了", NULL, NULL, NULL);
+            snprintf(body,sizeof(body),"您加入了群[%s]",msg->group->name);
+            group_come(lc, msg->group);
             break;
         case GROUP_LEAVE:
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您离开了一个群", NULL, NULL, NULL);
+            {
+            snprintf(body,sizeof(body),"您离开了群[%s]",msg->group->name);
+            PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
+            if(chat){
+                purple_blist_remove_chat(chat);
+            //purple_chat_destroy(chat);
+            }
+            }
             break;
         case GROUP_REQUEST_JOIN:
             {
@@ -551,11 +559,13 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                 lwqq_msg_move(msg,nmsg);
                 LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
-
+                return;
             } break;
         default:
+            return;
             break;
     }
+    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body,NULL, NULL, NULL);
 }
 //open chat conversation dialog
 static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
@@ -644,7 +654,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    LwqqGroup* group = find_group_by_gid(lc,(msg->type==LWQQ_MT_DISCU_MSG)?msg->discu.did:msg->from);
+    LwqqGroup* group = find_group_by_gid(lc,(msg->super.super.type==LWQQ_MS_DISCU_MSG)?msg->discu.did:msg->super.from);
 
     if(group == NULL) return FAILED;
 
@@ -721,7 +731,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
 
-    const char* from = mmsg->from;
+    const char* from = mmsg->super.from;
     const char* gid = mmsg->sess.id;
     char name[70];
     static char buf[8192];
@@ -920,46 +930,51 @@ void qq_msg_check(LwqqClient* lc)
     while(msg) {
         int res = SUCCESS;
         if(msg->msg) {
-            switch(msg->msg->type) {
-            case LWQQ_MT_BUDDY_MSG:
-                buddy_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
-                break;
-            case LWQQ_MT_GROUP_MSG:
-            case LWQQ_MT_DISCU_MSG:
-                res = group_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
-                break;
-            case LWQQ_MT_SESS_MSG:
-                whisper_message(lc,(LwqqMsgMessage*)msg->msg->opaque);
+            switch(lwqq_mt_bits(msg->msg->type)) {
+            case LWQQ_MT_MESSAGE:
+                switch(msg->msg->type){
+                    case LWQQ_MS_BUDDY_MSG:
+                        buddy_message(lc,(LwqqMsgMessage*)msg->msg);
+                        break;
+                    case LWQQ_MS_GROUP_MSG:
+                    case LWQQ_MS_DISCU_MSG:
+                        res = group_message(lc,(LwqqMsgMessage*)msg->msg);
+                        break;
+                    case LWQQ_MS_SESS_MSG:
+                        whisper_message(lc,(LwqqMsgMessage*)msg->msg);
+                        break;
+                    default: break;
+                }
                 break;
             case LWQQ_MT_STATUS_CHANGE:
-                status_change(lc,(LwqqMsgStatusChange*)msg->msg->opaque);
+                status_change(lc,(LwqqMsgStatusChange*)msg->msg);
                 break;
             case LWQQ_MT_KICK_MESSAGE:
-                kick_message(lc,(LwqqMsgKickMessage*)msg->msg->opaque);
+                kick_message(lc,(LwqqMsgKickMessage*)msg->msg);
                 break;
             case LWQQ_MT_SYSTEM:
-                system_message(lc,(LwqqMsgSystem*)msg->msg->opaque);
+                system_message(lc,(LwqqMsgSystem*)msg->msg);
                 break;
             case LWQQ_MT_BLIST_CHANGE:
-                blist_change(lc,(LwqqMsgBlistChange*)msg->msg->opaque);
+                blist_change(lc,(LwqqMsgBlistChange*)msg->msg);
                 break;
             case LWQQ_MT_OFFFILE:
-                offline_file(lc,(LwqqMsgOffFile*)msg->msg->opaque);
+                offline_file(lc,(LwqqMsgOffFile*)msg->msg);
                 break;
             case LWQQ_MT_FILE_MSG:
-                file_message(lc,(LwqqMsgFileMessage*)msg->msg->opaque);
+                file_message(lc,(LwqqMsgFileMessage*)msg->msg);
                 break;
             case LWQQ_MT_FILETRANS:
                 //complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
                 break;
             case LWQQ_MT_NOTIFY_OFFFILE:
-                notify_offfile(lc,(LwqqMsgNotifyOfffile*)msg->msg->opaque);
+                notify_offfile(lc,(LwqqMsgNotifyOfffile*)msg->msg);
                 break;
             case LWQQ_MT_INPUT_NOTIFY:
-                input_notify(lc,(LwqqMsgInputNotify*)msg->msg->opaque);
+                input_notify(lc,(LwqqMsgInputNotify*)msg->msg);
                 break;
             case LWQQ_MT_SYS_G_MSG:
-                sys_g_message(lc,(LwqqMsgSysGMsg*)msg->msg->opaque);
+                sys_g_message(lc,(LwqqMsgSysGMsg*)msg->msg);
                 break;
             default:
                 lwqq_puts("unknow message\n");
@@ -1131,7 +1146,7 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
 {
     switch(c->type){
         case LWQQ_CONTENT_OFFPIC:
-            qq_sys_msg_write(lc->data, LWQQ_MT_BUDDY_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
+            qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         default:break;
     }
@@ -1298,9 +1313,9 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         }
     }
 
-    LwqqMsgMessage* mmsg = msg->opaque;
-    if(mmsg->type == LWQQ_MT_GROUP_MSG) mmsg->group.group_code = NULL;
-    else if(mmsg->type == LWQQ_MT_DISCU_MSG) mmsg->discu.did = NULL;
+    LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+    if(msg->type == LWQQ_MS_GROUP_MSG) mmsg->group.group_code = NULL;
+    else if(msg->type == LWQQ_MS_DISCU_MSG) mmsg->discu.did = NULL;
 failed:
     s_free(what);
     s_free(serv_id);
@@ -1321,24 +1336,24 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         strcpy(gname,pos+strlen(" ### "));
         strncpy(nick,who,pos-who);
         nick[pos-who] = '\0';
-        msg = lwqq_msg_new(LWQQ_MT_SESS_MSG);
-        mmsg = msg->opaque;
+        msg = lwqq_msg_new(LWQQ_MS_SESS_MSG);
+        mmsg = (LwqqMsgMessage*)msg;
         LwqqGroup* group = find_group_by_name(lc,gname);
         LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,nick);
-        mmsg->to = s_strdup(sb->uin);
+        mmsg->super.to = s_strdup(sb->uin);
         if(!sb->group_sig)
             lwqq_info_get_group_sig(lc,group,sb->uin);
         mmsg->sess.group_sig = s_strdup(sb->group_sig);
     } else {
-        msg = lwqq_msg_new(LWQQ_MT_BUDDY_MSG);
-        mmsg = msg->opaque;
+        msg = lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
+        mmsg = (LwqqMsgMessage*)msg;
         if(ac->qq_use_qqnum){
             LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
             if(buddy)
-                mmsg->to = s_strdup(buddy->uin);
-            else mmsg->to = s_strdup(who);
+                mmsg->super.to = s_strdup(buddy->uin);
+            else mmsg->super.to = s_strdup(who);
         }else{
-            mmsg->to = s_strdup(who);
+            mmsg->super.to = s_strdup(who);
         }
     }
     mmsg->f_name = s_strdup("宋体");
@@ -1348,7 +1363,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 
     translate_message_to_struct(lc, who, what, msg, 0);
 
-    LwqqAsyncEvent* ev = lwqq_msg_send(lc,msg);
+    LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
     lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
 
     return 1;
@@ -1361,14 +1376,14 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     LwqqMsg* msg;
 
     
-    msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
-    LwqqMsgMessage *mmsg = msg->opaque;
-    mmsg->to = s_strdup(group->gid);
+    msg = lwqq_msg_new(LWQQ_MS_GROUP_MSG);
+    LwqqMsgMessage *mmsg = (LwqqMsgMessage*)msg;
+    mmsg->super.to = s_strdup(group->gid);
     if(group->type == LWQQ_GROUP_QUN){
-        msg->type = mmsg->type =  LWQQ_MT_GROUP_MSG;
+        msg->type = LWQQ_MS_GROUP_MSG;
         mmsg->group.group_code = group->code;
     }else if(group->type == LWQQ_GROUP_DISCU){
-        msg->type = mmsg->type =  LWQQ_MT_DISCU_MSG;
+        msg->type = LWQQ_MS_DISCU_MSG;
         mmsg->discu.did = group->did;
     }
     mmsg->f_name = s_strdup("宋体");
@@ -1379,7 +1394,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 
     translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
 
-    LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq,msg);
+    LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq,mmsg);
     lwqq_async_add_event_listener(ev, _C_(4p,send_receipt,ev,msg,s_strdup(group->gid),s_strdup(message)));
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 

@@ -25,14 +25,14 @@
 #include "internal.h"
 #include "util.h"
 
+#define LWQQ_MT_BITS  (~((-1)<<8))
+
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list);
 static json_t *get_result_json_object(json_t *json);
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
-static void lwqq_msg_message_free(void *opaque);
-static void lwqq_msg_status_free(void *opaque);
 static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c);
 static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const char* to);
@@ -46,26 +46,35 @@ typedef struct LwqqRecvMsgListInternal {
     pthread_t tid;
     int on_quit;
 } LwqqRecvMsgListInternal;
+#define RET_INSERT_MSG 0
+#define RET_DELAY_INS 1
+#define RET_BAD_MSG -1
 
 static struct LwqqStrMapEntry_ msg_type_map[] = {
-    {"message",                 LWQQ_MT_BUDDY_MSG},
-    {"group_message",           LWQQ_MT_GROUP_MSG},
-    {"discu_message",           LWQQ_MT_DISCU_MSG},
-    {"sess_message",            LWQQ_MT_SESS_MSG },
-    {"buddies_status_change",   LWQQ_MT_STATUS_CHANGE},
-    {"kick_message",            LWQQ_MT_KICK_MESSAGE},
-    {"system_message",          LWQQ_MT_SYSTEM},
-    {"buddylist_change",        LWQQ_MT_BLIST_CHANGE},
-    {"sys_g_msg",               LWQQ_MT_SYS_G_MSG},
-    {"push_offfile",            LWQQ_MT_OFFFILE},
-    {"filesrv_transfer",        LWQQ_MT_FILETRANS},
-    {"file_message",            LWQQ_MT_FILE_MSG},
-    {"notify_offfile",          LWQQ_MT_NOTIFY_OFFFILE},
-    {"input_notify",            LWQQ_MT_INPUT_NOTIFY},
-    {"unknow",                  LWQQ_MT_UNKNOWN},
-    {NULL,                      LWQQ_MT_UNKNOWN}
+    {"message",                 LWQQ_MS_BUDDY_MSG,          },
+    {"group_message",           LWQQ_MS_GROUP_MSG,          },
+    {"discu_message",           LWQQ_MS_DISCU_MSG,          },
+    {"sess_message",            LWQQ_MS_SESS_MSG,           },
+    {"buddies_status_change",   LWQQ_MT_STATUS_CHANGE,      },
+    {"kick_message",            LWQQ_MT_KICK_MESSAGE,       },
+    {"system_message",          LWQQ_MT_SYSTEM,             },
+    {"buddylist_change",        LWQQ_MT_BLIST_CHANGE,       },
+    {"sys_g_msg",               LWQQ_MT_SYS_G_MSG,          },
+    {"push_offfile",            LWQQ_MT_OFFFILE,            },
+    {"filesrv_transfer",        LWQQ_MT_FILETRANS,          },
+    {"file_message",            LWQQ_MT_FILE_MSG,           },
+    {"notify_offfile",          LWQQ_MT_NOTIFY_OFFFILE,     },
+    {"input_notify",            LWQQ_MT_INPUT_NOTIFY,       },
+    {"unknow",                  LWQQ_MT_UNKNOWN,            },
+    {NULL,                      LWQQ_MT_UNKNOWN,            }
 };
 
+static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* msg)
+{
+    insert_recv_msg_with_order(list,msg);
+    LwqqClient* lc = list->lc;
+    lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
+}
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -113,85 +122,72 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
     return ;
 }
 
-LwqqMsg *lwqq_msg_new(LwqqMsgType type)
+LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
 {
-    LwqqMsg *msg = NULL;
-    LwqqMsgMessage* mmsg;
-
-    msg = s_malloc0(sizeof(*msg));
-    msg->type = type;
-
-    switch (type) {
-    case LWQQ_MT_BUDDY_MSG:
-    case LWQQ_MT_GROUP_MSG:
-    case LWQQ_MT_DISCU_MSG:
-    case LWQQ_MT_SESS_MSG:
-        mmsg = s_malloc0(sizeof(LwqqMsgMessage));
-        mmsg->type = type;
-        TAILQ_INIT(&mmsg->content);
-        msg->opaque = mmsg;
-        break;
-    case LWQQ_MT_STATUS_CHANGE:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgStatusChange));
-        break;
-    case LWQQ_MT_KICK_MESSAGE:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgKickMessage));
-        break;
-    case LWQQ_MT_SYSTEM:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgSystem));
-        break;
-    case LWQQ_MT_BLIST_CHANGE:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgBlistChange));
-        break;
-    case LWQQ_MT_SYS_G_MSG:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgSysGMsg));
-        break;
-    case LWQQ_MT_OFFFILE:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgOffFile));
-        break;
-    case LWQQ_MT_FILETRANS:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgFileTrans));
-        break;
-    case LWQQ_MT_FILE_MSG:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgFileMessage));
-        break;
-    case LWQQ_MT_NOTIFY_OFFFILE:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgNotifyOfffile));
-        break;
-    case LWQQ_MT_INPUT_NOTIFY:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgInputNotify));
-        break;
-    default:
-        lwqq_log(LOG_ERROR, "No such message type\n");
-        goto failed;
-        break;
+    LwqqMsg* msg = NULL;
+    int type = msg_type&LWQQ_MT_BITS;
+    switch(type){
+        case LWQQ_MT_MESSAGE:
+            {
+            msg = s_malloc0(sizeof(LwqqMsgMessage));
+            LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+            TAILQ_INIT(&mmsg->content);
+            }
+            break;
+        case LWQQ_MT_STATUS_CHANGE:
+            msg = s_malloc0(sizeof(LwqqMsgStatusChange));
+            break;
+        case LWQQ_MT_KICK_MESSAGE:
+            msg = s_malloc0(sizeof(LwqqMsgKickMessage));
+            break;
+        case LWQQ_MT_SYSTEM:
+            msg = s_malloc0(sizeof(LwqqMsgSystem));
+            break;
+        case LWQQ_MT_BLIST_CHANGE:
+            msg = s_malloc0(sizeof(LwqqMsgBlistChange));
+            break;
+        case LWQQ_MT_SYS_G_MSG:
+            msg = s_malloc0(sizeof(LwqqMsgSysGMsg));
+            break;
+        case LWQQ_MT_OFFFILE:
+            msg = s_malloc0(sizeof(LwqqMsgOffFile));
+            break;
+        case LWQQ_MT_FILETRANS:
+            msg = s_malloc0(sizeof(LwqqMsgFileTrans));
+            break;
+        case LWQQ_MT_FILE_MSG:
+            msg = s_malloc0(sizeof(LwqqMsgFileMessage));
+            break;
+        case LWQQ_MT_NOTIFY_OFFFILE:
+            msg = s_malloc0(sizeof(LwqqMsgNotifyOfffile));
+            break;
+        case LWQQ_MT_INPUT_NOTIFY:
+            msg = s_malloc0(sizeof(LwqqMsgInputNotify));
+            break;
+        default:
+            msg = NULL;
+            break;
     }
-
+    if(msg) msg->type = msg_type;
     return msg;
-failed:
-    lwqq_msg_free(msg);
-    return NULL;
 }
 
-static void lwqq_msg_message_free(void *opaque)
+static void msg_message_free(LwqqMsg *opaque)
 {
-    LwqqMsgMessage *msg = opaque;
+    LwqqMsgMessage *msg = (LwqqMsgMessage*)opaque;
     if (!msg) {
         return ;
     }
 
-    s_free(msg->from);
-    s_free(msg->to);
     s_free(msg->f_name);
     s_free(msg->f_color);
-    s_free(msg->msg_id);
-    if(msg->type == LWQQ_MT_GROUP_MSG){
+    if(opaque->type == LWQQ_MS_GROUP_MSG){
         s_free(msg->group.send);
         s_free(msg->group.group_code);
-    }else if(msg->type == LWQQ_MT_SESS_MSG){
+    }else if(opaque->type == LWQQ_MS_SESS_MSG){
         s_free(msg->sess.id);
         s_free(msg->sess.group_sig);
-    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+    }else if(opaque->type == LWQQ_MS_DISCU_MSG){
         s_free(msg->discu.send);
         s_free(msg->discu.did);
     }
@@ -221,28 +217,20 @@ static void lwqq_msg_message_free(void *opaque)
         s_free(c);
     }
     
-    s_free(msg);
 }
 
-static void lwqq_msg_status_free(void *opaque)
+static void msg_status_free(void *opaque)
 {
     LwqqMsgStatusChange *s = opaque;
-    if (!s) {
-        return ;
-    }
-
     s_free(s->who);
     s_free(s->status);
-    s_free(s);
 }
 
-static void lwqq_msg_system_free(void* opaque)
+static void msg_system_free(LwqqMsg* opaque)
 {
-    LwqqMsgSystem* system;
-    system = opaque;
+    LwqqMsgSystem* system = (LwqqMsgSystem*)opaque;
     if(system){
         s_free(system->seq);
-        s_free(system->from_uin);
         s_free(system->account);
         s_free(system->stat);
         s_free(system->client_type);
@@ -256,31 +244,33 @@ static void lwqq_msg_system_free(void* opaque)
             s_free(system->verify_pass.group_id);
         }
     }
-    s_free(system);
 }
-void lwqq_msg_sys_g_msg_free(LwqqMsgSysGMsg* gmsg)
+static void msg_sys_g_msg_free(LwqqMsg* msg)
 {
+    LwqqMsgSysGMsg* gmsg = (LwqqMsgSysGMsg*)msg;
     if(gmsg){
+        if(gmsg->type == GROUP_LEAVE)
+            lwqq_group_free(gmsg->group);
         s_free(gmsg->gcode);
         s_free(gmsg->group_uin);
         s_free(gmsg->request_join.request_uin);
         s_free(gmsg->request_join.msg);
     }
-    s_free(gmsg);
 }
-void lwqq_msg_offfile_free(void* opaque)
+static void msg_offfile_free(void* opaque)
 {
     LwqqMsgOffFile* of = opaque;
     if(of){
-        s_free(of->msg_id);
         s_free(of->rkey);
-        s_free(of->from);
-        s_free(of->to);
         s_free(of->name);
     }
-    s_free(of);
 }
-
+static void msg_seq_free(LwqqMsg* msg)
+{
+    LwqqMsgSeq* seq = (LwqqMsgSeq*)msg;
+    s_free(seq->from);
+    s_free(seq->to);
+}
 /**
  * Free a LwqqMsg object
  * 
@@ -291,94 +281,92 @@ void lwqq_msg_free(LwqqMsg *msg)
     if (!msg)
         return;
 
-    if(msg->type<=LWQQ_MT_SESS_MSG)
-        lwqq_msg_message_free(msg->opaque);
-    else if(msg->type==LWQQ_MT_STATUS_CHANGE)
-        lwqq_msg_status_free(msg->opaque);
-    else if(msg->type==LWQQ_MT_KICK_MESSAGE){
-        LwqqMsgKickMessage* kick;
-        kick = msg->opaque;
-        if(kick)
-            s_free(kick->reason);
-        s_free(kick);
-    }
-    else if(msg->type==LWQQ_MT_SYSTEM){
-        lwqq_msg_system_free(msg->opaque);
-    }
-    else if(msg->type==LWQQ_MT_BLIST_CHANGE){
-        LwqqMsgBlistChange* blist;
-        LwqqBuddy* buddy;
-        LwqqBuddy* next;
-        LwqqSimpleBuddy* simple;
-        LwqqSimpleBuddy* simple_next;
-        blist = msg->opaque;
-        if(blist){
-            simple = LIST_FIRST(&blist->added_friends);
-            while(simple){
-                simple_next = LIST_NEXT(simple,entries);
-                lwqq_simple_buddy_free(simple);
-                simple = simple_next;
-            }
-            buddy = LIST_FIRST(&blist->removed_friends);
-            while(buddy){
-                next = LIST_NEXT(buddy,entries);
-                lwqq_buddy_free(buddy);
-                buddy = next;
-            }
-        }
-        s_free(blist);
-    }
-    else if(msg->type==LWQQ_MT_SYS_G_MSG){
-        lwqq_msg_sys_g_msg_free(msg->opaque);
-    }else if(msg->type==LWQQ_MT_OFFFILE){
-        lwqq_msg_offfile_free(msg->opaque);
-    }else if(msg->type==LWQQ_MT_FILETRANS){
-        LwqqMsgFileTrans* trans = msg->opaque;
-        FileTransItem* item;
-        FileTransItem* item_next;
-        if(trans){
-            s_free(trans->from);
-            s_free(trans->to);
-            s_free(trans->lc_id);
-            item = LIST_FIRST(&trans->file_infos);
-            while(item!=NULL){
-                item_next = LIST_NEXT(item,entries);
-                s_free(item->file_name);
-                s_free(item);
-                item = item_next;
-            }
-        }
-        s_free(trans);
-    }else if(msg->type==LWQQ_MT_FILE_MSG){
-        LwqqMsgFileMessage* file = msg->opaque;
-        if(file){
-            s_free(file->from);
-            s_free(file->to);
-            s_free(file->reply_ip);
-            if(file->mode == MODE_RECV){
-                s_free(file->recv.name);
-            };
-        }
-        s_free(file);
-    }else if(msg->type == LWQQ_MT_NOTIFY_OFFFILE){
-        LwqqMsgNotifyOfffile* notify = msg->opaque;
-        if(notify){
-            s_free(notify->from);
-            s_free(notify->to);
-            s_free(notify->filename);
-        }
-        s_free(notify);
-    }else if(msg->type == LWQQ_MT_INPUT_NOTIFY){
-        LwqqMsgInputNotify * input = msg->opaque;
-        if(input){
-            s_free(input->from);
-            s_free(input->to);
-        }
-        s_free(input);
-    }else{
-        lwqq_log(LOG_ERROR, "No such message type\n");
-    }
+    if(msg->type&LWQQ_MF_SEQ)
+        msg_seq_free(msg);
 
+    int type = msg->type&LWQQ_MT_BITS;
+    switch(type){
+        case LWQQ_MT_MESSAGE:
+            msg_message_free(msg);
+            break;
+        case LWQQ_MT_STATUS_CHANGE:
+            msg_status_free(msg);
+            break;
+        case LWQQ_MT_KICK_MESSAGE:
+            {
+            LwqqMsgKickMessage* kick = (LwqqMsgKickMessage*)msg;
+            s_free(kick->reason);
+            }break;
+        case LWQQ_MT_SYSTEM:
+            msg_system_free(msg);
+            break;
+        case LWQQ_MT_BLIST_CHANGE:
+            {
+                LwqqMsgBlistChange* blist = (LwqqMsgBlistChange*)msg;
+                LwqqBuddy* buddy;
+                LwqqBuddy* next;
+                LwqqSimpleBuddy* simple;
+                LwqqSimpleBuddy* simple_next;
+                simple = LIST_FIRST(&blist->added_friends);
+                while(simple){
+                    simple_next = LIST_NEXT(simple,entries);
+                    lwqq_simple_buddy_free(simple);
+                    simple = simple_next;
+                }
+                buddy = LIST_FIRST(&blist->removed_friends);
+                while(buddy){
+                    next = LIST_NEXT(buddy,entries);
+                    lwqq_buddy_free(buddy);
+                    buddy = next;
+                }
+            } break;
+        case LWQQ_MT_SYS_G_MSG:
+            msg_sys_g_msg_free(msg);
+            break;
+        case LWQQ_MT_OFFFILE:
+            msg_offfile_free(msg);
+            break;
+        case LWQQ_MT_FILETRANS:
+            {
+                LwqqMsgFileTrans* trans = (LwqqMsgFileTrans*)msg;
+                FileTransItem* item;
+                FileTransItem* item_next;
+                s_free(trans->lc_id);
+                item = LIST_FIRST(&trans->file_infos);
+                while(item!=NULL){
+                    item_next = LIST_NEXT(item,entries);
+                    s_free(item->file_name);
+                    s_free(item);
+                    item = item_next;
+                }
+            }
+            break;
+        case LWQQ_MT_FILE_MSG:
+            {
+                LwqqMsgFileMessage* file = (LwqqMsgFileMessage*)msg;
+                s_free(file->reply_ip);
+                if(file->mode == MODE_RECV){
+                    s_free(file->recv.name);
+                }
+            }
+            break;
+        case LWQQ_MT_NOTIFY_OFFFILE:
+            {
+                LwqqMsgNotifyOfffile* notify = (LwqqMsgNotifyOfffile*)msg;
+                s_free(notify->filename);
+            }
+            break;
+        case LWQQ_MT_INPUT_NOTIFY:
+            {
+                LwqqMsgInputNotify * input = (LwqqMsgInputNotify*)msg;
+                s_free(input->from);
+                s_free(input->to);
+            }
+            break;
+        default:
+            lwqq_log(LOG_ERROR, "No such message type\n");
+            break;
+    }
     s_free(msg);
 }
 
@@ -426,7 +414,7 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     }
     return lwqq_map_to_type_(msg_type_map, msg_type);
 }
-static int parse_content(json_t *json, void *opaque)
+static int parse_content(json_t *json, LwqqMsgMessage* opaque)
 {
     json_t *tmp, *ctent;
     LwqqMsgMessage *msg = opaque;
@@ -543,40 +531,27 @@ static int parse_content(json_t *json, void *opaque)
  * 
  * @return
  */
-static int parse_new_msg(json_t *json, void *opaque)
+static int parse_new_msg(json_t *json, LwqqMsg *opaque)
 {
-    LwqqMsgMessage *msg = opaque;
-    char *time;
+    LwqqMsgMessage *msg = (LwqqMsgMessage*)opaque;
     
-    msg->from = s_strdup(json_parse_simple_value(json, "from_uin"));
-    if (!msg->from) {
-        return -1;
-    }
-
-    time = json_parse_simple_value(json, "time");
+    char* time = json_parse_simple_value(json, "time");
     time = time ?: "0";
     msg->time = (time_t)strtoll(time, NULL, 10);
-    msg->to = s_strdup(json_parse_simple_value(json, "to_uin"));
-    msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
-    msg->msg_id2 = atoi(json_parse_simple_value(json, "msg_id2"));
 
     //if it failed means it is not group message.
     //so it equ NULL.
-    if(msg->type == LWQQ_MT_GROUP_MSG){
+    if(opaque->type == LWQQ_MS_GROUP_MSG){
         msg->group.send = s_strdup(json_parse_simple_value(json, "send_uin"));
         msg->group.group_code = s_strdup(json_parse_simple_value(json,"group_code"));
-    }else if(msg->type == LWQQ_MT_SESS_MSG){
+    }else if(opaque->type == LWQQ_MS_SESS_MSG){
         msg->sess.id = s_strdup(json_parse_simple_value(json,"id"));
-    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+    }else if(opaque->type == LWQQ_MS_DISCU_MSG){
         msg->discu.send = s_strdup(json_parse_simple_value(json, "send_uin"));
         msg->discu.did = s_strdup(json_parse_simple_value(json,"did"));
     }
 
-    if (!msg->to) {
-        return -1;
-    }
-    
-    if (parse_content(json, opaque)) {
+    if (parse_content(json, msg)) {
         return -1;
     }
 
@@ -592,9 +567,9 @@ static int parse_new_msg(json_t *json, void *opaque)
  * 
  * @return 
  */
-static int parse_status_change(json_t *json, void *opaque)
+static int parse_status_change(json_t *json, LwqqMsg *opaque)
 {
-    LwqqMsgStatusChange *msg = opaque;
+    LwqqMsgStatusChange *msg = (LwqqMsgStatusChange*)opaque;
     char *c_type;
 
     msg->who = s_strdup(json_parse_simple_value(json, "uin"));
@@ -644,7 +619,7 @@ static int parse_system_message(json_t *json,void* opaque,void* _lc)
 
     if(system->type == SYSTEM_TYPE_UNKNOW) return 1;
 
-    system->from_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
+    //system->from_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
     system->account = s_strdup(json_parse_simple_value(json,"account"));
     system->stat = s_strdup(json_parse_simple_value(json,"stat"));
     system->client_type = s_strdup(json_parse_simple_value(json,"client_type"));
@@ -709,7 +684,7 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
     }
     return 0;
 }
-static int parse_sys_g_msg(json_t *json,void* opaque)
+static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
 {
     /*group create
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":39194,"from_uin":1528509098,"to_uin":350512021,"msg_id2":539171,"msg_type":38,"reply_ip":176752410,"type":"group_create","gcode":2676780935,"t_gcode":249818602,"owner_uin":350512021}}]}
@@ -724,28 +699,42 @@ static int parse_sys_g_msg(json_t *json,void* opaque)
       */
     LwqqMsgSysGMsg* msg = opaque;
     const char* type = json_parse_simple_value(json,"type");
+    msg->group_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
+    msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
+    msg->account = s_strdup(json_parse_simple_value(json,"t_gcode"));
     if(strcmp(type,"group_create")==0)msg->type = GROUP_CREATE;
-    else if(strcmp(type,"group_join")==0)msg->type = GROUP_JOIN;
-    else if(strcmp(type,"group_leave")==0)msg->type = GROUP_LEAVE;
+    else if(strcmp(type,"group_join")==0){
+        msg->type = GROUP_JOIN;
+        LwqqGroup* g = lwqq_group_new(LWQQ_GROUP_QUN);
+        g->account = s_strdup(msg->account);
+        g->code = s_strdup(msg->gcode);
+        g->gid = s_strdup(msg->group_uin);
+        msg->group = g;
+        LIST_INSERT_HEAD(&lc->groups,g,entries);
+        LwqqAsyncEvent* ev = lwqq_info_get_group_public(lc,g);
+        lwqq_async_add_event_listener(ev, _C_(2p,insert_msg_delay_by_request_content,lc->msg_list,msg));
+        return RET_DELAY_INS;
+    }
+    else if(strcmp(type,"group_leave")==0){
+        msg->type = GROUP_LEAVE;
+        msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
+        LIST_REMOVE(msg->group,entries);
+    }
     else if(strcmp(type,"group_request_join")==0){
         msg->type = GROUP_REQUEST_JOIN;
         msg->request_join.request_uin = s_strdup(json_parse_simple_value(json, "request_uin"));
         msg->request_join.msg = json_unescape(json_parse_simple_value(json, "msg"));
     }
     else msg->type = GROUP_UNKNOW;
-    msg->group_uin = s_strdup(json_parse_simple_value(json,"from_uin"));
-    msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
     return 0;
 
 }
 static int parse_push_offfile(json_t* json,void* opaque)
 {
     LwqqMsgOffFile * off = opaque;
-    off->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
     off->rkey = s_strdup(json_parse_simple_value(json,"rkey"));
     strncpy(off->ip,json_parse_simple_value(json,"ip"),24);
     strncpy(off->port,json_parse_simple_value(json,"port"),8);
-    off->from = s_strdup(json_parse_simple_value(json,"from_uin"));
     off->size = atol(json_parse_simple_value(json,"size"));
     off->name = json_unescape(json_parse_simple_value(json,"name"));
     off->expire_time = atol(json_parse_simple_value(json,"expire_time"));
@@ -756,8 +745,6 @@ static int parse_file_transfer(json_t* json,void* opaque)
 {
     LwqqMsgFileTrans* trans = opaque;
     trans->file_count = atoi(json_parse_simple_value(json,"file_count"));
-    trans->from = s_strdup(json_parse_simple_value(json,"from_uin"));
-    trans->to = s_strdup(json_parse_simple_value(json,"to_uin"));
     trans->lc_id = s_strdup(json_parse_simple_value(json,"lc_id"));
     trans->now = atol(json_parse_simple_value(json,"now"));
     trans->operation = atoi(json_parse_simple_value(json,"operation"));
@@ -782,9 +769,6 @@ static int parse_file_message(json_t* json,void* opaque)
     if(strcmp(mode,"recv")==0) file->mode = MODE_RECV;
     else if(strcmp(mode,"refuse")==0) file->mode = MODE_REFUSE;
     else if(strcmp(mode,"send_ack")==0) file->mode = MODE_SEND_ACK;
-    file->from = s_strdup(json_parse_simple_value(json,"from_uin"));
-    file->to = s_strdup(json_parse_simple_value(json,"to_uin"));
-    file->msg_id2 = atoi(json_parse_simple_value(json,"msg_id2"));
     file->reply_ip = s_strdup(json_parse_simple_value(json,"reply_ip"));
     file->type = atoi(json_parse_simple_value(json,"type"));
     file->time = atol(json_parse_simple_value(json,"time"));
@@ -809,10 +793,7 @@ static int parse_notify_offfile(json_t* json,void* opaque)
      * {"msg_id":9948,"from_uin":495653555,"to_uin":350512021,"msg_id2":460591,"msg_type":9,"reply_ip":178847911,"action":2,"filename":"12.jpg","filesize":137972}}]}
     */
     LwqqMsgNotifyOfffile* notify = opaque;
-    notify->msg_id = atoi(json_parse_simple_value(json,"msg_id"));
     notify->action = atoi(json_parse_simple_value(json,"action"));
-    notify->from = s_strdup(json_parse_simple_value(json,"from_uin"));
-    notify->to = s_strdup(json_parse_simple_value(json,"to_uin"));
     notify->filename = json_unescape(json_parse_simple_value(json,"filename"));
     notify->filesize = strtoul(json_parse_simple_value(json,"filesize"), NULL, 10);
     return 0;
@@ -919,7 +900,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,const char* from_uin,LwqqMsgContent* c)
+static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,int msg_id,const char* from_uin,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
     LwqqErrorCode error;
@@ -927,7 +908,7 @@ static LwqqAsyncEvent* request_content_cface2(LwqqClient* lc,const char* msg_id,
     char url[1024];
 /*http://d.web2.qq.com/channel/get_cface2?lcid=3588&guid=85930B6CCE38BDAEF176FA83F0491569.jpg&to=2217604723&count=5&time=1&clientid=6325200&psessionid=8368046764001d636f6e6e7365727665725f77656271714031302e3133342e362e31333800001c9b000000d8026e04009563e4146d0000000a403946423664616232666d00000028ceb438eb76f1bc88360fc303e9148cc5dac8652a7a4bb702ee6dcf9bb10adf571a48b8a76b599e44*/
     snprintf(url, sizeof(url),
-             "%s/channel/get_cface2?lcid=%s&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
+             "%s/channel/get_cface2?lcid=%d&to=%s&guid=%s&count=5&time=1&clientid=%s&psessionid=%s",
              "http://d.web2.qq.com",
              msg_id,from_uin,c->data.cface.name,lc->clientid,lc->psessionid);
     req = lwqq_http_create_default_request(lc,url, err);
@@ -943,7 +924,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgMessage* msg)
+static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     LwqqMsgContent* c;
     LwqqAsyncEvset* ret = NULL;
@@ -951,12 +932,12 @@ static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgM
     TAILQ_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
             if(ret == NULL) ret = lwqq_async_evset_new();
-            event = request_content_offpic(lc,msg->from,c);
+            event = request_content_offpic(lc,msg->super.from,c);
             lwqq_async_evset_add_event(ret,event);
         }else if(c->type == LWQQ_CONTENT_CFACE){
             if(ret == NULL) ret = lwqq_async_evset_new();
-            if(type == LWQQ_MT_BUDDY_MSG)
-                event = request_content_cface2(lc,msg->msg_id,msg->from,c);
+            if(msg->super.super.type == LWQQ_MS_BUDDY_MSG)
+                event = request_content_cface2(lc,msg->super.msg_id,msg->super.from,c);
             else
                 event = request_content_cface(lc,msg->group.group_code,msg->group.send,c);
             lwqq_async_evset_add_event(ret,event);
@@ -964,11 +945,14 @@ static LwqqAsyncEvset* lwqq_msg_request_picture(LwqqClient* lc,int type,LwqqMsgM
     }
     return ret;
 }
-static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* msg)
+static int parse_msg_seq(json_t* json,LwqqMsg* msg)
 {
-    insert_recv_msg_with_order(list,msg);
-    LwqqClient* lc = list->lc;
-    lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
+    LwqqMsgSeq* seq = (LwqqMsgSeq*)msg;
+    seq->from = s_strdup(json_parse_simple_value(json,"from_uin"));
+    seq->to = s_strdup(json_parse_simple_value(json,"to_uin"));
+    seq->msg_id = s_atoi(json_parse_simple_value(json,"msg_id"),0);
+    seq->msg_id2 = s_atoi(json_parse_simple_value(json,"msg_id2"),0);
+    return 0;
 }
 /**
  * Parse message received from server
@@ -1033,60 +1017,59 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         if (!msg) {
             continue;
         }
-
-        switch (msg_type) {
-        case LWQQ_MT_BUDDY_MSG:
-        case LWQQ_MT_GROUP_MSG:
-        case LWQQ_MT_DISCU_MSG:
-        case LWQQ_MT_SESS_MSG:
-            ret = parse_new_msg(cur, msg->opaque);
-            ev = lwqq_msg_request_picture(list->lc, msg->type, msg->opaque);
-            if(ev){
+        if(msg_type&LWQQ_MF_SEQ){
+            parse_msg_seq(cur,msg);
+        }
+        switch(msg_type&LWQQ_MT_BITS){
+            case LWQQ_MT_MESSAGE:
+                ret = parse_new_msg(cur,msg);
+                ev = lwqq_msg_request_picture(list->lc, (LwqqMsgMessage*)msg);
+                if(ev){
+                    ret = -1;
+                    lwqq_async_add_evset_listener(ev,_C_(2p,insert_msg_delay_by_request_content,list,msg));
+                    //this jump the case
+                    continue;
+                }
+                break;
+            case LWQQ_MT_STATUS_CHANGE:
+                ret = parse_status_change(cur, msg);
+                break;
+            case LWQQ_MT_KICK_MESSAGE:
+                ret = parse_kick_message(cur,msg);
+                break;
+            case LWQQ_MT_SYSTEM:
+                ret = parse_system_message(cur,msg,list->lc);
+                break;
+            case LWQQ_MT_BLIST_CHANGE:
+                ret = parse_blist_change(cur,msg,list->lc);
+                break;
+            case LWQQ_MT_SYS_G_MSG:
+                ret = parse_sys_g_msg(cur,msg,list->lc);
+                break;
+            case LWQQ_MT_OFFFILE:
+                ret = parse_push_offfile(cur,msg);
+                break;
+            case LWQQ_MT_FILETRANS:
+                ret = parse_file_transfer(cur,msg);
+                break;
+            case LWQQ_MT_FILE_MSG:
+                ret = parse_file_message(cur,msg);
+                break;
+            case LWQQ_MT_NOTIFY_OFFFILE:
+                ret = parse_notify_offfile(cur,msg);
+                break;
+            case LWQQ_MT_INPUT_NOTIFY:
+                ret = parse_input_notify(cur,msg);
+                break;
+            default:
                 ret = -1;
-                lwqq_async_add_evset_listener(ev,_C_(2p,insert_msg_delay_by_request_content,list,msg));
-                //this jump the case
-                continue;
-            }
-            break;
-        case LWQQ_MT_STATUS_CHANGE:
-            ret = parse_status_change(cur, msg->opaque);
-            break;
-        case LWQQ_MT_KICK_MESSAGE:
-            ret = parse_kick_message(cur,msg->opaque);
-            break;
-        case LWQQ_MT_SYSTEM:
-            ret = parse_system_message(cur,msg->opaque,list->lc);
-            break;
-        case LWQQ_MT_BLIST_CHANGE:
-            ret = parse_blist_change(cur,msg->opaque,list->lc);
-            break;
-        case LWQQ_MT_SYS_G_MSG:
-            ret = parse_sys_g_msg(cur,msg->opaque);
-            break;
-        case LWQQ_MT_OFFFILE:
-            ret = parse_push_offfile(cur,msg->opaque);
-            break;
-        case LWQQ_MT_FILETRANS:
-            ret = parse_file_transfer(cur,msg->opaque);
-            break;
-        case LWQQ_MT_FILE_MSG:
-            ret = parse_file_message(cur,msg->opaque);
-            break;
-        case LWQQ_MT_NOTIFY_OFFFILE:
-            ret = parse_notify_offfile(cur,msg->opaque);
-            break;
-        case LWQQ_MT_INPUT_NOTIFY:
-            ret = parse_input_notify(cur,msg->opaque);
-            break;
-        default:
-            ret = -1;
-            lwqq_log(LOG_ERROR, "No such message type\n");
-            break;
+                lwqq_log(LOG_ERROR, "No such message type\n");
+                break;
         }
 
-        if (ret == 0) {
+        if (ret == RET_INSERT_MSG) {
             insert_recv_msg_with_order(list,msg);
-        } else {
+        } else if(ret == RET_BAD_MSG){
             lwqq_msg_free(msg);
         }
     }
@@ -1106,13 +1089,13 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
     /* Parse a new message successfully, link it to our list */
     pthread_mutex_lock(&list->mutex);
     //sort the order for messages.
-    if(msg->type <= LWQQ_MT_SESS_MSG){
-        int id2 = ((LwqqMsgMessage*)msg->opaque)->msg_id2;
+    if((msg->type & LWQQ_MT_BITS) ==  LWQQ_MT_MESSAGE){
+        int id2 = ((LwqqMsgSeq*)msg)->msg_id2;
         int inserted = 0;
         TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
-            if(iter->msg->type>LWQQ_MT_SESS_MSG)
+            if((iter->msg->type&LWQQ_MT_BITS)!=LWQQ_MT_MESSAGE)
                 continue;
-            LwqqMsgMessage* iter_msg = iter->msg->opaque;
+            LwqqMsgSeq* iter_msg = (LwqqMsgSeq*)iter->msg;
             if(iter_msg->msg_id2<id2){
                 TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
                 inserted = 1;
@@ -1339,10 +1322,10 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
                 break;
             case LWQQ_CONTENT_CFACE:
                 //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
-                if(msg_type == LWQQ_MT_GROUP_MSG)
+                if(msg_type == LWQQ_MS_GROUP_MSG)
                     format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
                             c->data.cface.name);
-                else if(msg_type == LWQQ_MT_BUDDY_MSG || msg_type == LWQQ_MT_SESS_MSG)
+                else if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG)
                     format_append(buf,"["KEY("cface")","KEY("%s")"],",
                             c->data.cface.name);
                 *has_cface = 1;
@@ -1493,9 +1476,9 @@ static LwqqAsyncEvent* lwqq_msg_upload_cface(
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     //this is special for group msg.it can upload over 250K
     req->add_form(req,LWQQ_FORM_CONTENT,"from","control");
-    if(type == LWQQ_MT_GROUP_MSG){
+    if(type == LWQQ_MS_GROUP_MSG){
         req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPicGroup");
-    } else if(type == LWQQ_MT_BUDDY_MSG){
+    } else if(type == LWQQ_MS_BUDDY_MSG){
         req->add_form(req,LWQQ_FORM_CONTENT,"f","EQQ.Model.ChatMsg.callbackSendPic");
     }
     req->add_file_content(req,"custom_face",filename,buffer,size,NULL);
@@ -1546,7 +1529,7 @@ done:
     return errno;
 }
 
-void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsg* msg,LwqqAsyncEvent* event)
+void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyncEvent* event)
 {
     LwqqAsyncEvent* ret = lwqq_msg_send(lc,msg);
     lwqq_async_add_event_chain(ret, event);
@@ -1561,20 +1544,16 @@ void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsg* msg,LwqqAsyncEvent* event)
  * @return 1 means ok
  *         0 means failed or send failed
  */
-LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
+LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
 {
     LwqqHttpRequest *req = NULL;  
     char *content = NULL;
     char data[8192];
     data[0] = '\0';
-    LwqqMsgMessage *mmsg;
+    LwqqMsgMessage *mmsg = msg;
     const char *apistr;
     int has_cface = 0;
 
-    if (!msg || (msg->type > LWQQ_MT_SESS_MSG)){
-        goto failed;
-    }
-    mmsg = msg->opaque;
 
     //this would check msg content to see if it need do upload picture first
     LwqqMsgContent* c;
@@ -1584,10 +1563,10 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
     TAILQ_FOREACH(c,&mmsg->content,entries){
         event = NULL;
         if(c->type == LWQQ_CONTENT_CFACE && c->data.cface.data > 0){
-            event = lwqq_msg_upload_cface(lc,c,mmsg->type);
+            event = lwqq_msg_upload_cface(lc,c,mmsg->super.super.type);
             if(!lc->gface_sig) lwqq_async_evset_add_event(evset,query_gface_sig(lc));
         } else if(c->type == LWQQ_CONTENT_OFFPIC && c->data.img.data > 0)
-            event = lwqq_msg_upload_offline_pic(lc,c,mmsg->to);
+            event = lwqq_msg_upload_offline_pic(lc,c,mmsg->super.to);
         //event = lwqq_msg_upload_content(lc,mmsg,c);
         lwqq_async_evset_add_event(evset,event);
         will_upload |= (event!=NULL);
@@ -1604,21 +1583,21 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsg *msg)
 
     //we do send msg
     format_append(data,"r={");
-    content = content_parse_string(mmsg,msg->type,&has_cface);
-    if(msg->type == LWQQ_MT_BUDDY_MSG){
-        format_append(data,"\"to\":%s,",mmsg->to);
+    content = content_parse_string(mmsg,msg->super.super.type,&has_cface);
+    if(msg->super.super.type == LWQQ_MS_BUDDY_MSG){
+        format_append(data,"\"to\":%s,",mmsg->super.to);
         apistr = "send_buddy_msg2";
-    }else if(msg->type == LWQQ_MT_GROUP_MSG){
-        format_append(data,"\"group_uin\":%s,",mmsg->to);
+    }else if(msg->super.super.type == LWQQ_MS_GROUP_MSG){
+        format_append(data,"\"group_uin\":%s,",mmsg->super.to);
         if(has_cface){
             format_append(data,"\"group_code\":%s,\"key\":\"%s\",\"sig\":\"%s\",",
                     mmsg->group.group_code,lc->gface_key,lc->gface_sig);
         }
         apistr = "send_qun_msg2";
-    }else if(msg->type == LWQQ_MT_SESS_MSG){
-        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->to,mmsg->sess.group_sig);
+    }else if(msg->super.super.type == LWQQ_MS_SESS_MSG){
+        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->super.to,mmsg->sess.group_sig);
         apistr = "send_sess_msg2";
-    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+    }else if(msg->super.super.type == LWQQ_MS_DISCU_MSG){
         format_append(data,"\"did\":\"%s\",",mmsg->discu.did);
         apistr = "send_discu_msg2";
     }
@@ -1685,8 +1664,8 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
         return 0;
     int ret = 0;
     LwqqMsg *msg = lwqq_msg_new(type);
-    LwqqMsgMessage *mmsg = msg->opaque;
-    mmsg->to = s_strdup(to);
+    LwqqMsgMessage *mmsg = (LwqqMsgMessage*)msg;
+    mmsg->super.to = s_strdup(to);
     mmsg->f_name = "宋体";
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
@@ -1697,7 +1676,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
     LWQQ_SYNC_BEGIN();
-    lwqq_msg_send(lc,msg);
+    lwqq_msg_send(lc,mmsg);
     LWQQ_SYNC_END();
 
     mmsg->f_name = NULL;
@@ -1730,7 +1709,7 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     char* name = url_encode(msg->recv.name);
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_file2?"
             "lcid=%d&guid=%s&to=%s&psessionid=%s&count=1&time=%ld&clientid=%s",
-            msg->session_id,name,msg->from,lc->psessionid,time(NULL),lc->clientid);
+            msg->session_id,name,msg->super.from,lc->psessionid,time(NULL),lc->clientid);
     s_free(name);
     //s_free(gbk);
     lwqq_verbose(3,"%s\n",url);
@@ -1777,14 +1756,14 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
-    req->add_form(req,LWQQ_FORM_CONTENT,"uin",file->from);
+    req->add_form(req,LWQQ_FORM_CONTENT,"uin",file->super.from);
     req->add_form(req,LWQQ_FORM_CONTENT,"skey",lc->cookies->skey);
     req->add_form(req,LWQQ_FORM_CONTENT,"appid","1002101");
-    req->add_form(req,LWQQ_FORM_CONTENT,"peeruin",file->to);
+    req->add_form(req,LWQQ_FORM_CONTENT,"peeruin",file->super.to);
     req->add_form(req,LWQQ_FORM_CONTENT,"vfwebqq",lc->vfwebqq);
     req->add_form(req,LWQQ_FORM_FILE,"file",file->name);
     char fileid[128];
-    snprintf(fileid,sizeof(fileid),"%s_%ld",file->to,time(NULL));
+    snprintf(fileid,sizeof(fileid),"%s_%ld",file->super.to,time(NULL));
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
@@ -1831,7 +1810,7 @@ LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
             "\"filename\":\"%s\",\"to_uin\":\"%s\","
             "\"clientid\":\"%s\",\"psessionid\":\"%s\"}&"
             "clientid=%s&psessionid=%s",
-            file->to,file->path,file->name,file->to,lc->clientid,lc->psessionid,
+            file->super.to,file->path,file->name,file->super.to,lc->clientid,lc->psessionid,
             lc->clientid,lc->psessionid);
     return req->do_request_async(req,1,post,_C_(2p_i,send_offfile_back,req,file));
 }
@@ -1866,7 +1845,7 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
 {
     char url[512];
     snprintf(url,sizeof(url),"http://file1.web.qq.com/v2/%s/%s/%ld/%s/%s/1/f/1/0/0?psessionid=%s",
-            file->from,file->to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
+            file->super.from,file->super.to,time(NULL)%4096,lc->index,lc->port,lc->psessionid
             );
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
@@ -1910,8 +1889,8 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
 {
     LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
     file->name = s_strdup(filename);
-    file->from = s_strdup(from);
-    file->to = s_strdup(to);
+    file->super.from = s_strdup(from);
+    file->super.to = s_strdup(to);
     return file;
 }
 LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)

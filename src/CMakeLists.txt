@@ -8,8 +8,6 @@ set(SRC_LIST
   )
 
 set(LWQQ_LIST
-  liblwqq/async.c
-  liblwqq/http.c
   liblwqq/url.c
   liblwqq/md5.c
   liblwqq/unicode.c
@@ -25,14 +23,16 @@ set(LWQQ_LIST
   liblwqq/vplist.c
   liblwqq/util.c
   liblwqq/internal.c
+  liblwqq/async.c
+  liblwqq/http.c
   )
 
 add_definitions(-Wall)
 
 
 ADD_LIBRARY(webqq MODULE
-    ${SRC_LIST}
     ${LWQQ_LIST}
+    ${SRC_LIST}
     )
 include_directories(
   ${PURPLE_INCLUDE_DIRS}

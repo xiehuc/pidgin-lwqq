@@ -289,7 +289,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     TRexMatch m;
     if(_regex==NULL) translate_global_init();
     TRex* x = _regex;
-    LwqqMsgMessage* mmsg = msg->opaque;
+    LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
      
     while(*ptr!='\0'){
         c = NULL;
@@ -312,7 +312,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //process ing img.
             sscanf(begin,"<IMG ID=\"%d\">",&img_id);
             PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
-            if(using_cface||msg->type == LWQQ_MT_GROUP_MSG){
+            if(using_cface||msg->type == LWQQ_MS_GROUP_MSG){
                 c = lwqq_msg_fill_upload_cface(
                         purple_imgstore_get_filename(simg),
                         purple_imgstore_get_data(simg),

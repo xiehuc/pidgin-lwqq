@@ -56,7 +56,7 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         PurpleAccount* account = ac->account;
         LwqqClient* lc = ac->qq;
         //for(i=0;i<file->file_count;i++){
-        LwqqBuddy* buddy = lc->find_buddy_by_uin(lc,file->from);
+        LwqqBuddy* buddy = lc->find_buddy_by_uin(lc,file->super.from);
         if(buddy == NULL ) return;
         const char* key = try_get(buddy->qqnumber,buddy->uin);
         PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,key);
@@ -66,14 +66,14 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         purple_xfer_set_cancel_recv_fnc(xfer,recv_file_cancel);
         LwqqMsgFileMessage* fdup = s_malloc(sizeof(*fdup));
         memcpy(fdup,file,sizeof(*fdup));
-        file->from = file->to = file->reply_ip = file->recv.name = NULL;
+        file->super.from = file->super.to = file->reply_ip = file->recv.name = NULL;
         xfer->data = fdup;
         purple_xfer_request(xfer);
     } else if(file->mode == MODE_REFUSE) {
         if(file->refuse.cancel_type == CANCEL_BY_USER) {
-            qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
         } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
-            qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
         }
 
     }
@@ -87,11 +87,11 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
     LwqqMsgOffFile* file = xfer->data;
 
     if(errno == 0){
-        qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->to, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
+        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
     }else{
-        qq_sys_msg_write(ac, LWQQ_MT_BUDDY_MSG, file->to, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
+        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
     }
-    lwqq_msg_offfile_free(file);
+    lwqq_msg_free((LwqqMsg*)file);
     purple_xfer_set_completed(xfer,1);
 }
 
@@ -108,8 +108,8 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     LwqqMsgOffFile* file = xfer->data;
     //purple_xfer_unref(xfer);
     if(errno) {
-        qq_sys_msg_write(ac,LWQQ_MT_BUDDY_MSG, file->to,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
-        lwqq_msg_offfile_free(file);
+        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
+        lwqq_msg_free((LwqqMsg*)file);
         s_free(xfer->data);
         purple_xfer_set_completed(xfer,1);
     } else {
@@ -135,8 +135,8 @@ static void upload_file_init(PurpleXfer* xfer)
     qq_account* ac = data[0];
     LwqqClient* lc = ac->qq;
     LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
-    file->from = s_strdup(lc->myself->uin);
-    file->to = s_strdup(purple_xfer_get_remote_user(xfer));
+    file->super.from = s_strdup(lc->myself->uin);
+    file->super.to = s_strdup(purple_xfer_get_remote_user(xfer));
     file->name = s_strdup(purple_xfer_get_local_filename(xfer));
     xfer->start_time = time(NULL);
     data[1] = file;

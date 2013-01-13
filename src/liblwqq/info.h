@@ -128,5 +128,6 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
 // when allow == LWQQ_ALLOW_AND_ADD extra is markname
 LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra);
 
+LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g);
 
 #endif  /* LWQQ_INFO_H */

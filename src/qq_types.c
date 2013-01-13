@@ -172,13 +172,13 @@ PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,q
 {
     PurpleAccount* account = ac->account;
     const char* local_id;
-    if(msg_type == LWQQ_MT_BUDDY_MSG){
+    if(msg_type == LWQQ_MS_BUDDY_MSG){
         if(ac->qq_use_qqnum){
             LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
             local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;
         }else local_id = serv_id;
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,local_id,account);
-    } else if(msg_type == LWQQ_MT_GROUP_MSG || msg_type == LWQQ_MT_DISCU_MSG){
+    } else if(msg_type == LWQQ_MS_GROUP_MSG || msg_type == LWQQ_MS_DISCU_MSG){
         if(ac->qq_use_qqnum){
             LwqqGroup* group = find_group_by_gid(ac->qq,serv_id);
             local_id = (group&&group->account)?group->account:serv_id;

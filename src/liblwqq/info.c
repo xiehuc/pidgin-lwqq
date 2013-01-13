@@ -83,6 +83,14 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
     g->mask = m;
 }
 
+#define parse_key_value(k,v) {\
+    char* s=json_parse_simple_value(json,v);\
+    if(s){\
+        s_free(k);\
+        k=json_unescape(s);\
+    }\
+}
+
 /**
  * Get the result object in a json object.
  *
@@ -113,6 +121,12 @@ static json_t *parse_retcode_result(json_t *json,int* retcode)
      * if failed it would return NULL;
      */
     json_t* result = json_find_first_label_all(json, "result");
+    if(result == NULL) return NULL;
+    return result->child;
+}
+static json_t* parse_key_child(json_t* json,const char* key)
+{
+    json_t* result = json_find_first_label(json, key);
     if(result == NULL) return NULL;
     return result->child;
 }
@@ -182,6 +196,21 @@ static void parse_and_do_set_status(json_t* cur,LwqqClient* lc)
             b->client_type = s_atoi(client_type,LWQQ_CLIENT_DESKTOP);
         }
     }
+}
+
+static void parse_group_info(json_t* json,LwqqGroup* g)
+{
+    //{"face":0,"memo":"","member_cnt":2,"class":10011,"fingermemo":"","code":492623520,"createtime":1344433413,"flag":16842753,"name":"group\u0026test","gid":4072534964,"owner":586389001,"maxmember":100,"option":2}
+    if(!json) return;
+    parse_key_value(g->class,"class");
+    parse_key_value(g->code,"code");
+    parse_key_value(g->createtime,"createtime");
+    parse_key_value(g->face,"face");
+    parse_key_value(g->flag,"flag");
+    parse_key_value(g->gid,"gid");
+    parse_key_value(g->name,"name");
+    parse_key_value(g->option,"option");
+    parse_key_value(g->owner,"owner");
 }
 /**
  * this process simple result;
@@ -268,6 +297,22 @@ static int process_online_buddies(LwqqHttpRequest* req,LwqqClient* lc)
             parse_and_do_set_status(result,lc);
             result = result->next;
         }
+    }
+done:
+    lwqq_util_clean_json_and_req(root,req);
+    return err;
+}
+static int process_group_info(LwqqHttpRequest*req,LwqqGroup* g)
+{
+    //{"retcode":0,"result":{"ginfo":{"face":0,"memo":"","member_cnt":2,"class":10011,"fingermemo":"","code":492623520,"createtime":1344433413,"flag":16842753,"name":"group\u0026test","gid":4072534964,"owner":586389001,"maxmember":100,"option":2}}}
+    int err = 0;
+    json_t *root = NULL,*result;
+    lwqq_util_jump_if_http_fail(req,err);
+    lwqq_util_jump_if_json_fail(root,req->response,err);
+    result = parse_retcode_result(root, &err);
+    lwqq_util_jump_if_retcode_fail(err);
+    if(result){
+        parse_group_info(parse_key_child(result, "ginfo"),g);
     }
 done:
     lwqq_util_clean_json_and_req(root,req);
@@ -989,67 +1034,6 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
 }
 
 
-/**
- * Parse group info like this
- * Is the "members" in "ginfo" useful ? Here not parsing it...
- *
- * "result":{
- * "ginfo":
- *   {"face":0,"memo":"","class":10026,"fingermemo":"","code":3968641865,"createtime":1339647698,"flag":1,
- *    "level":0,"name":"............","gid":2698833507,"owner":909998471,
- *    "members":[{"muin":56360327,"mflag":0},{"muin":909998471,"mflag":0}],
- *    "option":2},
- *
- * @param lc
- * @param group
- * @param json Point to the first child of "result"'s value
- */
-static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
-{
-    char *gid;
-
-    /* Make json point "ginfo" reference */
-    while (json) {
-        if (json->text && !strcmp(json->text, "ginfo")) {
-            break;
-        }
-        json = json->next;
-    }
-    if (!json) {
-        return ;
-    }
-
-    //json = json->child;    // there's no array here , comment it.
-    gid = json_parse_simple_value(json,"gid");
-    if (strcmp(group->gid, gid) != 0) {
-        lwqq_log(LOG_ERROR, "Parse json object error.");
-        return;
-    }
-
-#define  SET_GINFO(key, name) {                                    \
-        if (group->key) {                                               \
-            s_free(group->key);                                         \
-        }                                                               \
-        group->key = s_strdup(json_parse_simple_value(json, name));     \
-    }
-
-    /* we have got the 'code','name' and 'gid', so we comment it here. */
-    SET_GINFO(face, "face");
-    SET_GINFO(memo, "memo");
-    SET_GINFO(class, "class");
-    SET_GINFO(fingermemo,"fingermemo");
-    //SET_GINFO(code, "code");
-    SET_GINFO(createtime, "createtime");
-    SET_GINFO(flag, "flag");
-    SET_GINFO(level, "level");
-    //SET_GINFO(name, "name");
-    //SET_GINFO(gid, "gid");
-    SET_GINFO(owner, "owner");
-    SET_GINFO(option, "option");
-
-#undef SET_GINFO
-
-}
 static char* ibmpc_ascii_character_convert(char *str)
 {
     static char buf[256];
@@ -1365,7 +1349,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
         json_tmp = json_tmp->child;
 
         /* first , get group information */
-        parse_groups_ginfo_child(lc, group, json_tmp);
+        parse_group_info(parse_key_child(json_tmp->parent, "ginfo"), group);
         /* second , get group members */
         parse_groups_minfo_child(lc, group, json_tmp);
         parse_groups_ginfo_members_child(lc,group,json_tmp);
@@ -1938,4 +1922,17 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
+}
+LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g)
+{
+    if(!lc||!g) return NULL;
+    if(!g->code) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_group_public_info2?gcode=%s&vfwebqq=%s&t=%ld",
+            g->code,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
+    return req->do_request_async(req,0,NULL,_C_(2p_i,process_group_info,req,g));
+
 }
