@@ -1007,10 +1007,6 @@ void qq_msg_check(LwqqClient* lc)
     }
 }*/
 
-static void finish_insertion(qq_account* ac)
-{
-    lwdb_userdb_commit(ac->db, "insertion");
-}
 static void login_stage_f(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -1034,12 +1030,10 @@ static void login_stage_f(LwqqClient* lc)
     }
 
     LwqqAsyncEvent* ev = NULL;
-    LwqqAsyncEvset* set = NULL;
     if(ac->qq_use_qqnum){
         //lwdb_userdb_write_to_client(ac->db, lc);
         lwdb_userdb_query_qqnumbers(lc, ac->db);
         lwdb_userdb_begin(ac->db,"insertion");
-        set = lwqq_async_evset_new();
     }
 
     //we must put buddy and group clean before any add operation.
@@ -1064,7 +1058,6 @@ static void login_stage_f(LwqqClient* lc)
         if(ac->qq_use_qqnum && ! buddy->qqnumber){
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,lc,buddy));
-            lwqq_async_evset_add_event(set, ev);
         }
         else{
             friend_come(lc,buddy);
@@ -1075,13 +1068,10 @@ static void login_stage_f(LwqqClient* lc)
         if(ac->qq_use_qqnum && ! group->account){
             ev = lwqq_info_get_group_qqnumber(lc,group);
             lwqq_async_add_event_listener(ev,_C_(2p,write_group_to_db,lc,group));
-            lwqq_async_evset_add_event(set, ev);
         }else{
             group_come(lc,group);
         }
     }
-    if(set)
-        lwqq_async_add_evset_listener(set, _C_(p,finish_insertion, ac));
     //after this we finished the qqnumber fast index.
     
 
