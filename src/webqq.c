@@ -539,12 +539,16 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
             break;
         case GROUP_JOIN:
-            snprintf(body,sizeof(body),"您加入了群[%s]",msg->group->name);
+            snprintf(body,sizeof(body),"%s加入了群[%s]",
+                    strcmp(msg->member_uin,lc->myself->uin)==0?"您":msg->member,
+                    msg->group->name);
             group_come(lc, msg->group);
             break;
         case GROUP_LEAVE:
             {
-            snprintf(body,sizeof(body),"您离开了群[%s]",msg->group->name);
+            snprintf(body,sizeof(body),"%s离开了群[%s]",
+                    strcmp(msg->member_uin,lc->myself->uin)==0?"您":msg->member,
+                    msg->group->name);
             PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
             if(chat){
                 purple_blist_remove_chat(chat);
@@ -580,6 +584,7 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
     }
 }
 struct rewrite_pic_entry {
+    LwqqGroup* owner;
     int ori_id;
     int new_id;
 };
@@ -590,6 +595,21 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
 
     PurpleConnection* pc = ac->gc;
     PurpleConversation* conv = purple_find_chat(pc, opend_chat_search(ac,group));
+    if(conv == NULL){
+        //only do free work.
+        GList* item = ac->rewrite_pic_list,*safe;
+        struct rewrite_pic_entry* entry;
+        while(item){
+            entry = item->data;
+            safe = item;
+            item = item->next;
+            if(entry->owner == group){
+                purple_imgstore_unref_by_id(entry->new_id);
+                ac->rewrite_pic_list = g_list_remove_link(ac->rewrite_pic_list,safe);
+            }
+        }
+        return;
+    }
     GList* list = purple_conversation_get_message_history(conv);
     GList* newlist = NULL;
     PurpleConvMessage* message,* newmsg;
@@ -687,6 +707,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
             struct rewrite_pic_entry* entry = s_malloc0(sizeof(*entry));
             entry->ori_id = id;
             entry->new_id = new_id;
+            entry->owner = group;
             ac->rewrite_pic_list = g_list_append(ac->rewrite_pic_list,entry);
             pic++;
         }

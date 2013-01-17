@@ -143,6 +143,7 @@ static void cookies_free(LwqqCookies *c)
         s_free(c->pt2gguin);
         s_free(c->verifysession);
         s_free(c->lwcookies);
+        s_free(c->RK);
         s_free(c);
     }
 }

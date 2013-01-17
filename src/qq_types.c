@@ -72,7 +72,7 @@ void qq_account_free(qq_account* ac)
     for(i=0;i<ac->opend_chat->len;i++){
         purple_conversation_destroy(purple_find_chat(gc, i));
     }
-    g_ptr_array_free(ac->opend_chat,0);
+    g_ptr_array_free(ac->opend_chat,1);
 #if QQ_USE_FAST_INDEX
     g_hash_table_destroy(ac->fast_index.qqnum_index);
     g_hash_table_destroy(ac->fast_index.uin_index);

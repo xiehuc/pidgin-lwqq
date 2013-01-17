@@ -174,6 +174,8 @@ typedef struct LwqqMsgSysGMsg{
     char* group_uin;
     char* gcode;
     char* account;
+    char* member_uin;
+    char* member;
     LwqqGroup* group;
     union{
         struct {
