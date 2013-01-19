@@ -539,9 +539,10 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
             break;
         case GROUP_JOIN:
-            snprintf(body,sizeof(body),"%s加入了群[%s]",
+            snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
                     strcmp(msg->member_uin,lc->myself->uin)==0?"您":msg->member,
-                    msg->group->name);
+                    msg->group->name,
+                    msg->admin);
             group_come(lc, msg->group);
             break;
         case GROUP_LEAVE:
@@ -931,6 +932,7 @@ static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group)
 }
 static void lost_connection(LwqqClient* lc)
 {
+    if(!lwqq_client_valid(lc)) return ;
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = ac->gc;
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,正在重新登录,请等待一会儿再重试");

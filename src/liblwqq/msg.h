@@ -176,10 +176,11 @@ typedef struct LwqqMsgSysGMsg{
     char* account;
     char* member_uin;
     char* member;
+    char* admin_uin;
+    char* admin;
     LwqqGroup* group;
     union{
         struct {
-            char* request_uin;
             char* msg;
         }request_join;
     };

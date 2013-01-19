@@ -255,7 +255,8 @@ static void msg_sys_g_msg_free(LwqqMsg* msg)
         s_free(gmsg->group_uin);
         s_free(gmsg->member);
         s_free(gmsg->member_uin);
-        s_free(gmsg->request_join.request_uin);
+        s_free(gmsg->admin_uin);
+        s_free(gmsg->admin);
         s_free(gmsg->request_join.msg);
     }
 }
@@ -709,6 +710,8 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->type = GROUP_JOIN;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
+        msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
+        msg->admin = json_unescape(json_parse_simple_value(json, "admin_nick"));
         LwqqGroup* g = lwqq_group_new(LWQQ_GROUP_QUN);
         g->account = s_strdup(msg->account);
         g->code = s_strdup(msg->gcode);
@@ -728,7 +731,8 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     }
     else if(strcmp(type,"group_request_join")==0){
         msg->type = GROUP_REQUEST_JOIN;
-        msg->request_join.request_uin = s_strdup(json_parse_simple_value(json, "request_uin"));
+        msg->member_uin = s_strdup(json_parse_simple_value(json,"request_uin"));
+        msg->member = json_unescape(json_parse_simple_value(json,"t_request_uin"));
         msg->request_join.msg = json_unescape(json_parse_simple_value(json, "msg"));
     }
     else msg->type = GROUP_UNKNOW;

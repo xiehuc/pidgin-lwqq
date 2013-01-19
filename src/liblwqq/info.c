@@ -1943,7 +1943,7 @@ LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,L
 {
     if(!lc||!msg||!buddy) return NULL;
     char url[512];
-    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->request_join.request_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->member_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
     lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
@@ -1959,7 +1959,7 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
     int op = (answer)?2:3;
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/op_group_join_req?"
             "group_uin=%s&req_uin=%s&msg=%s&op_type=%d&clientid=%s&psessionid=%s&t=%ld",
-            msg->group_uin,msg->request_join.request_uin,reason,op,lc->clientid,lc->psessionid,time(NULL));
+            msg->group_uin,msg->member_uin,reason,op,lc->clientid,lc->psessionid,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
