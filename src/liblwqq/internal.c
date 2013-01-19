@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-int lwqq_map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key)
+int lwqq__map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key)
 {
     while(maps->str != NULL){
         if(!strncmp(maps->str,key,strlen(maps->str))) return maps->type;
@@ -14,7 +14,7 @@ int lwqq_map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key)
     return maps->type;
 }
 
-const char* lwqq_map_to_str_(const struct LwqqStrMapEntry_* maps,int type)
+const char* lwqq__map_to_str_(const struct LwqqStrMapEntry_* maps,int type)
 {
     while(maps->str != NULL){
         if(maps->type == type) return maps->str;
@@ -40,7 +40,7 @@ done:
     return err;
 }
 
-LwqqAsyncEvent* lwqq_util_request_captcha(LwqqClient* lc,LwqqVerifyCode* c)
+LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c)
 {
     if(!lc||!c) return NULL;
     char url[512];

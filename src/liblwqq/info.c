@@ -39,7 +39,7 @@ static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGr
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
 static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGroup* g);
 static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
-static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g);
+static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g,char* msg);
 
 
 //=====================INSTRUCTION====================//
@@ -1872,12 +1872,12 @@ LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* g,const char* msg)
     LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
     ev->lc = lc;
     LwqqVerifyCode* c = s_malloc0(sizeof(*c));
-    c->cmd = _C_(3p,add_group_stage_4,ev,c,g);
+    c->cmd = _C_(4p,add_group_stage_4,ev,c,g,s_strdup(msg));
     lwqq__request_captcha(lc, c);
     return ev;
 }
 
-static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g)
+static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g,char* msg)
 {
     if(c->str==NULL){
         called->result = LWQQ_EC_ERROR;
@@ -1890,7 +1890,7 @@ static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/apply_join_group2");
     snprintf(post,sizeof(post),"r={\"gcode\":%s,\"code\":\"%s\",\"vfy\":\"%s\","
             "\"msg\":\"%s\",\"vfwebqq\":\"%s\"}",
-            g->code,c->str,lc->cookies->verifysession,"",lc->vfwebqq);
+            g->code,c->str,lc->cookies->verifysession,msg,lc->vfwebqq);
     lwqq_puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
@@ -1899,6 +1899,7 @@ static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup
     lwqq_async_add_event_chain(ev, called);
 done:
     lwqq_vc_free(c);
+    s_free(msg);
 }
 
 

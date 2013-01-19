@@ -216,16 +216,15 @@ static void add_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     }
     lwqq_group_free(g);
 }
-static void add_group(LwqqClient* lc,LwqqConfirmTable* c,LwqqGroup* g,char* message)
+static void add_group(LwqqClient* lc,LwqqConfirmTable* c,LwqqGroup* g)
 {
     if(c->answer == LWQQ_NO){
         goto done;
     }
-    LwqqAsyncEvent* ev = lwqq_info_add_group(lc, g,message);
+    LwqqAsyncEvent* ev = lwqq_info_add_group(lc, g, c->input);
     lwqq_async_add_event_listener(ev, _C_(2p,add_group_receipt,ev,g));
 done:
     lwqq_ct_free(c);
-    s_free(message);
 }
 static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
 {
@@ -244,13 +243,15 @@ static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup("群确认");
+    confirm->input_title = s_strdup("附加理由");
+    confirm->flags = LWQQ_CT_YES_NEED_INPUT|LWQQ_CT_NO_NEED_INPUT;
     char body[1024] = {0};
 #define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
     ADD_INFO("QQ",g->qq);
     ADD_INFO("名称",g->name);
 #undef ADD_INFO
     confirm->body = s_strdup(body);
-    confirm->cmd = _C_(4p,add_group,lc,confirm,g,NULL);
+    confirm->cmd = _C_(3p,add_group,lc,confirm,g);
     lc->async_opt->need_confirm(lc,confirm);
 }
 
@@ -1207,14 +1208,22 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
     return ;
 }
 
-static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestField* fields)
+static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestFields* fields)
 {
     table->answer = LWQQ_YES;
+    if(table->flags & LWQQ_CT_YES_NEED_INPUT){
+        const char* i = purple_request_fields_get_string(fields, "input");
+        table->input = s_strdup(i);
+    }
     vp_do(table->cmd,NULL);
 }
-static void confirm_table_no(LwqqConfirmTable* table,PurpleRequestField* fields)
+static void confirm_table_no(LwqqConfirmTable* table,PurpleRequestFields* fields)
 {
     table->answer = LWQQ_NO;
+    if(table->flags & LWQQ_CT_NO_NEED_INPUT){
+        const char* i = purple_request_fields_get_string(fields, "input");
+        table->input = s_strdup(i);
+    }
     vp_do(table->cmd,NULL);
 }
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
@@ -1231,6 +1240,10 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     PurpleRequestField* str = purple_request_field_string_new("body", table->title, table->body, TRUE);
     purple_request_field_string_set_editable(str, FALSE);
     purple_request_field_group_add_field(field_group, str);
+    if(table->flags & LWQQ_CT_YES_NEED_INPUT || table->flags & LWQQ_CT_NO_NEED_INPUT){
+        PurpleRequestField* i = purple_request_field_string_new("input", table->input_title, "", FALSE);
+        purple_request_field_group_add_field(field_group,i);
+    }
 
     purple_request_fields(ac->account, NULL,
                           "确认请求", NULL,
