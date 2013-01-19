@@ -243,12 +243,6 @@ typedef struct LwqqVerifyCode {
 
 typedef enum {LWQQ_NO,LWQQ_YES} LwqqAnswer;
 typedef enum {LWQQ_DENY,LWQQ_ALLOW,LWQQ_ALLOW_AND_ADD} LwqqAllow;
-typedef struct LwqqConfirmTable {
-    LwqqAnswer answer;
-    char* title;
-    char* body;
-    LwqqCommand cmd;
-}LwqqConfirmTable;
 
 typedef struct LwqqCookies {
     char *ptvfsession;          /**< ptvfsession */
@@ -342,7 +336,6 @@ void lwqq_set_cookie(LwqqCookies* ,const char* key,const char* value);
  * @param vc 
  */
 void lwqq_vc_free(LwqqVerifyCode *vc);
-void lwqq_ct_free(LwqqConfirmTable* table);
 
 /** 
  * Free LwqqClient instance

@@ -13,11 +13,11 @@
 #include <msg.h>
 #include <info.h>
 #include <http.h>
+#include <login.h>
+#include <lwdb.h>
 
 #include "internal.h"
 #include "qq_types.h"
-#include "login.h"
-#include "lwdb.h"
 #include "background.h"
 #include "translate.h"
 
@@ -116,15 +116,15 @@ static void action_about_webqq(PurplePluginAction *action)
     g_return_if_fail(NULL != gc);
 
     info = g_string_new("<html><body>");
-    g_string_append(info, _("<p><b>Author</b>:<br>\n"));
+    g_string_append(info, "<p><b>Author</b>:<br>\n");
     g_string_append(info, "xiehuc\n");
     g_string_append(info, "<br/>\n");
 
-    g_string_append(info, _("pidgin-libwebqq mainly referenced: "
+    g_string_append(info, "pidgin-libwebqq mainly referenced: "
                             "1.openfetion for libpurple about<br/>"
                             "2.lwqq for webqq about<br/>"
                             "so it remaind a easy job<br/>"
-                            "thanks riegamaths@gmail.com's great guide"));
+                            "thanks riegamaths@gmail.com's great guide");
     g_string_append(info, "<br/><br/></body></html>");
     title = g_strdup_printf(_("About WebQQ %s"), DISPLAY_VERSION);
     purple_notify_formatted(gc, title, title, NULL, info->str, NULL, NULL);
@@ -1372,7 +1372,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
-    mmsg->f_color = s_strdup("000000");
+    strcpy(mmsg->f_color,"000000");
 
     translate_message_to_struct(lc, who, what, msg, 0);
 
@@ -1402,7 +1402,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
-    mmsg->f_color = s_strdup("000000");
+    strcpy(mmsg->f_color,"000000");
     PurpleConversation* conv = purple_find_chat(gc,id);
 
     translate_message_to_struct(ac->qq, group->gid, message, msg, 1);

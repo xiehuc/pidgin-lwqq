@@ -121,14 +121,6 @@ void lwqq_vc_free(LwqqVerifyCode *vc)
 
     }
 }
-void lwqq_ct_free(LwqqConfirmTable* table)
-{
-    if(table){
-        s_free(table->title);
-        s_free(table->body);
-        s_free(table);
-    }
-}
 
 static void cookies_free(LwqqCookies *c)
 {
@@ -462,11 +454,11 @@ LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const cha
 
 const char* lwqq_status_to_str(LwqqStatus status)
 {
-    return lwqq_map_to_str_(status_type_map, status);
+    return lwqq__map_to_str_(status_type_map, status);
 }
 LwqqStatus lwqq_status_from_str(const char* str)
 {
-    return lwqq_map_to_type_(status_type_map, str);
+    return lwqq__map_to_type_(status_type_map, str);
 }
 
 

@@ -11,6 +11,7 @@
 #define LWQQ_ASYNC_H
 #include "type.h"
 #include "msg.h"
+#include "util.h"
 #include <assert.h>
 
 

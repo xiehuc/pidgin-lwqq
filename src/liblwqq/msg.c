@@ -131,6 +131,7 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
             {
             msg = s_malloc0(sizeof(LwqqMsgMessage));
             LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+            strcpy(mmsg->f_color,"000000");
             TAILQ_INIT(&mmsg->content);
             }
             break;
@@ -180,7 +181,6 @@ static void msg_message_free(LwqqMsg *opaque)
     }
 
     s_free(msg->f_name);
-    s_free(msg->f_color);
     if(opaque->type == LWQQ_MS_GROUP_MSG){
         s_free(msg->group.send);
         s_free(msg->group.group_code);
@@ -415,7 +415,7 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     if (!msg_type) {
         return type;
     }
-    return lwqq_map_to_type_(msg_type_map, msg_type);
+    return lwqq__map_to_type_(msg_type_map, msg_type);
 }
 static int parse_content(json_t *json, LwqqMsgMessage* opaque)
 {
@@ -443,8 +443,7 @@ static int parse_content(json_t *json, LwqqMsgMessage* opaque)
 
                 /* Font color */
                 color = json_parse_simple_value(ctent, "color");
-                color = color ?: "000000";
-                msg->f_color = s_strdup(color);
+                strcpy(msg->f_color,color?:"000000");
 
                 /* Font size */
                 size = json_parse_simple_value(ctent, "size");
@@ -1433,15 +1432,15 @@ static int process_gface_sig(LwqqHttpRequest* req)
 {
     int err = 0;
     json_t* json = NULL;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(json,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(json,req->response,err);
     LwqqClient* lc = req->lc;
 
     lc->gface_key = s_strdup(json_parse_simple_value(json,"gface_key"));
     lc->gface_sig = s_strdup(json_parse_simple_value(json,"gface_sig"));
     
 done:
-    lwqq_util_clean_json_and_req(json,req);
+    lwqq__clean_json_and_req(json,req);
     return err;
 }
 static LwqqAsyncEvent* query_gface_sig(LwqqClient* lc)
@@ -1679,7 +1678,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     mmsg->f_name = "宋体";
     mmsg->f_size = 13;
     mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
-    mmsg->f_color = "000000";
+    strcpy(mmsg->f_color,"000000");
     LwqqMsgContent * c = s_malloc(sizeof(*c));
     c->type = LWQQ_CONTENT_STRING;
     c->data.str = s_strdup(message);
@@ -1690,7 +1689,6 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     LWQQ_SYNC_END();
 
     mmsg->f_name = NULL;
-    mmsg->f_color = NULL;
 
     lwqq_msg_free(msg);
 

@@ -25,6 +25,7 @@
 #include "json.h"
 #include "async.h"
 #include "util.h"
+#include "internal.h"
 
 #define LWQQ_CACHE_DIR "/tmp/lwqq/"
 
@@ -66,7 +67,7 @@ static void do_change_markname(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,char
 }
 static void do_modify_category(LwqqAsyncEvent* ev,LwqqBuddy* b,int cate)
 {
-    lwqq_util_return_if_ev_fail(ev);
+    lwqq__return_if_ev_fail(ev);
     b->cate_index = cate;
 }
 static void do_change_status(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqStatus s)
@@ -79,7 +80,7 @@ static void do_change_status(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqStatus s)
 }
 static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
 {
-    lwqq_util_return_if_ev_fail(ev);
+    lwqq__return_if_ev_fail(ev);
     g->mask = m;
 }
 
@@ -268,8 +269,8 @@ static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
     //{"retcode":0,"result":{"face":567,"birthday":{"month":x,"year":xxxx,"day":xxxx},"occupation":"","phone":"","allow":1,"college":"","constel":5,"blood":0,"stat":20,"homepage":"","country":"中国","city":"xx","uiuin":"","personal":"","nick":"xxx","shengxiao":x,"email":"","token":"523678fd7cff12223ef9906a4e924a4bf733108b9532c27c","province":"xx","account":xxx,"gender":"male","tuin":3202680423,"mobile":""}}
     int err = 0;
     json_t *root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
     //WEBQQ_FATAL:验证码输入错误.
     if(err != WEBQQ_OK) goto done;
@@ -277,7 +278,7 @@ static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
         parse_friend_detail(result,out);
 
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 
@@ -286,8 +287,8 @@ static int process_qqnumber(LwqqHttpRequest* req,LwqqBuddy* b,LwqqGroup* g)
     //{"retcode":0,"result":{"uiuin":"","account":1154230227,"uin":2379149875}}
     int err = 0;
     json_t *root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
     char* account = NULL;
     if(result){
@@ -301,7 +302,7 @@ static int process_qqnumber(LwqqHttpRequest* req,LwqqBuddy* b,LwqqGroup* g)
     }
 
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 
@@ -311,10 +312,10 @@ static int process_online_buddies(LwqqHttpRequest* req,LwqqClient* lc)
     // "{"uin":2726159277,"status":"busy","client_type":1}]}
     int err = 0;
     json_t *root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
-    lwqq_util_jump_if_retcode_fail(err);
+    lwqq__jump_if_retcode_fail(err);
     if(result) {
         result = result->child;
         while(result){
@@ -323,7 +324,7 @@ static int process_online_buddies(LwqqHttpRequest* req,LwqqClient* lc)
         }
     }
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 static int process_group_info(LwqqHttpRequest*req,LwqqGroup* g)
@@ -331,15 +332,15 @@ static int process_group_info(LwqqHttpRequest*req,LwqqGroup* g)
     //{"retcode":0,"result":{"ginfo":{"face":0,"memo":"","member_cnt":2,"class":10011,"fingermemo":"","code":492623520,"createtime":1344433413,"flag":16842753,"name":"group\u0026test","gid":4072534964,"owner":586389001,"maxmember":100,"option":2}}}
     int err = 0;
     json_t *root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
-    lwqq_util_jump_if_retcode_fail(err);
+    lwqq__jump_if_retcode_fail(err);
     if(result){
         parse_group_info(parse_key_child(result, "ginfo"),g);
     }
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 
@@ -348,16 +349,16 @@ static int process_business_card(LwqqHttpRequest* req,LwqqBusinessCard* card)
     //{"retcode":0,"result":{"phone":"","muin":350512021,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}}
     int err = 0;
     json_t *root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
+    lwqq__jump_if_http_fail(req,err);
     lwqq_verbose(3,"%s\n",req->response);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
-    lwqq_util_jump_if_retcode_fail(err);
+    lwqq__jump_if_retcode_fail(err);
     if(result){
         parse_business_card(result,card);
     }
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 
@@ -1764,7 +1765,7 @@ LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,Lwqq
     ev->lc = lc;
     LwqqVerifyCode* c = s_malloc0(sizeof(*c));
     c->cmd = _C_(3p,add_friend_stage_2,ev,c,out);
-    lwqq_util_request_captcha(lc, c);
+    lwqq__request_captcha(lc, c);
     return ev;
 }
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out)
@@ -1820,7 +1821,7 @@ LwqqAsyncEvent* lwqq_info_search_group_by_qq(LwqqClient* lc,const char* qq,LwqqG
     ev->lc = lc;
     LwqqVerifyCode* code = s_malloc0(sizeof(*code));
     code->cmd = _C_(3p,add_group_stage_1,ev,code,group);
-    lwqq_util_request_captcha(lc, code);
+    lwqq__request_captcha(lc, code);
     return ev;
 }
 
@@ -1848,8 +1849,8 @@ static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g)
     //{"result":[{"GC":"","GD":"","GE":3090888,"GF":"","TI":"永远的电子商务033班","GA":"","BU":"","GB":"","DT":"","RQ":"","QQ":"","MD":"","TA":"","HF":"","UR":"","HD":"","HE":"","HB":"","HC":"","HA":"","LEVEL":0,"PD":"","TX":"","PA":"","PB":"","CL":"","GEX":1013409473,"PC":""}],"retcode":0,"responseHeader":{"CostTime":18,"Status":0,"TotalNum":1,"CurrentNum":1,"CurrentPage":1}}
     int err = 0;
     json_t* root = NULL,*result;
-    lwqq_util_jump_if_http_fail(req,err);
-    lwqq_util_jump_if_json_fail(root,req->response,err);
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
     result = parse_retcode_result(root, &err);
     if(err != WEBQQ_OK) {goto done;}
     if(result && result->child){
@@ -1860,7 +1861,7 @@ static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g)
         err = LWQQ_EC_NO_RESULT;
     }
 done:
-    lwqq_util_clean_json_and_req(root,req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 
@@ -1872,7 +1873,7 @@ LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* g,const char* msg)
     ev->lc = lc;
     LwqqVerifyCode* c = s_malloc0(sizeof(*c));
     c->cmd = _C_(3p,add_group_stage_4,ev,c,g);
-    lwqq_util_request_captcha(lc, c);
+    lwqq__request_captcha(lc, c);
     return ev;
 }
 
