@@ -2064,7 +2064,7 @@ static void client_connect_signals(PurpleConnection* gc)
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
-    .options=           OPT_PROTO_IM_IMAGE,
+    .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_INVITE_MESSAGE,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
     .list_icon=         qq_list_icon,   /* list_icon */
     .login=             qq_login,       /* login */
