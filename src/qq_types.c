@@ -59,8 +59,8 @@ qq_account* qq_account_new(PurpleAccount* account)
 #if QQ_USE_FAST_INDEX
     ac->qq->find_buddy_by_uin = find_buddy_by_uin;
     ac->qq->find_buddy_by_qqnumber = find_buddy_by_qqnumber;
-    ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,g_free);
-    ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
+    ac->fast_index.uin_index = g_hash_table_new_full(g_str_hash,g_str_equal,g_free,g_free);
+    ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,g_free,NULL);
 #endif
     ac->qq->dispatch = qq_dispatch;
     return ac;
@@ -89,14 +89,14 @@ void qq_account_insert_index_node(qq_account* ac,int type,void* data)
     node->node = data;
     if(type == NODE_IS_BUDDY){
         LwqqBuddy* buddy = data;
-        g_hash_table_insert(ac->fast_index.uin_index,buddy->uin,node);
+        g_hash_table_insert(ac->fast_index.uin_index,s_strdup(buddy->uin),node);
         if(buddy->qqnumber)
-            g_hash_table_insert(ac->fast_index.qqnum_index,buddy->qqnumber,node);
+            g_hash_table_insert(ac->fast_index.qqnum_index,s_strdup(buddy->qqnumber),node);
     }else{
         LwqqGroup* group = data;
-        g_hash_table_insert(ac->fast_index.uin_index,group->gid,node);
+        g_hash_table_insert(ac->fast_index.uin_index,s_strdup(group->gid),node);
         if(group->account)
-            g_hash_table_insert(ac->fast_index.qqnum_index,group->account,node);
+            g_hash_table_insert(ac->fast_index.qqnum_index,s_strdup(group->account),node);
     }
 #endif
 }

@@ -61,7 +61,7 @@ typedef struct qq_account {
 #if QQ_USE_FAST_INDEX
     struct{
         GHashTable* qqnum_index;
-        GHashTable* uin_index;
+        GHashTable* uin_index;          ///< key:char*,value:struct index_node
     }fast_index;
 #endif
     struct{

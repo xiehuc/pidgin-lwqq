@@ -452,6 +452,10 @@ static int get_version_back(LwqqHttpRequest* req)
     int err = LWQQ_EC_OK;
     char* response = NULL;
     LwqqClient* lc = req->lc;
+    if(!lwqq_client_valid(lc)){
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
     if (req->http_code!=200) {
         err = LWQQ_EC_NETWORK_ERROR;
         goto done;

@@ -454,7 +454,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    static char buf[8192];
+    char buf[8192];
     //clean buffer
     strcpy(buf,"");
 
