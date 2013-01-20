@@ -1,5 +1,8 @@
 project(libwebqq)
 cmake_minimum_required(VERSION 2.6)
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "1")
+set(VERSION_PATCH "b")
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 if(NOT CMAKE_INSTALL_PREFIX)
