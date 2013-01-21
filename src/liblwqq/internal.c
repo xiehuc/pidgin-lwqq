@@ -56,3 +56,5 @@ LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c)
     req->set_header(req,"Connection","keep-alive");
     return req->do_request_async(req,0,NULL,_C_(2p_i,request_captcha_back,req,c));
 }
+
+

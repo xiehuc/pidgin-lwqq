@@ -487,6 +487,12 @@ static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
     PurpleConnection* pc = ac->gc;
     serv_got_typing(pc,serv_id_to_local(ac,input->from),5,PURPLE_TYPING);
 }
+static void shake_message(LwqqClient* lc,LwqqMsgShakeMessage* shake)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+    PurpleConnection* pc = ac->gc;
+    serv_got_attention(pc, serv_id_to_local(ac, shake->super.from), 0);
+}
 static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
 {
     char body_[1024] = {0};
@@ -999,6 +1005,9 @@ void qq_msg_check(LwqqClient* lc)
                 break;
             case LWQQ_MT_SYS_G_MSG:
                 sys_g_message(lc,(LwqqMsgSysGMsg*)msg->msg);
+                break;
+            case LWQQ_MT_SHAKE_MESSAGE:
+                shake_message(lc,(LwqqMsgShakeMessage*)msg->msg);
                 break;
             default:
                 lwqq_puts("unknow message\n");
@@ -1913,6 +1922,13 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
     lwqq_async_add_event_listener(ev, _C_(3p,search_buddy_receipt,ev,friend,s_strdup(message)));
 }
+static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guint type)
+{
+    qq_account* ac = gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    lwqq_msg_shake_window(lc, local_id_to_serv(ac, username));
+    return TRUE;
+}
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
 {
@@ -2084,6 +2100,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .send_im=           qq_send_im,     /* send_im */
     .send_typing=       qq_send_typing,
     .chat_send=         qq_send_chat,
+    .send_attention=    qq_send_attention,
     //.chat_leave=        qq_leave_chat,
     .send_file=         qq_send_file,
     //.chat_whisper=      qq_send_whisper,

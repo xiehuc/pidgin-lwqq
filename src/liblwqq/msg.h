@@ -43,6 +43,7 @@ typedef enum LwqqMsgType {
     LWQQ_MT_FILE_MSG = LWQQ_MF_SEQ|(9<<3),
     LWQQ_MT_NOTIFY_OFFFILE = LWQQ_MF_SEQ|(10<<3),
     LWQQ_MT_INPUT_NOTIFY = 11<<3,
+    LWQQ_MT_SHAKE_MESSAGE = LWQQ_MF_SEQ|(12<<3),
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
 #define lwqq_mt_bits(t) (t&~(-1<<8))
@@ -264,6 +265,10 @@ typedef struct LwqqMsgInputNotify{
     char* to;
     int msg_type;
 }LwqqMsgInputNotify;
+typedef struct LwqqMsgShakeMessage{
+    LwqqMsgSeq super;
+    unsigned long reply_ip;
+}LwqqMsgShakeMessage;
 
 
 /**
@@ -383,6 +388,7 @@ LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
 
 LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id);
+LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id);
 #define lwqq_msg_move(from,to) {memcpy(to,from,sizeof(*from));memset(from,0,sizeof(*from));}
 
 

@@ -65,6 +65,7 @@ static struct LwqqStrMapEntry_ msg_type_map[] = {
     {"file_message",            LWQQ_MT_FILE_MSG,           },
     {"notify_offfile",          LWQQ_MT_NOTIFY_OFFFILE,     },
     {"input_notify",            LWQQ_MT_INPUT_NOTIFY,       },
+    {"shake_message",           LWQQ_MT_SHAKE_MESSAGE,      },
     {"unknow",                  LWQQ_MT_UNKNOWN,            },
     {NULL,                      LWQQ_MT_UNKNOWN,            }
 };
@@ -74,6 +75,30 @@ static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* m
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
     lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
+}
+static int process_simple_response(LwqqHttpRequest* req)
+{
+    //{"retcode":0,"result":{"ret":0}}
+    int err = 0;
+    if(req->http_code!=200){
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
+    lwqq_puts(req->response);
+    json_t *root = NULL;
+    if(json_parse_document(&root, req->response)!=JSON_OK){
+        lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
+    int retcode = s_atoi(json_parse_simple_value(root, "retcode"),LWQQ_EC_ERROR);
+    if(retcode != WEBQQ_OK){
+        err = retcode;
+    }
+done:
+    if(root) json_free_value(&root);
+    lwqq_http_request_free(req);
+    return err;
 }
 /**
  * Create a new LwqqRecvMsgList object
@@ -164,6 +189,9 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
             break;
         case LWQQ_MT_INPUT_NOTIFY:
             msg = s_malloc0(sizeof(LwqqMsgInputNotify));
+            break;
+        case LWQQ_MT_SHAKE_MESSAGE:
+            msg = s_malloc0(sizeof(LwqqMsgShakeMessage));
             break;
         default:
             msg = NULL;
@@ -365,6 +393,9 @@ void lwqq_msg_free(LwqqMsg *msg)
                 s_free(input->from);
                 s_free(input->to);
             }
+            break;
+        case LWQQ_MT_SHAKE_MESSAGE:
+            s_free(msg);
             break;
         default:
             lwqq_log(LOG_ERROR, "No such message type\n");
@@ -821,6 +852,16 @@ static int parse_input_notify(json_t* json,void* opaque)
     input->to = s_strdup(json_parse_simple_value(json,"to_uin"));
     return 0;
 }
+static int parse_shake_message(json_t* json,void* opaque)
+{
+    /**
+     * {"retcode":0,"result":[{"poll_type":"shake_message","value":
+     * {"msg_id":568,"from_uin":2822367047,"to_uin":2501542492,"msg_id2":405490,"msg_type":9,"reply_ip":176498151}}]}
+     */
+    LwqqMsgShakeMessage* shake = opaque;
+    shake->reply_ip = strtoul(json_parse_simple_value(json, "reply_ip"), NULL, 10);
+    return 0;
+}
 const char* get_host_of_url(const char* url,char* buffer)
 {
     const char* ptr;
@@ -1069,6 +1110,9 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
                 break;
             case LWQQ_MT_INPUT_NOTIFY:
                 ret = parse_input_notify(cur,msg);
+                break;
+            case LWQQ_MT_SHAKE_MESSAGE:
+                ret = parse_shake_message(cur,msg);
                 break;
             default:
                 ret = -1;
@@ -1842,12 +1886,6 @@ done:
     return errno;
 }
 #define rand(n) (rand()%9000+1000)
-int dump_response(LwqqHttpRequest* req)
-{
-    lwqq_http_request_free(req);
-    //s_free(data);
-    return 0;
-}
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data)
 {
@@ -1910,7 +1948,19 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
             );
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    return req->do_request_async(req,0,NULL,_C_(p_i,dump_response,req));
+    return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
+}
+
+LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id)
+{
+    if(!lc || !serv_id) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/shake2?to_uin=%s&clientid=%s&psessionid=%s&t=%ld",
+            serv_id,lc->clientid,lc->psessionid,time(NULL));
+    lwqq_verbose(3,"%s\n",url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 
 #if 0
