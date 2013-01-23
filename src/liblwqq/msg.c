@@ -1948,6 +1948,7 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id)
             );
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 
