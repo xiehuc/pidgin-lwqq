@@ -1498,6 +1498,7 @@ LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup
     req = lwqq_http_create_default_request(lc,url, NULL);
     req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req, 0, NULL,_C_(3p_i,process_qqnumber,req,buddy,group));
 }
 
@@ -1533,6 +1534,7 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req, 0, NULL,_C_(2p_i,process_friend_detail,req,buddy));
 }
 
@@ -1566,6 +1568,7 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req, 0, NULL,_C_(2p_i,process_online_buddies,req,lc));
 done:
     lwqq_http_request_free(req);
@@ -1580,6 +1583,8 @@ LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     snprintf(post,sizeof(post),"tuin=%s&markname=%s&vfwebqq=%s",
             buddy->uin,alias,lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
     LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(4p,do_change_markname,ev,buddy,NULL,s_strdup(alias)));
@@ -1595,7 +1600,8 @@ LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     snprintf(post,sizeof(post),"r={\"gcode\":%s,\"markname\":\"%s\",\"vfwebqq\":\"%s\"}",
             group->code,alias,lc->vfwebqq);
-    lwqq_puts(post);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
     LwqqAsyncEvent* ev;
@@ -1613,8 +1619,9 @@ LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,con
     snprintf(post,sizeof(post),"r={\"did\":\"%s\",\"discu_name\":\"%s\","
             "\"dtype\":1,\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
             group->did,alias,lc->clientid,lc->psessionid,lc->vfwebqq);
-    lwqq_puts(post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     LwqqAsyncEvent* ev;
     ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
@@ -1641,7 +1648,8 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     snprintf(post,sizeof(post),"tuin=%s&newid=%ld&vfwebqq=%s",
             buddy->uin,cate_idx,lc->vfwebqq );
-    lwqq_puts(post);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     req->set_header(req,"Origin","http://s.web2.qq.com");
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
     LwqqAsyncEvent* ev;
@@ -1659,8 +1667,9 @@ LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LwqqDelF
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     snprintf(post,sizeof(post),"tuin=%s&delType=%d&vfwebqq=%s",
             buddy->uin,del_type,lc->vfwebqq );
-    lwqq_puts(post);
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&callback=0&id=3");
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     LwqqAsyncEvent* ev;
     ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     //would have blist remove buddies msg
@@ -1694,6 +1703,8 @@ LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,Lw
     }
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     return req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
 }
 
@@ -1720,6 +1731,7 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     }
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20010321002&callback=0&id=2");
+    lwqq_verbose(3,"%s\n",url);
     ret = req->do_request(req,0,NULL);
     if(req->http_code!=200){
         goto done;
@@ -1747,7 +1759,7 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status)
             "psessionid=%s&"
             "t=%ld",
             "http://d.web2.qq.com",lwqq_status_to_str(status),lc->clientid,lc->psessionid,time(NULL));
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=3");
@@ -1779,7 +1791,7 @@ static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqB
     LwqqClient* lc = called->lc;
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/search_qq_by_uin2?tuin=%s&verifysession=%s&code=%s&vfwebqq=%s&t=%ld",
             out->qqnumber,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
@@ -1804,7 +1816,8 @@ LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char*
     snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
             "\"groupid\":%d,\"msg\":\"%s\","
             "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
-    lwqq_puts(post);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
@@ -1834,7 +1847,7 @@ static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGr
             "http://cgi.web2.qq.com/keycgi/qqweb/group/search.do?"
             "pg=1&perpage=10&all=%s&c1=0&c2=0&c3=0&st=0&vfcode=%s&type=1&vfwebqq=%s&t=%ld",
             g->qq,code->str,lc->vfwebqq,time(NULL));
-    lwqq_puts(url);
+    lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=1");
@@ -1891,7 +1904,7 @@ static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup
     snprintf(post,sizeof(post),"r={\"gcode\":%s,\"code\":\"%s\",\"vfy\":\"%s\","
             "\"msg\":\"%s\",\"vfwebqq\":\"%s\"}",
             g->code,c->str,lc->cookies->verifysession,msg,lc->vfwebqq);
-    lwqq_puts(post);
+    lwqq_verbose(3,"%s\n",post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
@@ -1909,7 +1922,6 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     char url[512];
     char post[2048];
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
-    lwqq_puts(url);
     const char* mask_type;
 
     mask_type = (group->type == LWQQ_GROUP_QUN)? "groupmask":"discumask";
@@ -1931,6 +1943,7 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     group->mask = mask_ori;
     format_append(post,"\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
             lc->index,lc->port,lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
@@ -1946,10 +1959,10 @@ LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,L
     if(!lc||!msg||!buddy) return NULL;
     char url[512];
     snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->member_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
-    lwqq_puts(url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(2p,process_friend_detail,req,buddy));
 }
 
@@ -1965,6 +1978,7 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g)
@@ -1977,6 +1991,7 @@ LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g)
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=1");
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(2p_i,process_group_info,req,g));
 
 }
