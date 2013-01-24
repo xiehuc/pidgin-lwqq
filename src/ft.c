@@ -14,10 +14,8 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
 {
     PurpleXfer* xfer = data;
     if(purple_xfer_is_canceled(xfer)||purple_xfer_is_completed(xfer)) {
-        printf("cancel triggered\n");
         return 1;
     }
-    printf("progress triggered\n");
     purple_xfer_set_size(xfer,total);
     xfer->bytes_sent = now;
     xfer->bytes_remaining = total-now;
@@ -93,7 +91,9 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
     if(errno == 0){
         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
     }else{
-        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, "发送离线文件失败", PURPLE_MESSAGE_ERROR, time(NULL));
+        char buf[512];
+        snprintf(buf,sizeof(buf),"发送离线文件失败,错误号:%d",errno);
+        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, buf, PURPLE_MESSAGE_ERROR, time(NULL));
     }
     lwqq_msg_free((LwqqMsg*)file);
     purple_xfer_set_completed(xfer,1);
@@ -112,7 +112,6 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     }
     errno = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = xfer->data;
-    //purple_xfer_unref(xfer);
     if(errno) {
         qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_free((LwqqMsg*)file);

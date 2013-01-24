@@ -588,8 +588,7 @@ static void event_cb(void* data,int fd,int revents)
 }
 static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 {
-    //int kind = ((act&CURL_POLL_IN)?LWQQ_ASYNC_READ:0)|((act&CURL_POLL_OUT)?LWQQ_ASYNC_WRITE:0);
-    //printf("kind:%d\n",kind);
+    int kind = ((act&CURL_POLL_IN)?LWQQ_ASYNC_READ:0)|((act&CURL_POLL_OUT)?LWQQ_ASYNC_WRITE:0);
 
     f->sockfd = s;
     f->action = act;
@@ -597,8 +596,9 @@ static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
     if ( f->evset )
         lwqq_async_io_stop(&f->ev);
     //since read+write works fine. we find out 'kind' not worked when have time
-    lwqq_async_io_watch(&f->ev,f->sockfd,LWQQ_ASYNC_READ|LWQQ_ASYNC_WRITE,event_cb,g);
-    //lwqq_async_io_watch(&f->ev,f->sockfd,kind,event_cb,g);
+    //lwqq_async_io_watch(&f->ev,f->sockfd,LWQQ_ASYNC_READ|LWQQ_ASYNC_WRITE,event_cb,g);
+    //set both direction may cause upload file failed.so we restore it.
+    lwqq_async_io_watch(&f->ev,f->sockfd,kind,event_cb,g);
 
     f->evset=1;
 }

@@ -1908,6 +1908,8 @@ LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
             "clientid=%s&psessionid=%s",
             file->super.to,file->path,file->name,file->super.to,lc->clientid,lc->psessionid,
             lc->clientid,lc->psessionid);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     return req->do_request_async(req,1,post,_C_(2p_i,send_offfile_back,req,file));
 }
 
