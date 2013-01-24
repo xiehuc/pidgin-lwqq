@@ -105,9 +105,11 @@ int open_new_chat(qq_account* ac,LwqqGroup* group);
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t);
 
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac);
+//----------------------------ft.h-----------------------------
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
 void qq_send_offline_file(PurpleBlistNode* node);
+//=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);

@@ -195,6 +195,7 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
             break;
         default:
             msg = NULL;
+            lwqq_log(LOG_ERROR,"No such message type\n");
             break;
     }
     if(msg) msg->type = msg_type;
@@ -317,6 +318,8 @@ void lwqq_msg_free(LwqqMsg *msg)
 
     int type = msg->type&LWQQ_MT_BITS;
     switch(type){
+        case 0:
+            break;
         case LWQQ_MT_MESSAGE:
             msg_message_free(msg);
             break;
@@ -1747,13 +1750,54 @@ const char* lwqq_msg_offfile_get_url(LwqqMsgOffFile* msg)
     s_free(file_name);
     return url;
 }
-static int lwqq_file_download_finish(LwqqHttpRequest* req,void* data)
+static int file_download_finish(LwqqHttpRequest* req,void* data)
 {
     FILE* f = data;
     fclose(f);
     lwqq_http_request_free(req);
-    return 0;
+    return LWQQ_EC_OK;
 }
+
+static int accept_file_back(LwqqHttpRequest* req,LwqqAsyncEvent* ret,char* saveto)
+{
+    int err = 0;
+    if(req->http_code == 200){
+        lwqq_log(LOG_WARNING, "recv_file failed(%d):%s\n",req->http_code,req->response);
+        err = lwqq__get_retcode_from_str(req->response);
+        goto failed;
+    }
+    if(req->http_code != 302){
+        lwqq_log(LOG_WARNING, "recv_file failed(%d):%s\n",req->http_code,req->response);
+        err = LWQQ_EC_ERROR;
+        goto failed;
+    }
+    char * follow_url = req->location;
+    char* name;
+    req->location = NULL;
+    name = url_whole_encode(follow_url);
+    s_free(follow_url);
+    lwqq_http_set_option(req, LWQQ_HTTP_RESET_URL,name);
+    s_free(name);
+
+    FILE* file = fopen(saveto,"w");
+    if(file==NULL){
+        perror("recv_file write error:");
+        err = LWQQ_EC_ERROR;
+        goto failed;
+    }
+    lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE,file);
+    LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,file_download_finish,req,file));
+    lwqq_async_add_event_chain(ev, ret);
+    s_free(saveto);
+    return LWQQ_EC_OK;
+failed:
+    ret->result = err;
+    lwqq_async_event_finish(ret);
+    lwqq_http_request_free(req);
+    s_free(saveto);
+    return err;
+}
+
 LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,const char* saveto)
 {
     char url[512];
@@ -1767,31 +1811,27 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-    req->set_header(req,"Referer","http://web2.qq.com/");
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=4");
+    //req->set_header(req,"Referer","http://web2.qq.com/");
     //followlocation by hand
     //because curl doesn't escape url after auto follow;
     //lwqq_http_not_follow(req);
     lwqq_http_set_option(req, LWQQ_HTTP_NOT_FOLLOW,1L);
-    req->do_request(req,0,NULL);
-    if(req->http_code != 302){
-        lwqq_log(LOG_WARNING, "http_code:%d,msg:%s\n",req->http_code,req->response);
-        lwqq_http_request_free(req);
-        return NULL;
-    }
-    char * follow_url = req->location;
-    req->location = NULL;
-    name = url_whole_encode(follow_url);
-    s_free(follow_url);
-    lwqq_http_set_option(req, LWQQ_HTTP_RESET_URL,name);
-    s_free(name);
-
-    FILE* file = fopen(saveto,"w");
-    if(file==NULL){
-        perror("Error:");
-        return NULL;
-    }
-    lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE,file);
-    return req->do_request_async(req,0,NULL,_C_(2p_i,lwqq_file_download_finish,req,file));
+    LwqqAsyncEvent* ev = lwqq_async_event_new(req);
+    req->do_request_async(req,0,NULL,_C_(3p_i,accept_file_back,req,ev,s_strdup(saveto)));
+    return ev;
+}
+LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file)
+{
+    char url[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/refuse_file2?"
+            "lcid=%d&to=%s&psessionid=%s&count=1&time=%ld&clientid=%s",
+            file->session_id,file->super.from,lc->psessionid,time(NULL),lc->clientid);
+    lwqq_verbose(3,"%s\n",url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=4");
+    return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file)

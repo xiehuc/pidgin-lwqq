@@ -9,9 +9,6 @@
 #include "background.h"
 
 
-static void recv_file_request_denied(PurpleXfer* xfer)
-{
-}
 static int file_trans_on_progress(void* data,size_t now,size_t total)
 {
     PurpleXfer* xfer = data;
@@ -24,9 +21,21 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
     qq_dispatch(vp_func_p,(CALLBACK_FUNC)purple_xfer_update_progress,xfer);
     return 0;
 }
-static void recv_file_complete(PurpleXfer* xfer)
+static void recv_file_complete(PurpleXfer* xfer,LwqqAsyncEvent* ev)
 {
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
+    LwqqMsgFileMessage* file = xfer->data;
+    char buf[512];
+    const char* extra = NULL;
+    if(ev->result){
+        snprintf(buf,sizeof(buf),"传输失败,错误号:%d\n",ev->result);
+        if(ev->result == 102)
+            extra = "对方是用webqq发送的吧.\n让对方发离线文件或邮件吧.";
+        else extra = NULL;
+        purple_notify_error(ac->gc,"文件传输",buf,extra);
+    }
     purple_xfer_set_completed(xfer,1);
+    lwqq_msg_free((LwqqMsg*)file);
 }
 static void recv_file_init(PurpleXfer* xfer)
 {
@@ -43,41 +52,18 @@ static void recv_file_init(PurpleXfer* xfer)
         return;
     }
     lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
-    lwqq_async_add_event_listener(ev,_C_(p,recv_file_complete,xfer));
+    lwqq_async_add_event_listener(ev,_C_(2p,recv_file_complete,xfer,ev));
+}
+static void recv_file_request_denied(PurpleXfer* xfer)
+{
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
+    LwqqClient* lc = ac->qq;
+    LwqqMsgFileMessage* file = xfer->data;
+    lwqq_msg_refuse_file(lc, file);
+    lwqq_msg_free((LwqqMsg*)file);
 }
 static void recv_file_cancel(PurpleXfer* xfer)
 {
-}
-
-void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
-{
-    qq_account* ac = lwqq_client_userdata(lc);
-    if(file->mode == MODE_RECV) {
-        PurpleAccount* account = ac->account;
-        LwqqClient* lc = ac->qq;
-        //for(i=0;i<file->file_count;i++){
-        LwqqBuddy* buddy = lc->find_buddy_by_uin(lc,file->super.from);
-        if(buddy == NULL ) return;
-        const char* key = try_get(buddy->qqnumber,buddy->uin);
-        PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,key);
-        purple_xfer_set_filename(xfer,file->recv.name);
-        purple_xfer_set_init_fnc(xfer,recv_file_init);
-        purple_xfer_set_request_denied_fnc(xfer,recv_file_request_denied);
-        purple_xfer_set_cancel_recv_fnc(xfer,recv_file_cancel);
-        LwqqMsgFileMessage* fdup = s_malloc(sizeof(*fdup));
-        memcpy(fdup,file,sizeof(*fdup));
-        file->super.from = file->super.to = file->reply_ip = file->recv.name = NULL;
-        xfer->data = fdup;
-        purple_xfer_request(xfer);
-    } else if(file->mode == MODE_REFUSE) {
-        if(file->refuse.cancel_type == CANCEL_BY_USER) {
-            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
-        } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
-            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
-        }
-
-    }
-
 }
 
 static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
@@ -185,4 +171,32 @@ void qq_send_offline_file(PurpleBlistNode* node)
     purple_xfer_set_request_denied_fnc(xfer,recv_file_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,recv_file_cancel);
     purple_xfer_request(xfer);
+}
+//the entrience for recv file messages
+void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
+{
+    qq_account* ac = lwqq_client_userdata(lc);
+    if(file->mode == MODE_RECV) {
+        PurpleAccount* account = ac->account;
+        LwqqClient* lc = ac->qq;
+        //for(i=0;i<file->file_count;i++){
+        LwqqBuddy* buddy = lc->find_buddy_by_uin(lc,file->super.from);
+        if(buddy == NULL ) return;
+        const char* key = try_get(buddy->qqnumber,buddy->uin);
+        PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_RECEIVE,key);
+        purple_xfer_set_filename(xfer,file->recv.name);
+        purple_xfer_set_init_fnc(xfer,recv_file_init);
+        purple_xfer_set_request_denied_fnc(xfer,recv_file_request_denied);
+        purple_xfer_set_cancel_recv_fnc(xfer,recv_file_cancel);
+        LwqqMsgFileMessage* fdup = s_malloc0(sizeof(*fdup));
+        lwqq_msg_move(fdup,file);
+        xfer->data = fdup;
+        purple_xfer_request(xfer);
+    } else if(file->mode == MODE_REFUSE) {
+        if(file->refuse.cancel_type == CANCEL_BY_USER) {
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
+        } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
+        }
+    }
 }

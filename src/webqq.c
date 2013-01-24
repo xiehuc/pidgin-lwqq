@@ -468,7 +468,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
     PurpleConnection* pc = ac->gc;
     char buf[512];
     snprintf(buf,sizeof(buf),"您收到一个离线文件:%s\n"
-             "到期时间:%s"
+             "到期时间: %s"
              "<a href=\"%s\">点此下载</a>",
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
     serv_got_im(pc,serv_id_to_local(ac,msg->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
@@ -569,7 +569,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             {
                 LwqqBuddy* buddy = lwqq_buddy_new();
                 LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
-                lwqq_msg_move(msg,nmsg);
+                lwqq_msg_move(nmsg,msg);
                 LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
                 return;

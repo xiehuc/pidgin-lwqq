@@ -58,3 +58,15 @@ LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c)
 }
 
 
+int lwqq__get_retcode_from_str(const char* str)
+{
+    if(!str) return LWQQ_EC_ERROR;
+    const char* beg = strstr(str,"retcode");
+    if(beg == NULL) return LWQQ_EC_ERROR;
+    beg+=strlen("retcode:\"");
+    int ret = 0;
+    char* end;
+    ret = strtoul(beg, &end,10);
+    if(end == beg) return LWQQ_EC_ERROR;
+    return ret;
+}
