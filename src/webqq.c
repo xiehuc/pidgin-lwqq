@@ -72,6 +72,7 @@ static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
     PurpleAccount* account = purple_chat_get_account(chat);
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
+    if(!lwqq_client_valid(lc)) return NULL;
     LwqqGroup* ret = NULL;
     GHashTable* table = purple_chat_get_components(chat);
     const char* key = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
