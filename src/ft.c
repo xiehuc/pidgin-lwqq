@@ -113,9 +113,8 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     errno = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = xfer->data;
     if(errno) {
-        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,"上传空间不足",PURPLE_MESSAGE_ERROR,time(NULL));
+        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_free((LwqqMsg*)file);
-        s_free(xfer->data);
         purple_xfer_set_completed(xfer,1);
     } else {
         LwqqAsyncEvent* ev = lwqq_msg_send_offfile(lc,file);
