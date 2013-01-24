@@ -103,8 +103,6 @@ void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle);
  */
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd);
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd);
-/** !!not finished yet */
-void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data);
 /** this set the errno for a event.
  * it is a hack code.
  * ensure LwqqAsyncEvent first member is a int.
@@ -116,6 +114,7 @@ void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,
 #define lwqq_async_event_get_result(ev)     (ev?ev->result:-1)
 #define lwqq_async_event_get_code(ev)       (ev?ev->failcode:LWQQ_CALLBACK_FAILED)
 #define lwqq_async_event_get_owner(ev)      (ev->lc)
+LwqqHttpRequest* lwqq_async_event_get_conn(LwqqAsyncEvent* ev);
 /** this return one of errno of event in set ,so do not use it*/
 #define lwqq_async_evset_get_result(ev)     (ev?ev->result:-1)
 

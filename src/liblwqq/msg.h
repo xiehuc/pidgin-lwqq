@@ -201,6 +201,7 @@ typedef struct LwqqMsgOffFile{
     char* path;///< only used when upload
     time_t expire_time;
     time_t time;
+    LwqqHttpRequest* req;
 }LwqqMsgOffFile;
 typedef struct FileTransItem{
     char* file_name;
@@ -248,6 +249,7 @@ typedef struct LwqqMsgFileMessage{
             } cancel_type;
         }refuse;
     };
+    LwqqHttpRequest* req;
 }LwqqMsgFileMessage;
 
 typedef struct LwqqMsgNotifyOfffile{

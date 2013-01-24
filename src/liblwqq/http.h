@@ -14,8 +14,7 @@
 #include "type.h"
 #include <stdio.h>
 
-struct LwqqHttpRequest;
-typedef int (*LwqqAsyncCallback)(struct LwqqHttpRequest* request, void* data);
+typedef int (*LwqqAsyncCallback)(LwqqHttpRequest* request, void* data);
 
 struct cookie_list {
     char name[32];
@@ -31,7 +30,7 @@ typedef enum {
  * But for other app, it may work bad.
  *
  */
-typedef struct LwqqHttpRequest {
+struct _LwqqHttpRequest {
     void *req;
     void *lc;
     void *header;// read and write.
@@ -59,17 +58,17 @@ typedef struct LwqqHttpRequest {
      * Send a request to server, method is GET(0) or POST(1), if we make a
      * POST request, we must provide a http body.
      */
-    int (*do_request)(struct LwqqHttpRequest *request, int method, char *body);
+    int (*do_request)(LwqqHttpRequest *request, int method, char *body);
 
     /**
      * Send a request to server asynchronous, method is GET(0) or POST(1),
      * if we make a POST request, we must provide a http body.
      */
-    LwqqAsyncEvent* (*do_request_async)(struct LwqqHttpRequest *request, int method,
+    LwqqAsyncEvent* (*do_request_async)(LwqqHttpRequest *request, int method,
                             char *body,LwqqCommand);
 
     /* Set our http client header */
-    void (*set_header)(struct LwqqHttpRequest *request, const char *name,
+    void (*set_header)(LwqqHttpRequest *request, const char *name,
                        const char *value);
 
     /* Set default http header */
@@ -79,21 +78,21 @@ typedef struct LwqqHttpRequest {
      * Get header, return a alloca memory, so caller has responsibility
      * free the memory
      */
-    const char * (*get_header)(struct LwqqHttpRequest *request, const char *name);
+    const char * (*get_header)(LwqqHttpRequest *request, const char *name);
 
     /**
      * Get Cookie, return a alloca memory, so caller has responsibility
      * free the memory
      */
-    char * (*get_cookie)(struct LwqqHttpRequest *request, const char *name);
+    char * (*get_cookie)(LwqqHttpRequest *request, const char *name);
 
-    void (*add_form)(struct LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* content);
-    void (*add_file_content)(struct LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,const char* extension);
+    void (*add_form)(LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* content);
+    void (*add_file_content)(LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,const char* extension);
     int (*progress_func)(void* data,size_t now,size_t total);
     void* prog_data;
     time_t last_prog;
 
-} LwqqHttpRequest;
+} ;
 
 /**
  * Free Http Request
@@ -129,12 +128,14 @@ typedef enum {
     LWQQ_HTTP_SAVE_FILE,
     LWQQ_HTTP_RESET_URL,
     LWQQ_HTTP_VERBOSE,
+    LWQQ_HTTP_CANCELABLE,
 }LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();
 void lwqq_http_cleanup(LwqqClient*lc);
 void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...);
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data);
+void lwqq_http_cancel(LwqqHttpRequest* req);
 char* lwqq_http_escape(LwqqHttpRequest* req,const char* url);
 
 

@@ -4,6 +4,7 @@
 #include "qq_types.h"
 #include "type.h"
 #include "msg.h"
+#include "http.h"
 #include "async.h"
 #include "smemory.h"
 #include "background.h"
@@ -13,8 +14,10 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
 {
     PurpleXfer* xfer = data;
     if(purple_xfer_is_canceled(xfer)||purple_xfer_is_completed(xfer)) {
+        printf("cancel triggered\n");
         return 1;
     }
+    printf("progress triggered\n");
     purple_xfer_set_size(xfer,total);
     xfer->bytes_sent = now;
     xfer->bytes_remaining = total-now;
@@ -23,6 +26,7 @@ static int file_trans_on_progress(void* data,size_t now,size_t total)
 }
 static void recv_file_complete(PurpleXfer* xfer,LwqqAsyncEvent* ev)
 {
+    if(ev->failcode == LWQQ_CALLBACK_CANCELED) return;
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqMsgFileMessage* file = xfer->data;
     char buf[512];
@@ -51,7 +55,9 @@ static void recv_file_init(PurpleXfer* xfer)
         purple_xfer_cancel_local(xfer);
         return;
     }
-    lwqq_async_event_set_progress(ev,file_trans_on_progress,xfer);
+    LwqqHttpRequest* req = lwqq_async_event_get_conn(ev);
+    lwqq_http_on_progress(req, file_trans_on_progress, xfer);
+    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE,1L);
     lwqq_async_add_event_listener(ev,_C_(2p,recv_file_complete,xfer,ev));
 }
 static void recv_file_request_denied(PurpleXfer* xfer)
@@ -64,6 +70,18 @@ static void recv_file_request_denied(PurpleXfer* xfer)
 }
 static void recv_file_cancel(PurpleXfer* xfer)
 {
+    LwqqMsg* msg = xfer->data;
+    if(lwqq_mt_bits(msg->type)==LWQQ_MT_FILE_MSG){
+        LwqqMsgFileMessage* file = (LwqqMsgFileMessage*)msg;
+        lwqq_http_cancel(file->req);
+        lwqq_msg_free((LwqqMsg*)file);
+    }else if(lwqq_mt_bits(msg->type)==LWQQ_MT_OFFFILE){
+        LwqqMsgOffFile* file = (LwqqMsgOffFile*)msg;
+        lwqq_http_cancel(file->req);
+        lwqq_msg_free((LwqqMsg*)file);
+    }else{
+        lwqq_log(LOG_ERROR,"msg file cast failed");
+    }
 }
 
 static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
@@ -83,11 +101,13 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
 
 static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
 {
+    //now xfer is not valid.
+    if(event->failcode == LWQQ_CALLBACK_CANCELED) return;
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqClient* lc = ac->qq;
     long errno = 0;
-    if(lwqq_async_event_get_code(event)==LWQQ_CALLBACK_FAILED){
-        s_free(xfer->data);
+    if(event->failcode==LWQQ_CALLBACK_FAILED){
+        lwqq_msg_free((LwqqMsg*)xfer->data);
         return;
     }
     errno = lwqq_async_event_get_result(event);
@@ -113,7 +133,9 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     xfer->data = file;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
     lwqq_async_add_event_listener(ev,_C_(2p,send_file,ev,xfer));
-    lwqq_async_event_set_progress(ev, file_trans_on_progress, xfer);
+    LwqqHttpRequest* req = lwqq_async_event_get_conn(ev);
+    lwqq_http_on_progress(req, file_trans_on_progress, xfer);
+    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE,1L);
 }
 static void upload_file_init(PurpleXfer* xfer)
 {

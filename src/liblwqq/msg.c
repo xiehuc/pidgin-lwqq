@@ -1819,6 +1819,9 @@ LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* msg,cons
     lwqq_http_set_option(req, LWQQ_HTTP_NOT_FOLLOW,1L);
     LwqqAsyncEvent* ev = lwqq_async_event_new(req);
     req->do_request_async(req,0,NULL,_C_(3p_i,accept_file_back,req,ev,s_strdup(saveto)));
+    //because we use one req do every thing.
+    //so we can set req here.and without change it dynamicly.
+    msg->req = req;
     return ev;
 }
 LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file)
@@ -1844,7 +1847,6 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->set_header(req,"Origin","http://web2.qq.com");
     req->set_header(req,"Cache-Control","max-age=0");
 
-    lwqq_http_set_option(req,LWQQ_HTTP_VERBOSE,1L);
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
     req->add_form(req,LWQQ_FORM_CONTENT,"clientversion","1409");
@@ -1859,6 +1861,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
     req->add_form(req,LWQQ_FORM_CONTENT,"fileid",fileid);
     req->add_form(req,LWQQ_FORM_CONTENT,"senderviplevel","0");
     req->add_form(req,LWQQ_FORM_CONTENT,"reciverviplevel","0");
+    file->req = req;
     return req->do_request_async(req,0,NULL,_C_(2p_i,upload_offline_file_back,req,file));
 }
 
@@ -1887,6 +1890,7 @@ done:
     if(json)
         json_free_value(&json);
     lwqq_http_request_free(req);
+    file->req = NULL;
     return errno;
 }
 
@@ -1974,6 +1978,7 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
         const char* from,const char* to)
 {
     LwqqMsgOffFile* file = s_malloc0(sizeof(*file));
+    file->super.super.type = LWQQ_MT_OFFFILE;
     file->name = s_strdup(filename);
     file->super.from = s_strdup(from);
     file->super.to = s_strdup(to);

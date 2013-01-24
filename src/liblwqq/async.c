@@ -80,6 +80,12 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
     event->result = 0;
     return event;
 }
+LwqqHttpRequest* lwqq_async_event_get_conn(LwqqAsyncEvent* ev)
+{
+    if(!ev) return NULL;
+    _LwqqAsyncEventInternal* in = (_LwqqAsyncEventInternal*) ev;
+    return in->req;
+}
 LwqqAsyncEvset* lwqq_async_evset_new()
 {
     _LwqqAsyncEvsetInternal* l = s_malloc0(sizeof(_LwqqAsyncEvsetInternal));
@@ -182,16 +188,10 @@ void lwqq_async_queue_rm(LwqqAsyncQueue* queue,void* func)
     }
 }
 
-void lwqq_async_event_set_progress(LwqqAsyncEvent* event,LWQQ_PROGRESS callback,void* data)
-{
-    _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
-    lwqq_http_on_progress(_event->req,callback,data);
-}
 typedef struct {
     LwqqAsyncIoCallback callback;
     void* data;
 }LwqqAsyncIoWrap;
-
 
 
 

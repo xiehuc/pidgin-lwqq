@@ -23,7 +23,7 @@ static void lwqq_http_add_form(LwqqHttpRequest* request,LWQQ_FORM form,
         const char* name,const char* value);
 static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name,
         const char* filename,const void* data,size_t size,const char* extension);
-static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int method,
         char *body,LwqqCommand);
 
 typedef struct GLOBAL {
@@ -517,6 +517,8 @@ static void check_multi_info(GLOBAL *g)
                     curl_multi_add_handle(g->multi, easy);
                     continue;
                 }
+            }else if(ret == CURLE_ABORTED_BY_CALLBACK){
+                ev->failcode = LWQQ_CALLBACK_CANCELED;
             }
 
             curl_multi_remove_handle(g->multi, easy);
@@ -643,7 +645,7 @@ static void delay_add_handle(void* data,int fd,int act)
     }
     pthread_mutex_unlock(&add_lock);
 }
-static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
+static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int method,
                                       char *body, LwqqCommand command)
 {
     if (!request->req)
@@ -960,17 +962,19 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
     LwqqHttpRequest* req = d;
+    if(req->retry == 0) return 1;
     time_t ct = time(NULL);
     if(ct<=req->last_prog) return 0;
 
     req->last_prog = ct;
     size_t now = dn+un;
     size_t total = dt+ut;
-    return req->progress_func(req->prog_data,now,total);
+    return req->progress_func?req->progress_func(req->prog_data,now,total):0;
 }
 
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data)
 {
+    if(!req) return;
     curl_easy_setopt(req->req,CURLOPT_PROGRESSFUNCTION,lwqq_http_progress_trans);
     req->progress_func = progress;
     req->prog_data = prog_data;
@@ -1000,6 +1004,14 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
         case LWQQ_HTTP_VERBOSE:
             curl_easy_setopt(req->req,CURLOPT_VERBOSE,va_arg(args,long));
             break;
+        case LWQQ_HTTP_CANCELABLE:
+            if(va_arg(args,long)&&req->progress_func==NULL)
+                lwqq_http_on_progress(req, NULL, NULL);
+            break;
     }
     va_end(args);
+}
+void lwqq_http_cancel(LwqqHttpRequest* req)
+{
+    req->retry = 0;
 }

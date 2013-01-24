@@ -28,6 +28,7 @@
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
 typedef struct _LwqqAsyncOption LwqqAsyncOption;
+typedef struct _LwqqHttpRequest LwqqHttpRequest;
 //typedef struct _LwqqClient LwqqClient;
 typedef LIST_HEAD(,LwqqAsyncEntry) LwqqAsyncQueue;
 
@@ -57,6 +58,7 @@ typedef enum {
     LWQQ_CALLBACK_FAILED = 0x0,
     LWQQ_CALLBACK_VALID,
     LWQQ_CALLBACK_TIMEOUT,
+    LWQQ_CALLBACK_CANCELED,
 }LwqqCallbackCode;
 typedef enum {
     LWQQ_STATUS_LOGOUT = 0,
