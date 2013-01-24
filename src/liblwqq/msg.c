@@ -1849,7 +1849,7 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
 
     //some server didn't response this.
     //such as cache server
-    req->set_header(req,"Expected","");
+    req->set_header(req,"Expect","");
 
     req->add_form(req,LWQQ_FORM_CONTENT,"callback","parent.EQQ.Model.ChatMsg.callbackSendOffFile");
     req->add_form(req,LWQQ_FORM_CONTENT,"locallangid","2052");
