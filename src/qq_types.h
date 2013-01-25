@@ -58,12 +58,6 @@ typedef struct qq_account {
     GPtrArray* opend_chat;
     GList* p_buddy_list;///< purple buddy list
     GList* rewrite_pic_list;
-#if QQ_USE_FAST_INDEX
-    struct{
-        GHashTable* qqnum_index;
-        GHashTable* uin_index;          ///< key:char*,value:struct index_node
-    }fast_index;
-#endif
     struct{
     gboolean qq_use_qqnum;
     gboolean disable_custom_font_face;
@@ -71,6 +65,12 @@ typedef struct qq_account {
     gboolean dark_theme_fix;
     gboolean debug_file_send;
     };
+#if QQ_USE_FAST_INDEX
+    struct{
+        GHashTable* qqnum_index;
+        GHashTable* uin_index;          ///< key:char*,value:struct index_node
+    }fast_index;
+#endif
     int magic;//0x4153
 } qq_account;
 typedef struct system_msg {

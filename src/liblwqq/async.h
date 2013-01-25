@@ -165,6 +165,12 @@ struct _LwqqAsyncOption {
     void (*request_confirm)(LwqqClient* lc,LwqqBuddy* buddy);
     void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
     void (*need_confirm)(LwqqClient* lc,LwqqConfirmTable* table);
+    /* this called when successfully delete group from server
+     * and the last chance to visit group
+     * do not delete group in this function
+     * it would deleted later.
+     */
+    void (*delete_group)(LwqqClient* lc,const LwqqGroup* g);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);

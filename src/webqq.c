@@ -1269,6 +1269,12 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
                           "取消", G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
 }
+static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
+{
+    PurpleChat* chat = g->data;
+    if(!chat) return;
+    purple_blist_remove_chat(chat);
+}
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
@@ -1278,6 +1284,7 @@ static LwqqAsyncOption qq_async_opt = {
     .upload_fail = upload_content_fail,
     .need_verify2 = show_verify_image,
     .need_confirm = show_confirm_table,
+    .delete_group = delete_group_local,
 };
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
@@ -1458,6 +1465,7 @@ static unsigned int qq_send_typing(PurpleConnection* gc,const char* local_id,Pur
 #if 0
 static void qq_leave_chat(PurpleConnection* gc,int id)
 {
+    printf("leave chat\n");
 }
 
 //pidgin not use send_whisper .
@@ -1502,9 +1510,16 @@ GList *qq_chat_info(PurpleConnection *gc)
     m = NULL;
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = "QQ: ";
+    pce->label = "QQ:";
     pce->identifier = QQ_ROOM_KEY_GID;
+    pce->required = TRUE;
     m = g_list_append(m, pce);
+
+    /*pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = ":";
+    pce->identifier = QQ_ROOM_TYPE;
+    pce->required = TRUE;
+    m = g_list_append(m, pce);*/
 
     return m;
 }
@@ -1516,7 +1531,7 @@ static GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat
 
     if (chat_name != NULL){
         g_hash_table_insert(defaults, QQ_ROOM_KEY_GID, g_strdup(chat_name));
-        g_hash_table_insert(defaults, QQ_ROOM_TYPE,g_strdup(QQ_ROOM_TYPE_QUN));
+        g_hash_table_insert(defaults, QQ_ROOM_TYPE,    g_strdup(QQ_ROOM_TYPE_QUN));
     }
 
     return defaults;
@@ -1592,22 +1607,27 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
     }
     return ;
 }
-static void qq_group_join(PurpleConnection *gc, GHashTable *data)
+static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
     LwqqGroup* group = NULL;
 
-    /*if(ac->state != LOAD_COMPLETED) {
-        purple_notify_warning(gc,NULL,"加载尚未完成","请稍后重新尝试打开");
-        return;
-    }*/
-
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     if(key==NULL) return;
-    group = find_group_by_qqnumber(lc,key);
-    if(group == NULL) group = find_group_by_gid(lc,key);
-    if(group == NULL) return;
+    if(ac->qq_use_qqnum)
+        group = find_group_by_qqnumber(lc,key);
+    else
+        group = find_group_by_gid(lc,key);
+    if(group == NULL){
+        //from now this is a add group query.
+        //we need send to server.
+        group = lwqq_group_new(LWQQ_GROUP_QUN);
+        LwqqAsyncEvent* ev;
+        ev = lwqq_info_search_group_by_qq(ac->qq, key, group);
+        lwqq_async_add_event_listener(ev, _C_(2p,search_group_receipt,ev,group));
+        return;
+    }
 
     //this will open chat dialog.
     qq_conv_open(gc,group);
@@ -2071,6 +2091,15 @@ static void qq_set_self_card(PurpleBlistNode* node)
     LwqqAsyncEvent* ev = lwqq_info_get_self_card(lc, group, card);
     lwqq_async_add_event_listener(ev, _C_(2p,qq_display_self_card,lc,card));
 }
+static void qq_quit_group(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group = find_group_by_chat(chat);
+    lwqq_info_delete_group(lc, group);
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2092,6 +2121,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         }
         action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
         act = g_list_append(act,action);
+        action = purple_menu_action_new("退出群组", (PurpleCallback)qq_quit_group, node, NULL);
+        act = g_list_append(act,action);
     }
     return act;
 }
@@ -2100,8 +2131,8 @@ static void client_connect_signals(PurpleConnection* gc)
     static int handle;
 
     void* h = &handle;
-    purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
-            PURPLE_CALLBACK(on_create),gc);
+    //purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
+    //        PURPLE_CALLBACK(on_create),gc);
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
             //PURPLE_CALLBACK(catch_to_add_chat),gc);
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
@@ -2111,20 +2142,20 @@ static void client_connect_signals(PurpleConnection* gc)
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
     .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_INVITE_MESSAGE,
-    .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},	/* icon_spec */
-    .list_icon=         qq_list_icon,   /* list_icon */
-    .login=             qq_login,       /* login */
-    .close=             qq_close,       /* close */
+    .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},
+    .list_icon=         qq_list_icon,
+    .login=             qq_login,
+    .close=             qq_close,
     .status_text=       qq_status_text,
     .tooltip_text=      qq_tooltip_text,
-    .status_types=      qq_status_types,    /* status_types */
+    .status_types=      qq_status_types,
     .set_status=        qq_set_status,
-    .blist_node_menu=   qq_blist_node_menu,                   /* blist_node_menu */
+    .blist_node_menu=   qq_blist_node_menu,
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
     .roomlist_get_list =qq_get_all_group_list,
-    .join_chat=         qq_group_join,
+    .join_chat=         qq_group_add_or_join,
     .get_cb_real_name=  qq_get_cb_real_name,
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
@@ -2171,8 +2202,8 @@ init_plugin(PurplePlugin *plugin)
     //option = purple_account_option_bool_new("兼容Pidgin Conversation integration", 
     //        "compatible_pidgin_conversation_integration", FALSE);
     //options = g_list_append(options, option);
-    option = purple_account_option_bool_new("不缓存QQ号","disable_qq_cache",FALSE);
-    options = g_list_append(options, option);
+    //option = purple_account_option_bool_new("不缓存QQ号","disable_qq_cache",FALSE);
+    //options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);

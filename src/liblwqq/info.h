@@ -124,6 +124,7 @@ LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,
 LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,const char* alias);
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate);
 LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LwqqDelFriendType del_type);
+LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group);
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin);
 LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status);
 LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask mask);

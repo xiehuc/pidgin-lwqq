@@ -83,6 +83,15 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
     lwqq__return_if_ev_fail(ev);
     g->mask = m;
 }
+static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
+{
+    lwqq__return_if_ev_fail(ev);
+    LwqqClient* lc = ev->lc;
+    LIST_REMOVE(g,entries);
+    if(lc->async_opt && lc->async_opt->delete_group)
+        lc->async_opt->delete_group(lc,g);
+    lwqq_group_free(g);
+}
 
 #define parse_key_value(k,v) {\
     char* s=json_parse_simple_value(json,v);\
@@ -2078,4 +2087,22 @@ LwqqAsyncEvent* lwqq_info_get_single_long_nick(LwqqClient* lc,LwqqBuddy* buddy)
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110413001&id=3");
     return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"lnick",&buddy->long_nick));
+}
+
+LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group)
+{
+    if(!lc||!group) return NULL;
+    char url[512];
+    char post[512];
+
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/quit_group2");
+    snprintf(post,sizeof(post),"r={\"gcode\":\"%s\",\"vfwebqq\":\"%s\"}",group->code,lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110413001&id=3");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    lwqq_async_add_event_listener(ev, _C_(2p,do_delete_group,ev,group));
+    return ev;
 }
