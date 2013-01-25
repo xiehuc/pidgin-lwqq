@@ -286,7 +286,7 @@ static void msg_sys_g_msg_free(LwqqMsg* msg)
         s_free(gmsg->member_uin);
         s_free(gmsg->admin_uin);
         s_free(gmsg->admin);
-        s_free(gmsg->request_join.msg);
+        s_free(gmsg->msg);
     }
 }
 static void msg_offfile_free(void* opaque)
@@ -734,6 +734,9 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":10899,"from_uin":3060007976,"to_uin":350512021,"msg_id2":693883,"msg_type":35,"reply_ip":176752016,"type":"group_request_join","gcode":406247342,"t_gcode":249818602,"request_uin":2297680537,"t_request_uin":"","msg":""}}]}
       group request join agree
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":29407,"from_uin":1735178063,"to_uin":2501542492,"msg_id2":28428,"msg_type":36,"reply_ip":176498075,"type":"group_request_join_agree","gcode":3557387121,"t_gcode":249818602,"admin_uin":4005533729,"msg":""}}]}
+      group request join deny
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":1253,"from_uin":1735178063,"to_uin":2501542492,"msg_id2":93655,"msg_type":37,"reply_ip":176622059,"type":"group_request_join_deny","gcode":3557387121,"t_gcode":249818602,"admin_uin":4005533729,"msg":"123"}}]}
+
       */
     LwqqMsgSysGMsg* msg = opaque;
     const char* type = json_parse_simple_value(json,"type");
@@ -761,11 +764,13 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->type = GROUP_REQUEST_JOIN;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"request_uin"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_request_uin"));
-        msg->request_join.msg = json_unescape(json_parse_simple_value(json, "msg"));
+        msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
     }else if(strcmp(type,"group_request_join_agree")==0){
         msg->type = GROUP_REQUEST_JOIN_AGREE;
         add_new_group = 1;
-
+    }else if(strcmp(type,"group_request_join_deny")==0){
+        msg->type = GROUP_REQUEST_JOIN_DENY;
+        msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
     }
     else msg->type = GROUP_UNKNOW;
     if(add_new_group){

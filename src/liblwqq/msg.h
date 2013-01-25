@@ -171,6 +171,7 @@ typedef struct LwqqMsgSysGMsg{
         GROUP_LEAVE,
         GROUP_REQUEST_JOIN,
         GROUP_REQUEST_JOIN_AGREE,
+        GROUP_REQUEST_JOIN_DENY,
         GROUP_UNKNOW,
     }type;
     char* group_uin;
@@ -180,12 +181,8 @@ typedef struct LwqqMsgSysGMsg{
     char* member;
     char* admin_uin;
     char* admin;
+    char* msg;
     LwqqGroup* group;
-    union{
-        struct {
-            char* msg;
-        }request_join;
-    };
 }LwqqMsgSysGMsg;
 typedef struct LwqqMsgBlistChange{
     LwqqMsg super;

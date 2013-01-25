@@ -545,7 +545,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
 {
     char body[1024]={0};
     LwqqGroup* g = find_group_by_gid(lc, msg->group_uin);
-    format_append(body,"申请的群:%s\n申请理由:%s\n",g->name,msg->request_join.msg);
+    format_append(body,"申请的群:%s\n申请理由:%s\n",g->name,msg->msg);
     format_body_from_buddy(body,buddy);
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
     ct->title = s_strdup("群申请确认");
@@ -581,6 +581,10 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                 //purple_chat_destroy(chat);
             }
             }
+            break;
+        case GROUP_REQUEST_JOIN_DENY:
+            snprintf(body,sizeof(body),"群[%s]拒绝了您的请求",msg->account);
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body, NULL, NULL, NULL);
             break;
         case GROUP_REQUEST_JOIN:
             {
@@ -1627,13 +1631,10 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     LwqqGroup* group = NULL;
 
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
+    char* type = g_hash_table_lookup(data,QQ_ROOM_TYPE);
     if(key==NULL) return;
     //we may delete group .so we need query lc directly.
-    if(ac->qq_use_qqnum)
-        group = lwqq_group_find_group_by_qqnumber(lc,key);
-    else
-        group = lwqq_group_find_group_by_gid(lc,key);
-    if(group == NULL){
+    if(type == NULL){
         //from now this is a add group query.
         //we need send to server.
         group = lwqq_group_new(LWQQ_GROUP_QUN);
@@ -1642,6 +1643,11 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
         lwqq_async_add_event_listener(ev, _C_(2p,search_group_receipt,ev,group));
         return;
     }
+    if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
+        group = lwqq_group_find_group_by_qqnumber(lc,key);
+    else
+        group = lwqq_group_find_group_by_gid(lc,key);
+    if(group == NULL) return;
 
     //this will open chat dialog.
     qq_conv_open(gc,group);
@@ -1683,12 +1689,14 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
     return NULL;
 }
 
+#if 0
 static void on_create(void *data,PurpleConnection* gc)
 {
     //on conversation create we add smileys to it.
     PurpleConversation* conv = data;
     translate_add_smiley_to_conversation(conv);
 }
+#endif
 static void qq_login(PurpleAccount *account)
 {
     PurpleConnection* pc= purple_account_get_connection(account);
@@ -2142,9 +2150,11 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
 }
 static void client_connect_signals(PurpleConnection* gc)
 {
+/*
     static int handle;
 
     void* h = &handle;
+    */
     //purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
     //        PURPLE_CALLBACK(on_create),gc);
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
