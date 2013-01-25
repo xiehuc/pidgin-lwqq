@@ -80,36 +80,39 @@ void qq_account_free(qq_account* ac)
     g_free(ac);
 }
 
-void qq_account_insert_index_node(qq_account* ac,int type,void* data)
+void qq_account_insert_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g)
 {
 #if QQ_USE_FAST_INDEX
-    if(!ac || !data) return;
+    if(!ac || (!b && !g)) return;
     index_node* node = s_malloc(sizeof(*node));
+    int type = b?NODE_IS_BUDDY:NODE_IS_GROUP;
     node->type = type;
-    node->node = data;
     if(type == NODE_IS_BUDDY){
-        LwqqBuddy* buddy = data;
+        node->node = b;
+        const LwqqBuddy* buddy = b;
         g_hash_table_insert(ac->fast_index.uin_index,s_strdup(buddy->uin),node);
         if(buddy->qqnumber)
             g_hash_table_insert(ac->fast_index.qqnum_index,s_strdup(buddy->qqnumber),node);
     }else{
-        LwqqGroup* group = data;
+        node->node = g;
+        const LwqqGroup* group = g;
         g_hash_table_insert(ac->fast_index.uin_index,s_strdup(group->gid),node);
         if(group->account)
             g_hash_table_insert(ac->fast_index.qqnum_index,s_strdup(group->account),node);
     }
 #endif
 }
-void qq_account_remove_index_node(qq_account* ac,int type,void* data)
+void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g)
 {
 #if QQ_USE_FAST_INDEX
-    if(!ac || !data) return;
+    if(!ac || !(b && !g)) return;
+    int type = b?NODE_IS_BUDDY:NODE_IS_GROUP;
     if(type == NODE_IS_BUDDY){
-        LwqqBuddy* buddy = data;
+        const LwqqBuddy* buddy = b;
         if(buddy->qqnumber)g_hash_table_remove(ac->fast_index.qqnum_index,buddy->qqnumber);
         g_hash_table_remove(ac->fast_index.uin_index,buddy->uin);
     }else{
-        LwqqGroup* group = data;
+        const LwqqGroup* group = g;
         if(group->account) g_hash_table_remove(ac->fast_index.qqnum_index,group->account);
         g_hash_table_remove(ac->fast_index.uin_index,group->gid);
     }
@@ -195,7 +198,7 @@ LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_BUDDY) return NULL;
-    return node->node;
+    return (LwqqBuddy*)node->node;
 #else
     return lwqq_buddy_find_buddy_by_qqnumber(lc, qqnum);
 #endif
@@ -207,7 +210,7 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
     index_node* node = g_hash_table_lookup(ac->fast_index.qqnum_index,qqnum);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_GROUP) return NULL;
-    return node->node;
+    return (LwqqGroup*)node->node;
 #else
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
@@ -226,7 +229,7 @@ LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin)
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_BUDDY) return NULL;
-    return node->node;
+    return (LwqqBuddy*)node->node;
 #else
     return lwqq_buddy_find_buddy_by_uin(lc, uin);
 #endif
@@ -238,7 +241,7 @@ LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,gid);
     if(node == NULL) return NULL;
     if(node->type != NODE_IS_GROUP) return NULL;
-    return node->node;
+    return (LwqqGroup*)node->node;
 #else
     return lwqq_group_find_group_by_gid(lc, gid);
 #endif

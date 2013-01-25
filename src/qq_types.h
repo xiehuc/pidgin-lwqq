@@ -31,6 +31,7 @@ typedef struct _AsyncListener AsyncListener;
 #define DISPLAY_VERSION "0.1"
 #define DBGID   "webqq"
 #define QQ_DEFAULT_CATE "好友"
+#define QQ_GROUP_DEFAULT_CATE "聊天"
 //this is qqnumber of a group
 #define QQ_ROOM_KEY_QUN_ID "account"
 #define QQ_ROOM_KEY_GID "gid"
@@ -40,7 +41,7 @@ typedef struct _AsyncListener AsyncListener;
 
 typedef struct {
     enum {NODE_IS_BUDDY,NODE_IS_GROUP} type;
-    void* node;
+    const void* node;
 }index_node;
 
 typedef struct qq_account {
@@ -95,8 +96,8 @@ qq_account* qq_account_new(PurpleAccount* account);
 void qq_account_free(qq_account* ac);
 #define qq_account_valid(ac) (ac->magic == QQ_MAGIC)
 
-void qq_account_insert_index_node(qq_account* ac,int type,void* data);
-void qq_account_remove_index_node(qq_account* ac,int type,void* data);
+void qq_account_insert_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g);
+void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g);
 
 int open_new_chat(qq_account* ac,LwqqGroup* group);
 #define opend_chat_search(ac,group) open_new_chat(ac,group)

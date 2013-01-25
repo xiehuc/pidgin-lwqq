@@ -168,7 +168,7 @@ static void all_reset(qq_account* ac,int opt)
                     if(purple_chat_get_account(chat)==ac->account) {
                         node = purple_blist_node_next(node,1);
                         const char* type = qq_get_type_from_chat(chat);
-                        if(!strcmp(type,QQ_ROOM_TYPE_QUN)){
+                        if(type==NULL||!strcmp(type,QQ_ROOM_TYPE_QUN)){
                             if(opt & RESET_GROUP) purple_blist_remove_chat(chat);
                             if(opt & RESET_GROUP_SOFT ){
                                 const char* name = get_name_from_chat(chat);
@@ -402,7 +402,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
     }
 
-    qq_account_insert_index_node(ac, NODE_IS_BUDDY, buddy);
+    qq_account_insert_index_node(ac, buddy,NULL);
 
     ac->disable_send_server = 0;
 }
@@ -422,7 +422,7 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
-    PurpleGroup* qun = purple_group_new("QQ群");
+    PurpleGroup* qun = purple_group_new(QQ_GROUP_DEFAULT_CATE);
     PurpleGroup* talk = purple_group_new("讨论组");
     GHashTable* components;
     PurpleChat* chat;
@@ -438,8 +438,18 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
         purple_blist_add_chat(chat,lwqq_group_is_qun(group)?qun:talk,NULL);
         //we shouldn't save it.
         if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
-    } 
+    } else {
+        components = chat->components;
+        if(!g_hash_table_lookup(components,QQ_ROOM_TYPE)){
+            type = (group->type==LWQQ_GROUP_QUN)? QQ_ROOM_TYPE_QUN:QQ_ROOM_TYPE_DISCU;
+            g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(type));
+        }
 
+        if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
+    }
+
+    group->data = chat;
+    
     if(lwqq_group_is_qun(group)){
         //*** it failed ***/
         purple_blist_alias_chat(chat,group_name(group));
@@ -451,7 +461,7 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
         purple_blist_alias_chat(chat,group_name(group));
     }
 
-    qq_account_insert_index_node(ac, NODE_IS_GROUP, group);
+    qq_account_insert_index_node(ac, NULL, group);
 
     ac->disable_send_server = 0;
     return 0;
@@ -553,8 +563,9 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
             break;
         case GROUP_JOIN:
+        case GROUP_REQUEST_JOIN_AGREE:
             snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
-                    strcmp(msg->member_uin,lc->myself->uin)==0?"您":msg->member,
+                    (msg->member_uin==0||strcmp(msg->member_uin,lc->myself->uin)==0)?"您":msg->member,
                     msg->group->name,
                     msg->admin);
             group_come(lc, msg->group);
@@ -1273,6 +1284,8 @@ static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
 {
     PurpleChat* chat = g->data;
     if(!chat) return;
+    qq_account* ac = chat->account->gc->proto_data;
+    qq_account_remove_index_node(ac, NULL, g);
     purple_blist_remove_chat(chat);
 }
 static LwqqAsyncOption qq_async_opt = {
@@ -1615,10 +1628,11 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
 
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     if(key==NULL) return;
+    //we may delete group .so we need query lc directly.
     if(ac->qq_use_qqnum)
-        group = find_group_by_qqnumber(lc,key);
+        group = lwqq_group_find_group_by_qqnumber(lc,key);
     else
-        group = find_group_by_gid(lc,key);
+        group = lwqq_group_find_group_by_gid(lc,key);
     if(group == NULL){
         //from now this is a add group query.
         //we need send to server.

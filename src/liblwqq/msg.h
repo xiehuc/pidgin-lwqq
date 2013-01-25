@@ -170,6 +170,7 @@ typedef struct LwqqMsgSysGMsg{
         GROUP_JOIN,
         GROUP_LEAVE,
         GROUP_REQUEST_JOIN,
+        GROUP_REQUEST_JOIN_AGREE,
         GROUP_UNKNOW,
     }type;
     char* group_uin;
