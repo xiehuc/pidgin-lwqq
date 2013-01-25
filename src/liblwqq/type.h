@@ -151,26 +151,16 @@ typedef struct LwqqBuddy {
     char *mobile;
     char *vip_info;
     char *markname;
-    LwqqStatus stat;                 /** 10:online 20:offline 30:away 50:busy 70:请勿打扰*/
+    LwqqStatus stat;
+    LwqqClientType client_type;
+    char *token;                /**< Only used in add friend */
     time_t birthday;
-
     char *flag;
-
     char *avatar;
     size_t avatar_len;
-
     int cate_index;           /**< Index of the category */
-    char *token;                /**< Only used in add friend */
-
-    /*
-     * 1 : Desktop client
-     * 21: Mobile client
-     * 41: Web QQ Client
-     */
-    LwqqClientType client_type;
-
-
-    int ref;
+    //int ref;
+    void *data;                 /**< user defined data */
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
@@ -223,6 +213,7 @@ typedef struct LwqqGroup {
 
     char *avatar;
     size_t avatar_len;
+    void *data;                 /** < user defined data */
 
     LIST_ENTRY(LwqqGroup) entries;
     LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */

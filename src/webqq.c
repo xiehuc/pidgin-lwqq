@@ -384,6 +384,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
     purple_buddy_set_protocol_data(bu, buddy);
+    buddy->data = bu;
     if(purple_buddy_get_group(bu)!=group) 
         purple_blist_add_buddy(bu,NULL,group,NULL);
     if(!bu->alias || strcmp(bu->alias,disp) )
@@ -1826,14 +1827,14 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* friend ;
-    if(ac->qq_use_qqnum){
+    LwqqBuddy* friend = buddy->proto_data;
+    /*if(ac->qq_use_qqnum){
         const char* qqnum = purple_buddy_get_name(buddy);
         friend = find_buddy_by_qqnumber(lc,qqnum);
     }else{
         const char* uin = purple_buddy_get_name(buddy);
         friend = find_buddy_by_uin(lc,uin);
-    }
+    }*/
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 }
@@ -1858,8 +1859,11 @@ static void qq_visit_qzone(PurpleBlistNode* node)
         system(url);
         return;
     }else{
+        /*
         const char* uin = purple_buddy_get_name(buddy);
         LwqqBuddy* friend = find_buddy_by_uin(ac->qq,uin);
+        */
+        LwqqBuddy* friend = buddy->proto_data;
         if(friend==NULL) return;
         if(!friend->qqnumber) {
             lwqq_async_add_event_listener(
@@ -1942,6 +1946,18 @@ static char* qq_status_text(PurpleBuddy* pb)
     LwqqBuddy* buddy = pb->proto_data;
     if(!buddy) return NULL;
     return s_strdup(buddy->long_nick);
+}
+static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean full)
+{
+    LwqqBuddy* buddy = pb->proto_data;
+    if(buddy->qqnumber)
+        purple_notify_user_info_add_pair_plaintext(info, "QQ", buddy->qqnumber);
+    if(buddy->nick)
+        purple_notify_user_info_add_pair_plaintext(info, "昵称", buddy->nick);
+    if(buddy->markname)
+        purple_notify_user_info_add_pair_plaintext(info, "备注", buddy->markname);
+    if(buddy->long_nick)
+        purple_notify_user_info_add_pair_plaintext(info, "签名", buddy->long_nick);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
@@ -2100,7 +2116,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .login=             qq_login,       /* login */
     .close=             qq_close,       /* close */
     .status_text=       qq_status_text,
-//	twitterim_tooltip_text,/* tooltip_text */
+    .tooltip_text=      qq_tooltip_text,
     .status_types=      qq_status_types,    /* status_types */
     .set_status=        qq_set_status,
     .blist_node_menu=   qq_blist_node_menu,                   /* blist_node_menu */

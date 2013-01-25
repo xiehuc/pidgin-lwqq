@@ -1,5 +1,11 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+dev (01/25/2013):
+	* new feature: support long nick
+
+dev (01/24/2013):
+	* enhancement: file transport enhanced
+
 dev (01/13/2013):
 	* new feature: change self business card for group.
 

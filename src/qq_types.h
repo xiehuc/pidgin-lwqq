@@ -30,7 +30,7 @@ typedef struct _AsyncListener AsyncListener;
 
 #define DISPLAY_VERSION "0.1"
 #define DBGID   "webqq"
-#define QQ_DEFAULT_CATE "QQ好友"
+#define QQ_DEFAULT_CATE "好友"
 //this is qqnumber of a group
 #define QQ_ROOM_KEY_QUN_ID "account"
 #define QQ_ROOM_KEY_GID "gid"
