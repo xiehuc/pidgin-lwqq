@@ -383,12 +383,17 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         //if there isn't a qqnumber we shouldn't save it.
         if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
+    purple_buddy_set_protocol_data(bu, buddy);
     if(purple_buddy_get_group(bu)!=group) 
         purple_blist_add_buddy(bu,NULL,group,NULL);
     if(!bu->alias || strcmp(bu->alias,disp) )
         purple_blist_alias_buddy(bu,disp);
-    if(buddy->stat)
-        purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
+    if(buddy->stat){
+        if(buddy->long_nick)
+            purple_prpl_got_user_status(account, key, buddy_status(buddy), "long_nick",buddy->long_nick,NULL);
+        else
+            purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
+    }
     //download avatar
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
@@ -1045,15 +1050,6 @@ static void login_stage_f(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
 
-    //we must put this here. avoid group_come stupid add duplicate group
-    /*if(LIST_EMPTY(&lc->friends)){
-        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取好友列表失败");
-        return;
-    }
-    if(LIST_EMPTY(&lc->groups)){
-        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取群列表失败");
-        return;
-    }*/
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
 
     if(!purple_account_get_alias(ac->account))
@@ -1089,13 +1085,24 @@ static void login_stage_f(LwqqClient* lc)
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
+        LwqqAsyncEvset* set = NULL;
+        lwdb_userdb_query_buddy(ac->db, buddy);
         if(ac->qq_use_qqnum && ! buddy->qqnumber){
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
-            lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,lc,buddy));
+            if(!set) set = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(set, ev);
+            //lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,lc,buddy));
+            //ready = 0;
         }
-        else{
+        if(! buddy->long_nick) {
+            ev = lwqq_info_get_single_long_nick(lc, buddy);
+            if(!set) set = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(set, ev);
+        }
+        if(set){
+            lwqq_async_add_evset_listener(set, _C_(2p,write_buddy_to_db,lc,buddy));
+        }else
             friend_come(lc,buddy);
-        }
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
@@ -1930,6 +1937,12 @@ static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guin
     lwqq_msg_shake_window(lc, local_id_to_serv(ac, username));
     return TRUE;
 }
+static char* qq_status_text(PurpleBuddy* pb)
+{
+    LwqqBuddy* buddy = pb->proto_data;
+    if(!buddy) return NULL;
+    return s_strdup(buddy->long_nick);
+}
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
 {
@@ -2086,7 +2099,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .list_icon=         qq_list_icon,   /* list_icon */
     .login=             qq_login,       /* login */
     .close=             qq_close,       /* close */
-    //NULL,//twitter_status_text, /* status_text */
+    .status_text=       qq_status_text,
 //	twitterim_tooltip_text,/* tooltip_text */
     .status_types=      qq_status_types,    /* status_types */
     .set_status=        qq_set_status,

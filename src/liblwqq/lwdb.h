@@ -106,8 +106,11 @@ void lwdb_userdb_free(LwdbUserDB *db);
  */
 #define lwdb_userdb_close(db) (lwdb_userdb_free(db))
 
+LwqqErrorCode lwdb_userdb_update_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy);
 LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy);
 LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group);
+
+LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy);
 
 void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to);
 void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to);

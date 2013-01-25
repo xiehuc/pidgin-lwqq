@@ -94,8 +94,8 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
 #define parse_key_string(k,v) {\
     char* s = json_parse_simple_value(json,v);\
     if(s){\
-        s_free(k);\
-        k = json_unescape(s);\
+        s_free((k));\
+        (k) = json_unescape(s);\
     }\
 }
 #define parse_key_int(k,v,d) {\
@@ -141,6 +141,12 @@ static json_t* parse_key_child(json_t* json,const char* key)
     json_t* result = json_find_first_label(json, key);
     if(result == NULL) return NULL;
     return result->child;
+}
+static char* parse_string(json_t* json,const char* key)
+{
+    char* ret = NULL;
+    parse_key_string(ret,key);
+    return ret;
 }
 static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
 {
@@ -359,6 +365,24 @@ static int process_business_card(LwqqHttpRequest* req,LwqqBusinessCard* card)
     }
 done:
     lwqq__clean_json_and_req(root,req);
+    return err;
+}
+
+static int process_simple_string(LwqqHttpRequest* req,const char* key,char ** ptr)
+{
+    int err = 0;
+    json_t *json = NULL,*result;
+    lwqq__jump_if_http_fail(req,err);
+    lwqq_verbose(3,"%s\n",req->response);
+    lwqq__jump_if_json_fail(json,req->response,err);
+    result = parse_retcode_result(json, &err);
+    lwqq__jump_if_retcode_fail(err);
+    if(result){
+        char* str = parse_string(result, key);
+        if(str){ s_free(*ptr); *ptr = str;}
+    }
+done:
+    lwqq__clean_json_and_req(json,req);
     return err;
 }
 
@@ -2040,4 +2064,18 @@ LwqqAsyncEvent* lwqq_info_set_self_card(LwqqClient* lc,LwqqBusinessCard* card)
     lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",post);
     return req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+}
+
+LwqqAsyncEvent* lwqq_info_get_single_long_nick(LwqqClient* lc,LwqqBuddy* buddy)
+{
+    //{"retcode":0,"result":[{"uin":1503539798,"lnick":"有梦想的人是幸福的，哪怕是梦想没有实现，只要努力奋斗了，也无怨无悔"}]}
+    if(!lc||!buddy||!buddy->uin) return NULL;
+    char url[512];
+
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_single_long_nick2?tuin=%s&vfwebqq=%s&t=%ld",
+            buddy->uin,lc->vfwebqq,time(NULL));
+    lwqq_verbose(3,"%s\n",url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110413001&id=3");
+    return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"lnick",&buddy->long_nick));
 }

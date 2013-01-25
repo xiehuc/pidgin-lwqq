@@ -39,15 +39,13 @@ static LwqqErrorCode lwdb_globaldb_update_user_info(
 
 static LwqqBuddy *lwdb_userdb_query_buddy_info(
     struct LwdbUserDB *db, const char *qqnumber);
-static LwqqErrorCode lwdb_userdb_update_buddy_info(
-    struct LwdbUserDB *db, LwqqBuddy *buddy);
 
 static char *database_path;
 static char *global_database_name;
 
 ///when save friend info need update version
 //to clean old error
-#define LWDB_VERSION 1001
+#define LWDB_VERSION 1002
 #define VAL(v) #v
 #define STR(v) VAL(v)
 
@@ -81,6 +79,7 @@ static const char *create_user_db_sql =
     "    city default '',"
     "    personal default '',"
     "    nick default '',"
+    "    long_nick default '',"   
     "    shengxiao default '',"
     "    email default '',"
     "    province default '',"
@@ -109,7 +108,8 @@ static const char *create_user_db_sql =
     "    level default '',"
     "    owner default '',"
     "    flag default '',"
-    "    mask int default 0);"
+    "    mask int default 0,"
+    "    last_modify timestamp default 0);"
 
     "create table if not exists pairs("
     "   key primary key not null,"
@@ -646,23 +646,30 @@ LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
     static SwsStmt* stmt = NULL, *stmt2;
 
     sws_query_start(db->db, "INSERT INTO buddies ("
-            "qqnumber,nick,markname) VALUES (?,?,?);", &stmt, NULL);
+            "qqnumber) VALUES (?);", &stmt, NULL);
     sws_query_start(db->db, "UPDATE buddies SET "
             "nick=? , markname=? WHERE qqnumber=?;",&stmt2,NULL);
 
     sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
-    sws_query_bind(stmt,2,SWS_BIND_TEXT,buddy->nick);
-    sws_query_bind(stmt,3,SWS_BIND_TEXT,buddy->markname);
     if(sws_query_next(stmt,NULL) == SWS_OK) goto done;
-    sws_query_reset(stmt2);
-    sws_query_bind(stmt2,1,SWS_BIND_TEXT,buddy->nick);
-    sws_query_bind(stmt2,2,SWS_BIND_TEXT,buddy->markname);
-    sws_query_bind(stmt2,3,SWS_BIND_TEXT,buddy->qqnumber);
-    sws_query_next(stmt2,NULL);
+    lwdb_userdb_update_buddy_info(db, buddy);
 done:
     sws_query_end(stmt, NULL);
-    sws_query_end(stmt2, NULL);
+    return 0;
+}
+LwqqErrorCode lwdb_userdb_update_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
+{
+    if(!db || !buddy || !buddy->qqnumber) return LWQQ_EC_ERROR;
+    SwsStmt* stmt = NULL;
+    sws_query_start(db->db, "UPDATE buddies SET "
+            "nick=?,markname=?,long_nick=?,last_modify=datetime('now') WHERE qqnumber=?;",&stmt,NULL);
+    sws_query_bind(stmt, 1, SWS_BIND_TEXT,buddy->nick);
+    sws_query_bind(stmt, 2, SWS_BIND_TEXT,buddy->markname);
+    sws_query_bind(stmt, 3, SWS_BIND_TEXT,buddy->long_nick);
+    sws_query_bind(stmt, 4, SWS_BIND_TEXT,buddy->qqnumber);
+    sws_query_next(stmt, NULL);
+    sws_query_end(stmt,NULL);
     return 0;
 }
 LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
@@ -691,6 +698,7 @@ LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
     sws_query_end(stmt2, NULL);
     return 0;
 }
+/*
 static LwqqErrorCode lwdb_userdb_update_buddy_info(
     struct LwdbUserDB *db, LwqqBuddy *buddy)
 {
@@ -752,6 +760,7 @@ static LwqqErrorCode lwdb_userdb_update_buddy_info(
 
     return LWQQ_EC_OK;
 }
+*/
 static LwqqBuddy* find_buddy_by_nick_and_mark(LwqqClient* lc,const char* nick,const char* mark)
 {
     if(!lc || !nick ) return NULL;
@@ -878,7 +887,7 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
             sws_query_bind(stmt1, 2, SWS_BIND_TEXT,buddy->markname);
             //there are no result.so we ignore it.
             if(sws_query_next(stmt1, NULL)!=SWS_OK){
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ nick : %s mark : %s]\n",buddy->nick,buddy->markname);
+                lwqq_verbose(1,"userdb mismatch [ nick : %s mark : %s]\n",buddy->nick,buddy->markname);
                 continue;
             }
             sws_query_column(stmt1, 0, qqnumber, sizeof(qqnumber), NULL);
@@ -890,14 +899,14 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
             sws_query_reset(stmt2);
             sws_query_bind(stmt2, 1, SWS_BIND_TEXT,buddy->nick);
             if(sws_query_next(stmt2,0)!=SWS_OK){
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ nick : %s ]\n",buddy->nick);
+                lwqq_verbose(1,"userdb mismatch [ nick : %s ]\n",buddy->nick);
                 continue;
             }
             sws_query_column(stmt2, 0, qqnumber, sizeof(qqnumber), NULL);
             if(sws_query_next(stmt2,NULL)==SWS_FAILED){
                 buddy->qqnumber = s_strdup(qqnumber);
             }else
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ nick : %s ]\n",buddy->nick);
+                lwqq_verbose(1,"userdb mismatch [ nick : %s ]\n",buddy->nick);
         }
     }
     LIST_FOREACH(group,&lc->groups,entries){
@@ -906,26 +915,26 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
             sws_query_bind(stmt3, 1, SWS_BIND_TEXT,group->name);
             sws_query_bind(stmt3, 2, SWS_BIND_TEXT,group->markname);
             if(sws_query_next(stmt3,0)!=SWS_OK){
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
+                lwqq_verbose(1,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
                 continue;
             }
             sws_query_column(stmt3, 0, qqnumber,sizeof(qqnumber), NULL);
             if(sws_query_next(stmt3,0)==SWS_FAILED){
                 group->account = s_strdup(qqnumber);
             }else
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
+                lwqq_verbose(1,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
         }else{
             sws_query_reset(stmt4);
             sws_query_bind(stmt4,1,SWS_BIND_TEXT,group->name);
             if(sws_query_next(stmt4,0)!=SWS_OK){
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ name : %s ]\n",group->name);
+                lwqq_verbose(1,"userdb mismatch [ name : %s ]\n",group->name);
                 continue;
             }
             sws_query_column(stmt4,0,qqnumber,sizeof(qqnumber),NULL);
             if(sws_query_next(stmt4,0)==SWS_FAILED){
                 group->account = s_strdup(qqnumber);
             }else
-                lwqq_log(LOG_NOTICE,"userdb mismatch [ name : %s ]\n",group->name);
+                lwqq_verbose(1,"userdb mismatch [ name : %s ]\n",group->name);
         }
     }
 
@@ -961,4 +970,19 @@ void lwdb_userdb_commit(LwdbUserDB* db,const char* transaction)
     char sql[128];
     snprintf(sql,sizeof(sql),"COMMIT %s;",transaction?transaction:"");
     sws_exec_sql(db->db,sql,NULL);
+}
+LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy)
+{
+    if(!db||!buddy||!buddy->qqnumber) return LWQQ_EC_ERROR;
+    SwsStmt* stmt = NULL;
+    sws_query_start(db->db, "SELECT long_nick FROM buddies WHERE qqnumber=?;", &stmt, NULL);
+    sws_query_bind(stmt, 1, SWS_BIND_TEXT,buddy->qqnumber);
+    sws_query_next(stmt, NULL);
+    char buf[1024];
+    if(!sws_query_column(stmt, 0, buf, sizeof(buf), NULL)){
+        s_free(buddy->long_nick);
+        buddy->long_nick = s_strdup(buf);
+    }
+    sws_query_end(stmt, NULL);
+    return 0;
 }
