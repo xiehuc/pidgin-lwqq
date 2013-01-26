@@ -2103,7 +2103,11 @@ static void set_group_alias(PurpleBlistNode* node,const char* mark)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
     LwqqGroup* group = find_group_by_chat(chat);
-    LwqqAsyncEvent* ev = lwqq_info_change_group_markname(lc, group, mark);
+    LwqqAsyncEvent* ev;
+    if(group->type == LWQQ_GROUP_QUN)
+        ev = lwqq_info_change_group_markname(lc, group, mark);
+    else
+        ev = lwqq_info_set_dicsu_topic(lc, group, mark);
     lwqq_async_add_event_listener(ev, _C_(2p,set_group_alias_local,node,s_strdup(mark)));
 }
 static void qq_set_group_alias(PurpleBlistNode* node)
@@ -2111,8 +2115,14 @@ static void qq_set_group_alias(PurpleBlistNode* node)
     PurpleChat* chat = PURPLE_CHAT(node);
     PurpleAccount* account = purple_chat_get_account(chat);
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
-    purple_request_input(ac->gc, "修改备注", "输入备注", NULL, NULL, FALSE, FALSE, NULL, 
-            "设置", G_CALLBACK(set_group_alias), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
+    char* type = g_hash_table_lookup(chat->components,QQ_ROOM_TYPE);
+    if(type == NULL) return;
+    if(strcmp(type,QQ_ROOM_TYPE_QUN)==0)
+        purple_request_input(ac->gc, "修改备注", "输入备注", NULL, NULL, FALSE, FALSE, NULL, 
+                "设置", G_CALLBACK(set_group_alias), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
+    else purple_request_input(ac->gc,"设置主题","输入主题",
+            "注意:您设置的是讨论组.\n这个将会影响所有讨论组成员",NULL,FALSE,FALSE,NULL,
+            "设置",G_CALLBACK(set_group_alias),"取消",G_CALLBACK(do_no_thing),ac->account,NULL,NULL,node);
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {

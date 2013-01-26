@@ -62,8 +62,8 @@ static void do_change_markname(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,char
 {
     if(ev->failcode == LWQQ_CALLBACK_FAILED) {s_free(mark);return;}
     if(ev->result != WEBQQ_OK) {s_free(mark);return;}
-    if(b) b->markname = mark;
-    if(g) g->markname = mark;
+    if(b){s_free(b->markname); b->markname = mark;}
+    if(g){s_free(g->markname); g->markname = mark;}
 }
 static void do_modify_category(LwqqAsyncEvent* ev,LwqqBuddy* b,int cate)
 {
@@ -82,6 +82,13 @@ static void do_mask_group(LwqqAsyncEvent* ev,LwqqGroup* g,LwqqMask m)
 {
     lwqq__return_if_ev_fail(ev);
     g->mask = m;
+}
+static void do_rename_discu(LwqqAsyncEvent* ev,LwqqGroup* d,char* name)
+{
+    if(ev->failcode == LWQQ_CALLBACK_FAILED) {s_free(name);return;}
+    if(ev->result != WEBQQ_OK) {s_free(name);return;}
+    s_free(d->name);
+    d->name = name;
 }
 static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
 {
@@ -1627,7 +1634,7 @@ LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,
 
 LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,const char* alias)
 {
-    if(!lc||!group||!alias) return NULL;
+    if(!lc||!group||!alias||group->type != LWQQ_GROUP_QUN) return NULL;
     char url[512];
     char post[256];
     snprintf(url,sizeof(url),"%s/api/update_group_info2","http://s.web2.qq.com");
@@ -2128,4 +2135,20 @@ LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g)
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110413001&id=3");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"memo",&g->memo));
+}
+
+LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic)
+{
+    if(!lc || !d || !topic || d->type != LWQQ_GROUP_DISCU) return NULL;
+    char url[512];
+    char post[1024];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/modify_discu_info");
+    snprintf(post,sizeof(post),"r={\"did\":\"%s\",\"discu_name\":\"%s\",\"dtype\":1,\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
+            d->did,topic,lc->clientid,lc->psessionid,lc->vfwebqq);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110413002&id=3");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    lwqq_async_add_event_listener(ev, _C_(3p,do_rename_discu,ev,d,s_strdup(topic)));
+    return ev;
 }
