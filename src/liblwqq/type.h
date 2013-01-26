@@ -202,7 +202,7 @@ typedef struct LwqqGroup {
     char *memo;
     char *class;
     char *fingermemo;
-    char *createtime;
+    time_t createtime;
     char *level;
     char *owner;                 /** < owner's QQ number  */
     char *flag;

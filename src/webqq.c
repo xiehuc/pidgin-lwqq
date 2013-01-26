@@ -2124,6 +2124,23 @@ static void qq_set_group_alias(PurpleBlistNode* node)
             "注意:您设置的是讨论组.\n这个将会影响所有讨论组成员",NULL,FALSE,FALSE,NULL,
             "设置",G_CALLBACK(set_group_alias),"取消",G_CALLBACK(do_no_thing),ac->account,NULL,NULL,node);
 }
+static void qq_get_group_info(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqGroup* g = find_group_by_chat(chat);
+    PurpleNotifyUserInfo* info = purple_notify_user_info_new();
+#define ADD_STRING(k,v) purple_notify_user_info_add_pair_plaintext(info,k,v)
+    ADD_STRING("QQ",g->account);
+    ADD_STRING("名称",g->name);
+    ADD_STRING("备注",g->markname);
+    ADD_STRING("签名",g->memo);
+    //ADD_STRING("创建人",g->owner);
+    //ADD_STRING("创建时间",ctime(&g->createtime));
+    purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
+#undef ADD_STRING
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2136,6 +2153,12 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
+        if(group->type == LWQQ_GROUP_QUN){
+            action = purple_menu_action_new("获取信息",(PurpleCallback)qq_get_group_info,node,NULL);
+            act = g_list_append(act,action);
+            action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
+            act = g_list_append(act,action);
+        }
         if(group){
             if(group->mask == LWQQ_MASK_NONE)
                 action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
@@ -2144,8 +2167,6 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
             act = g_list_append(act,action);
         }
         action = purple_menu_action_new("修改备注",(PurpleCallback)qq_set_group_alias,node,NULL);
-        act = g_list_append(act,action);
-        action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
         act = g_list_append(act,action);
         action = purple_menu_action_new("退出群组", (PurpleCallback)qq_quit_group, node, NULL);
         act = g_list_append(act,action);
@@ -2164,7 +2185,7 @@ static void client_connect_signals(PurpleConnection* gc)
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
             //PURPLE_CALLBACK(catch_to_add_chat),gc);
 }
-const char* qq_list_emblem(PurpleBuddy* b)
+static const char* qq_list_emblem(PurpleBuddy* b)
 {
     LwqqBuddy* buddy = b->proto_data;
     const char* ret = NULL;
@@ -2176,6 +2197,58 @@ const char* qq_list_emblem(PurpleBuddy* b)
             break;
     }
     return ret;
+}
+
+static void display_user_info(PurpleConnection* gc,LwqqBuddy* b)
+{
+    PurpleNotifyUserInfo* info = purple_notify_user_info_new();
+    char buf[32];
+#define ADD_STRING(k,v)   purple_notify_user_info_add_pair_plaintext(info,k,v)
+#define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
+//#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
+    //ADD_HEADER("基本信息");
+    ADD_STRING("QQ",b->qqnumber);
+    ADD_STRING("昵称",b->nick);
+    ADD_STRING("备注",b->markname);
+    ADD_STRING("签名",b->long_nick);
+    ADD_HEADER("个人信息");
+    ADD_STRING("性别",b->gender);
+    ADD_STRING("生肖",b->shengxiao);
+    ADD_STRING("星座",b->constel);
+    ADD_STRING("血型",b->blood);
+    struct tm *tm_ = localtime(&b->birthday);
+    strftime(buf,sizeof(buf),"%Y年%m月%d日",tm_);
+    ADD_STRING("生日",buf);
+    ADD_HEADER("住宅信息");
+    ADD_STRING("国籍",b->country);
+    ADD_STRING("省份",b->province);
+    ADD_STRING("城市",b->city);
+    ADD_HEADER("通讯信息");
+    ADD_STRING("电话",b->phone);
+    ADD_STRING("手机",b->mobile);
+    ADD_STRING("邮箱",b->email);
+    ADD_STRING("职业",b->occupation);
+    ADD_STRING("学校",b->college);
+    ADD_STRING("网页",b->homepage);
+    ADD_STRING("简介","");
+    purple_notify_userinfo(gc, try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
+#undef ADD_STRING
+#undef ADD_HEADER
+}
+
+static void qq_get_user_info(PurpleConnection* gc,const char* who)
+{
+    qq_account* ac = gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* buddy;
+    if(ac->qq_use_qqnum)
+        buddy = lc->find_buddy_by_qqnumber(lc,who);
+    else 
+        buddy = lc->find_buddy_by_uin(lc,who);
+    if(buddy){
+        LwqqAsyncEvent* ev = lwqq_info_get_friend_detail_info(lc, buddy);
+        lwqq_async_add_event_listener(ev, _C_(2p,display_user_info,gc,buddy));
+    }
 }
 
 PurplePluginProtocolInfo webqq_prpl_info = {
@@ -2191,6 +2264,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .set_status=        qq_set_status,
     .blist_node_menu=   qq_blist_node_menu,
     .list_emblem=       qq_list_emblem,
+    .get_info=          qq_get_user_info,
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */

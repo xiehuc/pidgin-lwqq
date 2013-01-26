@@ -238,7 +238,7 @@ static void parse_group_info(json_t* json,LwqqGroup* g)
     if(!json) return;
     parse_key_value(g->class,"class");
     parse_key_value(g->code,"code");
-    parse_key_value(g->createtime,"createtime");
+    parse_key_int(g->createtime,"createtime",0);
     parse_key_value(g->face,"face");
     parse_key_value(g->flag,"flag");
     parse_key_value(g->gid,"gid");

@@ -371,7 +371,6 @@ void lwqq_group_free(LwqqGroup *group)
     s_free(group->memo);
     s_free(group->class);
     s_free(group->fingermemo);
-    s_free(group->createtime);
     s_free(group->level);
     s_free(group->owner);
     s_free(group->flag);
