@@ -1744,7 +1744,6 @@ static void qq_login(PurpleAccount *account)
     client_connect_signals(ac->gc);
 
     lwqq_client_userdata(ac->qq) = ac;
-    //background_login(ac);
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
     lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
@@ -1779,51 +1778,6 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
-#if 0
-static void change_group_markname_back(LwqqAsyncEvent* event,void* data)
-{
-    void **d = data;
-    char* old_alias = d[2];
-    if(lwqq_async_event_get_result(event)!=0) {
-        qq_account* ac = d[0];
-        PurpleChat* chat = d[1];
-
-        purple_notify_error(ac->gc,NULL,"更改组备注失败","服务器返回错误");
-        ac->disable_send_server = 1;
-        purple_blist_alias_chat(chat,old_alias);
-        ac->disable_send_server = 0;
-    }
-    s_free(old_alias);
-    s_free(data);
-}
-static void qq_change_group_markname(void* node,const char* old_alias,void* _gc)
-{
-    PurpleBlistNode* n = node;
-    PurpleConnection* gc = _gc;
-    qq_account* ac = purple_connection_get_protocol_data(gc);
-    if(ac==NULL) return;
-    //verify this is qq_account
-    if(ac->magic != QQ_MAGIC) return;
-    if(ac->disable_send_server) return;
-    LwqqClient* lc = ac->qq;
-    if(PURPLE_BLIST_NODE_IS_CHAT(n)) {
-        PurpleChat* chat = PURPLE_CHAT(n);
-        GHashTable* hash = purple_chat_get_components(chat);
-        const char* qqnum = g_hash_table_lookup(hash,QQ_ROOM_KEY_QUN_ID);
-        LwqqGroup* group = find_group_by_qqnumber(lc,qqnum);
-        const char* alias = purple_chat_get_name(chat);
-        if(group == NULL) return;
-        void** data = s_malloc0(sizeof(void*)*3);
-        data[0] = ac;
-        data[1] = chat;
-        data[2] = s_strdup(old_alias);
-        lwqq_async_add_event_listener(
-            lwqq_info_change_group_markname(lc,group,alias),
-            change_group_markname_back,
-            data);
-    }
-}
-#endif
 void move_buddy_back(void* data)
 {
     void** d = data;
@@ -2136,6 +2090,30 @@ static void qq_quit_group(PurpleBlistNode* node)
     LwqqGroup* group = find_group_by_chat(chat);
     lwqq_info_delete_group(lc, group);
 }
+static void set_group_alias_local(PurpleBlistNode* node,char* mark)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    purple_blist_alias_chat(chat, mark);
+    s_free(mark);
+}
+static void set_group_alias(PurpleBlistNode* node,const char* mark)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* group = find_group_by_chat(chat);
+    LwqqAsyncEvent* ev = lwqq_info_change_group_markname(lc, group, mark);
+    lwqq_async_add_event_listener(ev, _C_(2p,set_group_alias_local,node,s_strdup(mark)));
+}
+static void qq_set_group_alias(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    purple_request_input(ac->gc, "修改备注", "输入备注", NULL, NULL, FALSE, FALSE, NULL, 
+            "设置", G_CALLBACK(set_group_alias), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2155,6 +2133,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
                 action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
             act = g_list_append(act,action);
         }
+        action = purple_menu_action_new("修改备注",(PurpleCallback)qq_set_group_alias,node,NULL);
+        act = g_list_append(act,action);
         action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
         act = g_list_append(act,action);
         action = purple_menu_action_new("退出群组", (PurpleCallback)qq_quit_group, node, NULL);
@@ -2173,8 +2153,6 @@ static void client_connect_signals(PurpleConnection* gc)
     //        PURPLE_CALLBACK(on_create),gc);
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
             //PURPLE_CALLBACK(catch_to_add_chat),gc);
-    //purple_signal_connect(purple_blist_get_handle(),"blist-node-aliased",h,
-    //        PURPLE_CALLBACK(qq_change_group_markname),gc);
 }
 
 PurplePluginProtocolInfo webqq_prpl_info = {
