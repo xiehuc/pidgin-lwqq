@@ -652,9 +652,8 @@ LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 
     sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
-    if(sws_query_next(stmt,NULL) == SWS_OK) goto done;
+    sws_query_next(stmt,NULL);
     lwdb_userdb_update_buddy_info(db, buddy);
-done:
     sws_query_end(stmt, NULL);
     return 0;
 }
@@ -672,30 +671,36 @@ LwqqErrorCode lwdb_userdb_update_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
     sws_query_end(stmt,NULL);
     return 0;
 }
+LwqqErrorCode lwdb_userdb_update_group_info(LwdbUserDB* db,LwqqGroup* group)
+{
+    if(!db || !group || !group->account) return LWQQ_EC_ERROR;
+    SwsStmt* stmt = NULL;
+    sws_query_start(db->db,"UPDATE groups SET "
+            "name=? , markname=?,memo=?,last_modify=datetime('now') WHERE account=?;",&stmt,NULL);
+    sws_query_bind(stmt,1,SWS_BIND_TEXT,group->name);
+    sws_query_bind(stmt,2,SWS_BIND_TEXT,group->markname);
+    sws_query_bind(stmt,3,SWS_BIND_TEXT,group->memo);
+    sws_query_bind(stmt,4,SWS_BIND_TEXT,group->account);
+    sws_query_next(stmt, NULL);
+    sws_query_end(stmt, NULL);
+    return 0;
+}
 LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
 {
     if(!db || !group) return -1;
     if(! group->account) return -1;
-    SwsStmt* stmt = NULL, *stmt2;
+    SwsStmt* stmt = NULL;
 
     sws_query_start(db->db,"INSERT INTO groups ("
             "account,name,markname) VALUES (?,?,?);",&stmt,NULL);
-    sws_query_start(db->db,"UPDATE groups SET "
-            "name=? , markname=? WHERE account=?;",&stmt2,NULL);
 
     sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,group->account);
     sws_query_bind(stmt,2,SWS_BIND_TEXT,group->name);
     sws_query_bind(stmt,3,SWS_BIND_TEXT,group->markname);
-    if(sws_query_next(stmt,NULL) == SWS_OK) return 0;
-    sws_query_reset(stmt2);
-    sws_query_bind(stmt2,1,SWS_BIND_TEXT,group->name);
-    sws_query_bind(stmt2,2,SWS_BIND_TEXT,group->markname);
-    sws_query_bind(stmt2,3,SWS_BIND_TEXT,group->account);
-    sws_query_next(stmt2,NULL);
-
+    sws_query_next(stmt,NULL);
+    lwdb_userdb_update_group_info(db, group);
     sws_query_end(stmt, NULL);
-    sws_query_end(stmt2, NULL);
     return 0;
 }
 /*
@@ -982,6 +987,21 @@ LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy)
     if(!sws_query_column(stmt, 0, buf, sizeof(buf), NULL)){
         s_free(buddy->long_nick);
         buddy->long_nick = s_strdup(buf);
+    }
+    sws_query_end(stmt, NULL);
+    return 0;
+}
+LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group)
+{
+    if(!db ||!group ||!group->account) return LWQQ_EC_ERROR;
+    SwsStmt* stmt = NULL;
+    sws_query_start(db->db, "SELECT memo FROM groups WHERE account=? and last_modify != 0;", &stmt, NULL);
+    sws_query_bind(stmt, 1, SWS_BIND_TEXT,group->account);
+    sws_query_next(stmt, NULL);
+    char buf[1024];
+    if(!sws_query_column(stmt, 0, buf, sizeof(buf), NULL)){
+        s_free(group->memo);
+        group->memo = s_strdup(buf);
     }
     sws_query_end(stmt, NULL);
     return 0;

@@ -398,6 +398,7 @@ done:
 
 
 
+
 //======================OLD UNCLEARD API==================//
 /**
  * Just a utility function
@@ -2113,4 +2114,18 @@ LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group)
     LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(2p,do_delete_group,ev,group));
     return ev;
+}
+
+LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g)
+{
+    if(!lc||!g) return NULL;
+    char url[512];
+
+    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_group_info?"
+            "retainKey=memo,gid&vfwebqq=%s&t=%ld&gcode=[%s]",
+            lc->vfwebqq,time(NULL),g->code);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110413001&id=3");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"memo",&g->memo));
 }

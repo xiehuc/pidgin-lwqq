@@ -430,10 +430,10 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
     const char* key = try_get(group->account,group->gid);
 
     if( (chat = purple_blist_find_chat(account,key)) == NULL) {
-        components = g_hash_table_new_full(g_str_hash, g_str_equal, NULL , g_free);
-        g_hash_table_insert(components,QQ_ROOM_KEY_GID,g_strdup(key));
+        components = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        g_hash_table_insert(components,g_strdup(QQ_ROOM_KEY_GID),g_strdup(key));
         type = (group->type==LWQQ_GROUP_QUN)? QQ_ROOM_TYPE_QUN:QQ_ROOM_TYPE_DISCU;
-        g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(type));
+        g_hash_table_insert(components,g_strdup(QQ_ROOM_TYPE),g_strdup(type));
         chat = purple_chat_new(account,key,components);
         purple_blist_add_chat(chat,lwqq_group_is_qun(group)?qun:talk,NULL);
         //we shouldn't save it.
@@ -442,7 +442,7 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
         components = chat->components;
         if(!g_hash_table_lookup(components,QQ_ROOM_TYPE)){
             type = (group->type==LWQQ_GROUP_QUN)? QQ_ROOM_TYPE_QUN:QQ_ROOM_TYPE_DISCU;
-            g_hash_table_insert(components,QQ_ROOM_TYPE,g_strdup(type));
+            g_hash_table_insert(components,s_strdup(QQ_ROOM_TYPE),g_strdup(type));
         }
 
         if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
@@ -1107,8 +1107,6 @@ static void login_stage_f(LwqqClient* lc)
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
-            //lwqq_async_add_event_listener(ev,_C_(2p,write_buddy_to_db,lc,buddy));
-            //ready = 0;
         }
         if(! buddy->long_nick) {
             ev = lwqq_info_get_single_long_nick(lc, buddy);
@@ -1122,12 +1120,23 @@ static void login_stage_f(LwqqClient* lc)
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
+        LwqqAsyncEvset* set = NULL;
+        lwdb_userdb_query_group(ac->db, group);
         if(ac->qq_use_qqnum && ! group->account){
             ev = lwqq_info_get_group_qqnumber(lc,group);
-            lwqq_async_add_event_listener(ev,_C_(2p,write_group_to_db,lc,group));
-        }else{
-            group_come(lc,group);
+            if(!set) set = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(set, ev);
         }
+        if(!group->memo){
+            ev = lwqq_info_get_group_memo(lc, group);
+            if(!set) set = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(set, ev);
+        }
+        
+        if(set)
+            lwqq_async_add_evset_listener(set, _C_(2p,write_group_to_db,lc,group));
+        else
+            group_come(lc,group);
     }
     //after this we finished the qqnumber fast index.
     
@@ -1544,11 +1553,11 @@ static GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat
 {
     GHashTable *defaults;
 
-    defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+    defaults = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     if (chat_name != NULL){
-        g_hash_table_insert(defaults, QQ_ROOM_KEY_GID, g_strdup(chat_name));
-        g_hash_table_insert(defaults, QQ_ROOM_TYPE,    g_strdup(QQ_ROOM_TYPE_QUN));
+        g_hash_table_insert(defaults, g_strdup(QQ_ROOM_KEY_GID), g_strdup(chat_name));
+        g_hash_table_insert(defaults, g_strdup(QQ_ROOM_TYPE),    g_strdup(QQ_ROOM_TYPE_QUN));
     }
 
     return defaults;
@@ -1635,13 +1644,16 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     if(key==NULL) return;
     //we may delete group .so we need query lc directly.
     if(type == NULL){
-        //from now this is a add group query.
-        //we need send to server.
-        group = lwqq_group_new(LWQQ_GROUP_QUN);
-        LwqqAsyncEvent* ev;
-        ev = lwqq_info_search_group_by_qq(ac->qq, key, group);
-        lwqq_async_add_event_listener(ev, _C_(2p,search_group_receipt,ev,group));
-        return;
+        group = lwqq_group_find_group_by_qqnumber(lc, key);
+        if(group==NULL){
+            //from now this is a add group query.
+            //we need send to server.
+            group = lwqq_group_new(LWQQ_GROUP_QUN);
+            LwqqAsyncEvent* ev;
+            ev = lwqq_info_search_group_by_qq(ac->qq, key, group);
+            lwqq_async_add_event_listener(ev, _C_(2p,search_group_receipt,ev,group));
+            return;
+        }
     }
     if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
         group = lwqq_group_find_group_by_qqnumber(lc,key);
@@ -1651,6 +1663,8 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
 
     //this will open chat dialog.
     qq_conv_open(gc,group);
+    PurpleConversation* conv = purple_find_chat(gc, opend_chat_search(ac,group));
+    purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), NULL, group->memo);
     LwqqCommand cmd = _C_(2p,group_member_list_come,ac,group);
     if(!LIST_EMPTY(&group->members)) {
         vp_do(cmd,NULL);
@@ -2165,7 +2179,7 @@ static void client_connect_signals(PurpleConnection* gc)
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
-    .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_INVITE_MESSAGE,
+    .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_INVITE_MESSAGE|OPT_PROTO_CHAT_TOPIC,
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},
     .list_icon=         qq_list_icon,
     .login=             qq_login,
@@ -2180,6 +2194,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
     .roomlist_get_list =qq_get_all_group_list,
     .join_chat=         qq_group_add_or_join,
+    //.set_chat_topic=    qq_set_chat_topic,
     .get_cb_real_name=  qq_get_cb_real_name,
     /**group part end*/
     .send_im=           qq_send_im,     /* send_im */
