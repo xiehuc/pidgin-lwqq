@@ -2164,6 +2164,19 @@ static void client_connect_signals(PurpleConnection* gc)
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
             //PURPLE_CALLBACK(catch_to_add_chat),gc);
 }
+const char* qq_list_emblem(PurpleBuddy* b)
+{
+    LwqqBuddy* buddy = b->proto_data;
+    const char* ret = NULL;
+    switch(buddy->client_type){
+        case LWQQ_CLIENT_WEBQQ:
+            ret = "external";
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
@@ -2177,6 +2190,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .status_types=      qq_status_types,
     .set_status=        qq_set_status,
     .blist_node_menu=   qq_blist_node_menu,
+    .list_emblem=       qq_list_emblem,
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
