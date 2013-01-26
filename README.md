@@ -54,8 +54,8 @@ Function list
 * send / recv picture messages
 * send / recv qq face (you should use webqq faces theme in settings)
 * send / recv input notify | shake message
+* change buddy|group|discu markname
 * avatar
-* change buddy markname
 * change buddy category
 * confirm buddy added request
 * visit buddy qzone
@@ -132,8 +132,8 @@ lwqq 即是 linux webqq 之意
 * 支持发送接受图片
 * 支持发送接受表情(在设置中使用webqq表情主题)
 * 支持发送接受 输入提示|窗口摇动
+* 支持设置 好友|群|讨论组 备注
 * 支持头像
-* 支持设置好友备注
 * 支持更改好友分组
 * 支持确认添加好友请求
 * 支持群的临时会话

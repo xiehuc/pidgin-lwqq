@@ -1,5 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+dev (01/26/2013):
+	* new feature: support chat topic
+	* new feature: support change group/discu markname
+	
 dev (01/25/2013):
 	* new feature: support long nick
 
