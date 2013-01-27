@@ -1895,6 +1895,19 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     }
 }
 
+static void qq_send_mail(PurpleBlistNode* n)
+{
+    PurpleBuddy* b = PURPLE_BUDDY(n);
+    LwqqBuddy* buddy = b->proto_data;
+    char buf[128];
+    if(buddy->email) snprintf(buf,sizeof(buf),
+            "xdg-open mailto:%s",buddy->email);
+    else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
+            "xdg-open mailto:%s@qq.com",buddy->qqnumber);
+    else return;
+    system(buf);
+}
+
 static void add_friend_receipt(LwqqAsyncEvent* ev)
 {
     int err = ev->result;
@@ -2160,6 +2173,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送离线文件",(PurpleCallback)qq_send_offline_file,node,NULL);
         act = g_list_append(act,action);
+        action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
+        act  = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
