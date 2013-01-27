@@ -357,7 +357,8 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
 #define lwqq_msg_send_group(lc,group,message) \
     ((group!=NULL)? lwqq_msg_send_simple(lc,LWQQ_MT_GROUP_MSG,group->gid,message) : NULL)
 /* LwqqRecvMsg API end */
-//======================LWQQ MSG UPLOAD API=========================================///
+//
+//-----------------------------LWQQ MSG UPLOAD API---------------------------------///
 //helper function : fill a msg content with upload cface
 //then add it to LwqqMsgMessage::content
 LwqqMsgContent* lwqq_msg_fill_upload_cface(const char* filename,
@@ -381,12 +382,25 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
 LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file);
 //call this function when upload_offline_file finished.
 LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
-//call this when upload failed.
-
-LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* file,const char* saveto);
-LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file);
+//not finished yet
 LwqqAsyncEvent* lwqq_msg_upload_file(LwqqClient* lc,LwqqMsgOffFile* file,
         LWQQ_PROGRESS progress,void* prog_data);
+///================================================================================///
+
+//----------------------------LWQQ MSG DOWNLOAD API-------------------------------///
+/** use this when you recvd a file message .
+ * @param file : first use lwqq_msg_new(LWQQ_MT_FILE_MESSAGE) to create a empty message.
+ *               then use lwqq_move_msg to move original data to it.
+ *               finally pass it to here.
+ *               you have response to free it after used.
+ * @param saveto : the store file path you want to write to.
+ */
+LwqqAsyncEvent* lwqq_msg_accept_file(LwqqClient* lc,LwqqMsgFileMessage* file,const char* saveto);
+/** use this when you recved a file message .
+ * @param file : @see lwqq_msg_accept_file{file}
+ */
+LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file);
+///===============================================================================///
 
 LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id);
 LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id);

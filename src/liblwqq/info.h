@@ -122,21 +122,56 @@ LwqqAsyncEvent* lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
 LwqqAsyncEvent* lwqq_info_change_buddy_markname(LwqqClient* lc,LwqqBuddy* buddy,const char* alias);
 LwqqAsyncEvent* lwqq_info_change_group_markname(LwqqClient* lc,LwqqGroup* group,const char* alias);
 LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,const char* alias);
+/**
+ * @param new_cate the catetory name. if lwqq cannot find out such cate .would return NULL
+ */
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate);
+/** after call this. poll would recv blist change message.
+ * in there do real delete work and ui should delete buddy info
+ */
 LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LwqqDelFriendType del_type);
+/** after call this. before real delete. lwqq would call async_opt->delete_group.
+ * in this ui should delete linked group info
+ */
 LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group);
+//no necessary to call
 void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin);
+
 LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status);
 LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask mask);
 
+/**@param out use lwqq_buddy_new to create buddy and passit to here.
+ * when succees. lwqq would fill out necessary info.
+ * note lwqq would call async_opt->need_verify to process captcha
+ */
 LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out);
+/**@param out : use what you get in lwqq_info_search_friend_by_qq. and you can add other info
+ * such as cate_index
+ * @param message : the extra reason .
+ * note lwqq would call async_opt->need_verify to process captcha
+ */
 LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* out,const char* message);
+//just like search_friend
 LwqqAsyncEvent* lwqq_info_search_group_by_qq(LwqqClient* lc,const char* qq,LwqqGroup* out);
+//just like add_friend
 LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* group,const char* msg);
+/**use this when you received sys g message with type (request join).
+ * @param out : use lwqq_buddy_new to create a empty buddy.
+ * @param msg : first use lwqq_msg_new(LWQQ_MT_SYS_G_MSG) to create a empty message.
+ *              then use lwqq_msg_move to fill original message data.
+ *              then pass it into here.
+ *              because poll msg would auto free original message data. so we should 
+ *              'move' it to another handle.
+ */
 LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out);
+/** use this when you received sys g message with type (request join).
+ * normally you should use get_stanger_info first and ask user whether accept or deny request.
+ * @param msg : use you moved message.
+ * @param answer : yes or no.
+ * @param reason : if answer is yes . then there is markname.
+ *                 if answer is no . then there is reason.
+ */
 LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMsg* msg ,LwqqAnswer answer,const char* reason);
-// when allow == LWQQ_DENY extra is reason
-// when allow == LWQQ_ALLOW_AND_ADD extra is markname
 LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra);
 
 LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g);
