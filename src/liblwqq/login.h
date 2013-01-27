@@ -12,6 +12,7 @@
 #define LWQQ_LOGIN_H
 
 #include "type.h"
+#include "util.h"
 
 /** 
  * WebQQ login function
@@ -28,6 +29,8 @@ void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err);
  * @param err Error code
  */
 void lwqq_logout(LwqqClient *client, LwqqErrorCode *err);
+
+//LwqqAsyncEvent* lwqq_fill_url(LwqqClient* lc,const char* url,LwqqString* str);
 
 
 #endif  /* LWQQ_LOGIN_H */

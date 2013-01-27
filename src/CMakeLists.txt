@@ -5,6 +5,7 @@ set(SRC_LIST
   translate.c
   qq_types.c
   ft.c
+  remote.c
   )
 
 set(LWQQ_LIST

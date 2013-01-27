@@ -17,6 +17,10 @@ typedef struct LwqqConfirmTable {
     LwqqCommand cmd;
 }LwqqConfirmTable;
 
+typedef struct LwqqString{
+    char* str;
+} LwqqString;
+
 void lwqq_ct_free(LwqqConfirmTable* table);
     
 #endif

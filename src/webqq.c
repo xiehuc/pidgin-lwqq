@@ -20,6 +20,7 @@
 #include "qq_types.h"
 #include "background.h"
 #include "translate.h"
+#include "remote.h"
 
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
@@ -195,17 +196,26 @@ static void all_reset_action(PurplePluginAction* action)
 
     purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"全部重载,请重新登录");
 }
+#if 0
 static void visit_my_qq_center(PurplePluginAction* action)
 {
-    //PurpleConnection* gc = action->context;
-    //qq_account* ac = purple_connection_get_protocol_data(gc);
-    char buf[512];
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+    char buf[1024];
     snprintf(buf,sizeof(buf),"xdg-open 'http://ptlogin2.qq.com/login?u=2501542492&p=146FA572EB4E2E1251BB197D7125E630&verifycode=!DGM&aid=1006102&u1=http5%%3A%%2F%%2Fid.qq.com%%2Findex.html%23myfriends&h=1&ptredirect=1&ptlang=2052&from_ui=1&dumy=&fp=loginerroralert&action=2-5-10785&mibao_css=&t=1&g=1'");
+    //system(buf);
+    //qq_remote_call(ac, "http://id.qq.com/#myfriends");
+    LwqqString str;
+    lwqq_fill_url(ac->qq, "", &str);
+    snprintf(buf,sizeof(buf),"xdg-open '%s'",str.str);
     system(buf);
+
+
 
     //system("xdg-open 'http://id.qq.com/#myfriends'");
 
 }
+#endif
 
 static void add_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
 {
@@ -291,8 +301,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     m = g_list_append(m, act);
     act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("好友管理",visit_my_qq_center);
-    m = g_list_append(m, act);
+    //act = purple_plugin_action_new("好友管理",visit_my_qq_center);
+    //m = g_list_append(m, act);
     act = purple_plugin_action_new("添加群",qq_add_group);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
@@ -2185,6 +2195,7 @@ static void client_connect_signals(PurpleConnection* gc)
     //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
             //PURPLE_CALLBACK(catch_to_add_chat),gc);
 }
+#if 0
 static const char* qq_list_emblem(PurpleBuddy* b)
 {
     LwqqBuddy* buddy = b->proto_data;
@@ -2198,6 +2209,7 @@ static const char* qq_list_emblem(PurpleBuddy* b)
     }
     return ret;
 }
+#endif
 
 static void display_user_info(PurpleConnection* gc,LwqqBuddy* b)
 {
@@ -2263,7 +2275,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .status_types=      qq_status_types,
     .set_status=        qq_set_status,
     .blist_node_menu=   qq_blist_node_menu,
-    .list_emblem=       qq_list_emblem,
+    //.list_emblem=       qq_list_emblem,
     .get_info=          qq_get_user_info,
     /**group part start*/
     .chat_info=         qq_chat_info,    /* chat_info implement this to enable chat*/
