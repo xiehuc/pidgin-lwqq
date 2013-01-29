@@ -379,7 +379,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
         snprintf(buf+strlen(buf),300,"color=\"#ffffff\" ");
     else
         snprintf(buf+strlen(buf),300,"color=\"#%s\" ",msg->f_color);
-    if(!ac->disable_custom_font_face)
+    if(!ac->disable_custom_font_face&&msg->f_name)
         snprintf(buf+strlen(buf),300,"face=\"%s\" ",msg->f_name);
     if(!ac->disable_custom_font_size)
         snprintf(buf+strlen(buf),300,"size=\"%d\" ",sizeunmap(msg->f_size));

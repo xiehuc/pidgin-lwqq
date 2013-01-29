@@ -2158,19 +2158,31 @@ static void qq_get_group_info(PurpleBlistNode* node)
 #undef ADD_STRING
 }
 
-static void merge_online_history(LwqqClient* lc,LwqqBuddy* b,LwqqHistoryMsgList* history)
+static void merge_online_history(qq_account* ac,LwqqBuddy* b,LwqqHistoryMsgList* history)
 {
+    if(history->total == 0) return ;
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
     char buf[8192];
+    PurpleLog* log = purple_log_new(PURPLE_LOG_IM,b->qqnumber,ac->account,NULL,time(NULL),NULL);
+    const char* another = b->markname?:b->nick;
+    const char* me = ac->account->alias;
+    snprintf(buf,sizeof(buf),"======online history [page:%d,total:%d]=======",history->page,history->total);
+    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",time(NULL),buf);
     TAILQ_FOREACH(recv,&history->msg_list,entries){
         //clear buf.
         buf[0]='\0';
         msg = (LwqqMsgMessage*)recv->msg;
-        translate_struct_to_message(lc->data, msg, buf);
-        printf("%s\n",buf);
+        translate_struct_to_message(ac, msg, buf);
+        if(strcmp(msg->super.from,b->uin)==0){
+            purple_log_write(log,PURPLE_MESSAGE_RECV,another,msg->time,buf);
+        }else
+            purple_log_write(log,PURPLE_MESSAGE_SEND,me,msg->time,buf);
     }
+    snprintf(buf,sizeof(buf),"======online history end=======");
+    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",time(NULL),buf);
     lwqq_historymsg_free(history);
+    purple_log_free(log);
 }
 
 static void qq_merge_online_history(PurpleBuddy* buddy)
@@ -2180,7 +2192,7 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
     LwqqBuddy* b = buddy->proto_data;
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
-    lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,lc,b,history));
+    lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,ac,b,history));
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
@@ -2195,7 +2207,7 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
-        action = purple_menu_action_new("汇入在线记录",(PurpleCallback)qq_merge_online_history,node,NULL);
+        action = purple_menu_action_new("汇入在线记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);

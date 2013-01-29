@@ -206,7 +206,7 @@ done:
     lwqq_http_request_free(req);
     return err;
 }
-static int process_msg_list(LwqqHttpRequest* req,LwqqHistoryMsgList* list)
+static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgList* list)
 {
     ///alloy.app.chatLogViewer.rederChatLog(
     //{ret:0,tuin:2141909423,page:14,total:14,chatlogs:[{ver:3,cmd:16,seq:160,time:1358935482,type:1,msg:["12"] }
@@ -225,7 +225,7 @@ static int process_msg_list(LwqqHttpRequest* req,LwqqHistoryMsgList* list)
             strcpy(write,"{\"");
             beg++;
         }else if(*beg==','){
-            if(beg[1]=='{')
+            if(beg[1]=='{' || (beg[1]<='9'&&beg[1]>='0'))
                 *write++=',';
             else
                 strcpy(write,",\"");
@@ -254,9 +254,18 @@ static int process_msg_list(LwqqHttpRequest* req,LwqqHistoryMsgList* list)
     json_t* log;
     lwqq__json_parse_child(root,"chatlogs",log);
     if(log) log=log->child;
+    const char* me = ((LwqqClient*)req->lc)->myself->uin;
     while(log){
         LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
         msg->time = lwqq__json_get_long(log,"time",0);
+        int cmd = lwqq__json_get_int(log,"cmd",0);
+        if(cmd==17){
+            msg->super.from = s_strdup(serv_id);
+            msg->super.to = s_strdup(me);
+        }else{
+            msg->super.from = s_strdup(me);
+            msg->super.to = s_strdup(serv_id);
+        }
         parse_content(log,"msg",msg);
         LwqqRecvMsg* wrapper = s_malloc0(sizeof(*wrapper));
         wrapper->msg = (LwqqMsg*)msg;
@@ -2119,7 +2128,7 @@ LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqH
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
-    return req->do_request_async(req,0,NULL,_C_(2p,process_msg_list,req,list));
+    return req->do_request_async(req,0,NULL,_C_(3p,process_msg_list,req,s_strdup(serv_id),list));
 }
 
 #if 0
