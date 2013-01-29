@@ -122,7 +122,7 @@ static void action_about_webqq(PurplePluginAction *action)
     g_string_append(info, "xiehuc\n");
     g_string_append(info, "<br/>\n");
 
-    g_string_append(info, "pidgin-libwebqq mainly referenced: "
+    g_string_append(info, "pidgin-lwqq mainly referenced: "
                             "1.openfetion for libpurple about<br/>"
                             "2.lwqq for webqq about<br/>"
                             "so it remaind a easy job<br/>"
@@ -1848,13 +1848,6 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
     LwqqBuddy* friend = buddy->proto_data;
-    /*if(ac->qq_use_qqnum){
-        const char* qqnum = purple_buddy_get_name(buddy);
-        friend = find_buddy_by_qqnumber(lc,qqnum);
-    }else{
-        const char* uin = purple_buddy_get_name(buddy);
-        friend = find_buddy_by_uin(lc,uin);
-    }*/
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 }
@@ -2164,17 +2157,46 @@ static void qq_get_group_info(PurpleBlistNode* node)
     purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
 #undef ADD_STRING
 }
+
+static void merge_online_history(LwqqClient* lc,LwqqBuddy* b,LwqqHistoryMsgList* history)
+{
+    LwqqRecvMsg* recv;
+    LwqqMsgMessage* msg;
+    char buf[8192];
+    TAILQ_FOREACH(recv,&history->msg_list,entries){
+        //clear buf.
+        buf[0]='\0';
+        msg = (LwqqMsgMessage*)recv->msg;
+        translate_struct_to_message(lc->data, msg, buf);
+        printf("%s\n",buf);
+    }
+    lwqq_historymsg_free(history);
+}
+
+static void qq_merge_online_history(PurpleBuddy* buddy)
+{
+    qq_account* ac = buddy->account->gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* b = buddy->proto_data;
+    LwqqHistoryMsgList* history = lwqq_historymsg_list();
+    LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
+    lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,lc,b,history));
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
     PurpleMenuAction* action;
     if(PURPLE_BLIST_NODE_IS_BUDDY(node)) {
+        PurpleBuddy* buddy = PURPLE_BUDDY(node);
+        //LwqqBuddy* friend = buddy->proto_data;
         action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送离线文件",(PurpleCallback)qq_send_offline_file,node,NULL);
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
+        action = purple_menu_action_new("汇入在线记录",(PurpleCallback)qq_merge_online_history,node,NULL);
+        act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);

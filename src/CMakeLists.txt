@@ -30,7 +30,6 @@ set(LWQQ_LIST
 
 add_definitions(-Wall)
 
-
 ADD_LIBRARY(webqq MODULE
     ${LWQQ_LIST}
     ${SRC_LIST}
@@ -48,7 +47,7 @@ else(WITH_LIBEV)
     add_definitions(-DUSE_LIBPURPLE)
 endif(WITH_LIBEV)
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1 -Wno-unused-function")
 
 target_link_libraries(webqq
   ${SQLITE_LIBRARIES}

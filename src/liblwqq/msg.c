@@ -70,6 +70,112 @@ static struct LwqqStrMapEntry_ msg_type_map[] = {
     {NULL,                      LWQQ_MT_UNKNOWN,            }
 };
 
+
+static int parse_content(json_t *json,const char* key, LwqqMsgMessage* opaque)
+{
+    json_t *tmp, *ctent;
+    LwqqMsgMessage *msg = opaque;
+
+    tmp = json_find_first_label_all(json, key);
+    if (!tmp || !tmp->child || !tmp->child) {
+        return -1;
+    }
+    tmp = tmp->child->child;
+    for (ctent = tmp; ctent != NULL; ctent = ctent->next) {
+        if (ctent->type == JSON_ARRAY) {
+            /* ["font",{"size":10,"color":"000000","style":[0,0,0],"name":"\u5B8B\u4F53"}] */
+            char *buf;
+            /* FIXME: ensure NULL access */
+            buf = ctent->child->text;
+            if (!strcmp(buf, "font")) {
+                const char *name, *color, *size;
+                int sa, sb, sc;
+                /* Font name */
+                name = json_parse_simple_value(ctent, "name");
+                name = name ?: "Arial";
+                msg->f_name = ucs4toutf8(name);
+
+                /* Font color */
+                color = json_parse_simple_value(ctent, "color");
+                strcpy(msg->f_color,color?:"000000");
+
+                /* Font size */
+                size = json_parse_simple_value(ctent, "size");
+                size = size ?: "12";
+                msg->f_size = atoi(size);
+
+                /* Font style: style":[0,0,0] */
+                tmp = json_find_first_label_all(ctent, "style");
+                if (tmp) {
+                    json_t *style = tmp->child->child;
+                    const char *stylestr = style->text;
+                    sa = (int)strtol(stylestr, NULL, 10);
+                    style = style->next;
+                    stylestr = style->text;
+                    sb = (int)strtol(stylestr, NULL, 10);
+                    style = style->next;
+                    stylestr = style->text;
+                    sc = (int)strtol(stylestr, NULL, 10);
+                } else {
+                    sa = 0;
+                    sb = 0;
+                    sc = 0;
+                }
+                msg->f_style.b = sa;
+                msg->f_style.i = sb;
+                msg->f_style.u = sc;
+            } else if (!strcmp(buf, "face")) {
+                /* ["face", 107] */
+                /* FIXME: ensure NULL access */
+                int facenum = (int)strtol(ctent->child->next->text, NULL, 10);
+                LwqqMsgContent *c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_FACE;
+                c->data.face = facenum; 
+                TAILQ_INSERT_TAIL(&msg->content, c, entries);
+            } else if(!strcmp(buf, "offpic")) {
+                //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
+                LwqqMsgContent *c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_OFFPIC;
+                c->data.img.success = atoi(json_parse_simple_value(ctent,"success"));
+                c->data.img.file_path = s_strdup(json_parse_simple_value(ctent,"file_path"));
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+            } else if(!strcmp(buf,"cface")){
+                //["cface",{"name":"0C3AED06704CA9381EDCC20B7F552802.jPg","file_id":914490174,"key":"YkC3WaD3h5pPxYrY","server":"119.147.15.201:443"}]
+                //["cface","0C3AED06704CA9381EDCC20B7F552802.jPg",""]
+                LwqqMsgContent* c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_CFACE;
+                c->data.cface.name = s_strdup(json_parse_simple_value(ctent,"name"));
+                if(c->data.cface.name!=NULL){
+                    c->data.cface.file_id = s_strdup(json_parse_simple_value(ctent,"file_id"));
+                    c->data.cface.key = s_strdup(json_parse_simple_value(ctent,"key"));
+                    char* server = s_strdup(json_parse_simple_value(ctent,"server"));
+                    char* split = strchr(server,':');
+                    strncpy(c->data.cface.serv_ip,server,split-server);
+                    strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
+                }else{
+                    c->data.cface.name = s_strdup(ctent->child->next->text);
+                }
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+            }
+        } else if (ctent->type == JSON_STRING) {
+            LwqqMsgContent *c = s_malloc0(sizeof(*c));
+            c->type = LWQQ_CONTENT_STRING;
+            c->data.str = json_unescape(ctent->text);
+            TAILQ_INSERT_TAIL(&msg->content, c, entries);
+        }
+    }
+
+    /* Make msg valid */
+    if (!msg->f_name || !msg->f_color || TAILQ_EMPTY(&msg->content)) {
+        return -1;
+    }
+    if (msg->f_size < 8) {
+        msg->f_size = 8;
+    }
+
+    return 0;
+}
+
 static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* msg)
 {
     insert_recv_msg_with_order(list,msg);
@@ -100,6 +206,67 @@ done:
     lwqq_http_request_free(req);
     return err;
 }
+static int process_msg_list(LwqqHttpRequest* req,LwqqHistoryMsgList* list)
+{
+    ///alloy.app.chatLogViewer.rederChatLog(
+    //{ret:0,tuin:2141909423,page:14,total:14,chatlogs:[{ver:3,cmd:16,seq:160,time:1358935482,type:1,msg:["12"] }
+    int err = 0;
+    json_t* root = NULL;
+    char buf[8192];
+    memset(buf,0,sizeof(buf));
+    lwqq__jump_if_http_fail(req,err);
+    char* beg = strchr(req->response,'{');
+    char* end = strrchr(req->response,')');
+    char* write = buf;
+    if(!beg||!end) goto done;
+    *end = '\0';
+    while(*beg!='\0'){
+        if(*beg=='{'){
+            strcpy(write,"{\"");
+            beg++;
+        }else if(*beg==','){
+            if(beg[1]=='{')
+                *write++=',';
+            else
+                strcpy(write,",\"");
+            beg++;
+        }else if(*beg==':'){
+            strcpy(write,"\":");
+            beg++;
+        }else{
+            end = strpbrk(beg, "{:,");
+            if(end==NULL){
+                strcpy(write,beg);
+                break;
+            }
+            strncpy(write,beg,end-beg);
+            beg=end;
+        }
+        write+=strlen(write);
+    }
+    //*write='\0';
+    lwqq__jump_if_json_fail(root,buf,err);
+    err = lwqq__json_get_int(root, "ret",-1);
+    if(err!=0) goto done;
+
+    list->page = lwqq__json_get_int(root,"page",0);
+    list->total = lwqq__json_get_int(root,"total",0);
+    json_t* log;
+    lwqq__json_parse_child(root,"chatlogs",log);
+    if(log) log=log->child;
+    while(log){
+        LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
+        msg->time = lwqq__json_get_long(log,"time",0);
+        parse_content(log,"msg",msg);
+        LwqqRecvMsg* wrapper = s_malloc0(sizeof(*wrapper));
+        wrapper->msg = (LwqqMsg*)msg;
+        TAILQ_INSERT_TAIL(&list->msg_list,wrapper,entries);
+        log = log->next;
+    }
+done:
+    lwqq__clean_json_and_req(root,req);
+    return err;
+}
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -120,6 +287,15 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
     list->poll_msg = lwqq_recvmsg_poll_msg;
     list->poll_close = lwqq_recvmsg_poll_close;
     
+    return list;
+}
+LwqqHistoryMsgList *lwqq_historymsg_list()
+{
+    LwqqHistoryMsgList* list;
+    list = s_malloc0(sizeof(LwqqHistoryMsgList));
+    list->row = 30;
+    list->page = 0;
+    TAILQ_INIT(&list->msg_list);
     return list;
 }
 
@@ -145,6 +321,16 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
 
     s_free(list);
     return ;
+}
+void lwqq_historymsg_free(LwqqHistoryMsgList *list)
+{
+    LwqqRecvMsg* msg;
+    while((msg = TAILQ_FIRST(&list->msg_list))){
+        TAILQ_REMOVE(&list->msg_list,msg,entries);
+        lwqq_msg_free(msg->msg);
+        s_free(msg);
+    }
+    s_free(list);
 }
 
 LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
@@ -451,110 +637,6 @@ static LwqqMsgType parse_recvmsg_type(json_t *json)
     }
     return lwqq__map_to_type_(msg_type_map, msg_type);
 }
-static int parse_content(json_t *json, LwqqMsgMessage* opaque)
-{
-    json_t *tmp, *ctent;
-    LwqqMsgMessage *msg = opaque;
-
-    tmp = json_find_first_label_all(json, "content");
-    if (!tmp || !tmp->child || !tmp->child) {
-        return -1;
-    }
-    tmp = tmp->child->child;
-    for (ctent = tmp; ctent != NULL; ctent = ctent->next) {
-        if (ctent->type == JSON_ARRAY) {
-            /* ["font",{"size":10,"color":"000000","style":[0,0,0],"name":"\u5B8B\u4F53"}] */
-            char *buf;
-            /* FIXME: ensure NULL access */
-            buf = ctent->child->text;
-            if (!strcmp(buf, "font")) {
-                const char *name, *color, *size;
-                int sa, sb, sc;
-                /* Font name */
-                name = json_parse_simple_value(ctent, "name");
-                name = name ?: "Arial";
-                msg->f_name = ucs4toutf8(name);
-
-                /* Font color */
-                color = json_parse_simple_value(ctent, "color");
-                strcpy(msg->f_color,color?:"000000");
-
-                /* Font size */
-                size = json_parse_simple_value(ctent, "size");
-                size = size ?: "12";
-                msg->f_size = atoi(size);
-
-                /* Font style: style":[0,0,0] */
-                tmp = json_find_first_label_all(ctent, "style");
-                if (tmp) {
-                    json_t *style = tmp->child->child;
-                    const char *stylestr = style->text;
-                    sa = (int)strtol(stylestr, NULL, 10);
-                    style = style->next;
-                    stylestr = style->text;
-                    sb = (int)strtol(stylestr, NULL, 10);
-                    style = style->next;
-                    stylestr = style->text;
-                    sc = (int)strtol(stylestr, NULL, 10);
-                } else {
-                    sa = 0;
-                    sb = 0;
-                    sc = 0;
-                }
-                msg->f_style.b = sa;
-                msg->f_style.i = sb;
-                msg->f_style.u = sc;
-            } else if (!strcmp(buf, "face")) {
-                /* ["face", 107] */
-                /* FIXME: ensure NULL access */
-                int facenum = (int)strtol(ctent->child->next->text, NULL, 10);
-                LwqqMsgContent *c = s_malloc0(sizeof(*c));
-                c->type = LWQQ_CONTENT_FACE;
-                c->data.face = facenum; 
-                TAILQ_INSERT_TAIL(&msg->content, c, entries);
-            } else if(!strcmp(buf, "offpic")) {
-                //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
-                LwqqMsgContent *c = s_malloc0(sizeof(*c));
-                c->type = LWQQ_CONTENT_OFFPIC;
-                c->data.img.success = atoi(json_parse_simple_value(ctent,"success"));
-                c->data.img.file_path = s_strdup(json_parse_simple_value(ctent,"file_path"));
-                TAILQ_INSERT_TAIL(&msg->content,c,entries);
-            } else if(!strcmp(buf,"cface")){
-                //["cface",{"name":"0C3AED06704CA9381EDCC20B7F552802.jPg","file_id":914490174,"key":"YkC3WaD3h5pPxYrY","server":"119.147.15.201:443"}]
-                //["cface","0C3AED06704CA9381EDCC20B7F552802.jPg",""]
-                LwqqMsgContent* c = s_malloc0(sizeof(*c));
-                c->type = LWQQ_CONTENT_CFACE;
-                c->data.cface.name = s_strdup(json_parse_simple_value(ctent,"name"));
-                if(c->data.cface.name!=NULL){
-                    c->data.cface.file_id = s_strdup(json_parse_simple_value(ctent,"file_id"));
-                    c->data.cface.key = s_strdup(json_parse_simple_value(ctent,"key"));
-                    char* server = s_strdup(json_parse_simple_value(ctent,"server"));
-                    char* split = strchr(server,':');
-                    strncpy(c->data.cface.serv_ip,server,split-server);
-                    strncpy(c->data.cface.serv_port,split+1,strlen(split+1));
-                }else{
-                    c->data.cface.name = s_strdup(ctent->child->next->text);
-                }
-                TAILQ_INSERT_TAIL(&msg->content,c,entries);
-            }
-        } else if (ctent->type == JSON_STRING) {
-            LwqqMsgContent *c = s_malloc0(sizeof(*c));
-            c->type = LWQQ_CONTENT_STRING;
-            c->data.str = json_unescape(ctent->text);
-            TAILQ_INSERT_TAIL(&msg->content, c, entries);
-        }
-    }
-
-    /* Make msg valid */
-    if (!msg->f_name || !msg->f_color || TAILQ_EMPTY(&msg->content)) {
-        return -1;
-    }
-    if (msg->f_size < 8) {
-        msg->f_size = 8;
-    }
-
-    return 0;
-}
 
 /**
  * {"poll_type":"message","value":{"msg_id":5244,"from_uin":570454553,
@@ -587,7 +669,7 @@ static int parse_new_msg(json_t *json, LwqqMsg *opaque)
         msg->discu.did = s_strdup(json_parse_simple_value(json,"did"));
     }
 
-    if (parse_content(json, msg)) {
+    if (parse_content(json,"content", msg)) {
         return -1;
     }
 
@@ -2027,6 +2109,17 @@ LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id)
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
+}
+
+LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqHistoryMsgList* list)
+{
+    if(!lc||!serv_id) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://web2.qq.com/cgi-bin/webqq_chat/?cmd=1&tuin=%s&vfwebqq=%s&page=%d&row=%d&callback=alloy.app.chatLogViewer.renderChatLog&t=%ld",serv_id,lc->vfwebqq,list->page,list->row,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://web2.qq.com/");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    return req->do_request_async(req,0,NULL,_C_(2p,process_msg_list,req,list));
 }
 
 #if 0

@@ -206,6 +206,7 @@ void vp_func_3p_i(VP_CALLBACK func,vp_list* vp,void* q)
     int ret = ((f)func)(p1,p2,p3);
     if(q) *(int*)q = ret;
 }
+#if 0
 static struct vp_d_table tables[]= {
     {"",vp_func_void},
     {"p",vp_func_p},
@@ -215,3 +216,4 @@ static struct vp_d_table tables[]= {
     {"pi",vp_func_pi},
     {"i:pp",vp_func_2p_i},
 };
+#endif

@@ -310,6 +310,12 @@ typedef struct LwqqRecvMsgList {
     void (*poll_msg)(struct LwqqRecvMsgList *list); /**< Poll to fetch msg */
     void (*poll_close)(struct LwqqRecvMsgList* list);/**< Close Poll */
 } LwqqRecvMsgList;
+typedef struct LwqqHistoryMsgList {
+    int row;
+    int page;
+    int total;
+    TAILQ_HEAD(,LwqqRecvMsg) msg_list;
+} LwqqHistoryMsgList;
 
 /**
  * Create a new LwqqRecvMsgList object
@@ -319,6 +325,7 @@ typedef struct LwqqRecvMsgList {
  * @return NULL on failure
  */
 LwqqRecvMsgList *lwqq_recvmsg_new(void *client);
+LwqqHistoryMsgList *lwqq_historymsg_list();
 
 /**
  * Free a LwqqRecvMsgList object
@@ -326,6 +333,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client);
  * @param list
  */
 void lwqq_recvmsg_free(LwqqRecvMsgList *list);
+void lwqq_historymsg_free(LwqqHistoryMsgList* list);
 
 //insert msg content
 #define lwqq_msg_content_append(msg,c) \
@@ -406,6 +414,7 @@ LwqqAsyncEvent* lwqq_msg_input_notify(LwqqClient* lc,const char* serv_id);
 LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id);
 #define lwqq_msg_move(to,from) {memcpy(to,from,sizeof(*from));memset(from,0,sizeof(*from));}
 
+LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqHistoryMsgList* list);
 
 /************************************************************************/
 /*  LwqqSendMsg API */
