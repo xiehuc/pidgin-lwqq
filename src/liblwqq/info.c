@@ -127,31 +127,6 @@ static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
  *
  * @return result object pointer on success, else NULL on failure.
  */
-static json_t *parse_retcode_result(json_t *json,int* retcode)
-{
-    //{"retcode":0,"result":......}
-
-    /**
-     * Frist, we parse retcode that indicate whether we get
-     * correct response from server
-     */
-    char* value = json_parse_simple_value(json, "retcode");
-    if(!value){
-        *retcode = LWQQ_EC_ERROR;
-        return NULL;
-    }
-
-    *retcode = s_atoi(value,LWQQ_EC_ERROR);
-
-    /**
-     * Second, Check whether there is a "result" key in json object
-     * if success it would return result;
-     * if failed it would return NULL;
-     */
-    json_t* result = json_find_first_label_all(json, "result");
-    if(result == NULL) return NULL;
-    return result->child;
-}
 static json_t* parse_key_child(json_t* json,const char* key)
 {
     json_t* result = json_find_first_label(json, key);
@@ -293,7 +268,7 @@ static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     //WEBQQ_FATAL:验证码输入错误.
     if(err != WEBQQ_OK) goto done;
     if(result)
@@ -311,7 +286,7 @@ static int process_qqnumber(LwqqHttpRequest* req,LwqqBuddy* b,LwqqGroup* g)
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     char* account = NULL;
     if(result){
         parse_account(result, &account);
@@ -336,7 +311,7 @@ static int process_online_buddies(LwqqHttpRequest* req,LwqqClient* lc)
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result) {
         result = result->child;
@@ -356,7 +331,7 @@ static int process_group_info(LwqqHttpRequest*req,LwqqGroup* g)
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result){
         parse_group_info(parse_key_child(result, "ginfo"),g);
@@ -374,7 +349,7 @@ static int process_business_card(LwqqHttpRequest* req,LwqqBusinessCard* card)
     lwqq__jump_if_http_fail(req,err);
     lwqq_verbose(3,"%s\n",req->response);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result){
         parse_business_card(result,card);
@@ -391,7 +366,7 @@ static int process_simple_string(LwqqHttpRequest* req,const char* key,char ** pt
     lwqq__jump_if_http_fail(req,err);
     lwqq_verbose(3,"%s\n",req->response);
     lwqq__jump_if_json_fail(json,req->response,err);
-    result = parse_retcode_result(json, &err);
+    result = lwqq__parse_retcode_result(json, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result){
         char* str = parse_string(result, key);
@@ -410,7 +385,7 @@ static int process_recent_list(LwqqHttpRequest* req,LwqqRecentList* list)
     lwqq__jump_if_http_fail(req,err);
     lwqq_verbose(3,"%s\n",req->response);
     lwqq__jump_if_json_fail(json,req->response,err);
-    result = parse_retcode_result(json, &err);
+    result = lwqq__parse_retcode_result(json, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result&&result->child){
         result = result->child_end;
@@ -674,7 +649,7 @@ static int get_friends_info_back(LwqqHttpRequest* req)
         goto done;
     }
 
-    json_tmp = parse_retcode_result(json, &retcode);
+    json_tmp = lwqq__parse_retcode_result(json, &retcode);
     if (retcode != WEBQQ_OK){
         err = retcode;
         goto done;
@@ -1009,7 +984,7 @@ static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc)
     }
 
     int retcode;
-    json_tmp = parse_retcode_result(json,&retcode);
+    json_tmp = lwqq__parse_retcode_result(json,&retcode);
     if (!json_tmp||retcode != WEBQQ_OK) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
         err = LWQQ_EC_ERROR;
@@ -1100,7 +1075,7 @@ static int get_discu_list_back(LwqqHttpRequest* req,void* data)
     req->response[req->resp_len] = '\0';
     json_parse_document(&root, req->response);
     if(!root){ err = 1; goto done;}
-    json_temp = parse_retcode_result(root, &retcode);
+    json_temp = lwqq__parse_retcode_result(root, &retcode);
     if(!json_temp || retcode != WEBQQ_OK) {err=1;goto done;}
 
     if (json_temp ) {
@@ -1446,7 +1421,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     }
 
     int retcode;
-    json_tmp = parse_retcode_result(json, &retcode);
+    json_tmp = lwqq__parse_retcode_result(json, &retcode);
     if (!json_tmp || retcode != WEBQQ_OK) {
         lwqq_log(LOG_ERROR, "Parse json object error: %s\n", req->response);
         goto json_error;
@@ -1540,7 +1515,7 @@ static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGr
     
     req->response[req->resp_len] = '\0';
     json_parse_document(&root,req->response);
-    json = parse_retcode_result(root, &retcode);
+    json = lwqq__parse_retcode_result(root, &retcode);
     if(json) {
         parse_discus_info_child(lc,discu,json);
         parse_discus_other_child(lc,discu,json);
@@ -1931,7 +1906,7 @@ static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g)
     json_t* root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
-    result = parse_retcode_result(root, &err);
+    result = lwqq__parse_retcode_result(root, &err);
     if(err != WEBQQ_OK) {goto done;}
     if(result && result->child){
         result = result->child;

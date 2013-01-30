@@ -68,6 +68,7 @@ Function list
 * support recv file trans
 * support local qqnumber cache
 * support add friend/group
+* support import online chat log
 
 ### empathy support (via telepathy-haze)
 
@@ -146,6 +147,7 @@ lwqq 即是 linux webqq 之意
 * 支持接受文件传输
 * 支持本地QQ号缓存机制
 * 支持添加好友|群
+* 支持下载漫游记录
 
 ### empathy support (via telepathy-haze)
 

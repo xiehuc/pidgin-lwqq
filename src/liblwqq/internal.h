@@ -1,6 +1,7 @@
 #ifndef LWQQ_INTERNAL_H_H
 #define LWQQ_INTERNAL_H_H
 #include "type.h"
+#include "json.h"
 
 struct LwqqStrMapEntry_ {
     const char* str;
@@ -11,6 +12,7 @@ struct LwqqStrMapEntry_ {
 int lwqq__map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key);
 const char* lwqq__map_to_str_(const struct LwqqStrMapEntry_* maps,int type);
 int lwqq__get_retcode_from_str(const char* str);
+json_t *lwqq__parse_retcode_result(json_t *json,int* retcode);
 
 LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c);
 

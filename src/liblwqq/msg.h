@@ -312,8 +312,14 @@ typedef struct LwqqRecvMsgList {
 } LwqqRecvMsgList;
 typedef struct LwqqHistoryMsgList {
     int row;
-    int page;
-    int total;
+    union{
+    short page;
+    short begin;
+    };
+    union{
+    short total;
+    short end;
+    };
     TAILQ_HEAD(,LwqqRecvMsg) msg_list;
 } LwqqHistoryMsgList;
 
@@ -415,6 +421,7 @@ LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id);
 #define lwqq_msg_move(to,from) {memcpy(to,from,sizeof(*from));memset(from,0,sizeof(*from));}
 
 LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqHistoryMsgList* list);
+LwqqAsyncEvent* lwqq_msg_group_history(LwqqClient* lc,LwqqGroup* g,LwqqHistoryMsgList* list);
 
 /************************************************************************/
 /*  LwqqSendMsg API */

@@ -289,6 +289,47 @@ done:
     lwqq__clean_json_and_req(root,req);
     return err;
 }
+
+static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryMsgList* list)
+{
+    //{"retcode":0,"result":{"time":1359526607,"data":{"cl":[{"g":249818602,"cl":[{"u":2501542492,"t":1359449452,"il":[{"v":"1231\n【提示：此用户正在使用Q+ Web：http://web2.qq.com/】","t":0}]}
+
+    int err = 0;
+    json_t* root = NULL,*result;
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
+    result = lwqq__parse_retcode_result(root, &err);
+    lwqq__jump_if_retcode_fail(err);
+    if(!result) goto done;
+    lwqq__json_parse_child(result,"data",result);
+    if(result->type == JSON_NULL) goto done;
+    lwqq__json_parse_child(result,"cl",result);
+    result = result->child;
+    list->begin = lwqq__json_get_int(result,"bs",0);
+    list->end = lwqq__json_get_int(result,"es",0);
+    //const char* gid = json_parse_simple_value(result, "g");
+    lwqq__json_parse_child(result,"cl",result);
+    result = result->child;
+    while(result){
+        LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_GROUP_MSG);
+        msg->super.from = lwqq__json_get_value(result,"u");
+        msg->time = lwqq__json_get_long(result,"t",0);
+        //parse_content(result, "v", msg);
+        LwqqMsgContent* c = s_malloc0(sizeof(*c));
+        c->type = LWQQ_CONTENT_STRING;
+        c->data.str = lwqq__json_get_string(result,"v");
+        TAILQ_INSERT_TAIL(&msg->content,c,entries);
+        LwqqRecvMsg* wrapper = s_malloc0(sizeof(*wrapper));
+        wrapper->msg = (LwqqMsg*)msg;
+        TAILQ_INSERT_TAIL(&list->msg_list,wrapper,entries);
+
+        result = result->next;
+    }
+
+done:
+    lwqq__clean_json_and_req(root,req);
+    return err;
+}
 /**
  * Create a new LwqqRecvMsgList object
  * 
@@ -2135,7 +2176,7 @@ LwqqAsyncEvent* lwqq_msg_shake_window(LwqqClient* lc,const char* serv_id)
 
 LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqHistoryMsgList* list)
 {
-    if(!lc||!serv_id) return NULL;
+    if(!lc||!serv_id||!list) return NULL;
     char url[512];
     snprintf(url,sizeof(url),"http://web2.qq.com/cgi-bin/webqq_chat/?cmd=1&tuin=%s&vfwebqq=%s&page=%d&row=%d&callback=alloy.app.chatLogViewer.renderChatLog&t=%ld",serv_id,lc->vfwebqq,list->page,list->row,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
@@ -2143,6 +2184,19 @@ LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqH
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(3p,process_msg_list,req,s_strdup(serv_id),list));
+}
+
+LwqqAsyncEvent* lwqq_msg_group_history(LwqqClient* lc,LwqqGroup* g,LwqqHistoryMsgList* list)
+{
+    if(!lc||!g||!list) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/top/groupchatlog?ps=%d&bs=%d&es=%d&gid=%s&mode=1&vfwebqq=%s&t=%ld",
+            list->row,list->begin,list->end,g->code,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
+    return req->do_request_async(req,0,NULL,_C_(3p,process_group_msg_list,req,NULL,list));
 }
 
 #if 0

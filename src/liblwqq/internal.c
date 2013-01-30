@@ -2,6 +2,7 @@
 #include "http.h"
 #include "logger.h"
 #include "async.h"
+#include "smemory.h"
 #include <string.h>
 
 
@@ -58,6 +59,31 @@ LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c)
 }
 
 
+json_t *lwqq__parse_retcode_result(json_t *json,int* retcode)
+{
+    //{"retcode":0,"result":......}
+
+    /**
+     * Frist, we parse retcode that indicate whether we get
+     * correct response from server
+     */
+    char* value = json_parse_simple_value(json, "retcode");
+    if(!value){
+        *retcode = LWQQ_EC_ERROR;
+        return NULL;
+    }
+
+    *retcode = s_atoi(value,LWQQ_EC_ERROR);
+
+    /**
+     * Second, Check whether there is a "result" key in json object
+     * if success it would return result;
+     * if failed it would return NULL;
+     */
+    json_t* result = json_find_first_label_all(json, "result");
+    if(result == NULL) return NULL;
+    return result->child;
+}
 int lwqq__get_retcode_from_str(const char* str)
 {
     if(!str) return LWQQ_EC_ERROR;
