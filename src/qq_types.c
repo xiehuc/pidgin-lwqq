@@ -85,7 +85,7 @@ void qq_account_insert_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGr
 {
 #if QQ_USE_FAST_INDEX
     if(!ac || (!b && !g)) return;
-    index_node* node = s_malloc(sizeof(*node));
+    index_node* node = s_malloc0(sizeof(*node));
     int type = b?NODE_IS_BUDDY:NODE_IS_GROUP;
     node->type = type;
     if(type == NODE_IS_BUDDY){
