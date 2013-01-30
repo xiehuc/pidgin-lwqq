@@ -1,5 +1,4 @@
 set(SRC_LIST
-  background.c
   trex.c
   webqq.c
   translate.c

@@ -18,7 +18,6 @@
 
 #include "internal.h"
 #include "qq_types.h"
-#include "background.h"
 #include "translate.h"
 #include "remote.h"
 
@@ -1344,16 +1343,14 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    //background_friends_info(ac);
-
     LwqqAsyncEvset* set = lwqq_async_evset_new();
     LwqqAsyncEvent* ev;
     ev = lwqq_info_get_friends_info(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
-    ev = lwqq_info_recent_list(lc, &ac->recent_list);
-    lwqq_async_evset_add_event(set, ev);
+    //ev = lwqq_info_recent_list(lc, &ac->recent_list);
+    //lwqq_async_evset_add_event(set, ev);
     lwqq_async_add_evset_listener(set,_C_(2p,login_stage_2,set,lc));
 
     return ;

@@ -7,7 +7,6 @@
 #include "http.h"
 #include "async.h"
 #include "smemory.h"
-#include "background.h"
 
 
 static int file_trans_on_progress(void* data,size_t now,size_t total)
@@ -148,7 +147,7 @@ static void upload_file_init(PurpleXfer* xfer)
     data[1] = file;
     data[2] = xfer;
     //lwqq_async_add_event_listener(
-    background_upload_file(lc,file,file_trans_on_progress,xfer);
+    //background_upload_file(lc,file,file_trans_on_progress,xfer);
     //send_file,data);
 }
 
