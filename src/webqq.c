@@ -411,11 +411,14 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
             purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
     }
     //download avatar
+    /*
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
-    }
+    }*/
+    if(buddy->avatar_len)
+        friend_avatar(ac, buddy);
 
     qq_account_insert_index_node(ac, buddy,NULL);
 
@@ -1094,8 +1097,10 @@ static void login_stage_f(LwqqClient* lc)
     if(ac->qq_use_qqnum){
         //lwdb_userdb_write_to_client(ac->db, lc);
         lwdb_userdb_query_qqnumbers(lc, ac->db);
-        lwdb_userdb_begin(ac->db,"insertion");
+        //lwdb_userdb_begin(ac->db,"insertion");
     }
+    lwdb_userdb_flush_buddies(ac->db, 5);
+    lwdb_userdb_flush_groups(ac->db, 1);
 
     //we must put buddy and group clean before any add operation.
     GList* ptr = ac->p_buddy_list, *nxt;
@@ -1126,6 +1131,8 @@ static void login_stage_f(LwqqClient* lc)
         if(! buddy->long_nick) {
             ev = lwqq_info_get_single_long_nick(lc, buddy);
             if(!set) set = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(set, ev);
+            ev = lwqq_info_get_friend_avatar(lc,buddy);
             lwqq_async_evset_add_event(set, ev);
         }
         if(set){

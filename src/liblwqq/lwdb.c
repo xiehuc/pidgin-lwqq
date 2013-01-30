@@ -980,7 +980,7 @@ LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy)
 {
     if(!db||!buddy||!buddy->qqnumber) return LWQQ_EC_ERROR;
     SwsStmt* stmt = NULL;
-    sws_query_start(db->db, "SELECT long_nick FROM buddies WHERE qqnumber=?;", &stmt, NULL);
+    sws_query_start(db->db, "SELECT long_nick FROM buddies WHERE qqnumber=? and last_modify != 0;", &stmt, NULL);
     sws_query_bind(stmt, 1, SWS_BIND_TEXT,buddy->qqnumber);
     sws_query_next(stmt, NULL);
     char buf[1024];
@@ -1005,4 +1005,18 @@ LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group)
     }
     sws_query_end(stmt, NULL);
     return 0;
+}
+void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last)
+{
+    if(!db||last<0) return ;
+    char sql[128];
+    snprintf(sql,sizeof(sql),"UPDATE buddies SET last_modify=0 ORDER BY last_modify LIMIT %d;",last);
+    sws_exec_sql(db->db, sql, NULL);
+}
+void lwdb_userdb_flush_groups(LwdbUserDB* db,int last)
+{
+    if(!db||last<0) return ;
+    char sql[128];
+    snprintf(sql,sizeof(sql),"UPDATE groups SET last_modify=0 ORDER BY last_modify LIMIT %d;",last);
+    sws_exec_sql(db->db, sql, NULL);
 }

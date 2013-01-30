@@ -119,6 +119,8 @@ void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to);
 void lwdb_userdb_begin(LwdbUserDB* db,const char* transaction);
 void lwdb_userdb_commit(LwdbUserDB* db,const char* transaction);
 void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db);
+void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last);
+void lwdb_userdb_flush_groups(LwdbUserDB* db,int last);
 /* LwdbUserDB API end */
 
 /************************************************************************/

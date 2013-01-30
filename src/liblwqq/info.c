@@ -745,6 +745,7 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
     snprintf(url, sizeof(url),
              "http://%s/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%s&vfwebqq=%s",
              host,type,uin, lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",url);
     req = lwqq_http_create_default_request(lc,url, &error);
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req,"Host",host);
