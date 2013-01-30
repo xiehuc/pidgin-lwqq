@@ -153,15 +153,16 @@ typedef struct LwqqBuddy {
     char *markname;
     LwqqStatus stat;
     LwqqClientType client_type;
-    char *token;                /**< Only used in add friend */
     time_t birthday;
     char *flag;
+    int cate_index;           /**< Index of the category */
+    //extra data
     char *avatar;
     size_t avatar_len;
-    int cate_index;           /**< Index of the category */
-    //int ref;
+    char *token;                /**< Only used in add friend */
     void *data;                 /**< user defined data */
-    pthread_mutex_t mutex;
+    short page;
+    //pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
 typedef LIST_HEAD(LwqqFriendList,LwqqBuddy) 

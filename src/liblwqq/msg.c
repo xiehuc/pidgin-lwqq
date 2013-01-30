@@ -136,7 +136,7 @@ static int parse_content(json_t *json,const char* key, LwqqMsgMessage* opaque)
                 //["offpic",{"success":1,"file_path":"/d65c58ae-faa6-44f3-980e-272fb44a507f"}]
                 LwqqMsgContent *c = s_malloc0(sizeof(*c));
                 c->type = LWQQ_CONTENT_OFFPIC;
-                c->data.img.success = atoi(json_parse_simple_value(ctent,"success"));
+                c->data.img.success = s_atoi(json_parse_simple_value(ctent,"success"),0);
                 c->data.img.file_path = s_strdup(json_parse_simple_value(ctent,"file_path"));
                 TAILQ_INSERT_TAIL(&msg->content,c,entries);
             } else if(!strcmp(buf,"cface")){
@@ -263,6 +263,7 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
 
     list->page = lwqq__json_get_int(root,"page",0);
     list->total = lwqq__json_get_int(root,"total",0);
+    lwqq_verbose(3,"[online history page:%d,total:%d]\n",list->page,list->total);
     json_t* log;
     lwqq__json_parse_child(root,"chatlogs",log);
     if(log) log=log->child;
@@ -2140,6 +2141,7 @@ LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqH
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(3p,process_msg_list,req,s_strdup(serv_id),list));
 }
 

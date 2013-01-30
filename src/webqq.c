@@ -2163,12 +2163,23 @@ static void qq_get_group_info(PurpleBlistNode* node)
 #undef ADD_STRING
 }
 
-static void merge_online_history(qq_account* ac,LwqqBuddy* b,LwqqHistoryMsgList* history)
+static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqHistoryMsgList* history)
 {
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(ev->result){
+        char buf[64];
+        snprintf(buf,sizeof(buf),"错误号:%d",ev->result);
+        purple_notify_warning(ac->account,"错误",buf,NULL);
+        return ;
+    }
     if(history->total == 0) return ;
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
     char buf[8192];
+    struct qq_extra_info* info = get_extra_info(ac->qq, b->uin);
+    info->total = history->total;
+    info->page = history->page;
     PurpleLog* log = purple_log_new(PURPLE_LOG_IM,b->qqnumber,ac->account,NULL,time(NULL),NULL);
     const char* another = b->markname?:b->nick;
     const char* me = ac->account->alias;
@@ -2195,10 +2206,12 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
     qq_account* ac = buddy->account->gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
+    struct qq_extra_info* info = get_extra_info(lc, b->uin);
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     history->row = 60;
+    history->page = info->page?info->page-1:0;
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
-    lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,ac,b,history));
+    lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,ev,b,history));
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
@@ -2213,7 +2226,7 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
-        action = purple_menu_action_new("汇入在线记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        action = purple_menu_action_new("下载漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);

@@ -267,3 +267,12 @@ void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
     long p5 = vp_arg(*vp,long);
     ((f)func)(p1,p2,p3,p4,p5);
 }
+struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin)
+{
+#if QQ_USE_FAST_INDEX
+    qq_account* ac = lwqq_client_userdata(lc);
+    index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
+    if(node == NULL) return NULL;
+    return &node->info;
+#endif
+}

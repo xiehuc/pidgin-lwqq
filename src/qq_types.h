@@ -43,6 +43,10 @@ typedef struct _AsyncListener AsyncListener;
 typedef struct {
     enum {NODE_IS_BUDDY,NODE_IS_GROUP} type;
     const void* node;
+    struct qq_extra_info{
+        short page;
+        short total;
+    }info;
 }index_node;
 
 typedef struct qq_account {
@@ -118,6 +122,7 @@ LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin);
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid);
+struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin);
 
 
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* p);
