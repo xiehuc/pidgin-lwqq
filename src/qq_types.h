@@ -5,6 +5,7 @@ typedef struct _AsyncListener AsyncListener;
 #include <type.h>
 #include <connection.h>
 #include "msg.h"
+#include "info.h"
 #include "lwdb.h"
 #include "logger.h"
 
@@ -59,6 +60,7 @@ typedef struct qq_account {
     GPtrArray* opend_chat;
     GList* p_buddy_list;///< purple buddy list
     GList* rewrite_pic_list;
+    LwqqRecentList recent_list;
     struct{
     gboolean qq_use_qqnum;
     gboolean disable_custom_font_face;

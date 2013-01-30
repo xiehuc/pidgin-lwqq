@@ -33,6 +33,8 @@ LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c);
 
 #define lwqq__json_get_int(json,k,def) s_atoi(json_parse_simple_value(json,k),def)
 #define lwqq__json_get_long(json,k,def) s_atol(json_parse_simple_value(json,k),def)
+#define lwqq__json_get_value(json,k) s_strdup(json_parse_simple_value(json,k))
+#define lwqq__json_get_string(json,k) json_unescape(json_parse_simple_value(json,k))
 #define lwqq__json_parse_child(json,k,sub) sub=json_find_first_label(json,k);if(sub) sub=sub->child;
 
 

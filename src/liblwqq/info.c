@@ -402,6 +402,31 @@ done:
     return err;
 }
 
+static int process_recent_list(LwqqHttpRequest* req,LwqqRecentList* list)
+{
+    //{"retcode":0,"result":[{"uin":273149476,"type":1},{"uin":2585596768,"type":0},{"uin":1971296934,"type":2}
+    int err = 0;
+    json_t *json = NULL,*result;
+    lwqq__jump_if_http_fail(req,err);
+    lwqq_verbose(3,"%s\n",req->response);
+    lwqq__jump_if_json_fail(json,req->response,err);
+    result = parse_retcode_result(json, &err);
+    lwqq__jump_if_retcode_fail(err);
+    if(result&&result->child){
+        result = result->child_end;
+        while(result){
+            LwqqRecentItem* recent = s_malloc0(sizeof(*recent));
+            recent->type = lwqq__json_get_int(result,"type",0);
+            recent->uin = lwqq__json_get_value(result,"uin");
+            LIST_INSERT_HEAD(list,recent,entries);
+            result = result->previous;
+        }
+    }
+done:
+    lwqq__clean_json_and_req(json,req);
+    return err;
+}
+
 
 
 
@@ -2153,18 +2178,29 @@ LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char
     return ev;
 }
 
-LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqMixList* list)
+LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list)
 {
     if(!lc||!list) return NULL;
     char url[512];
     char post[512];
     snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_recent_list2");
-    snprintf(post,sizeof(post),"r={\"vfwebqq\":\"%s\",\"clientid\":\"%s\",\"psessionid\",\"%s\"}",
+    snprintf(post,sizeof(post),"r={\"vfwebqq\":\"%s\",\"clientid\":\"%s\",\"psessionid\":\"%s\"}",
             lc->vfwebqq,lc->clientid,lc->psessionid);
     lwqq_verbose(3,"%s\n",url);
-    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110413002&id=2");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
-
+    return req->do_request_async(req,1,post,_C_(2p_i,process_recent_list,req,list));
+}
+void lwqq_recent_list_free(LwqqRecentList* list)
+{
+    if(!list) return;
+    LwqqRecentItem* recent;
+    while((recent = LIST_FIRST(list))){
+        LIST_REMOVE(recent,entries);
+        s_free(recent->uin);
+        s_free(recent);
+    }
+    memset(list,0,sizeof(*list));
 }

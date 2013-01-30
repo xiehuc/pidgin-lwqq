@@ -24,6 +24,19 @@ typedef struct LwqqBusinessCard {
     LwqqGender gender;
 } LwqqBusinessCard;
 
+typedef struct LwqqRecentItem {
+    enum {
+        ITEM_IS_BUDDY,
+        ITEM_IS_GROUP,
+        ITEM_IS_DISCU
+    } type;
+    char* uin;
+    LIST_ENTRY(LwqqRecentItem) entries;
+} LwqqRecentItem;
+
+typedef LIST_HEAD(,LwqqRecentItem) LwqqRecentList;
+
+
 /** 
  * Get QQ friends information. These information include basic friend
  * information, friends group information, and so on
@@ -181,5 +194,7 @@ LwqqAsyncEvent* lwqq_info_set_self_card(LwqqClient* lc,LwqqBusinessCard* card);
 LwqqAsyncEvent* lwqq_info_get_single_long_nick(LwqqClient* lc,LwqqBuddy* buddy);
 LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic);
+void lwqq_recent_list_free(LwqqRecentList* list);
+LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
 
 #endif  /* LWQQ_INFO_H */

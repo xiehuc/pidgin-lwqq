@@ -285,14 +285,20 @@ static void qq_add_group(PurplePluginAction* action)
     purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
             "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
+static void qq_open_recent(PurplePluginAction* action)
+{
+    PurpleConnection* gc = action->context;
+    LwqqBuddy* buddy = action->user_data;
+    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber, gc->account);
+    if(conv == NULL) purple_conversation_new(PURPLE_CONV_TYPE_IM, gc->account, buddy->qqnumber);
+}
 
 static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
 {
 
-    GList *m;
+    GList *m = NULL;
     PurplePluginAction *act;
-
-    m = NULL;
+    //PurpleConnection* gc = context;
 
     ///分割线
     m = g_list_append(m, NULL);
@@ -1346,6 +1352,8 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
+    ev = lwqq_info_recent_list(lc, &ac->recent_list);
+    lwqq_async_evset_add_event(set, ev);
     lwqq_async_add_evset_listener(set,_C_(2p,login_stage_2,set,lc));
 
     return ;
