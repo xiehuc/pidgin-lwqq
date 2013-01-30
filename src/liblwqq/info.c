@@ -2152,3 +2152,19 @@ LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char
     lwqq_async_add_event_listener(ev, _C_(3p,do_rename_discu,ev,d,s_strdup(topic)));
     return ev;
 }
+
+LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqMixList* list)
+{
+    if(!lc||!list) return NULL;
+    char url[512];
+    char post[512];
+    snprintf(url,sizeof(url),"http://d.web2.qq.com/channel/get_recent_list2");
+    snprintf(post,sizeof(post),"r={\"vfwebqq\":\"%s\",\"clientid\":\"%s\",\"psessionid\",\"%s\"}",
+            lc->vfwebqq,lc->clientid,lc->psessionid);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",url);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110413002&id=2");
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+
+}
