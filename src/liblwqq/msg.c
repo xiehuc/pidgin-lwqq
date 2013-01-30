@@ -212,7 +212,7 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
     //{ret:0,tuin:2141909423,page:14,total:14,chatlogs:[{ver:3,cmd:16,seq:160,time:1358935482,type:1,msg:["12"] }
     int err = 0;
     json_t* root = NULL;
-    char buf[8192];
+    char buf[8192*3];
     memset(buf,0,sizeof(buf));
     lwqq__jump_if_http_fail(req,err);
     char* beg = strchr(req->response,'{');
@@ -222,19 +222,31 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
     *end = '\0';
     while(*beg!='\0'){
         if(*beg=='{'){
-            strcpy(write,"{\"");
-            beg++;
+            if(!strncmp(beg+1,"ver:",4)||!strncmp(beg+1,"ret:",4)){
+                strcpy(write,"{\"");
+                beg++;
+                end = strchr(beg,':');
+                strncat(write,beg,end-beg);
+                strcat(write,"\":");
+                beg = end+1;
+            }else
+                *write++=*beg++;
         }else if(*beg==','){
-            if(beg[1]=='{' || (beg[1]<='9'&&beg[1]>='0'))
-                *write++=',';
-            else
+            if(!strncmp(beg+1,"cmd:",4)||!strncmp(beg+1,"seq:",4)||
+                    !strncmp(beg+1,"time:",5)||!strncmp(beg+1,"type:",5)||
+                    !strncmp(beg+1,"msg:",4)||!strncmp(beg+1,"tuin:",5)||
+                    !strncmp(beg+1,"page:",5)||!strncmp(beg+1,"total:",6)||
+                    !strncmp(beg+1,"chatlogs:",9)
+                    ){
                 strcpy(write,",\"");
-            beg++;
-        }else if(*beg==':'){
-            strcpy(write,"\":");
-            beg++;
+                beg++;
+                end = strchr(beg,':');
+                strncat(write,beg,end-beg);
+                strcat(write,"\":");
+                beg = end+1;
+            }else *write++=*beg++;
         }else{
-            end = strpbrk(beg, "{:,");
+            end = strpbrk(beg, "{,");
             if(end==NULL){
                 strcpy(write,beg);
                 break;

@@ -2196,6 +2196,7 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
+    history->row = 60;
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
     lwqq_async_add_event_listener(ev, _C_(3p,merge_online_history,ac,b,history));
 }
