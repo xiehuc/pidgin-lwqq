@@ -2238,7 +2238,7 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
-        if(group->type == LWQQ_GROUP_QUN){
+        if(group&&group->type == LWQQ_GROUP_QUN){
             action = purple_menu_action_new("获取信息",(PurpleCallback)qq_get_group_info,node,NULL);
             act = g_list_append(act,action);
             action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
