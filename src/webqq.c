@@ -531,7 +531,7 @@ static void shake_message(LwqqClient* lc,LwqqMsgShakeMessage* shake)
 static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
 {
     char body_[1024] = {0};
-#define ADD_INFO(k,v)  format_append(body_,k":%s\n",v)
+#define ADD_INFO(k,v)  if(v) format_append(body_,k":%s\n",v)
     ADD_INFO("QQ", buddy->qqnumber);
     ADD_INFO("昵称", buddy->nick);
     ADD_INFO("签名", buddy->personal);
@@ -582,22 +582,27 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             break;
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
-            snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
-                    (msg->member_uin==0||strcmp(msg->member_uin,lc->myself->uin)==0)?"您":msg->member,
-                    msg->group->name,
-                    msg->admin);
-            group_come(lc, msg->group);
+            {
+                int is_myself = msg->member_uin==0||strcmp(msg->member_uin,lc->myself->uin)==0;
+                snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
+                        is_myself?"您":msg->member,
+                        msg->group->name,
+                        msg->admin);
+                if(is_myself)
+                    group_come(lc, msg->group);
+            }
             break;
         case GROUP_LEAVE:
             {
-            snprintf(body,sizeof(body),"%s离开了群[%s]",
-                    strcmp(msg->member_uin,lc->myself->uin)==0?"您":msg->member,
-                    msg->group->name);
-            PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
-            if(chat){
-                purple_blist_remove_chat(chat);
-                //purple_chat_destroy(chat);
-            }
+                int is_myself = strcmp(msg->member_uin,lc->myself->uin)==0;
+                snprintf(body,sizeof(body),"%s离开了群[%s]",
+                        is_myself?"您":msg->member,
+                        msg->group->name);
+                PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
+                if(chat&&is_myself){
+                    purple_blist_remove_chat(chat);
+                    //purple_chat_destroy(chat);
+                }
             }
             break;
         case GROUP_REQUEST_JOIN_DENY:
