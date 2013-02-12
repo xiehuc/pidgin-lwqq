@@ -2184,23 +2184,39 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
     char buf[8192];
+    char name[64];
     struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
     info->total = history->total;
     info->page = history->page;
-    char name[64];
     b!=NULL?snprintf(name,sizeof(name),"%s",b->qqnumber):snprintf(name,sizeof(name),"%s.chat",g->account);
-    PurpleLog* log = purple_log_new(PURPLE_LOG_IM,name,ac->account,NULL,time(NULL),NULL);
+
+    recv = TAILQ_FIRST(&history->msg_list);
+    msg = (LwqqMsgMessage*)recv->msg;
+    time_t log_time = msg->time;
+    struct tm log_tm = *localtime(&msg->time);
+    PurpleLog* log = purple_log_new(b?PURPLE_LOG_IM:PURPLE_LOG_CHAT,name,ac->account,NULL,log_time,NULL);
     const char* another = b?(b->markname?:b->nick):NULL;
     const char* me = ac->account->alias;
     if(b)
         snprintf(buf,sizeof(buf),"======online history [page:%d,total:%d]=======",history->page,history->total);
     else
         snprintf(buf,sizeof(buf),"======online history [begin:%d,end:%d]======",history->begin,history->end);
-    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",time(NULL),buf);
+    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
     TAILQ_FOREACH(recv,&history->msg_list,entries){
         //clear buf.
         buf[0]='\0';
         msg = (LwqqMsgMessage*)recv->msg;
+        //if time interval is extend 1 day. we create a new log
+        struct tm msg_tm = *localtime(&msg->time);
+        if(msg_tm.tm_year!=log_tm.tm_year || msg_tm.tm_yday!=log_tm.tm_yday){
+            purple_log_free(log);
+            log_time = msg->time;
+            log_tm = *localtime(&msg->time);
+            log = purple_log_new(b?PURPLE_LOG_IM:PURPLE_LOG_CHAT,name,ac->account,NULL,log_time,NULL);
+            snprintf(buf,sizeof(buf),"==online history===");
+            purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
+            buf[0]='\0';
+        }
         translate_struct_to_message(ac, msg, buf);
         if(b){
             if(strcmp(msg->super.from,b->uin)==0){
@@ -2213,22 +2229,33 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
         }
     }
     snprintf(buf,sizeof(buf),"======online history end=======");
-    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",time(NULL),buf);
+    purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
     lwqq_historymsg_free(history);
     purple_log_free(log);
 }
-
+static void download_online_history_continue(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqHistoryMsgList* history)
+{
+    history->page--;
+    if(history->page==0){
+        merge_online_history(ev, b, NULL, history);
+        return;
+    }
+    LwqqClient* lc = ev->lc;
+    LwqqAsyncEvent* event = lwqq_msg_friend_history(lc, b->uin, history);
+    lwqq_async_add_event_listener(event, _C_(3p,download_online_history_continue,event,b,history));
+}
 static void qq_merge_online_history(PurpleBuddy* buddy)
 {
     qq_account* ac = buddy->account->gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
-    struct qq_extra_info* info = get_extra_info(lc, b->uin);
+    //struct qq_extra_info* info = get_extra_info(lc, b->uin);
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     history->row = 60;
-    history->page = info->page?info->page-1:0;
+    history->page = 0;
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
-    lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,b,NULL,history));
+    lwqq_async_add_event_listener(ev,_C_(3p,download_online_history_continue,ev,b,history));
+    //lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,b,NULL,history));
 }
 static void qq_merge_group_history(PurpleChat* chat)
 {

@@ -266,7 +266,7 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
     lwqq_verbose(3,"[online history page:%d,total:%d]\n",list->page,list->total);
     json_t* log;
     lwqq__json_parse_child(root,"chatlogs",log);
-    if(log) log=log->child;
+    if(log) log=log->child_end;
     const char* me = ((LwqqClient*)req->lc)->myself->uin;
     while(log){
         LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
@@ -282,8 +282,8 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
         parse_content(log,"msg",msg);
         LwqqRecvMsg* wrapper = s_malloc0(sizeof(*wrapper));
         wrapper->msg = (LwqqMsg*)msg;
-        TAILQ_INSERT_TAIL(&list->msg_list,wrapper,entries);
-        log = log->next;
+        TAILQ_INSERT_HEAD(&list->msg_list,wrapper,entries);
+        log = log->previous;
     }
 done:
     lwqq__clean_json_and_req(root,req);
