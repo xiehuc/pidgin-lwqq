@@ -236,7 +236,7 @@ typedef struct LwqqVerifyCode {
 } LwqqVerifyCode ;
 
 typedef enum {LWQQ_NO,LWQQ_YES,LWQQ_EXTRA_ANSWER} LwqqAnswer;
-typedef enum {LWQQ_DENY,LWQQ_ALLOW,LWQQ_ALLOW_AND_ADD} LwqqAllow;
+#define LWQQ_ALLOW_AND_ADD LWQQ_EXTRA_ANSWER
 
 typedef struct LwqqCookies {
     char *ptvfsession;          /**< ptvfsession */

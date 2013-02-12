@@ -185,7 +185,7 @@ LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,L
  *                 if answer is no . then there is reason.
  */
 LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMsg* msg ,LwqqAnswer answer,const char* reason);
-LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra);
+LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAnswer allow,const char* extra);
 
 LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g);
 void lwqq_card_free(LwqqBusinessCard* card);

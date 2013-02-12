@@ -11,7 +11,6 @@
 #define LWQQ_ASYNC_H
 #include "type.h"
 #include "msg.h"
-#include "util.h"
 #include <assert.h>
 
 
@@ -164,7 +163,6 @@ struct _LwqqAsyncOption {
      */
     void (*request_confirm)(LwqqClient* lc,LwqqBuddy* buddy);
     void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
-    void (*need_confirm)(LwqqClient* lc,LwqqConfirmTable* table);
     /* this called when successfully delete group from server
      * and the last chance to visit group
      * do not delete group in this function

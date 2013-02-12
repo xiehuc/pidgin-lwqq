@@ -1719,18 +1719,18 @@ LwqqAsyncEvent* lwqq_info_delete_friend(LwqqClient* lc,LwqqBuddy* buddy,LwqqDelF
     //do delete work.
     return ev;
 }
-LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAllow allow,const char* extra)
+LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAnswer allow,const char* extra)
 {
     if(!lc||!qq) return NULL;
     char url[512];
     char post[256];
     switch(allow){
-        case LWQQ_DENY:
+        case LWQQ_NO:
             snprintf(url,sizeof(url),"%s/api/deny_added_request2","http://s.web2.qq.com");
             snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\",\"msg\":\"%s\"}",
                     qq,lc->vfwebqq,extra?extra:"");
         break;
-        case LWQQ_ALLOW:
+        case LWQQ_YES:
             snprintf(url,sizeof(url),"%s/api/allow_added_request2","http://s.web2.qq.com");
             snprintf(post,sizeof(post),"r={\"account\":%s,\"vfwebqq\":\"%s\"}",
                     qq,lc->vfwebqq );

@@ -261,7 +261,7 @@ static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
 #undef ADD_INFO
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(3p,add_group,lc,confirm,g);
-    lc->async_opt->need_confirm(lc,confirm);
+    show_confirm_table(lc,confirm);
 }
 
 static void search_group(qq_account* ac,const char* text)
@@ -865,50 +865,28 @@ static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
     else reason = "您被不知道什么东西踢下线了额";
     purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,reason);
 }
-static void verify_required_confirm(void* data,PurpleRequestFields* root)
+static void verify_required_confirm(LwqqClient* lc,char* account,LwqqConfirmTable* ct)
 {
-    void** d = data;
-    qq_account* ac = d[0];
-    char* account = d[1];
-    s_free(data);
-    LwqqClient* lc = ac->qq;
-    int answer = purple_request_fields_get_choice(root,"answer");
-    LwqqAllow allow;
-    if(answer == 0) allow = LWQQ_ALLOW_AND_ADD;
-    else if(answer == 1) allow = LWQQ_ALLOW;
-    else allow = LWQQ_DENY;
-    lwqq_info_answer_request_friend(lc, account, allow, NULL);
+    if(ct->answer == LWQQ_NO)
+        lwqq_info_answer_request_friend(lc, account, ct->answer, ct->input);
+    else
+        lwqq_info_answer_request_friend(lc, account, ct->answer, NULL);
+    lwqq_ct_free(ct);
     s_free(account);
-}
-static void verify_required_cancel(void* data,PurpleRequestFields* root)
-{
 }
 static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 {
     qq_account* ac = lwqq_client_userdata(lc);
-    char buf1[128];
-    char buf2[128];
+    char buf1[256];
     if(system->type == VERIFY_REQUIRED) {
-
-        PurpleRequestFields* root = purple_request_fields_new();
-        PurpleRequestFieldGroup *container = purple_request_field_group_new("好友确认");
-        purple_request_fields_add_group(root,container);
-        snprintf(buf1,sizeof(buf1),"%s请求加您为好友",system->account);
-        snprintf(buf2,sizeof(buf2),"附加信息:%s",system->verify_required.msg);
-
-        PurpleRequestField* choice = purple_request_field_choice_new("answer","请选择",0);
-        purple_request_field_choice_add(choice,"同意并加为好友");
-        purple_request_field_choice_add(choice,"同意");
-        purple_request_field_choice_add(choice,"拒绝");
-        purple_request_field_group_add_field(container,choice);
-
-        void** data = s_malloc(sizeof(void*)*2);
-        data[0] = ac;
-        data[1] = s_strdup(system->account);
-        purple_request_fields(ac->gc,NULL,buf1,buf2,root,
-                              "确认",(GCallback)verify_required_confirm,
-                              "取消",(GCallback)verify_required_cancel,
-                              ac->account,NULL,NULL,data);
+        LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+        ct->title = s_strdup("好友确认");
+        snprintf(buf1,sizeof(buf1),"%s\n请求加您为好友\n附加信息:%s",system->account,system->verify_required.msg);
+        ct->body = s_strdup(buf1);
+        ct->exans_label = s_strdup("同意并加为好友");
+        ct->input_label = s_strdup("拒绝理由");
+        ct->cmd = _C_(3p,verify_required_confirm,lc,s_strdup(system->account),ct);
+        show_confirm_table(lc, ct);
     } else if(system->type == VERIFY_PASS_ADD) {
         snprintf(buf1,sizeof(buf1),"%s通过了您的请求,并添加您为好友",system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
@@ -1347,7 +1325,7 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
     .need_verify2 = show_verify_image,
-    .need_confirm = show_confirm_table,
+    //.need_confirm = show_confirm_table,
     .delete_group = delete_group_local,
 };
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
@@ -1973,7 +1951,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* messa
     format_body_from_buddy(body, buddy);
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
-    lc->async_opt->need_confirm(lc,confirm);
+    show_confirm_table(lc,confirm);
 }
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
