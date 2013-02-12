@@ -583,23 +583,21 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
             {
-                int is_myself = msg->member_uin==0||strcmp(msg->member_uin,lc->myself->uin)==0;
                 snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
-                        is_myself?"您":msg->member,
+                        msg->is_myself?"您":msg->member,
                         msg->group->name,
                         msg->admin);
-                if(is_myself)
+                if(msg->is_myself)
                     group_come(lc, msg->group);
             }
             break;
         case GROUP_LEAVE:
             {
-                int is_myself = strcmp(msg->member_uin,lc->myself->uin)==0;
                 snprintf(body,sizeof(body),"%s离开了群[%s]",
-                        is_myself?"您":msg->member,
+                        msg->is_myself?"您":msg->member,
                         msg->group->name);
                 PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
-                if(chat&&is_myself){
+                if(chat&&msg->is_myself){
                     purple_blist_remove_chat(chat);
                     //purple_chat_destroy(chat);
                 }

@@ -896,14 +896,16 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = json_unescape(json_parse_simple_value(json, "admin_nick"));
-        add_new_group = 1;
+        add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
     }
     else if(strcmp(type,"group_leave")==0){
         msg->type = GROUP_LEAVE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
         msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
-        LIST_REMOVE(msg->group,entries);
+        msg->is_myself = strcmp(lc->myself->uin,msg->member_uin)==0;
+        if(msg->is_myself)
+            LIST_REMOVE(msg->group,entries);
     }
     else if(strcmp(type,"group_request_join")==0){
         msg->type = GROUP_REQUEST_JOIN;
@@ -919,6 +921,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     }
     else msg->type = GROUP_UNKNOW;
     if(add_new_group){
+        msg->is_myself = 1;
         LwqqGroup* g = lwqq_group_new(LWQQ_GROUP_QUN);
         g->account = s_strdup(msg->account);
         g->code = s_strdup(msg->gcode);

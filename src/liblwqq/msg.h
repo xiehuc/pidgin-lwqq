@@ -167,11 +167,11 @@ typedef struct LwqqMsgSysGMsg{
     LwqqMsgSeq super;
     enum {
         GROUP_CREATE,
-        GROUP_JOIN,
-        GROUP_LEAVE,
-        GROUP_REQUEST_JOIN,
-        GROUP_REQUEST_JOIN_AGREE,
-        GROUP_REQUEST_JOIN_DENY,
+        GROUP_JOIN,                 //<admin or member(when admin operate) get this msg
+        GROUP_LEAVE,                //<admin or member(when admin operate) get this msg
+        GROUP_REQUEST_JOIN,         //<only admin get this msg
+        GROUP_REQUEST_JOIN_AGREE,   //<only member get this msg
+        GROUP_REQUEST_JOIN_DENY,    //<only member get this msg
         GROUP_UNKNOW,
     }type;
     char* group_uin;
@@ -182,6 +182,7 @@ typedef struct LwqqMsgSysGMsg{
     char* admin_uin;
     char* admin;
     char* msg;
+    int is_myself;                  //<true when group should add or delete
     LwqqGroup* group;
 }LwqqMsgSysGMsg;
 typedef struct LwqqMsgBlistChange{
