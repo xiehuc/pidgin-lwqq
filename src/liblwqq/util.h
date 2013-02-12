@@ -2,17 +2,14 @@
 #define LWQQ_UTIL_H_H
 #include "type.h"
 
-typedef enum {
-    LWQQ_CT_YES_NEED_INPUT = 1<<1,
-    LWQQ_CT_NO_NEED_INPUT = 1<<2
-}LwqqCTFlags;
 
 typedef struct LwqqConfirmTable {
     LwqqAnswer answer;
     int flags;
     char* title;            //< read
     char* body;             //< read
-    char* input_title;      //< read
+    char* exans_label;      //< extra answer label, read
+    char* input_label;      //< read
     char* input;            //< write
     LwqqCommand cmd;
 }LwqqConfirmTable;

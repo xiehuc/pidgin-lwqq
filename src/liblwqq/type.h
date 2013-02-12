@@ -235,7 +235,7 @@ typedef struct LwqqVerifyCode {
     LwqqCommand cmd;
 } LwqqVerifyCode ;
 
-typedef enum {LWQQ_NO,LWQQ_YES} LwqqAnswer;
+typedef enum {LWQQ_NO,LWQQ_YES,LWQQ_EXTRA_ANSWER} LwqqAnswer;
 typedef enum {LWQQ_DENY,LWQQ_ALLOW,LWQQ_ALLOW_AND_ADD} LwqqAllow;
 
 typedef struct LwqqCookies {

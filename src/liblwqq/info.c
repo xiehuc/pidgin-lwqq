@@ -267,6 +267,7 @@ static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
     int err = 0;
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
+    lwqq_verbose(3,"%s\n",req->response);
     lwqq__jump_if_json_fail(root,req->response,err);
     result = lwqq__parse_retcode_result(root, &err);
     //WEBQQ_FATAL:验证码输入错误.

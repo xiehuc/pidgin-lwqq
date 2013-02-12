@@ -253,8 +253,7 @@ static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup("群确认");
-    confirm->input_title = s_strdup("附加理由");
-    confirm->flags = LWQQ_CT_YES_NEED_INPUT|LWQQ_CT_NO_NEED_INPUT;
+    confirm->input_label = s_strdup("附加理由");
     char body[1024] = {0};
 #define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
     ADD_INFO("QQ",g->qq);
@@ -555,7 +554,8 @@ static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
 }
 static void request_join_confirm(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqConfirmTable* ct)
 {
-    lwqq_info_answer_request_join_group(lc, msg,ct->answer, "");
+    if(ct->answer != LWQQ_EXTRA_ANSWER)
+        lwqq_info_answer_request_join_group(lc, msg,ct->answer, ct->input);
     lwqq_ct_free(ct);
     lwqq_msg_free((LwqqMsg*)msg);
 }
@@ -567,8 +567,10 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
     format_body_from_buddy(body,buddy);
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
     ct->title = s_strdup("群申请确认");
-    ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
     ct->body = s_strdup(body);
+    ct->exans_label = s_strdup("忽略");
+    ct->input_label = s_strdup("拒绝理由");
+    ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
     show_confirm_table(lc,ct);
     lwqq_buddy_free(buddy);
 }
@@ -1277,8 +1279,11 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
 
 static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestFields* fields)
 {
-    table->answer = LWQQ_YES;
-    if(table->flags & LWQQ_CT_YES_NEED_INPUT){
+    if(table->exans_label){
+        table->answer = purple_request_fields_get_choice(fields,"choice");
+    }else 
+        table->answer = LWQQ_YES;
+    if(table->input_label){
         const char* i = purple_request_fields_get_string(fields, "input");
         table->input = s_strdup(i);
     }
@@ -1287,7 +1292,7 @@ static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestFields* field
 static void confirm_table_no(LwqqConfirmTable* table,PurpleRequestFields* fields)
 {
     table->answer = LWQQ_NO;
-    if(table->flags & LWQQ_CT_NO_NEED_INPUT){
+    if(table->input_label){
         const char* i = purple_request_fields_get_string(fields, "input");
         table->input = s_strdup(i);
     }
@@ -1303,19 +1308,27 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     field_group = purple_request_field_group_new((gchar*)0);
     purple_request_fields_add_group(fields, field_group);
 
-
     PurpleRequestField* str = purple_request_field_string_new("body", table->title, table->body, TRUE);
     purple_request_field_string_set_editable(str, FALSE);
     purple_request_field_group_add_field(field_group, str);
-    if(table->flags & LWQQ_CT_YES_NEED_INPUT || table->flags & LWQQ_CT_NO_NEED_INPUT){
-        PurpleRequestField* i = purple_request_field_string_new("input", table->input_title, "", FALSE);
+
+    if(table->exans_label){
+        PurpleRequestField* choice = purple_request_field_choice_new("choice", "请选择", 1);
+        purple_request_field_choice_add(choice,"拒绝");
+        purple_request_field_choice_add(choice,"同意");
+        purple_request_field_choice_add(choice,table->exans_label);
+        purple_request_field_group_add_field(field_group,choice);
+    }
+
+    if(table->input_label){
+        PurpleRequestField* i = purple_request_field_string_new("input", table->input_label, "", FALSE);
         purple_request_field_group_add_field(field_group,i);
     }
 
-    purple_request_fields(ac->account, NULL,
+    purple_request_fields(ac->gc, NULL,
                           "确认请求", NULL,
                           fields, "确认", G_CALLBACK(confirm_table_yes),
-                          "取消", G_CALLBACK(confirm_table_no),
+                          "拒绝", G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
 }
 static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
