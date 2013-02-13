@@ -1006,17 +1006,23 @@ LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group)
     sws_query_end(stmt, NULL);
     return 0;
 }
-void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last)
+void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last,int day)
 {
     if(!db||last<0) return ;
-    char sql[128];
-    snprintf(sql,sizeof(sql),"UPDATE buddies SET last_modify=0 ORDER BY last_modify LIMIT %d;",last);
+    char sql[256];
+    snprintf(sql,sizeof(sql),"UPDATE buddies SET last_modify=0 WHERE "
+            "qqnumber IN (SELECT qqnumber FROM buddies WHERE"
+            "julianday('now')-julianday(last_modify)>%d ORDER BY last_modify LIMIT %d);",
+            day,last);
     sws_exec_sql(db->db, sql, NULL);
 }
-void lwdb_userdb_flush_groups(LwdbUserDB* db,int last)
+void lwdb_userdb_flush_groups(LwdbUserDB* db,int last,int day)
 {
     if(!db||last<0) return ;
-    char sql[128];
-    snprintf(sql,sizeof(sql),"UPDATE groups SET last_modify=0 ORDER BY last_modify LIMIT %d;",last);
+    char sql[256];
+    snprintf(sql,sizeof(sql),"UPDATE groups SET last_modify=0 WHERE "
+            "account IN (SELECT account FROM groups WHERE "
+            "julianday('now')-julianday(last_modify)>%d ORDER BY last_modify LIMIT %d);",
+            day,last);
     sws_exec_sql(db->db, sql, NULL);
 }

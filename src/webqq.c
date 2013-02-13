@@ -1082,8 +1082,8 @@ static void login_stage_f(LwqqClient* lc)
         lwdb_userdb_query_qqnumbers(lc, ac->db);
         //lwdb_userdb_begin(ac->db,"insertion");
     }
-    lwdb_userdb_flush_buddies(ac->db, 5);
-    lwdb_userdb_flush_groups(ac->db, 1);
+    lwdb_userdb_flush_buddies(ac->db, 5,5);
+    lwdb_userdb_flush_groups(ac->db, 1,10);
 
     //we must put buddy and group clean before any add operation.
     GList* ptr = ac->p_buddy_list, *nxt;
