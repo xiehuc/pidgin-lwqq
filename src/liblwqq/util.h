@@ -19,5 +19,8 @@ typedef struct LwqqString{
 } LwqqString;
 
 void lwqq_ct_free(LwqqConfirmTable* table);
+
+#define lwqq_group_pretty_name(g) (g->markname?:g->name)
+#define lwqq_buddy_pretty_name(b) (b->markname?:b->nick)
     
 #endif

@@ -241,24 +241,16 @@ static int process_simple_response(LwqqHttpRequest* req)
 {
     //{"retcode":0,"result":{"ret":0}}
     int err = 0;
-    if(req->http_code!=200){
-        err = LWQQ_EC_ERROR;
-        goto done;
-    }
-    lwqq_puts(req->response);
     json_t *root = NULL;
-    if(json_parse_document(&root, req->response)!=JSON_OK){
-        lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);
-        err = LWQQ_EC_ERROR;
-        goto done;
-    }
+    lwqq__jump_if_http_fail(req,err);
+    lwqq_puts(req->response);
+    lwqq__jump_if_json_fail(root,req->response,err);
     int retcode = s_atoi(json_parse_simple_value(root, "retcode"),LWQQ_EC_ERROR);
     if(retcode != WEBQQ_OK){
         err = retcode;
     }
 done:
-    if(root) json_free_value(&root);
-    lwqq_http_request_free(req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
@@ -1759,6 +1751,7 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     if(sb==NULL) return;
     char url[512];
     int ret;
+    json_t* root = NULL;
     snprintf(url,sizeof(url),"%s/channel/get_c2cmsg_sig2?"
             "id=%s&"
             "to_uin=%s&"
@@ -1779,7 +1772,6 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     if(req->http_code!=200){
         goto done;
     }
-    json_t* root = NULL;
     ret = json_parse_document(&root,req->response);
     if(ret!=JSON_OK){
         goto done;

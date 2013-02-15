@@ -186,24 +186,16 @@ static int process_simple_response(LwqqHttpRequest* req)
 {
     //{"retcode":0,"result":{"ret":0}}
     int err = 0;
-    if(req->http_code!=200){
-        err = LWQQ_EC_ERROR;
-        goto done;
-    }
-    lwqq_puts(req->response);
     json_t *root = NULL;
-    if(json_parse_document(&root, req->response)!=JSON_OK){
-        lwqq_log(LOG_ERROR, "Parse json object of add friend error: %s\n", req->response);
-        err = LWQQ_EC_ERROR;
-        goto done;
-    }
+    lwqq__jump_if_http_fail(req,err);
+    lwqq_puts(req->response);
+    lwqq__jump_if_json_fail(root,req->response,err);
     int retcode = s_atoi(json_parse_simple_value(root, "retcode"),LWQQ_EC_ERROR);
     if(retcode != WEBQQ_OK){
         err = retcode;
     }
 done:
-    if(root) json_free_value(&root);
-    lwqq_http_request_free(req);
+    lwqq__clean_json_and_req(root,req);
     return err;
 }
 static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgList* list)
