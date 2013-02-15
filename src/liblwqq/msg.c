@@ -523,7 +523,8 @@ static void msg_sys_g_msg_free(LwqqMsg* msg)
     LwqqMsgSysGMsg* gmsg = (LwqqMsgSysGMsg*)msg;
     if(gmsg){
         if(gmsg->type == GROUP_LEAVE || gmsg->type == GROUP_REQUEST_JOIN_AGREE)
-            lwqq_group_free(gmsg->group);
+            if(gmsg->group)
+                lwqq_group_free(gmsg->group);
         s_free(gmsg->gcode);
         s_free(gmsg->group_uin);
         s_free(gmsg->member);
@@ -909,8 +910,11 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
     }else if(strcmp(type,"group_request_join_agree")==0){
         msg->type = GROUP_REQUEST_JOIN_AGREE;
-        msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
-        add_new_group = 1;
+        msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
+        msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
+        add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
+        if(!add_new_group)
+            msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
     }else if(strcmp(type,"group_request_join_deny")==0){
         msg->type = GROUP_REQUEST_JOIN_DENY;
         msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
