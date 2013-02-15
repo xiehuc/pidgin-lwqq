@@ -2184,6 +2184,7 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     LwqqMsgMessage* msg;
     char buf[8192];
     char name[64];
+    int type = b?PURPLE_LOG_IM:PURPLE_LOG_CHAT;
     struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
     info->total = history->total;
     info->page = history->page;
@@ -2193,13 +2194,20 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     msg = (LwqqMsgMessage*)recv->msg;
     time_t log_time = msg->time;
     struct tm log_tm = *localtime(&msg->time);
-    PurpleLog* log = purple_log_new(b?PURPLE_LOG_IM:PURPLE_LOG_CHAT,name,ac->account,NULL,log_time,NULL);
+
+    //delete old log
+    GList* old_logs = purple_log_get_logs(type, name, ac->account);
+    while(old_logs){
+        PurpleLog* log = old_logs->data;
+        if(log->time >= log_time && purple_log_is_deletable(log))
+            purple_log_delete(log);
+        old_logs = old_logs->next;
+    }
+
+    PurpleLog* log = purple_log_new(type,name,ac->account,NULL,log_time,NULL);
     const char* another = b?(b->markname?:b->nick):NULL;
     const char* me = ac->account->alias;
-    if(b)
-        snprintf(buf,sizeof(buf),"======online history [page:%d,total:%d]=======",history->page,history->total);
-    else
-        snprintf(buf,sizeof(buf),"======online history [begin:%d,end:%d]======",history->begin,history->end);
+    snprintf(buf,sizeof(buf),"======online history begin=======");
     purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
     TAILQ_FOREACH(recv,&history->msg_list,entries){
         //clear buf.
@@ -2208,11 +2216,13 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
         //if time interval is extend 1 day. we create a new log
         struct tm msg_tm = *localtime(&msg->time);
         if(msg_tm.tm_year!=log_tm.tm_year || msg_tm.tm_yday!=log_tm.tm_yday){
+            snprintf(buf,sizeof(buf),"======online history end=======");
+            purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
             purple_log_free(log);
             log_time = msg->time;
             log_tm = *localtime(&msg->time);
             log = purple_log_new(b?PURPLE_LOG_IM:PURPLE_LOG_CHAT,name,ac->account,NULL,log_time,NULL);
-            snprintf(buf,sizeof(buf),"==online history===");
+            snprintf(buf,sizeof(buf),"======online history begin======");
             purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
             buf[0]='\0';
         }
@@ -2229,17 +2239,25 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     }
     snprintf(buf,sizeof(buf),"======online history end=======");
     purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
+    snprintf(buf,sizeof(buf),"合并%d条记录",history->total*history->row);
+    purple_notify_info(ac->gc,"消息记录合并",buf,NULL);
     lwqq_historymsg_free(history);
     purple_log_free(log);
 }
 static void download_online_history_continue(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqHistoryMsgList* history)
 {
+    LwqqClient* lc = ev->lc;
+    if(history->total==0){
+        qq_account* ac = lc->data;
+        purple_notify_info(ac->gc,"消息记录合并","合并0条记录",NULL);
+        lwqq_historymsg_free(history);
+        return;
+    }
     history->page--;
     if(history->page==0){
         merge_online_history(ev, b, NULL, history);
         return;
     }
-    LwqqClient* lc = ev->lc;
     LwqqAsyncEvent* event = lwqq_msg_friend_history(lc, b->uin, history);
     lwqq_async_add_event_listener(event, _C_(3p,download_online_history_continue,event,b,history));
 }
@@ -2254,7 +2272,6 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
     history->page = 0;
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
     lwqq_async_add_event_listener(ev,_C_(3p,download_online_history_continue,ev,b,history));
-    //lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,b,NULL,history));
 }
 static void qq_merge_group_history(PurpleChat* chat)
 {
@@ -2289,7 +2306,7 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         act = g_list_append(act,action);
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
-        action = purple_menu_action_new("下载漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
