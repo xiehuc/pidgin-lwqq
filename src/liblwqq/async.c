@@ -157,8 +157,8 @@ void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
     _LwqqAsyncEvsetInternal* _evset = (_LwqqAsyncEvsetInternal*)evset;
     if(!evset) return;
-    if(_evset->ref_count == 0) s_free(evset);
     _evset->cmd = cmd;
+    if(_evset->ref_count == 0) s_free(evset);
 }
 
 LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func)
