@@ -61,7 +61,9 @@ void vp_func_void(VP_CALLBACK func,vp_list* vp,void* q)
 {
     typedef void (*f)(void);
     if( !func ){
-        vp_init(*vp,0);
+        //because malloc(0) make compiler confused
+        //let it as 1,it would freed nature
+        vp_init(*vp,1);
         return ;
     }
     ((f)func)();

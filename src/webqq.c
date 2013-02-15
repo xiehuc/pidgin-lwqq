@@ -676,7 +676,7 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
         if(strstr(pic,"<IMG")==NULL){
         }else{
             char* beg;
-            beg = message->what;
+            //beg = message->what;
             //inplace replace id num with new id;
             while((pic = strstr(pic,"<IMG")) != NULL){
                 int id,new_id = 0;
@@ -705,7 +705,7 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
         }
         newmsg->who = s_strdup(message->who);
         newmsg->when = message->when;
-        pic = newmsg->what;
+        //pic = newmsg->what;
         newlist = g_list_prepend(newlist,newmsg);
         list = list->next;
     }
@@ -713,7 +713,7 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
     list = newlist;
     while(list){
         message = list->data;
-        pic = message->what;
+        //pic = message->what;
         group_message_delay_display(ac, group, message->who, message->what, message->when);
         s_free(message->what);
         s_free(message->who);
@@ -1658,8 +1658,9 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     char* key = g_hash_table_lookup(data,QQ_ROOM_KEY_GID);
     char* type = g_hash_table_lookup(data,QQ_ROOM_TYPE);
     if(key==NULL) return;
-    //we may delete group .so we need query lc directly.
+    //if it is new add group so type is NULL
     if(type == NULL){
+        //we may delete group .so we need query lc directly.
         group = lwqq_group_find_group_by_qqnumber(lc, key);
         if(group==NULL){
             //from now this is a add group query.
@@ -1671,11 +1672,15 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
             return;
         }
     }
-    if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
-        group = lwqq_group_find_group_by_qqnumber(lc,key);
-    else
-        group = lwqq_group_find_group_by_gid(lc,key);
-    if(group == NULL) return;
+    //if above we found there is a group but type is NULL.
+    //so we open the group
+    if(group==NULL){
+        if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
+            group = lwqq_group_find_group_by_qqnumber(lc,key);
+        else
+            group = lwqq_group_find_group_by_gid(lc,key);
+        if(group == NULL) return;
+    }
 
     //this will open chat dialog.
     qq_conv_open(gc,group);

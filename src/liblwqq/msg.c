@@ -294,13 +294,15 @@ static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryM
     lwqq__jump_if_retcode_fail(err);
     if(!result) goto done;
     lwqq__json_parse_child(result,"data",result);
-    if(result->type == JSON_NULL) goto done;
+    if(!result || result->type == JSON_NULL) goto done;
     lwqq__json_parse_child(result,"cl",result);
+    if(!result) goto done;
     result = result->child;
     list->begin = lwqq__json_get_int(result,"bs",0);
     list->end = lwqq__json_get_int(result,"es",0);
     //const char* gid = json_parse_simple_value(result, "g");
     lwqq__json_parse_child(result,"cl",result);
+    if(!result) goto done;
     result = result->child;
     while(result){
         LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_GROUP_MSG);
@@ -1761,7 +1763,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
     char data[8192];
     data[0] = '\0';
     LwqqMsgMessage *mmsg = msg;
-    const char *apistr;
+    const char *apistr = NULL;
     int has_cface = 0;
 
 
@@ -1810,6 +1812,10 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
     }else if(msg->super.super.type == LWQQ_MS_DISCU_MSG){
         format_append(data,"\"did\":\"%s\",",mmsg->discu.did);
         apistr = "send_discu_msg2";
+    }else{
+        //this would never come.
+        assert(0);
+        return;
     }
     format_append(data,
             //"\"face\":0,"

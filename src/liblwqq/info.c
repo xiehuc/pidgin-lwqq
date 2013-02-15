@@ -1363,7 +1363,9 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
                 group->did,lc->clientid,lc->psessionid,time(NULL));
         req = lwqq_http_create_default_request(lc,url,NULL);
         req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002&id=2");
-    }
+    }else
+        //this never come. hotfix compile warnning
+        return NULL;
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,120L);
     ev = req->do_request_async(req, 0, NULL,_C_(3p_i,group_detail_back,req,lc,group));
