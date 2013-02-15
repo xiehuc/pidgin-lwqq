@@ -1,5 +1,5 @@
 /***************************************************************************
- *   copyright (c) 2007 by Rui Maciel   *
+ *   Copyright (C) 2007 by Rui Maciel   *
  *   rui.maciel@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -1134,7 +1134,7 @@ json_format_string (const char *text)
 
 
 char *
-json_escape (char *text)
+json_escape (const char *text)
 {
 	rcstring *output;
 	size_t i, length;
@@ -1200,9 +1200,9 @@ json_escape (char *text)
 
 
 char *
-json_unescape (char *text)
+json_unescape (const char *text)
 {
-	char *result = malloc (strlen (text) + 4);
+	char *result = malloc (strlen (text) + 1);
 	size_t r;		/* read cursor */
 	size_t w;		/* write cursor */
 
@@ -1335,7 +1335,7 @@ json_unescape (char *text)
 					}
 					else
 					{
-						fprintf (stderr, "JSON: unsupported unicode value: 0x%lX\n", (long unsigned int)unicode);
+						fprintf (stderr, "JSON: unsupported unicode value: 0x%lX\n", unicode);
 					}
 				}
 				break;
@@ -1350,8 +1350,6 @@ json_unescape (char *text)
 		}
 	}
 	result[w] = '\0';
-    result[w+1]='\0';
-    result[w+2]='\0';
 
 	return result;
 }
@@ -1372,7 +1370,7 @@ json_jpi_init (struct json_parsing_info *jpi)
 
 
 int
-lexer (char *buffer, char **p, unsigned int *state, rcstring ** text, size_t *line)
+lexer (const char *buffer, const char **p, unsigned int *state, rcstring ** text, size_t *line)
 {
 	assert (buffer != NULL);
 	assert (p != NULL);
@@ -2135,7 +2133,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text, size_t *li
 
 
 enum json_error
-json_parse_fragment (struct json_parsing_info *info, char *buffer)
+json_parse_fragment (struct json_parsing_info *info, const char *buffer)
 {
 	json_t *temp = NULL;
 
@@ -2772,7 +2770,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 
 
 enum json_error
-json_parse_document (json_t ** root, char *text)
+json_parse_document (json_t ** root, const char *text)
 {
 	enum json_error error;
 	struct json_parsing_info *jpi;
@@ -2807,14 +2805,9 @@ json_parse_document (json_t ** root, char *text)
 enum json_error
 json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_functions *jsf, char c)
 {
-	/*TODO handle a string instead of a single char */
-	/* temp variables */
-	//rcstring *temp;
-
 	/* make sure everything is in it's place */
 	assert (jsps != NULL);
 	assert (jsf != NULL);
-	//temp = NULL;
 
 	/* goto where we left off */
 	switch (jsps->state)
@@ -4218,52 +4211,3 @@ json_find_first_label (const json_t * object, const char *text_label)
 	}
 	return cursor;
 }
-
-json_t *json_find_first_label_all (const json_t * json, const char *text_label)
-{
-	json_t *cur, *tmp;
-
-	assert (json != NULL);
-	assert (text_label != NULL);
-	
-	if(json -> text != NULL && strcmp(json -> text, text_label) == 0){
-		return (json_t *)json;
-	}
-
-	for(cur = json -> child; cur != NULL; cur = cur -> next){
-		tmp = json_find_first_label_all(cur, text_label);
-		if(tmp != NULL){
-			return tmp;
-		}
-	}
-	
-	return NULL;
-}
-
-/* ************************************************************ */
-/* Below code written for LWQQ */
-/**
- * Parse value from json object whose value is a simle string
- * Caller dont need to free the returned string.
- * 
- * @param json Json object setup by json_parse_document()
- * @param key the key you want to search
- * 
- * @return Key whose value will be searched
- */
-char *json_parse_simple_value(json_t *json, const char *key)
-{
-    json_t *val;
-
-    if (!json || !key)
-        return NULL;
-    
-    val = json_find_first_label_all(json, key);
-    if (val && val->child && val->child->text) {
-        return val->child->text;
-    }
-    
-    return NULL;
-}
-
-/* ************************************************************ */

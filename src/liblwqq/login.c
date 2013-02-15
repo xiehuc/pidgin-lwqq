@@ -30,6 +30,7 @@
 #include "url.h"
 #include "json.h"
 #include "async.h"
+#include "internal.h"
 
 /* URL for webqq login */
 #define LWQQ_URL_LOGIN_HOST "http://ptlogin2.qq.com"

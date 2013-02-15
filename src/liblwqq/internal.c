@@ -96,3 +96,47 @@ int lwqq__get_retcode_from_str(const char* str)
     if(end == beg) return LWQQ_EC_ERROR;
     return ret;
 }
+
+json_t *json_find_first_label_all (const json_t * json, const char *text_label)
+{
+    json_t *cur, *tmp;
+
+    assert (json != NULL);
+    assert (text_label != NULL);
+
+    if(json -> text != NULL && strcmp(json -> text, text_label) == 0){
+        return (json_t *)json;
+    }
+
+    for(cur = json -> child; cur != NULL; cur = cur -> next){
+        tmp = json_find_first_label_all(cur, text_label);
+        if(tmp != NULL){
+            return tmp;
+        }
+    }
+
+    return NULL;
+}
+/**
+ * Parse value from json object whose value is a simle string
+ * Caller dont need to free the returned string.
+ * 
+ * @param json Json object setup by json_parse_document()
+ * @param key the key you want to search
+ * 
+ * @return Key whose value will be searched
+ */
+char *json_parse_simple_value(json_t *json, const char *key)
+{
+    json_t *val;
+
+    if (!json || !key)
+        return NULL;
+    
+    val = json_find_first_label_all(json, key);
+    if (val && val->child && val->child->text) {
+        return val->child->text;
+    }
+    
+    return NULL;
+}

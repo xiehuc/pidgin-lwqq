@@ -24,6 +24,7 @@
 #include "info.h"
 #include "internal.h"
 #include "util.h"
+#include "json.h"
 
 #define LWQQ_MT_BITS  (~((-1)<<8))
 
@@ -1815,7 +1816,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
     }else{
         //this would never come.
         assert(0);
-        return;
+        return NULL;
     }
     format_append(data,
             //"\"face\":0,"
