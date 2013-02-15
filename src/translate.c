@@ -375,9 +375,11 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
     if(msg->f_style.i==1) strcat(buf,"<i>");
     if(msg->f_style.u==1) strcat(buf,"<u>");
     snprintf(buf+strlen(buf),300,"<font ");
-    if(ac->dark_theme_fix && !strcmp("000000", msg->f_color))
-        snprintf(buf+strlen(buf),300,"color=\"#ffffff\" ");
-    else
+    if(ac->dark_theme_fix ){
+        int c = strtoul(msg->f_color, NULL, 16);
+        int t = (c==0)?0xffffff:(c%256)/2+128+((c/256%256)/2+128)*256+((c/256/256%256)/2+128)*256*256;
+        snprintf(buf+strlen(buf),300,"color=\"#%x\" ",t);
+    }else
         snprintf(buf+strlen(buf),300,"color=\"#%s\" ",msg->f_color);
     if(!ac->disable_custom_font_face&&msg->f_name)
         snprintf(buf+strlen(buf),300,"face=\"%s\" ",msg->f_name);
