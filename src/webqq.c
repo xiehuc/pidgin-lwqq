@@ -137,7 +137,7 @@ static void visit_self_infocenter(PurplePluginAction *action)
 {
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    char url[256];
+    char url[256]={0};
     snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
     system(url);
 }
@@ -200,7 +200,7 @@ static void visit_my_qq_center(PurplePluginAction* action)
 {
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    char buf[1024];
+    char buf[1024]={0};
     snprintf(buf,sizeof(buf),"xdg-open 'http://ptlogin2.qq.com/login?u=2501542492&p=146FA572EB4E2E1251BB197D7125E630&verifycode=!DGM&aid=1006102&u1=http5%%3A%%2F%%2Fid.qq.com%%2Findex.html%23myfriends&h=1&ptredirect=1&ptlang=2052&from_ui=1&dumy=&fp=loginerroralert&action=2-5-10785&mibao_css=&t=1&g=1'");
     //system(buf);
     //qq_remote_call(ac, "http://id.qq.com/#myfriends");
@@ -425,7 +425,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
 }
 static const char* group_name(LwqqGroup* group)
 {
-    static char gname[128];
+    static char gname[128]={0};
     if(group->markname) {
         strncpy(gname,group->markname,sizeof(gname));
     } else 
@@ -488,7 +488,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    char buf[8192];
+    char buf[8192]={0};
     //clean buffer
     strcpy(buf,"");
 
@@ -499,7 +499,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    char buf[512];
+    char buf[512]={0};
     snprintf(buf,sizeof(buf),"您收到一个离线文件: %s\n"
              "到期时间: %s"
              "<a href=\"%s\">点此下载</a>",
@@ -510,7 +510,7 @@ static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    char buf[512];
+    char buf[512]={0};
     const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
     snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
     serv_got_im(pc,serv_id_to_local(ac,notify->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
@@ -577,7 +577,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
 static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
 {
     qq_account* ac = lc->data;
-    char body[1024];
+    char body[1024]={0};
     switch(msg->type){
         case GROUP_CREATE:
             purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
@@ -667,7 +667,7 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
     GList* newlist = NULL;
     PurpleConvMessage* message,* newmsg;
     const char* pic;
-    char buf[6];
+    char buf[6]={0};
     while(list){
         message = list->data;
         newmsg = s_malloc0(sizeof(*newmsg));
@@ -807,8 +807,8 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 
     const char* from = mmsg->super.from;
     const char* gid = mmsg->sess.id;
-    char name[70];
-    static char buf[8192];
+    char name[70]={0};
+    static char buf[8192]={0};
     strcpy(buf,"");
 
     translate_struct_to_message(ac,mmsg,buf);
@@ -834,7 +834,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t)
 {
     PurpleConnection* pc = purple_account_get_connection(ac->account);
-    char name[70];
+    char name[70]={0};
     LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(group,from);
     if(sb == NULL) {
         snprintf(name,sizeof(name),"%s #(broken)# %s",from,group->name);
@@ -877,7 +877,7 @@ static void verify_required_confirm(LwqqClient* lc,char* account,LwqqConfirmTabl
 static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
 {
     qq_account* ac = lwqq_client_userdata(lc);
-    char buf1[256];
+    char buf1[256]={0};
     if(system->type == VERIFY_REQUIRED) {
         LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
         ct->title = s_strdup("好友确认");
@@ -1391,7 +1391,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         qq_sys_msg_write(ac,msg->type,serv_id,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
     }else{
         int err = lwqq_async_event_get_result(ev);
-        static char buf[1024];
+        static char buf[1024]={0};
         PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
         if(conv && err > 0){
@@ -1421,7 +1421,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    char nick[32],gname[32];
+    char nick[32]={0},gname[32]={0};
     const char* pos;
     LwqqMsg* msg;
     LwqqMsgMessage *mmsg;
@@ -1712,7 +1712,7 @@ static gboolean qq_can_receive_file(PurpleConnection* gc,const char* who)
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    char conv_name[70];
+    char conv_name[70]={0};
     if(purple_find_buddy(ac->account,who)!=NULL)
         return NULL;
     else {
@@ -1749,7 +1749,7 @@ static void qq_login(PurpleAccount *account)
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
-    char db_path[64];
+    char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path);
     ac->qq_use_qqnum = ! purple_account_get_bool(account, "disable_qq_cache", FALSE);
@@ -1865,7 +1865,7 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
 
 static void visit_qqzone(LwqqBuddy* buddy)
 {
-    char url[256];
+    char url[256]={0};
     snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
     system(url);
 }
@@ -1878,7 +1878,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
                          purple_account_get_connection(account));
     if(ac->qq_use_qqnum){
         const char* qqnum = purple_buddy_get_name(buddy);
-        char url[256];
+        char url[256]={0};
         snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",qqnum);
         system(url);
         return;
@@ -1903,7 +1903,7 @@ static void qq_send_mail(PurpleBlistNode* n)
 {
     PurpleBuddy* b = PURPLE_BUDDY(n);
     LwqqBuddy* buddy = b->proto_data;
-    char buf[128];
+    char buf[128]={0};
     if(buddy->email) snprintf(buf,sizeof(buf),
             "xdg-open mailto:%s",buddy->email);
     else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
@@ -2002,7 +2002,7 @@ static void qq_visit_qun_air(PurpleBlistNode* node)
     PurpleChat* chat = PURPLE_CHAT(node);
     GHashTable* table = purple_chat_get_components(chat);
     const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_QUN_ID);
-    char url[256];
+    char url[256]={0};
     snprintf(url,sizeof(url),"xdg-open 'http://qun.qq.com/air/%s'",qqnum);
     system(url);
 }
@@ -2174,7 +2174,7 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(ev->result){
-        char buf[64];
+        char buf[64]={0};
         snprintf(buf,sizeof(buf),"错误号:%d",ev->result);
         purple_notify_warning(ac->account,"错误",buf,NULL);
         return ;
@@ -2182,8 +2182,8 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     if(history->total == 0) return ;
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
-    char buf[8192];
-    char name[64];
+    char buf[8192]={0};
+    char name[64]={0};
     int type = b?PURPLE_LOG_IM:PURPLE_LOG_CHAT;
     struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
     info->total = history->total;
@@ -2364,7 +2364,7 @@ static const char* qq_list_emblem(PurpleBuddy* b)
 static void display_user_info(PurpleConnection* gc,LwqqBuddy* b)
 {
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
-    char buf[32];
+    char buf[32]={0};
 #define ADD_STRING(k,v)   purple_notify_user_info_add_pair_plaintext(info,k,v)
 #define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
