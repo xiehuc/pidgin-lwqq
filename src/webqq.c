@@ -2481,11 +2481,11 @@ init_plugin(PurplePlugin *plugin)
     //options = g_list_append(options, option);
     //option = purple_account_option_bool_new("不缓存QQ号","disable_qq_cache",FALSE);
     //options = g_list_append(options, option);
-    option = purple_account_option_bool_new("禁用自定义接收消息字体", "disable_custom_font_face", FALSE);
+    option = purple_account_option_bool_new("忽略接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("禁用自定义接收消息文字大小", "disable_custom_font_size", FALSE);
+    option = purple_account_option_bool_new("忽略接收消息文字大小", "disable_custom_font_size", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("修复暗色系统主题下的消息显示(将黑色文字转为白色)", "dark_theme_fix", FALSE);
+    option = purple_account_option_bool_new("暗色主题下文字加亮", "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
     options = g_list_append(options, option);
