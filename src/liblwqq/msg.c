@@ -522,9 +522,8 @@ static void msg_sys_g_msg_free(LwqqMsg* msg)
 {
     LwqqMsgSysGMsg* gmsg = (LwqqMsgSysGMsg*)msg;
     if(gmsg){
-        if(gmsg->type == GROUP_LEAVE || gmsg->type == GROUP_REQUEST_JOIN_AGREE || gmsg->type == GROUP_REQUEST_JOIN_DENY)
-            if(gmsg->group)
-                lwqq_group_free(gmsg->group);
+        if(gmsg->type == GROUP_LEAVE)
+            lwqq_group_free(gmsg->group);
         s_free(gmsg->gcode);
         s_free(gmsg->group_uin);
         s_free(gmsg->member);
