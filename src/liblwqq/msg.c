@@ -870,10 +870,14 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
 
       group leave
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":51488,"from_uin":1528509098,"to_uin":350512021,"msg_id2":180256,"msg_type":34,"reply_ip":176882139,"type":"group_leave","gcode":2676780935,"t_gcode":249818602,"op_type":2,"old_member":574849996,"t_old_member":""}}]}
+      {"poll_type":"sys_g_msg","value""msg_id":14601,"from_uin":529044675,"to_uin":411927578,"msg_id2":563796,"msg_type":34,"reply_ip":176752044,"type":"group_leave","gcode":423970275,"t_gcode":57128682,"op_type":3,"old_member":1096278260,"t_old_member":"","admin_uin":2738646735,"t_admin_uin":"","admin_nick":"\347\256\241\347\220\206\345\221\230"}}
+
       group request
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":10899,"from_uin":3060007976,"to_uin":350512021,"msg_id2":693883,"msg_type":35,"reply_ip":176752016,"type":"group_request_join","gcode":406247342,"t_gcode":249818602,"request_uin":2297680537,"t_request_uin":"","msg":""}}]}
+
       group request join agree
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":29407,"from_uin":1735178063,"to_uin":2501542492,"msg_id2":28428,"msg_type":36,"reply_ip":176498075,"type":"group_request_join_agree","gcode":3557387121,"t_gcode":249818602,"admin_uin":4005533729,"msg":""}}]}
+
       group request join deny
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":1253,"from_uin":1735178063,"to_uin":2501542492,"msg_id2":93655,"msg_type":37,"reply_ip":176622059,"type":"group_request_join_deny","gcode":3557387121,"t_gcode":249818602,"admin_uin":4005533729,"msg":"123"}}]}
 
@@ -884,6 +888,11 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     msg->gcode = s_strdup(json_parse_simple_value(json,"gcode"));
     msg->account = s_strdup(json_parse_simple_value(json,"t_gcode"));
     int add_new_group = 0;
+    //try to find group in lwqqclient.
+    //it is always well formed when admin receive group message
+    //if it is self receive message .it should be NULL.
+    //and when add_new_group it would be assign to new group .
+    msg->group = lwqq_group_find_group_by_gid(lc,msg->group_uin);
     if(strcmp(type,"group_create")==0)msg->type = GROUP_CREATE;
     else if(strcmp(type,"group_join")==0){
         msg->type = GROUP_JOIN;
@@ -897,7 +906,8 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->type = GROUP_LEAVE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
-        msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
+        msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
+        msg->admin = json_unescape(json_parse_simple_value(json, "admin_nick"));
         msg->is_myself = strcmp(lc->myself->uin,msg->member_uin)==0;
         if(msg->is_myself)
             LIST_REMOVE(msg->group,entries);
@@ -911,14 +921,12 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->type = GROUP_REQUEST_JOIN_AGREE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
-        msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
         add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
     }else if(strcmp(type,"group_request_join_deny")==0){
         msg->type = GROUP_REQUEST_JOIN_DENY;
         msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
-        msg->group = lwqq_group_find_group_by_gid(lc, msg->group_uin);
     }
     else msg->type = GROUP_UNKNOW;
     if(add_new_group){

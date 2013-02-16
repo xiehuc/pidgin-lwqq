@@ -183,7 +183,7 @@ typedef struct LwqqMsgSysGMsg{
     char* admin;
     char* msg;
     int is_myself;                  //<true when group should add or delete
-    LwqqGroup* group;
+    LwqqGroup* group;               //<read group info from this.
 }LwqqMsgSysGMsg;
 typedef struct LwqqMsgBlistChange{
     LwqqMsg super;
