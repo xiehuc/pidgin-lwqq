@@ -899,7 +899,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
-        msg->admin = json_unescape(json_parse_simple_value(json, "admin_nick"));
+        msg->admin = lwqq__json_get_string(json,"admin_nick");
         add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
     }
     else if(strcmp(type,"group_leave")==0){
@@ -907,7 +907,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
         msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
-        msg->admin = json_unescape(json_parse_simple_value(json, "admin_nick"));
+        msg->admin = lwqq__json_get_string(json,"admin_nick");
         msg->is_myself = strcmp(lc->myself->uin,msg->member_uin)==0;
         if(msg->is_myself)
             LIST_REMOVE(msg->group,entries);

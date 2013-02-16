@@ -140,3 +140,8 @@ char *json_parse_simple_value(json_t *json, const char *key)
     
     return NULL;
 }
+char *json_unescape_s(char* str)
+{
+    if(str==NULL) return NULL;
+    return json_unescape(str);
+}
