@@ -522,7 +522,7 @@ static void msg_sys_g_msg_free(LwqqMsg* msg)
 {
     LwqqMsgSysGMsg* gmsg = (LwqqMsgSysGMsg*)msg;
     if(gmsg){
-        if(gmsg->type == GROUP_LEAVE)
+        if(gmsg->type == GROUP_LEAVE && gmsg->is_myself)
             lwqq_group_free(gmsg->group);
         s_free(gmsg->gcode);
         s_free(gmsg->group_uin);
