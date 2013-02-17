@@ -85,6 +85,11 @@ typedef struct LwdbUserDB {
     LwqqBuddy * (*query_buddy_info)(struct LwdbUserDB *db, const char *qqnumber);
     LwqqErrorCode (*update_buddy_info)(struct LwdbUserDB *db, LwqqBuddy *buddy);
 } LwdbUserDB;
+
+typedef enum LwdbUserDBFlags{
+    LWDB_SYNCHRONOUS_OFF = 1,
+    LWDB_SYNCHRONOUS_NORMAL = 1<<2
+} LwdbUserDBFlags;
 /** 
  * Create a user DB object
  * 
@@ -93,7 +98,7 @@ typedef struct LwdbUserDB {
  * @return A new user DB object, or NULL if somethins wrong, and store
  * error code in err
  */
-LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir);
+LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir,int flags);
 
 /** 
  * Free a LwdbUserDB object

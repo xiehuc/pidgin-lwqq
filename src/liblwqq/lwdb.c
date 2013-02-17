@@ -483,7 +483,7 @@ static LwqqErrorCode lwdb_globaldb_update_user_info(
     return LWQQ_EC_OK;
 }
 
-LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir)
+LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir,int flags)
 {
     LwdbUserDB *udb = NULL;
     int ret;
@@ -514,6 +514,16 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir)
     if (!udb->db) {
         goto failed;
     }
+
+    const char* sync="FULL";
+    if(flags&LWDB_SYNCHRONOUS_OFF)
+        sync="OFF";
+    if(flags&LWDB_SYNCHRONOUS_NORMAL)
+        sync="NORMAL";
+    char sql[64];
+    snprintf(sql,sizeof(sql),"PRAGMA synchronous=%s",sync);
+    sws_exec_sql(udb->db, sql, NULL);
+
     udb->query_buddy_info = lwdb_userdb_query_buddy_info;
     udb->update_buddy_info = lwdb_userdb_update_buddy_info;
 
@@ -643,12 +653,10 @@ LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
     if(!db || !buddy ) return -1;
     if(!buddy->qqnumber) return -1;
-    static SwsStmt* stmt = NULL, *stmt2;
+    SwsStmt* stmt = NULL;
 
     sws_query_start(db->db, "INSERT INTO buddies ("
             "qqnumber) VALUES (?);", &stmt, NULL);
-    sws_query_start(db->db, "UPDATE buddies SET "
-            "nick=? , markname=? WHERE qqnumber=?;",&stmt2,NULL);
 
     sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
@@ -868,9 +876,6 @@ void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to)
         }
     }
     sws_query_end(stmt,NULL);
-}
-void lwdb_userdb_query_qqnum(LwdbUserDB* db,LwqqBuddy* buddy)
-{
 }
 void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
 {
