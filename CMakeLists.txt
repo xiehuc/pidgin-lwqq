@@ -33,11 +33,13 @@ if(NLS)
   find_package(Gettext)
 endif(NLS)
 
-option(WITH_LIBEV "build in libev for async process" On)
+#option(WITH_LIBEV "build in libev for async process" On)
 
-if(WITH_LIBEV)
-    find_package(EV REQUIRED)
-endif(WITH_LIBEV)
+#if(WITH_LIBEV)
+find_package(EV REQUIRED)
+#endif(WITH_LIBEV)
+
+option(DB_NOSYNC "Open Sqlite3 NoSync Pragma,for db build without block UI" Off)
 
 if(VERBOSE)
     add_definitions(-DLWQQ_VERBOSE_LEVEL=${VERBOSE})

@@ -1751,7 +1751,11 @@ static void qq_login(PurpleAccount *account)
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
+#ifdef NOSYNC
     ac->db = lwdb_userdb_new(username,db_path,LWDB_SYNCHRONOUS_OFF);
+#else
+    ac->db = lwdb_userdb_new(username,db_path,0);
+#endif
     ac->qq_use_qqnum = ! purple_account_get_bool(account, "disable_qq_cache", FALSE);
     //for empathy
     if(ac->qq_use_qqnum)

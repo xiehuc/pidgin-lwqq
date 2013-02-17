@@ -4,7 +4,6 @@ set(SRC_LIST
   translate.c
   qq_types.c
   ft.c
-  remote.c
   )
 
 set(LWQQ_LIST
@@ -38,13 +37,17 @@ include_directories(
   ${GLIB_INCLUDE_DIRS}
   liblwqq)
 
-if(WITH_LIBEV)
-    add_definitions(-DUSE_LIBEV)
-    include_directories(${EV_INCLUDE_DIRS})
-    target_link_libraries(webqq ${EV_LIBRARIES})
-else(WITH_LIBEV)
-    add_definitions(-DUSE_LIBPURPLE)
-endif(WITH_LIBEV)
+#if(WITH_LIBEV)
+add_definitions(-DUSE_LIBEV)
+include_directories(${EV_INCLUDE_DIRS})
+target_link_libraries(webqq ${EV_LIBRARIES})
+#else(WITH_LIBEV)
+#add_definitions(-DUSE_LIBPURPLE)
+#endif(WITH_LIBEV)
+
+if(DB_NOSYNC)
+    add_definitions(-DNOSYNC)
+endif(DB_NOSYNC)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1 -Wno-unused-function")
 

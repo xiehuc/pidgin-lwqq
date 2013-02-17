@@ -30,10 +30,8 @@ Build Option
 - UOA[=Off] 
 > Ubuntu-Account-Online Support
 
-- WITH_LIBEV[=On]
-> enable libev .  
-  put all http io waiting to libev thread.
-  avoid block main ui thread. so would be smoothly.
+- DB_NOSYNC[=Off]
+> Enable sqlite3 nosync pragma, when first run build db.would not block ui
 
 - VERBOSE[=0]
 > set the verbose level .0 means no verbose,3 means max verbose.
@@ -109,23 +107,17 @@ lwqq 即是 linux webqq 之意
 
 ### 编译选项
 - UOA[=Off] 
-> Ubuntu-Account-Online Support
+> 编译对Ubuntu-Account-Online的支持
 
-- WITH_LIBEV[=On]
-> enable libev .  
-  put all http io waiting to libev thread.
-  avoid block main ui thread. so would be smoothly.
+- DB_NOSYNC[=Off]
+> 开启sqlite3不同步的选项.当第一次运行建立数据库时,能够提供更好的体验不卡ui.
 
-将全部的http io等待放到一个单独的线程中.
-避免卡UI线程.能够提高程序的响应和体验.
+- VERBOSE[=0]
+> 设置输出等级 .0表示没有输出,3表示最大输出.
 
-    cmake .. -DWITH_LIBEV=On
-    make
-    sudo make install
 
 功能列表
 --------
-
 
 ### pidgin
 
