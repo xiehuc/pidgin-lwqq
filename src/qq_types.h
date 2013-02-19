@@ -1,6 +1,5 @@
 #ifndef QQ_TYPES_H_H
 #define QQ_TYPES_H_H
-typedef struct _AsyncListener AsyncListener;
 
 #include <type.h>
 #include <connection.h>
@@ -13,6 +12,7 @@ typedef struct _AsyncListener AsyncListener;
 #define QQ_USE_FAST_INDEX 1
 #define SUCCESS 0
 #define FAILED -1
+#define BUFLEN 15000
 
 #ifdef UNUSED
 #elif defined(__GNUC__)

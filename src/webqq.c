@@ -488,7 +488,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    char buf[8192]={0};
+    char buf[BUFLEN]={0};
     //clean buffer
     strcpy(buf,"");
 
@@ -733,7 +733,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 
     //force open dialog
     qq_conv_open(pc,group);
-    static char buf[8192] ;
+    static char buf[BUFLEN] ;
     strcpy(buf,"");
 
     translate_struct_to_message(ac,msg,buf);
@@ -808,7 +808,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     const char* from = mmsg->super.from;
     const char* gid = mmsg->sess.id;
     char name[70]={0};
-    static char buf[8192]={0};
+    static char buf[BUFLEN]={0};
     strcpy(buf,"");
 
     translate_struct_to_message(ac,mmsg,buf);
@@ -2187,7 +2187,7 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     if(history->total == 0) return ;
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
-    char buf[8192]={0};
+    char buf[BUFLEN]={0};
     char name[64]={0};
     int type = b?PURPLE_LOG_IM:PURPLE_LOG_CHAT;
     struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
