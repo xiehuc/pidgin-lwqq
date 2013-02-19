@@ -1215,6 +1215,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         LwqqClient* lc = list->lc;
         s_free(lc->new_ptwebqq);
         lc->new_ptwebqq = s_strdup(pt);
+        lwqq_verbose(3,"[new ptwebqq:%s]\n",lc->new_ptwebqq);
     }
     if(retcode != WEBQQ_OK) goto done;
 

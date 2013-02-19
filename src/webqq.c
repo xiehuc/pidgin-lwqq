@@ -855,7 +855,8 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
     }else{
         who = status->who;
     }
-    purple_prpl_got_user_status(account,who,status->status,NULL);
+    purple_prpl_got_user_status(account,who,
+            status->client_type==LWQQ_CLIENT_MOBILE?"mobile":status->status,NULL);
 }
 static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
 {
