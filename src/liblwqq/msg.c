@@ -1447,6 +1447,7 @@ static void *start_poll_msg(void *msg_list)
                 break;
             case WEBQQ_NEW_PTVALUE:
                 //just need do some things when relogin
+                lwqq_set_cookie(lc->cookies, "ptwebqq", lc->new_ptwebqq);
                 break;
         }
     }
