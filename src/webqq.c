@@ -870,7 +870,9 @@ static void verify_required_confirm(LwqqClient* lc,char* account,LwqqConfirmTabl
 {
     if(ct->answer == LWQQ_NO)
         lwqq_info_answer_request_friend(lc, account, ct->answer, ct->input);
-    else
+    else if(ct->answer == LWQQ_IGNORE){
+        //ignore it.
+    }else
         lwqq_info_answer_request_friend(lc, account, ct->answer, NULL);
     lwqq_ct_free(ct);
     s_free(account);
