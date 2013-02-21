@@ -897,7 +897,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     else if(strcmp(type,"group_join")==0){
         msg->type = GROUP_JOIN;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
-        msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
+        msg->member = lwqq__json_get_string(json_parse_simple_value(json,"t_new_member"));
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = lwqq__json_get_string(json,"admin_nick");
         add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
@@ -905,7 +905,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     else if(strcmp(type,"group_leave")==0){
         msg->type = GROUP_LEAVE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
-        msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
+        msg->member = lwqq__json_get_string(json_parse_simple_value(json,"t_old_member"));
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = lwqq__json_get_string(json,"admin_nick");
         msg->is_myself = strcmp(lc->myself->uin,msg->member_uin)==0;
@@ -915,18 +915,18 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
     else if(strcmp(type,"group_request_join")==0){
         msg->type = GROUP_REQUEST_JOIN;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"request_uin"));
-        msg->member = json_unescape(json_parse_simple_value(json,"t_request_uin"));
-        msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
+        msg->member = lwqq__json_get_string(json_parse_simple_value(json,"t_request_uin"));
+        msg->msg = lwqq__json_get_string(json_parse_simple_value(json, "msg"));
     }else if(strcmp(type,"group_request_join_agree")==0){
         msg->type = GROUP_REQUEST_JOIN_AGREE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
-        msg->member = json_unescape(json_parse_simple_value(json,"t_new_member"));
+        msg->member = lwqq__json_get_string(json_parse_simple_value(json,"t_new_member"));
         add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
     }else if(strcmp(type,"group_request_join_deny")==0){
         msg->type = GROUP_REQUEST_JOIN_DENY;
-        msg->msg = json_unescape(json_parse_simple_value(json, "msg"));
+        msg->msg = lwqq__json_get_string(json_parse_simple_value(json, "msg"));
         msg->member_uin = s_strdup(json_parse_simple_value(json,"old_member"));
-        msg->member = json_unescape(json_parse_simple_value(json,"t_old_member"));
+        msg->member = lwqq__json_get_string(json_parse_simple_value(json,"t_old_member"));
     }
     else msg->type = GROUP_UNKNOW;
     if(add_new_group){
