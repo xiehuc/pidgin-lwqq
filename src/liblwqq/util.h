@@ -2,6 +2,9 @@
 #define LWQQ_UTIL_H_H
 #include "type.h"
 
+typedef enum {
+    LWQQ_CT_ENABLE_IGNORE = 1<<1
+}LwqqCTFlags;
 
 typedef struct LwqqConfirmTable {
     LwqqAnswer answer;

@@ -1737,6 +1737,9 @@ LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,Lw
                 format_append(post,",\"mname\",\"%s\"",extra);
             strcat(post,"}");
         break;
+        default:
+        return NULL;
+        break;
     }
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Referer","http://s.web2.qq.com/proxy.html?v=20110412001&id=3");

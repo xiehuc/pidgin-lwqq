@@ -554,7 +554,7 @@ static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
 }
 static void request_join_confirm(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqConfirmTable* ct)
 {
-    if(ct->answer != LWQQ_EXTRA_ANSWER)
+    if(ct->answer != LWQQ_IGNORE)
         lwqq_info_answer_request_join_group(lc, msg,ct->answer, ct->input);
     lwqq_ct_free(ct);
     lwqq_msg_free((LwqqMsg*)msg);
@@ -568,7 +568,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
     ct->title = s_strdup("群申请确认");
     ct->body = s_strdup(body);
-    ct->exans_label = s_strdup("忽略");
+    ct->flags = LWQQ_CT_ENABLE_IGNORE;
     ct->input_label = s_strdup("拒绝理由");
     ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
     show_confirm_table(lc,ct);
@@ -886,6 +886,7 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
         ct->body = s_strdup(buf1);
         ct->exans_label = s_strdup("同意并加为好友");
         ct->input_label = s_strdup("拒绝理由");
+        ct->flags = LWQQ_CT_ENABLE_IGNORE;
         ct->cmd = _C_(3p,verify_required_confirm,lc,s_strdup(system->account),ct);
         show_confirm_table(lc, ct);
     } else if(system->type == VERIFY_PASS_ADD) {
@@ -1270,7 +1271,7 @@ static void confirm_table_yes(LwqqConfirmTable* table,PurpleRequestFields* field
 }
 static void confirm_table_no(LwqqConfirmTable* table,PurpleRequestFields* fields)
 {
-    table->answer = LWQQ_NO;
+    table->answer = (table->flags&LWQQ_CT_ENABLE_IGNORE)?LWQQ_IGNORE:LWQQ_NO;
     if(table->input_label){
         const char* i = purple_request_fields_get_string(fields, "input");
         table->input = s_strdup(i);
@@ -1291,11 +1292,12 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     purple_request_field_string_set_editable(str, FALSE);
     purple_request_field_group_add_field(field_group, str);
 
-    if(table->exans_label){
+    if(table->exans_label||table->flags&LWQQ_CT_ENABLE_IGNORE){
         PurpleRequestField* choice = purple_request_field_choice_new("choice", "请选择", 1);
         purple_request_field_choice_add(choice,"拒绝");
         purple_request_field_choice_add(choice,"同意");
-        purple_request_field_choice_add(choice,table->exans_label);
+        if(table->exans_label)
+            purple_request_field_choice_add(choice,table->exans_label);
         purple_request_field_group_add_field(field_group,choice);
     }
 
@@ -1307,7 +1309,7 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     purple_request_fields(ac->gc, NULL,
                           "确认请求", NULL,
                           fields, "确认", G_CALLBACK(confirm_table_yes),
-                          "拒绝", G_CALLBACK(confirm_table_no),
+                          table->flags&LWQQ_CT_ENABLE_IGNORE?"忽略":"拒绝", G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
 }
 static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
