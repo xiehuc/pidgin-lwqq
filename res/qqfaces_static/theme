@@ -32,110 +32,109 @@ Author=root@mdk3.com
 #adjust according to issue 154 
 
 [WebQQ]
-0.png          [FACE_14]		:)      :-)	/微笑	/wx
-1.png          [FACE_1]		:~		/撇嘴	/pz	
-2.png          [FACE_2]		:B		/色		/se
-3.png          [FACE_3]		:|		/发呆	/fd
-4.png          [FACE_4]		8-)		/得意	/dy
-5.png          [FACE_5]		:[		/流泪	/ll
-6.png          [FACE_6]		:$		/含羞	/hx
-7.png          [FACE_7]		:X		/闭嘴	/bz
-8.png          [FACE_8]		:Z		/睡 	/shui
-9.png          [FACE_9]		:'(    :'-(	/大哭	/dk
-10.png         [FACE_10]		:-|		/尴尬	/gg
-11.png         [FACE_11]		:@		/发怒	/fn
-12.png         [FACE_12]		;-)    ;)		:P		/调皮	/tp
-13.png         [FACE_13]		:D     /呲牙	/cy
-14.png         [FACE_0]		:O		/惊讶	/jy
-15.png         [FACE_50]		:-(    :(		/难过	/ng
-16.png         [FACE_51]		8-)		:+		/酷		/kuk 
-17.png         [FACE_96]		--b		/冷汗	/lengh
-18.png         [FACE_53]		:Q		/抓狂	/zk
-19.png         [FACE_54]		:T		/吐		/tuu
-20.png         [FACE_73]		:p		/偷笑	/tx
-21.png         [FACE_74]		:-D		/可爱	/ka
-22.png         [FACE_75]		:d		/白眼	/baiy
-23.png         [FACE_76]		:o		/傲慢	/am
-24.png         [FACE_77]		:g		/饥饿	/jie
-25.png         [FACE_78]		|-)		/困		/kun
-26.png         [FACE_55]		:!		/惊恐	/jk
-27.png         [FACE_56]		:L		/流汗	/lh
-28.png         [FACE_57]		:}		/憨笑	/hx
-29.png         [FACE_58]		:;		/大兵	/dab
-30.png         [FACE_79]		:f		/奋斗	/fendou
-31.png         [FACE_80]		:-S		/咒骂	/zhm
-32.png         [FACE_81]		/?		/yiw	/yiw
-33.png         [FACE_82]		;X		/嘘		/xu
-34.png         [FACE_83]		;@		/晕		/yun
-35.png         [FACE_84]		:8		/折磨	/zhem
-36.png         [FACE_85]		:b		/哀		/shuai
-37.png         [FACE_86]		/!!!	/骷髅	/kl
-38.png         [FACE_87]		/xx		/敲打	/qiao
-39.png         [FACE_88]		/bye	/再见	/zj
-40.png         [FACE_97]		/wipe	/擦汗	/ch
-41.png         [FACE_98]		/dig	/抠鼻	/kb
-42.png         [FACE_99]		/handclap		/鼓掌	/gz
-43.png         [FACE_100]	&-(		/糗大了	/qd
-44.png         [FACE_101]	B-)		/坏笑	/huaix
-45.png         [FACE_102]	[@		/左哼哼	/zhh
-46.png         [FACE_103]	@]		/右哼哼	/yhh
-47.png         [FACE_104]	:-O		/哈欠	/hq
-48.png         [FACE_105]	]-|		/鄙视	/bs
-49.png         [FACE_106]	P-(		/委屈	/wq
-50.png         [FACE_107]	:'|		/快哭了	/kk
-51.png         [FACE_108]	X-)		/阴险	/yx
-52.png         [FACE_109]	:*		/亲亲	/qq
-53.png         [FACE_110]	@x		/吓		/xia
-54.png         [FACE_111]	/8*		/可怜	/kel
-55.png         [FACE_112]	/pd		/菜刀	/cd
-56.png         [FACE_32]		/[w]	/西瓜	/xig
-57.png         [FACE_113]	/beer	/啤酒	/pj
-58.png         [FACE_114]	/basketb		/篮球	/lq
-59.png         [FACE_115]	/oo		/乒乓	/pp
-60.png         [FACE_63]		/coffee			/咖啡	/kf
-61.png         [FACE_64]		/eat	/饭		/fan
-62.png         [FACE_59]		/pig	/猪头	/zt
-63.png         [FACE_33]		/rose	/玫瑰	/mg
-64.png         [FACE_34]		/fade	/凋谢	/dx
-65.png         [FACE_116]	:-*		/示爱	/sa
-66.png         [FACE_36]		/heart	/爱心	/xin
-67.png         [FACE_37]		/break	/心碎	/xs
-68.png         [FACE_38]		/cake	/蛋糕	/dg
-69.png         [FACE_91]		/li		/闪电	/shd
-70.png         [FACE_92]		/bomb	/炸弹	/zhd
-71.png         [FACE_93]		/kn		/刀		/dao
-72.png         [FACE_29]		/footb	/足球	/zq
-73.png         [FACE_117]	/瓢虫	/pch
-74.png         [FACE_72]		/ww		/便便	/bb
-75.png         [FACE_45]		/moon	/月亮	/yl
-76.png         [FACE_42]		/sun	/太阳	/ty
-77.png         [FACE_39]		/gift	/礼物	/lw
-78.png         [FACE_62]		/hug	/拥抱	/yb
-79.png         [FACE_46]		/强		/qiang
-80.png         [FACE_47]		/weak	/弱		/ruo
-81.png         [FACE_71]		/share	/握手	/ws
-82.png         [FACE_95]		/v		/胜利	/shl
-83.png         [FACE_118]	@)		/抱拳	/bq
-84.png         [FACE_119]	/jj		/勾引	/gy
-85.png         [FACE_120]	@@		/拳头	/qt
-86.png         [FACE_121]	/bad	/差劲	/cj
-87.png         [FACE_122]	/loveu	/爱你	/aini
-88.png         [FACE_123]	/NO		/no		/bm
-89.png         [FACE_124]	/OK		/ok		/hd
-90.png         [FACE_27]		/love	/爱情	/aiq
-91.png         [FACE_21]		/[L]	/飞吻	/fw
-92.png         [FACE_23]		/jump	/跳跳	/tiao
-93.png         [FACE_25]		/shake	/发抖	/fad
-94.png         [FACE_26]		/[o]	/怄火	/oh
-95.png         [FACE_125]	/转圈	/zhq
-96.png         [FACE_126]	/磕头	/kt
-97.png         [FACE_127]	/回头	/ht
-98.png         [FACE_128]	/跳绳	/tsh
-99.png         [FACE_129]	/oY		/挥手	/hsh
-100.png        [FACE_130]	#-O		/激动	/jd
-101.png	        [FACE_131]	/街舞	/jw	
-102.png        [FACE_132]	/kiss	/献吻	/xw
-103.png        [FACE_133]	/<&		/左太极	/ztj
-104.png        [FACE_134]	/&>		/右太极	/ytj
-
+0.png          :)    [FACE_14]	 :-)	/微笑	/wx
+1.png          :~	   [FACE_1]		  /撇嘴	/pz	
+2.png          :B	   [FACE_2]		  /色		/se
+3.png          :|	   [FACE_3]		  /发呆	/fd
+4.png          8-)   [FACE_4]		  /得意	/dy
+5.png          :[	   [FACE_5]		  /流泪	/ll
+6.png          :$	   [FACE_6]		  /含羞	/hx
+7.png          :X	   [FACE_7]		  /闭嘴	/bz
+8.png          :Z	   [FACE_8]		  /睡 	/shui
+9.png          :'(   [FACE_9]		:'-(	/大哭	/dk
+10.png         :-|	[FACE_10]	  /尴尬	/gg
+11.png         :@	   [FACE_11]	  /发怒	/fn
+12.png         ;-)   [FACE_12]	;)		:P		/调皮	/tp
+13.png         :D    [FACE_13]	/呲牙	/cy
+14.png         :O	   [FACE_0]		  /惊讶	/jy
+15.png         :-(   [FACE_50]	:(		/难过	/ng
+16.png         8-)	[FACE_51]	  :+		/酷		/kuk 
+17.png         --b	[FACE_96]	  /冷汗	/lengh
+18.png         :Q	    [FACE_53]	  /抓狂	/zk
+19.png         :T	    [FACE_54]	  /吐		/tuu
+20.png         :p	    [FACE_73]	  /偷笑	/tx
+21.png         :-D	[FACE_74]	  /可爱	/ka
+22.png         :d	    [FACE_75]	  /白眼	/baiy
+23.png         :o	    [FACE_76]	  /傲慢	/am
+24.png         :g	    [FACE_77]	  /饥饿	/jie
+25.png         |-)	[FACE_78]	  /困		/kun
+26.png         :!	    [FACE_55]	  /惊恐	/jk
+27.png         :L	    [FACE_56]	  /流汗	/lh
+28.png         :}	    [FACE_57]	  /憨笑	/hx
+29.png         :;	    [FACE_58]	  /大兵	/dab
+30.png         :f	    [FACE_79]	  /奋斗	/fendou
+31.png         :-S	 [FACE_80]	  /咒骂	/zhm
+32.png         /?	    [FACE_81]	  /yiw	/yiw
+33.png         ;X	    [FACE_82]	  /嘘		/xu
+34.png         ;@	    [FACE_83]	  /晕		/yun
+35.png         :8	    [FACE_84]	  /折磨	/zhem
+36.png         :b	    [FACE_85]	  /哀		/shuai
+37.png         /!!!	 [FACE_86]	/骷髅	/kl
+38.png         /xx	 [FACE_87]	  /敲打	/qiao
+39.png         /bye	 [FACE_88]	/再见	/zj
+40.png         /wipe  [FACE_97]	  /擦汗	/ch
+41.png         /dig	 [FACE_98]  /抠鼻	/kb
+42.png         /handclap  [FACE_99]			/鼓掌	/gz
+43.png         &-(	  [FACE_100]	  /糗大了	/qd
+44.png         B-)	  [FACE_101]	  /坏笑	/huaix
+45.png         [@	     [FACE_102]	  /左哼哼	/zhh
+46.png         @]	     [FACE_103]	  /右哼哼	/yhh
+47.png         :-O	  [FACE_104]	  /哈欠	/hq
+48.png         ]-|	  [FACE_105]	  /鄙视	/bs
+49.png         P-(	  [FACE_106]	  /委屈	/wq
+50.png         :'|	  [FACE_107]	  /快哭了	/kk
+51.png         X-)	  [FACE_108]	  /阴险	/yx
+52.png         :*	    [FACE_109]	  /亲亲	/qq
+53.png         @x	    [FACE_110]	  /吓		/xia
+54.png         /8*	[FACE_111]	  /可怜	/kel
+55.png         /pd	 [FACE_112]	  /菜刀	/cd
+56.png         /[w]	 [FACE_32]	/西瓜	/xig
+57.png         /beer  [FACE_113]	  /啤酒	/pj
+58.png         /basketb  [FACE_114]		/篮球	/lq
+59.png         /oo	  [FACE_115]	  /乒乓	/pp
+60.png         /coffee  [FACE_63]				/咖啡	/kf
+61.png         /eat	 [FACE_64]	/饭		/fan
+62.png         /pig	 [FACE_59]	/猪头	/zt
+63.png         /rose  [FACE_33]	  /玫瑰	/mg
+64.png         /fade  [FACE_34]	  /凋谢	/dx
+65.png         :-*	  [FACE_116]	  /示爱	/sa
+66.png         /heart [FACE_36]	  /爱心	/xin
+67.png         /break [FACE_37]	  /心碎	/xs
+68.png         /cake  [FACE_38]	  /蛋糕	/dg
+69.png         /li	  [FACE_91]	  /闪电	/shd
+70.png         /bomb  [FACE_92]	  /炸弹	/zhd
+71.png         /kn	  [FACE_93]	  /刀		/dao
+72.png         /footb [FACE_29]	  /足球	/zq
+73.png         /瓢虫  [FACE_117]	  /pch
+74.png         /ww	  [FACE_72]	  /便便	/bb
+75.png         /moon  [FACE_45]	  /月亮	/yl
+76.png         /sun	 [FACE_42]	/太阳	/ty
+77.png         /gift  [FACE_39]	  /礼物	/lw
+78.png         /hug	 [FACE_62]	/拥抱	/yb
+79.png         /强	  [FACE_46]	  /qiang
+80.png         /weak  [FACE_47]	  /弱		/ruo
+81.png         /share [FACE_71]	  /握手	/ws
+82.png         /v	  [FACE_95]	  /胜利	/shl
+83.png         @)	  [FACE_118]	  /抱拳	/bq
+84.png         /jj	  [FACE_119]	  /勾引	/gy
+85.png         @@	  [FACE_120]	  /拳头	/qt
+86.png         /bad	 [FACE_121]	/差劲	/cj
+87.png         /loveu [FACE_122]	  /爱你	/aini
+88.png         /NO	  [FACE_123]	  /no		/bm
+89.png         /OK	  [FACE_124]	  /ok		/hd
+90.png         /love  [FACE_27]	  /爱情	/aiq
+91.png         /[L]	 [FACE_21]	/飞吻	/fw
+92.png         /jump  [FACE_23]	  /跳跳	/tiao
+93.png         /shake [FACE_25]	  /发抖	/fad
+94.png         /[o]	 [FACE_26]	/怄火	/oh
+95.png         /转圈  [FACE_125]	  /zhq
+96.png         /磕头  [FACE_126]	  /kt
+97.png         /回头  [FACE_127]	  /ht
+98.png         /跳绳  [FACE_128]	  /tsh
+99.png         /oY	  [FACE_129]	  /挥手	/hsh
+100.png        #-O	  [FACE_130]	  /激动	/jd
+101.png	       /街舞   [FACE_131]	  /jw	
+102.png        /kiss  [FACE_132]	  /献吻	/xw
+103.png        /<&	  [FACE_133]	  /左太极	/ztj
+104.png        /&>	  [FACE_134]	  /右太极	/ytj
 

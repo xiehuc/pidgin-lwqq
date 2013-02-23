@@ -593,6 +593,18 @@ void translate_global_free()
 }
 const char* translate_smile(int face)
 {
+    static char buf[64];
+    struct smile_entry* entry = &smile_tables[0];
+    while(entry->id != face&&entry->id!=-1){
+        entry++;
+    }
+    buf[0]=0;
+    if(entry->id!=-1){
+        strncpy(buf,entry->smile[0],sizeof(buf));
+        if(buf[0]=='/') strcat(buf," ");
+    }
+    return buf;
+    /*
 #define SMILE_MAP(face,str) \
     case face:\
     ret=str;\
@@ -623,6 +635,7 @@ const char* translate_smile(int face)
     }
     return ret;
 #undef SMILE_MAP
+*/
 }
 
 void add_smiley(void* data,void* userdata)
