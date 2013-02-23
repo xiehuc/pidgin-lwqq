@@ -2325,8 +2325,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
             act = g_list_append(act,action);
             action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
             act = g_list_append(act,action);
-            action = purple_menu_action_new("下载漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
-            act = g_list_append(act,action);
+            //action = purple_menu_action_new("下载漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
+            //act = g_list_append(act,action);
         }
         if(group){
             if(group->mask == LWQQ_MASK_NONE)
