@@ -1,5 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+
+master (02/24/2013):
+	* release 0.1c
+
 dev (01/30/2013):
 	* new feature: support download chat log
 
