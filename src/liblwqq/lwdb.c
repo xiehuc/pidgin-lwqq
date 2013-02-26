@@ -1016,7 +1016,7 @@ void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last,int day)
     if(!db||last<0) return ;
     char sql[256];
     snprintf(sql,sizeof(sql),"UPDATE buddies SET last_modify=0 WHERE "
-            "qqnumber IN (SELECT qqnumber FROM buddies WHERE"
+            "qqnumber IN (SELECT qqnumber FROM buddies WHERE "
             "julianday('now')-julianday(last_modify)>%d ORDER BY last_modify LIMIT %d);",
             day,last);
     sws_exec_sql(db->db, sql, NULL);
