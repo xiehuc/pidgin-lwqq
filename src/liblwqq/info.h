@@ -89,6 +89,8 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
 
 
 LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group);
+
+LwqqErrorCode lwqq_info_save_avatar(LwqqBuddy* b,LwqqGroup* g,const char* path);
 /** 
  * Get all friends qqnumbers
  * 

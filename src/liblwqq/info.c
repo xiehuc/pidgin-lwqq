@@ -16,6 +16,7 @@
 #include <utime.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "info.h"
 #include "url.h"
@@ -686,12 +687,13 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
     //there have avatar already do not repeat work;
     LwqqErrorCode error;
     int isgroup = group>0;
-    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
+    //const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     const char* uin = (isgroup)?group->code:buddy->uin;
 
     //to avoid chinese character
     //setlocale(LC_TIME,"en_US.utf8");
     //first we try to read from disk
+    /*
     char path[32];
     time_t modify=0;
     if(qqnumber || uin) {
@@ -700,7 +702,7 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
         //we read it last modify date
         stat(path,&st);
         modify = st.st_mtime;
-    }
+    }*/
     //we send request if possible with modify time
     //to reduce download rate
     LwqqHttpRequest* req;
@@ -719,90 +721,70 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
     req->set_header(req,"Host",host);
 
     //we ask server if it indeed need to update
-    if(modify) {
+    /*if(modify) {
         struct tm modify_tm;
         char buf[32];
         strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",localtime_r(&modify,&modify_tm) );
         req->set_header(req,"If-Modified-Since",buf);
-    }
+    }*/
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 0, NULL,_C_(3p_i,get_avatar_back,req,buddy,group));
 }
 static int get_avatar_back(LwqqHttpRequest* req,LwqqBuddy* buddy,LwqqGroup* group)
 {
-    if( req == LWQQ_CALLBACK_FAILED ){
-        return -1;
-    }
+    if(req == NULL)
+        return LWQQ_EC_ERROR;
     int isgroup = (group !=NULL);
-    const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
-    const char* uin = (isgroup)? group->code: buddy->uin;
     char** avatar = (isgroup)?&group->avatar:&buddy->avatar;
     size_t* len = (isgroup)?&group->avatar_len:&buddy->avatar_len;
-    char path[32];
-    int hasfile=0;
-    size_t filesize=0;
-    FILE* f;
-
-    if(qqnumber || uin) {
-        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber?qqnumber:uin);
-        struct stat st = {0};
-        //we read it last modify date
-        hasfile = !stat(path,&st);
-        filesize = st.st_size;
-    }
 
     if((req->http_code!=200 && req->http_code!=304)){
         goto done;
     }
 
-    //ok we need update our cache because 
-    //our cache outdate
-    if(req->http_code != 304) {
-        //we 'move' it instead of copy it
+    if(req->http_code == 200){
         *avatar = req->response;
         *len = req->resp_len;
         req->response = NULL;
         req->resp_len = 0;
-
-        //we cache it to file
-        if(qqnumber || uin ) {
-            f = fopen(path,"w");
-            if(f==NULL) {
-                mkdir(LWQQ_CACHE_DIR,0777);
-                f = fopen(path,"w");
-            }
-
-            fwrite(*avatar,1,*len,f);
-            fclose(f);
-            //we read last modify time from response header
-            struct tm wtm = {0};
-            strptime(req->get_header(req,"Last-Modified"),
-                    "%a, %d %b %Y %H:%M:%S GMT",&wtm);
-            //and write it to file
-            struct utimbuf wutime;
-            wutime.modtime = mktime(&wtm);
-            wutime.actime = wutime.modtime;//it is not important
-            utime(path,&wutime);
-        }
-        lwqq_http_request_free(req);
-        return 0;
     }
-
 done:
-    //failed or we do not need update
-    //we read from file
-    if(hasfile){
-        f = fopen(path,"r");
-        if(f!=NULL){
-            *avatar = s_malloc(filesize);
-            fread(*avatar,1,filesize,f);
-            *len = filesize;
-        }else{
-            perror("打开头像文件失败");
-        }
-    }
     lwqq_http_request_free(req);
-    return 0;
+    return -1;
+}
+LwqqErrorCode lwqq_info_save_avatar(LwqqBuddy* b,LwqqGroup* g,const char* path)
+{
+    char* path_;
+    char* avatar = b?b->avatar:g->avatar;
+    size_t avatar_len = b?b->avatar_len:g->avatar_len;
+    int err = LWQQ_EC_OK;
+    if(avatar_len==0||avatar==NULL) return LWQQ_EC_OK;
+
+    if(path == NULL){
+        char* qqnumber = b?b->qqnumber:g->account;
+        char* uin = b?b->uin:g->gid;
+        char* key = qqnumber?:uin;
+        path_ = s_malloc0(256);
+        snprintf(path_,256,LWQQ_CACHE_DIR"/%s",key);
+    }else
+        path_ = s_strdup(path);
+    FILE* f = fopen(path_,"wb");
+    if(f==NULL&&errno==2){
+        //no such directory or file
+        mkdir(LWQQ_CACHE_DIR,0777);
+        f = fopen(path_,"wb");
+    }
+    if(f==NULL){
+        lwqq_log(LOG_ERROR,"%d:%s\n",errno,strerror(errno));
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
+
+    fwrite(avatar, avatar_len, 1, f);
+    fclose(f);
+done:
+    s_free(path_);
+    return err;
 }
 
 /**
@@ -1380,10 +1362,10 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
         return get_discu_detail_info_back(req,lc,group);
     }
     int ret;
-    int errno = 0;
+    int err = 0;
     json_t *json = NULL, *json_tmp;
     if (req->http_code != 200) {
-        errno = LWQQ_EC_HTTP_ERROR;
+        err = LWQQ_EC_HTTP_ERROR;
         goto done;
     }
 
@@ -1411,7 +1393,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     if (ret != JSON_OK) {
         lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
         //assert(0);
-        errno = LWQQ_EC_ERROR;
+        err = LWQQ_EC_ERROR;
         goto done;
     }
 
@@ -1443,15 +1425,15 @@ done:
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return errno;
+    return err;
 
 json_error:
-    errno = LWQQ_EC_ERROR;
+    err = LWQQ_EC_ERROR;
     /* Free temporary string */
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
-    return errno;
+    return err;
 }
 
 static void parse_discus_info_child(LwqqClient* lc,LwqqGroup* discu,json_t* root)
@@ -1499,12 +1481,12 @@ static void parse_discus_other_child(LwqqClient* lc,LwqqGroup* discu,json_t* roo
 }
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu)
 {
-    int errno = 0;
+    int err = 0;
     int retcode;
     json_t* root = NULL,* json = NULL;
 
     if(req->http_code!=200){
-        errno = 1;
+        err = 1;
         goto done;
     }
     
@@ -1519,7 +1501,7 @@ done:
     if(root)
         json_free_value(&root);
     lwqq_http_request_free(req);
-    return errno;
+    return err;
 }
 
 LwqqAsyncEvent* lwqq_info_get_qqnumber(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* group)
