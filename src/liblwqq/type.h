@@ -114,7 +114,8 @@ typedef enum {
     LWQQ_EC_DB_EXEC_FAIELD = 50,
     LWQQ_EC_DB_CLOSE_FAILED,
     LWQQ_EC_NO_RESULT,
-    LWQQ_EC_TIMEOUT_OVER
+    LWQQ_EC_TIMEOUT_OVER,
+    LWQQ_EC_CANCELED
 } LwqqErrorCode;
 
 /* Struct defination */

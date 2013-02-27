@@ -507,7 +507,23 @@ static void check_multi_info(GLOBAL *g)
             if(ret != 0){
                 lwqq_log(LOG_WARNING,"async retcode:%d\n",ret);
             }
-            if(ret == CURLE_OPERATION_TIMEDOUT){
+            if(ret != CURLE_OK){
+                if(ret == CURLE_ABORTED_BY_CALLBACK){
+                    ev->failcode = LWQQ_CALLBACK_CANCELED;
+                }
+                req->retry --;
+                if(req->retry > 0){
+                    //re add it to libcurl
+                    curl_multi_remove_handle(g->multi, easy);
+                    curl_multi_add_handle(g->multi, easy);
+                    continue;
+                }
+                if(ret == CURLE_OPERATION_TIMEDOUT)
+                    ev->failcode = LWQQ_CALLBACK_TIMEOUT;
+                else
+                    ev->failcode = LWQQ_CALLBACK_FAILED;
+            }
+/*            if(ret == CURLE_OPERATION_TIMEDOUT){
                 req->retry --;
                 if(req->retry == 0){
                     ev->failcode = LWQQ_CALLBACK_TIMEOUT;
@@ -519,7 +535,7 @@ static void check_multi_info(GLOBAL *g)
                 }
             }else if(ret == CURLE_ABORTED_BY_CALLBACK){
                 ev->failcode = LWQQ_CALLBACK_CANCELED;
-            }
+            }*/
 
             curl_multi_remove_handle(g->multi, easy);
             LIST_REMOVE(conn,entries);
@@ -735,8 +751,21 @@ retry:
     }
 
     ret = curl_easy_perform(request->req);
+    if(ret != CURLE_OK){
+        lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
+        if(ret == CURLE_ABORTED_BY_CALLBACK){
+            return LWQQ_EC_CANCELED;
+        }
+        request->retry -- ;
+        if(request->retry > 0){
+            goto retry;
+        }
+        if(ret == CURLE_OPERATION_TIMEDOUT)
+            return LWQQ_EC_TIMEOUT_OVER;
+        else return LWQQ_EC_NETWORK_ERROR;
+    }
     //perduce timeout.
-    if(ret == CURLE_OPERATION_TIMEDOUT ){
+    /*if(ret == CURLE_OPERATION_TIMEDOUT ){
         lwqq_log(LOG_WARNING,"do_request timeout\n");
         request->retry --;
         if(request->retry == 0){
@@ -750,7 +779,7 @@ retry:
     if(ret != CURLE_OK){
         lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
         return ret;
-    }
+    }*/
     request->retry = LWQQ_RETRY_VALUE;
     have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);

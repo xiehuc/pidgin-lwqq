@@ -1432,11 +1432,15 @@ static void *start_poll_msg(void *msg_list)
     lwqq_http_on_progress(req, poll_progress, list);
     while(1) {
         ret = req->do_request(req, 1, msg);
-        if(ret != 0){
+        /*if(ret != 0){
             lwqq_verbose(2,"poll_msg:err:%d\n",ret);
-        }
+        }*/
         if(!lwqq_client_logined(lc)) break;
-        if(ret == LWQQ_EC_TIMEOUT_OVER){
+        /*if(ret == LWQQ_EC_TIMEOUT_OVER){
+            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+            break;
+        }*/
+        if(ret != LWQQ_EC_OK){
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
             break;
         }
