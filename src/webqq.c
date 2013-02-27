@@ -409,13 +409,14 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         else
             purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
     }
-    //download avatar
-    /*
+    //download avatar 
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
-    }*/
+    }
+    //this is avaliable when reload avatar in
+    //login_stage_f
     if(buddy->avatar_len)
         friend_avatar(ac, buddy);
 
@@ -1141,7 +1142,8 @@ static void login_stage_f(LwqqClient* lc)
             if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
         }
-        
+        //because group avatar less changed.
+        //so we dont reload it.
         if(set)
             lwqq_async_add_evset_listener(set, _C_(2p,write_group_to_db,lc,group));
         else
