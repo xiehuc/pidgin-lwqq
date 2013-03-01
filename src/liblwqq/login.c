@@ -350,8 +350,14 @@ static int do_login_back(LwqqHttpRequest* req)
         sscanf(beg,"%[^']",lc->error_description);
         goto done;
     }
+    if(req->response == NULL){
+        lwqq_puts("login no response\n");
+        err = LWQQ_EC_NETWORK_ERROR;
+        goto done;
+    }
 
     response = req->response;
+    lwqq_verbose(3,"%s\n",response);
     char *p = strstr(response, "\'");
     if (!p) {
         err = LWQQ_EC_ERROR;
@@ -644,6 +650,7 @@ void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err)
 
     client->stat = status;
 
+    lwqq_puts("[login stage 1:get webqq version]\n");
     /* First: get webqq version */
     LwqqAsyncEvent* ev = get_version(client, err);
     lwqq_async_add_event_listener(ev,_C_(p,login_stage_2,ev));
