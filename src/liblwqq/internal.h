@@ -3,6 +3,32 @@
 #include "type.h"
 #include "json.h"
 
+#ifndef LWQQ_ENABLE_SSL
+#define LWQQ_ENABLE_SSL 0
+#endif
+
+#if LWQQ_ENABLE_SSL
+//http head
+#define H_ "https://"
+//ssl switcher
+#define SSL_(ssl,normal) ssl
+#else
+
+#define H_ "http://"
+#define SSL_(ssl,normal) normal
+#endif
+//normal ssl switcher
+#define S_(normal) SSL_("ssl.",normal)
+//standard http header+ssl switcher
+#define H_S_ H_ S_("")
+
+
+#define WEBQQ_LOGIN_UI_HOST H_"ui.ptlogin2.qq.com"
+#define WEBQQ_CHECK_HOST H_ S_("check.")"ptlogin2.qq.com"
+#define WEBQQ_LOGIN_HOST H_S_"ptlogin2.qq.com"
+
+#define WEBQQ_VERSION_URL WEBQQ_LOGIN_UI_HOST"/cgi-bin/ver"
+
 struct LwqqStrMapEntry_ {
     const char* str;
     int type;

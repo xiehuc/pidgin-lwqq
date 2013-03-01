@@ -33,15 +33,10 @@
 #include "internal.h"
 
 /* URL for webqq login */
-#define LWQQ_URL_LOGIN_HOST "http://ptlogin2.qq.com"
-#define LWQQ_URL_CHECK_HOST "http://check.ptlogin2.qq.com"
 #define LWQQ_URL_VERIFY_IMG "http://captcha.qq.com/getimage?aid=%s&uin=%s"
-#define VCCHECKPATH "/check"
 #define APPID "1003903"
 #define LWQQ_URL_SET_STATUS "http://d.web2.qq.com/channel/login2"
 
-/* URL for get webqq version */
-#define LWQQ_URL_VERSION "http://ui.ptlogin2.qq.com/cgi-bin/ver"
 
 static LwqqAsyncEvent* set_online_status(LwqqClient *lc,const char *status);
 static int get_version_back(LwqqHttpRequest* req);
@@ -81,8 +76,8 @@ static LwqqAsyncEvent* get_verify_code(LwqqClient *lc,const char* appid)
     char url[512];
     char chkuin[64];
 
-    snprintf(url, sizeof(url), "%s%s?uin=%s&appid=%s", LWQQ_URL_CHECK_HOST,
-             VCCHECKPATH, lc->username, appid);
+    snprintf(url, sizeof(url), WEBQQ_CHECK_HOST"/check?uin=%s&appid=%s",
+             lc->username, appid);
     req = lwqq_http_create_default_request(lc,url,NULL);
     lwqq_verbose(3,"%s\n",url);
     
@@ -319,12 +314,13 @@ static LwqqAsyncEvent* do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *
     char url[1024];
     LwqqHttpRequest *req;
     
-    snprintf(url, sizeof(url), "%s/login?u=%s&p=%s&verifycode=%s&"
+    snprintf(url, sizeof(url), WEBQQ_LOGIN_HOST"/login?"
+            "u=%s&p=%s&verifycode=%s&"
              "webqq_type=%d&remember_uin=1&aid=1003903&login2qq=1&"
              "u1=http%%3A%%2F%%2Fweb.qq.com%%2Floginproxy.html"
              "%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&"
              "ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&"
-             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
+             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1",  lc->username, md5, lc->vc->str,lc->stat);
 
     req = lwqq_http_create_default_request(lc,url, err);
     lwqq_verbose(3,"%s\n",url);
@@ -448,10 +444,10 @@ static LwqqAsyncEvent* get_version(LwqqClient *lc, LwqqErrorCode *err)
 {
     LwqqHttpRequest *req;
 
-    req = lwqq_http_create_default_request(lc,LWQQ_URL_VERSION, err);
+    req = lwqq_http_create_default_request(lc,WEBQQ_VERSION_URL, err);
 
     /* Send request */
-    lwqq_log(LOG_DEBUG, "Get webqq version from %s\n", LWQQ_URL_VERSION);
+    lwqq_log(LOG_DEBUG, "Get webqq version from %s\n", WEBQQ_VERSION_URL);
     return  req->do_request_async(req, 0, NULL,_C_(p_i,get_version_back,req));
 }
 static int get_version_back(LwqqHttpRequest* req)

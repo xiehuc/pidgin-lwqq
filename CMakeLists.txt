@@ -47,6 +47,8 @@ else(VERBOSE)
     add_definitions(-DLWQQ_VERBOSE_LEVEL=0)
 endif(VERBOSE)
 
+option(SSL "Enable SSL Support test" OFF)
+
 add_subdirectory(src)
 add_subdirectory(res)
 
