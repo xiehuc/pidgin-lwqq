@@ -33,9 +33,7 @@
 #include "internal.h"
 
 /* URL for webqq login */
-#define LWQQ_URL_VERIFY_IMG "http://captcha.qq.com/getimage?aid=%s&uin=%s"
 #define APPID "1003903"
-#define LWQQ_URL_SET_STATUS "http://d.web2.qq.com/channel/login2"
 
 
 static LwqqAsyncEvent* set_online_status(LwqqClient *lc,const char *status);
@@ -179,7 +177,7 @@ static LwqqAsyncEvent* get_verify_image(LwqqClient *lc)
     char chkuin[64];
     LwqqErrorCode err;
  
-    snprintf(url, sizeof(url), LWQQ_URL_VERIFY_IMG, APPID, lc->username);
+    snprintf(url, sizeof(url), WEBQQ_CAPTCHA_HOST"/getimage?aid=%s&uin=%s", APPID, lc->username);
     req = lwqq_http_create_default_request(lc,url, &err);
      
     snprintf(chkuin, sizeof(chkuin), "chkuin=%s", lc->username);
@@ -540,11 +538,12 @@ static LwqqAsyncEvent* set_online_status(LwqqClient *lc,const char *status)
     s_free(buf);
 
     /* Create a POST request */
-    req = lwqq_http_create_default_request(lc,LWQQ_URL_SET_STATUS, NULL);
+    req = lwqq_http_create_default_request(lc,WEBQQ_D_HOST"/channel/login2", NULL);
 
+    lwqq_puts("[set online status]\n");
     /* Set header needed by server */
     req->set_header(req, "Cookie2", "$Version=1");
-    req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Referer", WEBQQ_D_REF_URL);
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     
     /* Set http cookie */
@@ -782,8 +781,9 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     re = tv.tv_usec / 1000;
     re += tv.tv_sec;
     
-    snprintf(url, sizeof(url), "%s/channel/logout2?clientid=%s&psessionid=%s&t=%ld",
-             "http://d.web2.qq.com", client->clientid, client->psessionid, re);
+    snprintf(url, sizeof(url), WEBQQ_D_HOST"/channel/logout2"
+            "?clientid=%s&psessionid=%s&t=%ld",
+             client->clientid, client->psessionid, re);
 
     /* Create a GET request */
     req = lwqq_http_create_default_request(client,url, err);
@@ -792,7 +792,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     }
 
     /* Set header needed by server */
-    req->set_header(req, "Referer", "http://ptlogin2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Referer", WEBQQ_LOGIN_REF_URL);
     
     /* Set http cookie */
     req->set_header(req, "Cookie", lwqq_get_cookies(client));

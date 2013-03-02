@@ -8,15 +8,13 @@
 #endif
 
 #if LWQQ_ENABLE_SSL
-//http head
-#define H_ "https://"
 //ssl switcher
 #define SSL_(ssl,normal) ssl
 #else
-
-#define H_ "http://"
 #define SSL_(ssl,normal) normal
 #endif
+
+#define H_ SSL_("https://","http://")
 //normal ssl switcher
 #define S_(normal) SSL_("ssl.",normal)
 //standard http header+ssl switcher
@@ -24,10 +22,16 @@
 
 
 #define WEBQQ_LOGIN_UI_HOST H_"ui.ptlogin2.qq.com"
-#define WEBQQ_CHECK_HOST H_ S_("check.")"ptlogin2.qq.com"
-#define WEBQQ_LOGIN_HOST H_S_"ptlogin2.qq.com"
+#define WEBQQ_CHECK_HOST    H_ S_("check.")"ptlogin2.qq.com"
+#define WEBQQ_LOGIN_HOST    H_S_"ptlogin2.qq.com"
+#define WEBQQ_CAPTCHA_HOST  H_S_"captcha.qq.com"
+#define WEBQQ_D_HOST        H_"d.web2.qq.com"
+#define WEBQQ_S_HOST        H_"s.web2.qq.com"
 
-#define WEBQQ_VERSION_URL WEBQQ_LOGIN_UI_HOST"/cgi-bin/ver"
+#define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/proxy.html"
+#define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/proxy.html"
+#define WEBQQ_LOGIN_REF_URL WEBQQ_LOGIN_HOST"/proxy.html"
+#define WEBQQ_VERSION_URL   WEBQQ_LOGIN_UI_HOST"/cgi-bin/ver"
 
 struct LwqqStrMapEntry_ {
     const char* str;
