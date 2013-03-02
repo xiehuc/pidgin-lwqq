@@ -596,13 +596,13 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     create_post_data(lc, msg, sizeof(msg));
 
     /* Create a POST request */
-    char url[512];
-    snprintf(url, sizeof(url), "%s/api/get_user_friends2", "http://s.web2.qq.com");
+    const char* url = WEBQQ_S_HOST"/api/get_user_friends2";
     req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto done;
     }
-    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
+    lwqq_verbose(3,"%s\n",url);
+    req->set_header(req, "Referer", WEBQQ_S_REF_URL);
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
@@ -907,14 +907,13 @@ LwqqAsyncEvent* lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err
 {
 
     char msg[256];
-    char url[512];
     LwqqHttpRequest *req = NULL;
 
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
     create_post_data(lc, msg, sizeof(msg));
 
     /* Create a POST request */
-    snprintf(url, sizeof(url), "%s/api/get_group_name_list_mask2", "http://s.web2.qq.com");
+    const char* url =  WEBQQ_S_HOST"/api/get_group_name_list_mask2";
     req = lwqq_http_create_default_request(lc,url, err);
     if (!req) {
         goto done;
@@ -1546,10 +1545,10 @@ LwqqAsyncEvent* lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *budd
 
     /* Create a GET request */
     snprintf(url, sizeof(url),
-             "%s/api/get_friend_info2?tuin=%s&verifysession=&code=&vfwebqq=%s",
-             "http://s.web2.qq.com", buddy->uin, lc->vfwebqq);
+             WEBQQ_S_HOST"/api/get_friend_info2?tuin=%s&verifysession=&code=&vfwebqq=%s",
+             buddy->uin, lc->vfwebqq);
     req = lwqq_http_create_default_request(lc,url, NULL);
-    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Referer", WEBQQ_S_REF_URL);
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
@@ -2070,7 +2069,7 @@ LwqqAsyncEvent* lwqq_info_get_single_long_nick(LwqqClient* lc,LwqqBuddy* buddy)
     if(!lc||!buddy||!buddy->uin) return NULL;
     char url[512];
 
-    snprintf(url,sizeof(url),"http://s.web2.qq.com/api/get_single_long_nick2?tuin=%s&vfwebqq=%s&t=%ld",
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_single_long_nick2?tuin=%s&vfwebqq=%s&t=%ld",
             buddy->uin,lc->vfwebqq,time(NULL));
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);

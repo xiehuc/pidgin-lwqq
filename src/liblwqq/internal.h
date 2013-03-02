@@ -26,7 +26,7 @@
 #define WEBQQ_LOGIN_HOST    H_S_"ptlogin2.qq.com"
 #define WEBQQ_CAPTCHA_HOST  H_S_"captcha.qq.com"
 #define WEBQQ_D_HOST        H_"d.web2.qq.com"
-#define WEBQQ_S_HOST        H_"s.web2.qq.com"
+#define WEBQQ_S_HOST        "http://s.web2.qq.com"
 
 #define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/proxy.html"
 #define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/proxy.html"
