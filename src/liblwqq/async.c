@@ -218,6 +218,7 @@ static void build_global_loop()
 static void *ev_run_thread(void* data)
 {
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    //signal(SIGPIPE,SIG_IGN);
     while(1){
         ev_thread_status = THREAD_NOW_RUNNING;
         ev_run(ev_default,0);

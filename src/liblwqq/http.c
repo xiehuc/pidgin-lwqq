@@ -844,9 +844,9 @@ void lwqq_http_global_init()
 {
     if(global.multi==NULL){
         curl_global_init(CURL_GLOBAL_ALL);
-#if LWQQ_ENABLE_SSL
-        signal(SIGPIPE,SIG_IGN);
-#endif
+//#if LWQQ_ENABLE_SSL
+        //signal(SIGPIPE,SIG_IGN);
+//#endif
         global.multi = curl_multi_init();
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETFUNCTION,sock_cb);
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
