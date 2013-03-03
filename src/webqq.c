@@ -401,7 +401,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     buddy->data = bu;
     if(purple_buddy_get_group(bu)!=group) 
         purple_blist_add_buddy(bu,NULL,group,NULL);
-    if(!bu->alias || strcmp(bu->alias,disp) )
+    if(!bu->alias || strcmp(bu->alias,disp)!=0 )
         purple_blist_alias_buddy(bu,disp);
     if(buddy->stat){
         if(buddy->long_nick)

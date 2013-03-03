@@ -843,6 +843,10 @@ static void share_unlock(CURL* handle,curl_lock_data data,void* userptr)
 void lwqq_http_global_init()
 {
     if(global.multi==NULL){
+        curl_global_init(CURL_GLOBAL_ALL);
+#if LWQQ_ENABLE_SSL
+        signal(SIGPIPE,SIG_IGN);
+#endif
         global.multi = curl_multi_init();
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETFUNCTION,sock_cb);
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
@@ -902,6 +906,7 @@ void lwqq_http_global_free()
         close(global.pipe_fd[1]);
         lwqq_async_timer_stop(&global.timer_event);
         memset(&global.timer_event,sizeof(LwqqAsyncTimer),0);
+        curl_global_cleanup();
     }
     if(global.share){
         curl_share_cleanup(global.share);
