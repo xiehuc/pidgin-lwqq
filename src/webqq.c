@@ -2194,12 +2194,11 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     LwqqRecvMsg* recv;
     LwqqMsgMessage* msg;
     char buf[BUFLEN]={0};
-    char name[64]={0};
+    const char* name = b?b->qqnumber:g->account;
     int type = b?PURPLE_LOG_IM:PURPLE_LOG_CHAT;
     struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
     info->total = history->total;
     info->page = history->page;
-    b!=NULL?snprintf(name,sizeof(name),"%s",b->qqnumber):snprintf(name,sizeof(name),"%s.chat",g->account);
 
     recv = TAILQ_FIRST(&history->msg_list);
     msg = (LwqqMsgMessage*)recv->msg;
@@ -2218,9 +2217,11 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     PurpleLog* log = purple_log_new(type,name,ac->account,NULL,log_time,NULL);
     const char* another = b?(b->markname?:b->nick):NULL;
     const char* me = ac->account->alias;
+    int count = 0;
     snprintf(buf,sizeof(buf),"======online history begin=======");
     purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
     TAILQ_FOREACH(recv,&history->msg_list,entries){
+        count++;
         //clear buf.
         buf[0]='\0';
         msg = (LwqqMsgMessage*)recv->msg;
@@ -2250,45 +2251,99 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     }
     snprintf(buf,sizeof(buf),"======online history end=======");
     purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
-    snprintf(buf,sizeof(buf),"合并%d条记录",history->total*history->row);
+    snprintf(buf,sizeof(buf),"合并%d条记录",count);
     purple_notify_info(ac->gc,"消息记录合并",buf,NULL);
     lwqq_historymsg_free(history);
     purple_log_free(log);
 }
-static void download_online_history_continue(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqHistoryMsgList* history)
+static void download_online_history_continue(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,LwqqHistoryMsgList* history)
 {
     LwqqClient* lc = ev->lc;
-    if(history->total==0){
+    if((b&&history->total==0)||(g&&history->end == -1)){
         qq_account* ac = lc->data;
+        if(TAILQ_EMPTY(&history->msg_list)){
         purple_notify_info(ac->gc,"消息记录合并","合并0条记录",NULL);
         lwqq_historymsg_free(history);
+        }else{
+            merge_online_history(ev,NULL,g,history);
+        }
         return;
     }
-    history->page--;
-    if(history->page==0){
-        merge_online_history(ev, b, NULL, history);
-        return;
+    LwqqAsyncEvent* event;
+    if(b){
+        history->page--;
+        if(history->page==0){
+            merge_online_history(ev, b, NULL, history);
+            return;
+        }
+        event = lwqq_msg_friend_history(lc, b->uin, history);
+    }else{
+        history->begin-=60;
+        history->end-=60;
+        history->reserve--;
+        if(history->reserve==0){
+            merge_online_history(ev,NULL,g,history);
+            return;
+        }
+        event = lwqq_msg_group_history(lc, g, history);
+
     }
-    LwqqAsyncEvent* event = lwqq_msg_friend_history(lc, b->uin, history);
-    lwqq_async_add_event_listener(event, _C_(3p,download_online_history_continue,event,b,history));
+    lwqq_async_add_event_listener(event, _C_(4p,download_online_history_continue,event,b,g,history));
+}
+static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_account* ac)
+{
+    LwqqClient* lc = ac->qq;
+    if(ct->answer == LWQQ_YES){
+        char* end;
+        int day = strtoul(ct->input,&end,10);
+        if(end == ct->input){
+            purple_notify_warning(ac->account,"错误","输入不合法",NULL);
+        }else{
+            LwqqHistoryMsgList* history = lwqq_historymsg_list();
+            history->row = 60;
+            history->begin = history->end = 0;
+            history->reserve = day;
+            LwqqAsyncEvent* ev = lwqq_msg_group_history(lc, g, history);
+            if(LIST_EMPTY(&g->members)){
+                LwqqAsyncEvset* set = lwqq_async_evset_new();
+                lwqq_async_evset_add_event(set, ev);
+                ev = lwqq_info_get_group_detail_info(lc, g, NULL);
+                lwqq_async_evset_add_event(set, ev);
+                lwqq_async_add_evset_listener(set, 
+                        _C_(4p,download_online_history_continue,ev,NULL,g,history));
+            }else
+                lwqq_async_add_event_listener(ev, 
+                        _C_(4p,download_online_history_continue,ev,NULL,g,history));
+        }
+    }
+    lwqq_ct_free(ct);
 }
 static void qq_merge_online_history(PurpleBuddy* buddy)
 {
     qq_account* ac = buddy->account->gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
-    //struct qq_extra_info* info = get_extra_info(lc, b->uin);
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     history->row = 60;
     history->page = 0;
     LwqqAsyncEvent* ev = lwqq_msg_friend_history(lc, b->uin, history);
-    lwqq_async_add_event_listener(ev,_C_(3p,download_online_history_continue,ev,b,history));
+    lwqq_async_add_event_listener(ev,
+            _C_(4p,download_online_history_continue,ev,b,NULL,history));
 }
 static void qq_merge_group_history(PurpleChat* chat)
 {
     qq_account* ac = chat->account->gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqGroup* g = find_group_by_chat(chat);
+    if(g == NULL) return;
+
+    LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+    ct->title = s_strdup("希望合并多少页的记录");
+    ct->body = s_strdup("每页有60条记录");
+    ct->input_label = s_strdup("页数");
+    ct->cmd = _C_(3p,download_online_history_begin,g,ct,ac);
+    show_confirm_table(lc, ct);
+    /*
     struct qq_extra_info* info = get_extra_info(lc, g->gid);
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     history->row = 60;
@@ -2303,6 +2358,7 @@ static void qq_merge_group_history(PurpleChat* chat)
         lwqq_async_add_evset_listener(set, _C_(4p,merge_online_history,ev,NULL,g,history));
     }else
         lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,NULL,g,history));
+        */
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
@@ -2327,8 +2383,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
             act = g_list_append(act,action);
             action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
             act = g_list_append(act,action);
-            //action = purple_menu_action_new("下载漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
-            //act = g_list_append(act,action);
+            action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
+            act = g_list_append(act,action);
         }
         if(group){
             if(group->mask == LWQQ_MASK_NONE)

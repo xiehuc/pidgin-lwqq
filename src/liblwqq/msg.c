@@ -286,7 +286,11 @@ done:
 static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryMsgList* list)
 {
     //{"retcode":0,"result":{"time":1359526607,"data":{"cl":[{"g":249818602,"cl":[{"u":2501542492,"t":1359449452,"il":[{"v":"1231\n【提示：此用户正在使用Q+ Web：http://web2.qq.com/】","t":0}]}
-
+#define SET_ERR {\
+        list->begin = list->end = -1;\
+        err = LWQQ_EC_NO_RESULT;\
+        goto done;\
+    }
     int err = 0;
     json_t* root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
@@ -295,15 +299,15 @@ static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryM
     lwqq__jump_if_retcode_fail(err);
     if(!result) goto done;
     lwqq__json_parse_child(result,"data",result);
-    if(!result || result->type == JSON_NULL) goto done;
+    if(!result || result->type == JSON_NULL) SET_ERR;
     lwqq__json_parse_child(result,"cl",result);
-    if(!result) goto done;
+    if(!result) SET_ERR;
     result = result->child;
     list->begin = lwqq__json_get_int(result,"bs",0);
     list->end = lwqq__json_get_int(result,"es",0);
     //const char* gid = json_parse_simple_value(result, "g");
     lwqq__json_parse_child(result,"cl",result);
-    if(!result) goto done;
+    if(!result) SET_ERR;
     result = result->child;
     while(result){
         LwqqMsgMessage* msg = (LwqqMsgMessage*)lwqq_msg_new(LWQQ_MS_GROUP_MSG);
@@ -324,6 +328,7 @@ static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryM
 done:
     lwqq__clean_json_and_req(root,req);
     return err;
+#undef SET_ERR
 }
 /**
  * Create a new LwqqRecvMsgList object

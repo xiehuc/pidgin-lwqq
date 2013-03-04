@@ -321,6 +321,7 @@ typedef struct LwqqHistoryMsgList {
     short total;
     short end;
     };
+    long reserve;       //<can store other data or a pointer.
     TAILQ_HEAD(,LwqqRecvMsg) msg_list;
 } LwqqHistoryMsgList;
 
