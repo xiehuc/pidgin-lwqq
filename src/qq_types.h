@@ -43,10 +43,6 @@
 typedef struct {
     enum {NODE_IS_BUDDY,NODE_IS_GROUP} type;
     const void* node;
-    struct qq_extra_info{
-        short page;
-        short total;
-    }info;
 }index_node;
 
 typedef struct qq_account {
@@ -71,6 +67,8 @@ typedef struct qq_account {
     gboolean disable_custom_font_size;
     gboolean dark_theme_fix;
     gboolean debug_file_send;
+    gboolean remove_duplicated_msg;
+    gboolean dont_expected_100_continue;
     };
 #if QQ_USE_FAST_INDEX
     struct{

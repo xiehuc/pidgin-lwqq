@@ -428,6 +428,10 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 const char* lwqq_status_to_str(LwqqStatus status);
 LwqqStatus lwqq_status_from_str(const char* str);
 
+//long time
+#define LTIME lwqq_time()
+unsigned long long lwqq_time();
+
 
 
 #endif  /* LWQQ_TYPE_H */

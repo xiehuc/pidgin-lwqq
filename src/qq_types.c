@@ -273,6 +273,7 @@ struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin)
     qq_account* ac = lwqq_client_userdata(lc);
     index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
     if(node == NULL) return NULL;
-    return &node->info;
+    //return &node->info;
+    return NULL;
 #endif
 }

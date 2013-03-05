@@ -29,7 +29,7 @@
 #define LWQQ_MT_BITS  (~((-1)<<8))
 
 static void *start_poll_msg(void *msg_list);
-static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
+static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list,int flags);
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list);
 static json_t *get_result_json_object(json_t *json);
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
@@ -41,12 +41,14 @@ static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 
-typedef struct LwqqRecvMsgListInternal {
+typedef struct LwqqRecvMsgList_{
     struct LwqqRecvMsgList parent;
-    LwqqAsyncTimer tip_loop;
+    //LwqqAsyncTimer tip_loop;
+    int flags;
+    int last_id2;
     pthread_t tid;
     int on_quit;
-} LwqqRecvMsgListInternal;
+} LwqqRecvMsgList_;
 #define RET_INSERT_MSG 0
 #define RET_DELAY_INS 1
 #define RET_BAD_MSG -1
@@ -339,18 +341,19 @@ done:
  */
 LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
 {
-    LwqqRecvMsgList *list;
+    LwqqRecvMsgList_ *list;
 
-    list = s_malloc0(sizeof(LwqqRecvMsgListInternal));
-    list->count = 0;
-    list->poll_flags = POLL_AUTO_REQUEST_PIC&POLL_AUTO_REQUEST_CFACE;
-    list->lc = client;
-    pthread_mutex_init(&list->mutex, NULL);
-    TAILQ_INIT(&list->head);
-    list->poll_msg = lwqq_recvmsg_poll_msg;
-    list->poll_close = lwqq_recvmsg_poll_close;
+    list = s_malloc0(sizeof(LwqqRecvMsgList_));
+    list->parent.count = 0;
+    list->flags = POLL_AUTO_REQUEST_PIC&POLL_AUTO_REQUEST_CFACE;
+    list->last_id2 = 0;
+    list->parent.lc = client;
+    pthread_mutex_init(&list->parent.mutex, NULL);
+    TAILQ_INIT(&list->parent.head);
+    list->parent.poll_msg = lwqq_recvmsg_poll_msg;
+    list->parent.poll_close = lwqq_recvmsg_poll_close;
     
-    return list;
+    return (LwqqRecvMsgList*)list;
 }
 LwqqHistoryMsgList *lwqq_historymsg_list()
 {
@@ -1322,6 +1325,7 @@ done:
 
 static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
 {
+    LwqqRecvMsgList_* msg_list = (LwqqRecvMsgList_*)list;
     LwqqRecvMsg *rmsg = s_malloc0(sizeof(*rmsg));
     rmsg->msg = msg;
     LwqqRecvMsg *iter;
@@ -1331,24 +1335,36 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg)
     if((msg->type & LWQQ_MT_BITS) ==  LWQQ_MT_MESSAGE){
         int id2 = ((LwqqMsgSeq*)msg)->msg_id2;
         int inserted = 0;
-        TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
-            if((iter->msg->type&LWQQ_MT_BITS)!=LWQQ_MT_MESSAGE)
-                continue;
-            LwqqMsgSeq* iter_msg = (LwqqMsgSeq*)iter->msg;
-            if(iter_msg->msg_id2<id2){
-                TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
-                inserted = 1;
-                break;
-            }else if(iter_msg->msg_id2==id2){
-                //this is duplicated message. we destroy it.
-                inserted = 1;
-                lwqq_msg_free(msg);
-                break;
+        if(msg_list->last_id2 == id2 && msg_list->flags & POLL_REMOVE_DUPLICATED_MSG){
+            s_free(rmsg);
+            lwqq_msg_free(msg);
+            inserted = 1;
+        }else{
+            TAILQ_FOREACH_REVERSE(iter,&list->head,RecvMsgListHead,entries){
+                if((iter->msg->type&LWQQ_MT_BITS)!=LWQQ_MT_MESSAGE)
+                    continue;
+                LwqqMsgSeq* iter_msg = (LwqqMsgSeq*)iter->msg;
+                if(iter_msg->msg_id2<id2){
+                    TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
+                    inserted = 1;
+                    break;
+                }else if(iter_msg->msg_id2==id2){
+                    //this is duplicated message. we destroy it.
+                    if(msg_list->flags & POLL_REMOVE_DUPLICATED_MSG){
+                        s_free(rmsg);
+                        lwqq_msg_free(msg);
+                    }else{
+                        TAILQ_INSERT_AFTER(&list->head,iter,rmsg,entries);
+                    }
+                    inserted = 1;
+                    break;
+                }
             }
         }
         if(!inserted){
             TAILQ_INSERT_HEAD(&list->head,rmsg,entries);
         }
+        msg_list->last_id2 = id2;
     }else{
         TAILQ_INSERT_TAIL(&list->head, rmsg, entries);
     }
@@ -1387,7 +1403,7 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
 
 static int poll_progress(void * data,size_t now,size_t total)
 {
-    LwqqRecvMsgListInternal* list = data;
+    LwqqRecvMsgList_* list = data;
     return list->on_quit;
 }
 /**
@@ -1483,10 +1499,11 @@ failed:
 #endif
 }
 
-static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
+static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list,int flags)
 {
+    LwqqRecvMsgList_* internal = (LwqqRecvMsgList_*)list;
+    internal->flags = flags;
 #if USE_MSG_THREAD
-    LwqqRecvMsgListInternal* internal = (LwqqRecvMsgListInternal*)list;
 
     pthread_create(&internal->tid, NULL/*&list->attr*/, start_poll_msg, list);
 #else
@@ -1497,7 +1514,7 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list)
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
 {
     if(!list) return;
-    LwqqRecvMsgListInternal* internal = (LwqqRecvMsgListInternal*)list;
+    LwqqRecvMsgList_* internal = (LwqqRecvMsgList_*)list;
     if(internal->tid == 0) return;
     internal->on_quit = 1;
     pthread_join(internal->tid,NULL);
@@ -2034,10 +2051,10 @@ LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file)
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file)
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,int flags)
 {
     char url[512];
-    snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",time(NULL));
+    snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%llu",LTIME);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://web2.qq.com/");
@@ -2046,7 +2063,8 @@ LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file
 
     //some server didn't response this.
     //such as cache server
-    req->set_header(req,"Expect","");
+    if(flags & DONT_EXPECTED_100_CONTINUE)
+        req->set_header(req,"Expect","");
 
     if(LWQQ_VERBOSE_LEVEL>=4)
         lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1L);

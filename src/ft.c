@@ -128,7 +128,9 @@ static void upload_offline_file_init(PurpleXfer* xfer)
             xfer->local_filename, lc->myself->uin, purple_xfer_get_remote_user(xfer));
     xfer->start_time = time(NULL);
     xfer->data = file;
-    LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file);
+    int flags = 0;
+    if(ac->dont_expected_100_continue) flags |= DONT_EXPECTED_100_CONTINUE;
+    LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file,flags);
     lwqq_async_add_event_listener(ev,_C_(2p,send_file,ev,xfer));
     LwqqHttpRequest* req = lwqq_async_event_get_conn(ev);
     lwqq_http_on_progress(req, file_trans_on_progress, xfer);

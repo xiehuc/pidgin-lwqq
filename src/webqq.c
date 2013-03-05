@@ -1160,8 +1160,11 @@ static void login_stage_f(LwqqClient* lc)
     }
 
     ac->state = LOAD_COMPLETED;
+    int flags = 0;
+    if(ac->remove_duplicated_msg)
+        flags |= POLL_REMOVE_DUPLICATED_MSG;
 
-    lc->msg_list->poll_msg(lc->msg_list);
+    lc->msg_list->poll_msg(lc->msg_list,flags);
 }
 
 static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
@@ -1756,6 +1759,8 @@ static void qq_login(PurpleAccount *account)
     ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
     ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
+    ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
+    ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
 #ifdef NOSYNC
@@ -2196,9 +2201,6 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     char buf[BUFLEN]={0};
     const char* name = b?b->qqnumber:g->account;
     int type = b?PURPLE_LOG_IM:PURPLE_LOG_CHAT;
-    struct qq_extra_info* info = get_extra_info(ac->qq, b?b->uin:g->gid);
-    info->total = history->total;
-    info->page = history->page;
 
     recv = TAILQ_FIRST(&history->msg_list);
     msg = (LwqqMsgMessage*)recv->msg;
@@ -2555,6 +2557,10 @@ init_plugin(PurplePlugin *plugin)
     option = purple_account_option_bool_new("暗色主题下文字加亮", "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("消息去重","remove_duplicated_msg",FALSE);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
     webqq_prpl_info.protocol_options = options;
 
