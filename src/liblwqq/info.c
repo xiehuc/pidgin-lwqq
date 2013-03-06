@@ -1339,7 +1339,7 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
     }else if(group->type == LWQQ_GROUP_DISCU){
 
         snprintf(url,sizeof(url),
-                WEBQQ_D_HOST"channel/get_discu_info?"
+                WEBQQ_D_HOST"/channel/get_discu_info?"
                 "did=%s&clientid=%s&psessionid=%s&t=%ld",
                 group->did,lc->clientid,lc->psessionid,time(NULL));
         req = lwqq_http_create_default_request(lc,url,NULL);
