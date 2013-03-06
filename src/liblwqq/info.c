@@ -185,11 +185,6 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
 #undef SET_BUDDY_INFO
 }
 
-static void parse_account(json_t* json,char** account)
-{
-    //{"uiuin":"","account":1154230227,"uin":2379149875}
-    *account = s_strdup(json_parse_simple_value(json, "account"));
-}
 static void parse_and_do_set_status(json_t* cur,LwqqClient* lc)
 {
     //{"uin":1100872453,"status":"online","client_type":21}
@@ -281,17 +276,13 @@ static int process_qqnumber(LwqqHttpRequest* req,LwqqBuddy* b,LwqqGroup* g)
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
     result = lwqq__parse_retcode_result(root, &err);
-    char* account = NULL;
     if(result){
-        parse_account(result, &account);
-        if(b&&account) {
+        char* account = lwqq__json_get_value(result,"account");
+        if(b&&account)
             s_free(b->qqnumber);b->qqnumber = account;
-        }
-        if(g&&account){
-            parse_account(result,&g->account);
-        }
+        if(g&&account)
+            s_free(g->account);g->account = account;
     }
-
 done:
     lwqq__clean_json_and_req(root,req);
     return err;
