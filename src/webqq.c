@@ -200,14 +200,15 @@ static void visit_my_qq_center(PurplePluginAction* action)
 {
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    char buf[1024]={0};
-    snprintf(buf,sizeof(buf),"xdg-open 'http://ptlogin2.qq.com/login?u=2501542492&p=146FA572EB4E2E1251BB197D7125E630&verifycode=!DGM&aid=1006102&u1=http5%%3A%%2F%%2Fid.qq.com%%2Findex.html%23myfriends&h=1&ptredirect=1&ptlang=2052&from_ui=1&dumy=&fp=loginerroralert&action=2-5-10785&mibao_css=&t=1&g=1'");
+    //char buf[1024]={0};
+    //snprintf(buf,sizeof(buf),"xdg-open 'http://ptlogin2.qq.com/login?u=2501542492&p=146FA572EB4E2E1251BB197D7125E630&verifycode=!DGM&aid=1006102&u1=http5%%3A%%2F%%2Fid.qq.com%%2Findex.html%23myfriends&h=1&ptredirect=1&ptlang=2052&from_ui=1&dumy=&fp=loginerroralert&action=2-5-10785&mibao_css=&t=1&g=1'");
+    char* test = NULL;
+    lwqq_service_login(ac->qq, "", test);
     //system(buf);
     //qq_remote_call(ac, "http://id.qq.com/#myfriends");
-    LwqqString str;
-    lwqq_fill_url(ac->qq, "", &str);
-    snprintf(buf,sizeof(buf),"xdg-open '%s'",str.str);
-    system(buf);
+    //LwqqString str;
+    //snprintf(buf,sizeof(buf),"xdg-open '%s'",str.str);
+    //system(buf);
 
 
 

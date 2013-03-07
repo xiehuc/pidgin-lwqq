@@ -30,7 +30,4 @@ void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err);
  */
 void lwqq_logout(LwqqClient *client, LwqqErrorCode *err);
 
-//LwqqAsyncEvent* lwqq_fill_url(LwqqClient* lc,const char* url,LwqqString* str);
-
-
 #endif  /* LWQQ_LOGIN_H */

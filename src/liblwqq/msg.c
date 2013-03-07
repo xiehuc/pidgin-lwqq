@@ -1879,7 +1879,7 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
             "\"clientid\":\"%s\","
             "\"psessionid\":\"%s\"}",
             content,lc->msg_id,lc->clientid,lc->psessionid);
-    format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
+    //format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
     if(strlen(data)+1==sizeof(data)) return NULL;
     lwqq_verbose(3,"%s\n",data);
 

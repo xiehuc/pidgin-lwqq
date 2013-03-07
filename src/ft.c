@@ -68,6 +68,7 @@ static void recv_file_request_denied(PurpleXfer* xfer)
 static void recv_file_cancel(PurpleXfer* xfer)
 {
     LwqqMsg* msg = xfer->data;
+    if(!msg) return;
     if(lwqq_mt_bits(msg->type)==LWQQ_MT_FILE_MSG){
         LwqqMsgFileMessage* file = (LwqqMsgFileMessage*)msg;
         lwqq_http_cancel(file->req);
@@ -124,8 +125,19 @@ static void upload_offline_file_init(PurpleXfer* xfer)
 {
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqClient* lc = ac->qq;
+
+    const char* serv_id;
+    if(ac->qq_use_qqnum){
+        const char* qqnum = purple_xfer_get_remote_user(xfer);
+        LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
+        if(b == NULL) return;
+        serv_id = b->uin;
+    }else{
+        serv_id = purple_xfer_get_remote_user(xfer);
+    }
+
     LwqqMsgOffFile* file = lwqq_msg_fill_upload_offline_file(
-            xfer->local_filename, lc->myself->uin, purple_xfer_get_remote_user(xfer));
+            xfer->local_filename, lc->myself->uin, serv_id);
     xfer->start_time = time(NULL);
     xfer->data = file;
     int flags = 0;
@@ -157,7 +169,15 @@ void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(!ac->debug_file_send){
-        purple_notify_warning(gc,NULL,"难题尚未攻破,曙光遥遥无期","请先用离线文件传输");
+        //purple_notify_warning(gc,NULL,"难题尚未攻破,曙光遥遥无期","请先用离线文件传输");
+        PurpleXfer* xfer = purple_xfer_new(ac->account,PURPLE_XFER_SEND,who);
+        purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
+        purple_xfer_set_request_denied_fnc(xfer,recv_file_request_denied);
+        purple_xfer_set_cancel_send_fnc(xfer,recv_file_cancel);
+        if(filename)
+            purple_xfer_request_accepted(xfer, filename);
+        else
+            purple_xfer_request(xfer);
         return;
     }
     PurpleAccount* account = ac->account;
@@ -176,18 +196,7 @@ void qq_send_offline_file(PurpleBlistNode* node)
 {
     PurpleBuddy* buddy = PURPLE_BUDDY(node);
     PurpleAccount* account = purple_buddy_get_account(buddy);
-    qq_account* ac = purple_connection_get_protocol_data(
-                         purple_account_get_connection(account));
-    const char* who;
-    if(ac->qq_use_qqnum){
-        const char* qqnum = purple_buddy_get_name(buddy);
-        LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
-        if(b == NULL) return;
-        who = b->uin;
-    }else{
-        who = purple_buddy_get_name(buddy);
-    }
-    PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,who);
+    PurpleXfer* xfer = purple_xfer_new(account,PURPLE_XFER_SEND,buddy->name);
     purple_xfer_set_init_fnc(xfer,upload_offline_file_init);
     purple_xfer_set_request_denied_fnc(xfer,recv_file_request_denied);
     purple_xfer_set_cancel_send_fnc(xfer,recv_file_cancel);

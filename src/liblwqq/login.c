@@ -843,16 +843,3 @@ done:
     lwqq_http_request_free(req);
     client->stat = LWQQ_STATUS_LOGOUT;
 }
-
-#if 0
-LwqqAsyncEvent* lwqq_fill_url(LwqqClient* client,const char* url,LwqqString* str)
-{
-    //get_verify_code(lc, "10019");
-    char buf[8192];
-    char* md5 = lwqq_enc_pwd(client->password, "!STE", client->username);
-    snprintf(buf,sizeof(buf),"http://ptlogin2.qq.com/login?u=%s&p=%s&verifycode=!STE&aid=1006102&ul=http://id.qq.com/index.html&ptredirect=1&ptlang=2052",client->username,md5);
-    s_free(md5);
-    str->str = s_strdup(buf);
-    return NULL;
-}
-#endif
