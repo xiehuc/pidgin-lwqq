@@ -278,10 +278,12 @@ static int process_qqnumber(LwqqHttpRequest* req,LwqqBuddy* b,LwqqGroup* g)
     result = lwqq__parse_retcode_result(root, &err);
     if(result){
         char* account = lwqq__json_get_value(result,"account");
-        if(b&&account)
+        if(b&&account){
             s_free(b->qqnumber);b->qqnumber = account;
-        if(g&&account)
+        }
+        if(g&&account){
             s_free(g->account);g->account = account;
+        }
     }
 done:
     lwqq__clean_json_and_req(root,req);

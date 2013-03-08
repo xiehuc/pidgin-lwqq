@@ -1387,6 +1387,7 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
 
     int retcode;
     if(req->http_code==200){
+        req->response[req->resp_len] = '\0';
         retcode = parse_recvmsg_from_json(list, req->response);
         if(retcode == 121 || retcode == 108){
             lc->async_opt->poll_lost(lc);
