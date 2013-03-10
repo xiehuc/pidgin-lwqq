@@ -902,19 +902,12 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
     }
 }
 
-static void write_buddy_to_db(LwqqClient* lc,LwqqBuddy* buddy)
+static void write_buddy_to_db(LwqqClient* lc,LwqqBuddy* b)
 {
     qq_account* ac = lwqq_client_userdata(lc);
 
-    lwdb_userdb_insert_buddy_info(ac->db, buddy);
-    friend_come(lc,buddy);
-}
-static void write_group_to_db(LwqqClient* lc,LwqqGroup* group)
-{
-    qq_account* ac = lwqq_client_userdata(lc);
-
-    lwdb_userdb_insert_group_info(ac->db, group);
-    group_come(lc,group);
+    lwdb_userdb_insert_buddy_info(ac->db, b);
+    friend_come(lc, b);
 }
 static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
 {
@@ -950,6 +943,7 @@ static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
         purple_buddy_icons_set_for_user(account,key,(guchar*)buddy->avatar,buddy->avatar_len,NULL);
     }
     buddy->avatar = NULL;
+    buddy->avatar_len = 0;
 }
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group)
 {
@@ -1071,6 +1065,28 @@ void qq_msg_check(LwqqClient* lc)
 
 static void login_stage_f(LwqqClient* lc)
 {
+    LwqqBuddy* buddy;
+    LwqqGroup* group;
+    qq_account* ac = lc->data;
+    lwdb_userdb_begin(ac->db, "ins");
+    LIST_FOREACH(buddy,&lc->friends,entries) {
+        if(buddy->last_modify == -1 || buddy->last_modify == 0){
+            //write_buddy_to_db(lc, buddy);
+            lwdb_userdb_insert_buddy_info(ac->db, buddy);
+            friend_come(lc, buddy);
+        }
+    }
+    LIST_FOREACH(group,&lc->groups,entries){
+        if(group->last_modify == -1 || group->last_modify == 0){
+            lwdb_userdb_insert_group_info(ac->db, group);
+            group_come(lc,group);
+        }
+    }
+    lwdb_userdb_commit(ac->db, "ins");
+}
+
+static void login_stage_3(LwqqClient* lc)
+{
     qq_account* ac = lwqq_client_userdata(lc);
 
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
@@ -1083,73 +1099,71 @@ static void login_stage_f(LwqqClient* lc)
     }
 
     LwqqAsyncEvent* ev = NULL;
+
+    lwdb_userdb_flush_buddies(ac->db, 5,5);
+    lwdb_userdb_flush_groups(ac->db, 1,10);
+
     if(ac->qq_use_qqnum){
         //lwdb_userdb_write_to_client(ac->db, lc);
         lwdb_userdb_query_qqnumbers(lc, ac->db);
         //lwdb_userdb_begin(ac->db,"insertion");
     }
-    lwdb_userdb_flush_buddies(ac->db, 5,5);
-    lwdb_userdb_flush_groups(ac->db, 1,10);
 
     //we must put buddy and group clean before any add operation.
-    GList* ptr = ac->p_buddy_list, *nxt;
+    GSList* ptr = purple_blist_get_buddies();
     while(ptr){
-        nxt = ptr->next;
         PurpleBuddy* buddy = ptr->data;
-        const char* qqnum = purple_buddy_get_name(buddy);
-        //if it isn't a qqnumber,we should delete it whatever.
-        if(lwqq_buddy_find_buddy_by_qqnumber(lc,qqnum)==NULL){
-            purple_blist_remove_buddy(buddy);
-            ac->p_buddy_list = g_list_delete_link(ac->p_buddy_list,ptr);
+        if(buddy->account == ac->account){
+            const char* qqnum = purple_buddy_get_name(buddy);
+            //if it isn't a qqnumber,we should delete it whatever.
+            if(lwqq_buddy_find_buddy_by_qqnumber(lc,qqnum)==NULL){
+                purple_blist_remove_buddy(buddy);
+            }
         }
-        ptr = nxt;
+        ptr = ptr->next;
     }
 
     //clean extra duplicated node
     all_reset(ac,RESET_GROUP_SOFT|RESET_DISCU);
+
+    LwqqAsyncEvset* set = lwqq_async_evset_new();
     
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
-        LwqqAsyncEvset* set = NULL;
         lwdb_userdb_query_buddy(ac->db, buddy);
         if(ac->qq_use_qqnum && ! buddy->qqnumber){
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
-            if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
         }
         if(! buddy->long_nick) {
             ev = lwqq_info_get_single_long_nick(lc, buddy);
-            if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
-            ev = lwqq_info_get_friend_avatar(lc,buddy);
-            lwqq_async_evset_add_event(set, ev);
+            if(buddy->last_modify != -1){
+                ev = lwqq_info_get_friend_avatar(lc,buddy);
+                lwqq_async_evset_add_event(set, ev);
+            }
         }
-        if(set){
-            lwqq_async_add_evset_listener(set, _C_(2p,write_buddy_to_db,lc,buddy));
-        }else
+        if(buddy->last_modify != -1 && buddy->last_modify != 0)
             friend_come(lc,buddy);
     }
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
-        LwqqAsyncEvset* set = NULL;
+        //LwqqAsyncEvset* set = NULL;
         lwdb_userdb_query_group(ac->db, group);
         if(ac->qq_use_qqnum && ! group->account){
             ev = lwqq_info_get_group_qqnumber(lc,group);
-            if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
         }
         if(!group->memo){
             ev = lwqq_info_get_group_memo(lc, group);
-            if(!set) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set, ev);
         }
         //because group avatar less changed.
         //so we dont reload it.
-        if(set)
-            lwqq_async_add_evset_listener(set, _C_(2p,write_group_to_db,lc,group));
-        else
+        if(group->last_modify != -1 && group->last_modify != 0)
             group_come(lc,group);
     }
+    lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
     //after this we finished the qqnumber fast index.
     
 
@@ -1389,7 +1403,7 @@ static void login_stage_2(LwqqAsyncEvset* evset,LwqqClient* lc)
         lwqq_async_evset_add_event(set,ev);
     }
 
-    lwqq_async_add_evset_listener(set,_C_(p,login_stage_f,lc));
+    lwqq_async_add_evset_listener(set,_C_(p,login_stage_3,lc));
 }
 
 //send back receipt
@@ -1764,11 +1778,7 @@ static void qq_login(PurpleAccount *account)
     ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
-#ifdef NOSYNC
-    ac->db = lwdb_userdb_new(username,db_path,LWDB_SYNCHRONOUS_OFF);
-#else
     ac->db = lwdb_userdb_new(username,db_path,0);
-#endif
     ac->qq_use_qqnum = ! purple_account_get_bool(account, "disable_qq_cache", FALSE);
     //for empathy
     if(ac->qq_use_qqnum)

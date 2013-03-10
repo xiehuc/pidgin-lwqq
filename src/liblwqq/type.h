@@ -160,9 +160,10 @@ typedef struct LwqqBuddy {
     //extra data
     char *avatar;
     size_t avatar_len;
+    time_t last_modify;
     char *token;                /**< Only used in add friend */
     void *data;                 /**< user defined data */
-    short page;
+    //short page;
     //pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
@@ -213,6 +214,7 @@ typedef struct LwqqGroup {
 
     char *group_sig;            /** < use in sess msg */
 
+    time_t last_modify;
     char *avatar;
     size_t avatar_len;
     void *data;                 /** < user defined data */

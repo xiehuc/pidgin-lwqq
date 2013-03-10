@@ -34,14 +34,6 @@ void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...)
 
     purple_timeout_add(10,did_dispatch,d);
 }
-static void add_p_buddy_to_ac(void* a,void* b)
-{
-    PurpleBuddy* buddy = a;
-    qq_account* ac = b;
-    if(purple_buddy_get_account(buddy) == ac->account)
-        ac->p_buddy_list = g_list_prepend(ac->p_buddy_list,buddy);
-
-}
 qq_account* qq_account_new(PurpleAccount* account)
 {
     qq_account* ac = g_malloc0(sizeof(qq_account));
@@ -50,8 +42,6 @@ qq_account* qq_account_new(PurpleAccount* account)
     ac->qq_use_qqnum = 0;
     //this is auto increment sized array . so don't worry about it.
     ac->opend_chat = g_ptr_array_sized_new(10);
-    ac->p_buddy_list = NULL;
-    g_slist_foreach(purple_blist_get_buddies(),add_p_buddy_to_ac,ac);
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
@@ -73,7 +63,6 @@ void qq_account_free(qq_account* ac)
         purple_conversation_destroy(purple_find_chat(gc, i));
     }
     g_ptr_array_free(ac->opend_chat,1);
-    lwqq_recent_list_free(&ac->recent_list);
 #if QQ_USE_FAST_INDEX
     g_hash_table_destroy(ac->fast_index.qqnum_index);
     g_hash_table_destroy(ac->fast_index.uin_index);

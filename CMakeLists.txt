@@ -39,8 +39,6 @@ endif(NLS)
 find_package(EV REQUIRED)
 #endif(WITH_LIBEV)
 
-option(DB_NOSYNC "Open Sqlite3 NoSync Pragma,for db build without block UI" Off)
-
 if(VERBOSE)
     add_definitions(-DLWQQ_VERBOSE_LEVEL=${VERBOSE})
 else(VERBOSE)

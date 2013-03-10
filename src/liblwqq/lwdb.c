@@ -515,14 +515,14 @@ LwdbUserDB *lwdb_userdb_new(const char *qqnumber,const char* dir,int flags)
         goto failed;
     }
 
-    const char* sync="FULL";
+    /*const char* sync="FULL";
     if(flags&LWDB_SYNCHRONOUS_OFF)
         sync="OFF";
     if(flags&LWDB_SYNCHRONOUS_NORMAL)
         sync="NORMAL";
     char sql[64];
     snprintf(sql,sizeof(sql),"PRAGMA synchronous=%s",sync);
-    sws_exec_sql(udb->db, sql, NULL);
+    sws_exec_sql(udb->db, sql, NULL);*/
 
     udb->query_buddy_info = lwdb_userdb_query_buddy_info;
     udb->update_buddy_info = lwdb_userdb_update_buddy_info;
@@ -883,12 +883,13 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
     LwqqBuddy* buddy;
     LwqqGroup* group;
     char qqnumber[32];
+    char last_modify[64];
     static SwsStmt* stmt1 = 0,*stmt2,*stmt3,*stmt4;
             
-    sws_query_start(db->db, "SELECT qqnumber FROM buddies WHERE nick=? AND markname=?", &stmt1, NULL);
-    sws_query_start(db->db, "SELECT qqnumber FROM buddies WHERE nick=?",&stmt2,NULL);
-    sws_query_start(db->db, "SELECT account FROM groups WHERE name=? AND markname=?",&stmt3,NULL);
-    sws_query_start(db->db, "SELECT account FROM groups WHERE name=?",&stmt4,NULL);
+    sws_query_start(db->db, "SELECT qqnumber,last_modify FROM buddies WHERE nick=? AND markname=?", &stmt1, NULL);
+    sws_query_start(db->db, "SELECT qqnumber,last_modify FROM buddies WHERE nick=?",&stmt2,NULL);
+    sws_query_start(db->db, "SELECT account,last_modify FROM groups WHERE name=? AND markname=?",&stmt3,NULL);
+    sws_query_start(db->db, "SELECT account,last_modify FROM groups WHERE name=?",&stmt4,NULL);
 
     LIST_FOREACH(buddy,&lc->friends,entries){
         if(buddy->markname){
@@ -898,25 +899,33 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
             //there are no result.so we ignore it.
             if(sws_query_next(stmt1, NULL)!=SWS_OK){
                 lwqq_verbose(1,"userdb mismatch [ nick : %s mark : %s]\n",buddy->nick,buddy->markname);
+                buddy->last_modify = -1;
                 continue;
             }
             sws_query_column(stmt1, 0, qqnumber, sizeof(qqnumber), NULL);
+            sws_query_column(stmt1, 1, last_modify, sizeof(last_modify), NULL);
             //there are no more result so we can ensure the qqnumber is only.
             if(sws_query_next(stmt1,NULL)==SWS_FAILED){
                 buddy->qqnumber = s_strdup(qqnumber);
+                buddy->last_modify = s_atol(last_modify, 0);
             }
         }else{
             sws_query_reset(stmt2);
             sws_query_bind(stmt2, 1, SWS_BIND_TEXT,buddy->nick);
             if(sws_query_next(stmt2,0)!=SWS_OK){
                 lwqq_verbose(1,"userdb mismatch [ nick : %s ]\n",buddy->nick);
+                buddy->last_modify = -1;
                 continue;
             }
             sws_query_column(stmt2, 0, qqnumber, sizeof(qqnumber), NULL);
+            sws_query_column(stmt2, 1, last_modify, sizeof(last_modify), NULL);
             if(sws_query_next(stmt2,NULL)==SWS_FAILED){
                 buddy->qqnumber = s_strdup(qqnumber);
-            }else
+                buddy->last_modify = s_atol(last_modify, 0);
+            }else{
                 lwqq_verbose(1,"userdb mismatch [ nick : %s ]\n",buddy->nick);
+                buddy->last_modify = -1;
+            }
         }
     }
     LIST_FOREACH(group,&lc->groups,entries){
@@ -926,25 +935,35 @@ void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db)
             sws_query_bind(stmt3, 2, SWS_BIND_TEXT,group->markname);
             if(sws_query_next(stmt3,0)!=SWS_OK){
                 lwqq_verbose(1,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
+                group->last_modify = -1;
                 continue;
             }
             sws_query_column(stmt3, 0, qqnumber,sizeof(qqnumber), NULL);
+            sws_query_column(stmt3, 1, last_modify, sizeof(last_modify), NULL);
             if(sws_query_next(stmt3,0)==SWS_FAILED){
                 group->account = s_strdup(qqnumber);
-            }else
+                group->last_modify = s_atol(last_modify, 0);
+            }else{
                 lwqq_verbose(1,"userdb mismatch [ name : %s mark : %s ]\n",group->name,group->markname);
+                group->last_modify = -1;
+            }
         }else{
             sws_query_reset(stmt4);
             sws_query_bind(stmt4,1,SWS_BIND_TEXT,group->name);
             if(sws_query_next(stmt4,0)!=SWS_OK){
                 lwqq_verbose(1,"userdb mismatch [ name : %s ]\n",group->name);
+                group->last_modify = -1;
                 continue;
             }
             sws_query_column(stmt4,0,qqnumber,sizeof(qqnumber),NULL);
+            sws_query_column(stmt4, 1, last_modify, sizeof(last_modify),NULL);
             if(sws_query_next(stmt4,0)==SWS_FAILED){
                 group->account = s_strdup(qqnumber);
-            }else
+                group->last_modify = s_atol(last_modify, 0);
+            }else{
                 lwqq_verbose(1,"userdb mismatch [ name : %s ]\n",group->name);
+                group->last_modify = -1;
+            }
         }
     }
 

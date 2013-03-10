@@ -58,9 +58,7 @@ typedef struct qq_account {
     }state;
     int msg_poll_handle;
     GPtrArray* opend_chat;
-    GList* p_buddy_list;///< purple buddy list
     GList* rewrite_pic_list;
-    LwqqRecentList recent_list;
     struct{
     gboolean qq_use_qqnum;
     gboolean disable_custom_font_face;

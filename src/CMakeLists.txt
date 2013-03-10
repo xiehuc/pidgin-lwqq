@@ -45,10 +45,6 @@ target_link_libraries(webqq ${EV_LIBRARIES})
 #add_definitions(-DUSE_LIBPURPLE)
 #endif(WITH_LIBEV)
 
-if(DB_NOSYNC)
-    add_definitions(-DNOSYNC)
-endif(DB_NOSYNC)
-
 if(SSL)
     add_definitions(-DLWQQ_ENABLE_SSL=1)
 endif(SSL)

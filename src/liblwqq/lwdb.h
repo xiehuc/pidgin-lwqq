@@ -86,10 +86,6 @@ typedef struct LwdbUserDB {
     LwqqErrorCode (*update_buddy_info)(struct LwdbUserDB *db, LwqqBuddy *buddy);
 } LwdbUserDB;
 
-typedef enum LwdbUserDBFlags{
-    LWDB_SYNCHRONOUS_OFF = 1,
-    LWDB_SYNCHRONOUS_NORMAL = 1<<2
-} LwdbUserDBFlags;
 /** 
  * Create a user DB object
  * 
