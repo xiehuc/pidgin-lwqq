@@ -10,7 +10,7 @@ if(NOT CMAKE_INSTALL_PREFIX)
 endif(NOT CMAKE_INSTALL_PREFIX)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(PURPLE REQUIRED  purple>=2.8.0)
+pkg_check_modules(PURPLE REQUIRED  purple)
 pkg_check_modules(GLIB REQUIRED  glib-2.0)
 pkg_check_modules(CURL REQUIRED libcurl)
 pkg_check_modules(SQLITE REQUIRED sqlite3)
@@ -22,9 +22,17 @@ EXEC_PROGRAM("pkg-config --variable=plugindir purple 2>/dev/null"
     OUTPUT_VARIABLE LIB_INSTALL_DIR)
 EXEC_PROGRAM("pkg-config --variable=datadir purple 2>/dev/null"
     OUTPUT_VARIABLE PURPLE_DATADIR)
+exec_program("pkg-config --modversion purple 2>/dev/null"
+    OUTPUT_VARIABLE PURPLE_VERSION)
 
+message("libpurple version:${PURPLE_VERSION}")
 message("would install to: ${LIB_INSTALL_DIR}")
 message("")
+
+if(PURPLE_VERSION VERSION_LESS "2.8")
+    message("libpurple version outdate")
+    add_definitions(-DPURPLE_OUTDATE="1")
+endif(PURPLE_VERSION LESS "2.8")
 
 add_definitions(-DINST_PREFIX="${CMAKE_INSTALL_PREFIX}")
 

@@ -1985,6 +1985,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* messa
     confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
     show_confirm_table(lc,confirm);
 }
+#if ! PURPLE_OUTDATE
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
@@ -1998,6 +1999,7 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
     lwqq_async_add_event_listener(ev, _C_(3p,search_buddy_receipt,ev,friend,s_strdup(message)));
 }
+#endif
 static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guint type)
 {
     qq_account* ac = gc->proto_data;
@@ -2527,8 +2529,9 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .group_buddy=       qq_change_category  /* change buddy category on server */,
     .rename_group=      qq_rename_category,
     .remove_buddy=      qq_remove_buddy,
-
+#if ! PURPLE_OUTDATE
     .add_buddy_with_invite=qq_add_buddy_with_invite,
+#endif
 
     .struct_size=       sizeof(PurplePluginProtocolInfo)
 };
