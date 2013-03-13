@@ -1340,14 +1340,16 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     field_group = purple_request_field_group_new((gchar*)0);
     purple_request_fields_add_group(fields, field_group);
 
-    PurpleRequestField* str = purple_request_field_string_new("body", table->title, table->body, TRUE);
-    purple_request_field_string_set_editable(str, FALSE);
-    purple_request_field_group_add_field(field_group, str);
+    if(table->body){
+        PurpleRequestField* str = purple_request_field_string_new("body", table->title, table->body, TRUE);
+        purple_request_field_string_set_editable(str, FALSE);
+        purple_request_field_group_add_field(field_group, str);
+    }
 
-    if(table->exans_label||table->flags&LWQQ_CT_ENABLE_IGNORE){
-        PurpleRequestField* choice = purple_request_field_choice_new("choice", "请选择", 1);
-        purple_request_field_choice_add(choice,"拒绝");
-        purple_request_field_choice_add(choice,"同意");
+    if(table->exans_label||table->flags&LWQQ_CT_ENABLE_IGNORE||table->flags&LWQQ_CT_CHOICE_MODE){
+        PurpleRequestField* choice = purple_request_field_choice_new("choice", "请选择", table->answer);
+        purple_request_field_choice_add(choice,table->no_label?:"拒绝");
+        purple_request_field_choice_add(choice,table->yes_label?:"同意");
         if(table->exans_label)
             purple_request_field_choice_add(choice,table->exans_label);
         purple_request_field_group_add_field(field_group,choice);
@@ -2080,7 +2082,15 @@ static void flush_group_name(void* data)
     LwqqGroup* group = find_group_by_chat(chat);
     purple_blist_alias_chat(chat,group_name(group));
 }
-
+static void set_cgroup_block(LwqqConfirmTable* ct,LwqqClient* lc,LwqqGroup* g)
+{
+    if(ct->answer != LWQQ_IGNORE){
+        lwqq_async_add_event_listener(
+                lwqq_info_mask_group(lc,g,ct->answer),
+                _C_(p,qq_set_group_name,g->data));
+    }
+    lwqq_ct_free(ct);
+}
 static void qq_block_chat(PurpleBlistNode* node)
 {
     PurpleChat* chat = PURPLE_CHAT(node);
@@ -2088,20 +2098,17 @@ static void qq_block_chat(PurpleBlistNode* node)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
     LwqqGroup* group = find_group_by_chat(chat);
-    lwqq_async_add_event_listener(
-            lwqq_info_mask_group(lc,group,LWQQ_MASK_ALL),
-            _C_(p,flush_group_name,chat));
-}
-static void qq_unblock_chat(PurpleBlistNode* node)
-{
-    PurpleChat* chat = PURPLE_CHAT(node);
-    PurpleAccount* account = purple_chat_get_account(chat);
-    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
-    LwqqClient* lc = ac->qq;
-    LwqqGroup* group = find_group_by_chat(chat);
-    lwqq_async_add_event_listener(
-            lwqq_info_mask_group(lc,group,LWQQ_MASK_NONE),
-            _C_(p,flush_group_name,chat));
+
+    LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+    ct->title = s_strdup("屏蔽设置");
+    ct->no_label = s_strdup("不屏蔽");
+    ct->yes_label = s_strdup("接收不提醒");
+    ct->exans_label = s_strdup("完全屏蔽");
+    ct->flags |= LWQQ_CT_CHOICE_MODE|LWQQ_CT_ENABLE_IGNORE;
+    ct->answer = group->mask;
+    ct->cmd = _C_(3p,set_cgroup_block,ct,lc,group);
+    show_confirm_table(lc, ct);
+
 }
 static void self_card_ok(vp_list* list,PurpleRequestFields* root)
 {
@@ -2424,13 +2431,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
             action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
             act = g_list_append(act,action);
         }
-        if(group){
-            if(group->mask == LWQQ_MASK_NONE)
-                action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
-            else
-                action = purple_menu_action_new("取消屏蔽",(PurpleCallback)qq_unblock_chat,node,NULL);
-            act = g_list_append(act,action);
-        }
+        action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
+        act = g_list_append(act,action);
         action = purple_menu_action_new("修改备注",(PurpleCallback)qq_set_group_alias,node,NULL);
         act = g_list_append(act,action);
         action = purple_menu_action_new("退出群组", (PurpleCallback)qq_quit_group, node, NULL);
