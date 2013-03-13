@@ -426,17 +426,6 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
 
     ac->disable_send_server = 0;
 }
-static const char* group_name(LwqqGroup* group)
-{
-    static char gname[128]={0};
-    if(group->markname) {
-        strncpy(gname,group->markname,sizeof(gname));
-    } else 
-        strncpy(gname,group->name,sizeof(gname));
-    if(group->mask == LWQQ_MASK_ALL)
-        strcat(gname,"(屏蔽)");
-    return gname;
-}
 
 static void qq_set_group_name(qq_chat_group* cg)
 {
@@ -757,7 +746,6 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
 static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
-    PurpleConnection* pc = ac->gc;
     LwqqGroup* group = find_group_by_gid(lc,(msg->super.super.type==LWQQ_MS_DISCU_MSG)?msg->discu.did:msg->super.from);
 
     if(group == NULL) return FAILED;
@@ -2076,12 +2064,6 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
     }
 }
 
-static void flush_group_name(void* data)
-{
-    PurpleChat* chat = data;
-    LwqqGroup* group = find_group_by_chat(chat);
-    purple_blist_alias_chat(chat,group_name(group));
-}
 static void set_cgroup_block(LwqqConfirmTable* ct,LwqqClient* lc,LwqqGroup* g)
 {
     if(ct->answer != LWQQ_IGNORE){
