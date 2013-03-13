@@ -4,6 +4,7 @@ set(SRC_LIST
   translate.c
   qq_types.c
   ft.c
+  cgroup.c
   )
 
 set(LWQQ_LIST

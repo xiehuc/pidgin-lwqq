@@ -1444,6 +1444,7 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     //long poll timeout is 90s.official value
     lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,90);
+    //lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1);
 
 #if USE_MSG_THREAD
     int retcode;

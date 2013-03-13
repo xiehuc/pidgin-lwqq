@@ -20,12 +20,13 @@
 #include "qq_types.h"
 #include "translate.h"
 #include "remote.h"
+#include "cgroup.h"
 
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(qq_account* ac,LwqqGroup* group);
-static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t);
+//static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t);
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
@@ -436,6 +437,27 @@ static const char* group_name(LwqqGroup* group)
         strcat(gname,"(屏蔽)");
     return gname;
 }
+
+static void qq_set_group_name(qq_chat_group* cg)
+{
+    PurpleChat * chat = cg->chat;
+    char gname[256] = {0};
+    int hide = CGROUP_GET_PROP(cg,QQ_CGROUP_HIDE_NEW);
+    if(hide) strcat(gname,"(");
+    strcat(gname,cg->group->markname?:cg->group->name);
+    if(hide){
+        strcat(gname,")");
+        unsigned int unread = CGROUP_UNREAD(cg);
+        if(unread)sprintf(gname+strlen(gname), "(%u)",unread);
+    }
+    purple_blist_alias_chat(chat, gname);
+}
+
+static struct qq_chat_group_opt qq_cg_opt_default = {
+    .new_msg_notice = qq_set_group_name
+};
+#define QQ_CG_OPT &qq_cg_opt_default
+
 static int group_come(LwqqClient* lc,LwqqGroup* group)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -467,17 +489,23 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
         if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
     }
 
-    group->data = chat;
+    qq_chat_group* cg = qq_cgroup_new(QQ_CG_OPT);
+    group->data = cg;
+    cg->group = group;
+    cg->chat = chat;
+    if(group->mask) CGROUP_SET_PROP(cg,QQ_CGROUP_HIDE_NEW,1);
     
     if(lwqq_group_is_qun(group)){
         //*** it failed ***/
-        purple_blist_alias_chat(chat,group_name(group));
+        //purple_blist_alias_chat(chat,group_name(group));
+        qq_set_group_name(cg);
         if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0){
             LwqqAsyncEvent* ev = lwqq_info_get_group_avatar(lc,group);
             lwqq_async_add_event_listener(ev,_C_(2p,group_avatar,ev,group));
         }
     }else{
-        purple_blist_alias_chat(chat,group_name(group));
+        qq_set_group_name(cg);
+        //purple_blist_alias_chat(chat,group_name(group));
     }
 
     qq_account_insert_index_node(ac, NULL, group);
@@ -716,7 +744,8 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
     while(list){
         message = list->data;
         //pic = message->what;
-        group_message_delay_display(ac, group, message->who, message->what, message->when);
+        //group_message_delay_display(ac, group, message->who, message->what, message->when);
+        qq_cgroup_got_msg(group->data, message->who, PURPLE_MESSAGE_RECV, message->what, message->when);
         s_free(message->what);
         s_free(message->who);
         list = list->next;
@@ -734,7 +763,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     if(group == NULL) return FAILED;
 
     //force open dialog
-    qq_conv_open(pc,group);
+    //qq_conv_open(pc,group);
     static char buf[BUFLEN] ;
     strcpy(buf,"");
 
@@ -777,10 +806,10 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     }else{
         group_member_list_come(ac, group);
     }
-    group_message_delay_display(ac, group, msg->group.send, buf, msg->time);
+    qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV, buf, msg->time);
     return SUCCESS;
 }
-static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t)
+/*static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const char* sender,const char* buf,time_t t)
 {
     PurpleConnection* pc = ac->gc;
     const char* who;
@@ -797,11 +826,12 @@ static int group_message_delay_display(qq_account* ac,LwqqGroup* group,const cha
     }
 
     //group_member_list_come(ac,group);
-    serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
+    //serv_got_chat_in(pc,opend_chat_search(ac,group),who,PURPLE_MESSAGE_RECV,buf,t);
+    qq_cgroup_got_msg(group->data, who, PURPLE_MESSAGE_RECV, buf, t);
     //s_free(sender);
     //s_free(buf);
     return 0;
-}
+}*/
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -1707,18 +1737,7 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
         if(group == NULL) return;
     }
 
-    //this will open chat dialog.
-    qq_conv_open(gc,group);
-    PurpleConversation* conv = purple_find_chat(gc, opend_chat_search(ac,group));
-    purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), NULL, group->memo);
-    LwqqCommand cmd = _C_(2p,group_member_list_come,ac,group);
-    if(!LIST_EMPTY(&group->members)) {
-        vp_do(cmd,NULL);
-    } else {
-        LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc,group,NULL);
-        lwqq_async_add_event_listener(ev,cmd);
-    }
-    return;
+    qq_cgroup_open(group->data);
 }
 static gboolean qq_offline_message(const PurpleBuddy *buddy)
 {
@@ -1804,6 +1823,10 @@ static void qq_close(PurpleConnection *gc)
     if(lwqq_client_logined(ac->qq))
         lwqq_logout(ac->qq,&err);
     ac->qq->msg_list->poll_close(ac->qq->msg_list);
+    LwqqGroup* g;
+    LIST_FOREACH(g,&ac->qq->groups,entries){
+        qq_cgroup_free((qq_chat_group*)g->data);
+    }
     lwqq_client_free(ac->qq);
     lwdb_userdb_free(ac->db);
     qq_account_free(ac);
