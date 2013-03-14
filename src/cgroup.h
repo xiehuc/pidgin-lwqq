@@ -4,9 +4,9 @@
 
 struct qq_chat_group_opt;
 
-typedef enum {
+/*typedef enum {
     QQ_CGROUP_HIDE_NEW = 1<<1,
-}qq_cgroup_properties;
+}qq_cgroup_properties;*/
 
 //this is data model for special
 //qq chat group to purple chat group 

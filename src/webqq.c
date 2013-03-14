@@ -431,7 +431,7 @@ static void qq_set_group_name(qq_chat_group* cg)
 {
     PurpleChat * chat = cg->chat;
     char gname[256] = {0};
-    int hide = CGROUP_GET_PROP(cg,QQ_CGROUP_HIDE_NEW);
+    int hide = cg->group->mask > 0;
     if(hide) strcat(gname,"(");
     strcat(gname,cg->group->markname?:cg->group->name);
     if(hide){
@@ -482,7 +482,6 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
     group->data = cg;
     cg->group = group;
     cg->chat = chat;
-    if(group->mask) CGROUP_SET_PROP(cg,QQ_CGROUP_HIDE_NEW,1);
     
     if(lwqq_group_is_qun(group)){
         //*** it failed ***/

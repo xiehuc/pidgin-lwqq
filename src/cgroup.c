@@ -134,7 +134,7 @@ void qq_cgroup_got_msg(qq_chat_group* cg,const char* serv_id,PurpleMessageFlags 
     const char* name;
 
     if(b)lwqq_group_find_group_member_by_uin(cg->group, serv_id);
-    if(CGROUP_GET_PROP(cg,QQ_CGROUP_HIDE_NEW)&&CGROUP_GET_CONV(cg)==NULL){
+    if(cg->group->mask>0&&CGROUP_GET_CONV(cg)==NULL){
         if(cg_->unread_num == 0){
             cg_->log = purple_log_new(PURPLE_LOG_CHAT, cg->group->account, cg->chat->account, NULL, t, NULL);
         }
@@ -172,7 +172,7 @@ void qq_cgroup_open(qq_chat_group* cg)
         set_user_list(cg);
         //note only have got user_list, there may be unread msg;
         qq_chat_group_* cg_ = (qq_chat_group_*) cg;
-        if(CGROUP_GET_PROP(cg,QQ_CGROUP_HIDE_NEW)&&cg_->unread_num>0){
+        if(cg->group->mask>0&&cg_->unread_num>0){
             if(purple_log_delete(cg_->log)==0)
                 force_delete_log(cg_->log);
             purple_log_free(cg_->log);
