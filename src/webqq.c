@@ -437,7 +437,8 @@ static void qq_set_group_name(qq_chat_group* cg)
     if(hide){
         strcat(gname,")");
         unsigned int unread = CGROUP_UNREAD(cg);
-        if(unread)sprintf(gname+strlen(gname), "(%u)",unread);
+        unsigned int split = unread<10?unread:unread<100?unread/10*10:unread/100*100;
+        if(unread>0)sprintf(gname+strlen(gname), "(%u%s)",split,unread>10?"+":"");
     }
     purple_blist_alias_chat(chat, gname);
 }
