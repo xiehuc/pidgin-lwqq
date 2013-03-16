@@ -37,6 +37,20 @@ typedef struct GLOBAL {
     LwqqAsyncIo add_listener;
     LIST_HEAD(,D_ITEM) add_link;
 }GLOBAL;
+
+struct trunk_entry{
+    char* trunk;
+    unsigned int size;
+    SIMPLEQ_ENTRY(trunk_entry) entries;
+};
+
+typedef struct LwqqHttpRequest_
+{
+    LwqqHttpRequest parent;
+    SIMPLEQ_HEAD(,trunk_entry) trunks;
+}LwqqHttpRequest_;
+
+
 static GLOBAL global = {0};
 static pthread_cond_t async_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t async_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -82,6 +96,26 @@ static int lwqq_gdb_whats_running()
         num++;
     }
     return num;
+}
+
+static void composite_trunks(LwqqHttpRequest* req)
+{
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
+    if(SIMPLEQ_EMPTY(&req_->trunks)) return;
+    size_t size = 0;
+    struct trunk_entry* trunk;
+    SIMPLEQ_FOREACH(trunk,&req_->trunks,entries){
+        size += trunk->size;
+    }
+    req->response = s_malloc(size);
+    req->resp_len = 0;
+    while((trunk = SIMPLEQ_FIRST(&req_->trunks))){
+        SIMPLEQ_REMOVE_HEAD(&req_->trunks,entries);
+        memcpy(req->response+req->resp_len,trunk->trunk,trunk->size);
+        req->resp_len+=trunk->size;
+        s_free(trunk->trunk);
+        s_free(trunk);
+    }
 }
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -187,6 +221,7 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
         return ;
     
     if (request) {
+        composite_trunks(request);
         s_free(request->response);
         s_free(request->location);
         curl_slist_free_all(request->header);
@@ -233,32 +268,36 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
 }
 static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
 {
-    LwqqHttpRequest* request = (LwqqHttpRequest*) userdata;
+    LwqqHttpRequest* req = (LwqqHttpRequest*) userdata;
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
     long http_code;
-    curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
+    curl_easy_getinfo(req->req,CURLINFO_RESPONSE_CODE,&http_code);
     //this is a redirection. ignore it.
     if(http_code == 301||http_code == 302){
         return size*nmemb;
     }
-    int resp_len = request->resp_len;
-    if(request->response==NULL){
-        const char* content_length = request->get_header(request,"Content-Length");
-        if(content_length){
-            size_t length = atol(content_length);
-            request->response = s_malloc0(length+10);
-            request->resp_realloc = 0;
-        }else{
-            request->response = s_malloc0(size*nmemb+10);
-            request->resp_realloc = 1;
+    char* position = NULL;
+    if(req->response==NULL&&SIMPLEQ_EMPTY(&req_->trunks) ){
+        double length = 0.0;
+        curl_easy_getinfo(req->req,CURLINFO_CONTENT_LENGTH_DOWNLOAD,&length);
+        printf("%lf\n",length);
+        if(length!=-1.0){
+            req->response = s_malloc0((unsigned long)length+10);
+            position = req->response;
         }
-        resp_len = 0;
-        request->resp_len = 0;
+        req->resp_len = 0;
     }
-    if(request->resp_realloc){
-        request->response = s_realloc(request->response,resp_len+size*nmemb+5);
+    if(req->response){
+        position = req->response+req->resp_len;
+    }else{
+        struct trunk_entry* trunk = s_malloc0(sizeof(*trunk));
+        trunk->size = size*nmemb;
+        trunk->trunk = s_malloc0(size*nmemb);
+        position = trunk->trunk;
+        SIMPLEQ_INSERT_TAIL(&req_->trunks,trunk,entries);
     }
-    memcpy(request->response+resp_len,ptr,size*nmemb);
-    request->resp_len+=size*nmemb;
+    memcpy(position,ptr,size*nmemb);
+    req->resp_len+=size*nmemb;
     return size*nmemb;
 }
 /** 
@@ -275,7 +314,10 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     }
 
     LwqqHttpRequest *request;
-    request = s_malloc0(sizeof(*request));
+    LwqqHttpRequest_* req_;
+    request = s_malloc0(sizeof(LwqqHttpRequest_));
+    req_ = (LwqqHttpRequest_*)request;
+    SIMPLEQ_INIT(&req_->trunks);
     
     request->req = curl_easy_init();
     request->retry = LWQQ_RETRY_VALUE;
@@ -445,6 +487,7 @@ LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url
 static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
+    composite_trunks(request);
     int have_read_bytes;
     int res;
     char** resp = &request->response;
@@ -751,6 +794,7 @@ retry:
     }
 
     ret = curl_easy_perform(request->req);
+    composite_trunks(request);
     if(ret != CURLE_OK){
         lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
         if(ret == CURLE_ABORTED_BY_CALLBACK){

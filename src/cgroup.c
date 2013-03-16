@@ -133,7 +133,7 @@ void qq_cgroup_got_msg(qq_chat_group* cg,const char* serv_id,PurpleMessageFlags 
     LwqqSimpleBuddy* sb = NULL;
     const char* name;
 
-    if(b)lwqq_group_find_group_member_by_uin(cg->group, serv_id);
+    if(b == NULL ) sb = lwqq_group_find_group_member_by_uin(cg->group, serv_id);
     if(cg->group->mask>0&&CGROUP_GET_CONV(cg)==NULL){
         if(cg_->unread_num == 0){
             cg_->log = purple_log_new(PURPLE_LOG_CHAT, cg->group->account, cg->chat->account, NULL, t, NULL);
