@@ -411,16 +411,16 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
         else
             purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
     }
+    //this is avaliable when reload avatar in
+    //login_stage_f
+    if(buddy->avatar_len)
+        friend_avatar(ac, buddy);
     //download avatar 
     PurpleBuddyIcon* icon;
     if((icon = purple_buddy_icons_find(account,key))==0) {
         LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
         lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
     }
-    //this is avaliable when reload avatar in
-    //login_stage_f
-    if(buddy->avatar_len)
-        friend_avatar(ac, buddy);
 
     qq_account_insert_index_node(ac, buddy,NULL);
 
@@ -1752,6 +1752,7 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
     else {
         LwqqGroup* group = opend_chat_index(ac,id);
         LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,who);
+        //if(sb==NULL) sb = lwqq_group_find_group_member_by_uin(group, who);
         snprintf(conv_name,sizeof(conv_name),"%s ### %s",(sb->card)?sb->card:sb->nick,group->name);
         return s_strdup(conv_name);
     }

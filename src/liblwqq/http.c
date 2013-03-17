@@ -107,7 +107,7 @@ static void composite_trunks(LwqqHttpRequest* req)
     SIMPLEQ_FOREACH(trunk,&req_->trunks,entries){
         size += trunk->size;
     }
-    req->response = s_malloc(size);
+    req->response = s_malloc0(size+10);
     req->resp_len = 0;
     while((trunk = SIMPLEQ_FIRST(&req_->trunks))){
         SIMPLEQ_REMOVE_HEAD(&req_->trunks,entries);
@@ -281,7 +281,7 @@ static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
         double length = 0.0;
         curl_easy_getinfo(req->req,CURLINFO_CONTENT_LENGTH_DOWNLOAD,&length);
         if(length!=-1.0){
-            req->response = s_malloc0((unsigned long)length+10);
+            req->response = s_malloc0((unsigned long)(length)+10);
             position = req->response;
         }
         req->resp_len = 0;

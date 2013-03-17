@@ -43,6 +43,17 @@ static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
 static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g,char* msg);
 
 
+static int lwqq_gdb_list_group_member(LwqqGroup* g)
+{
+    LwqqSimpleBuddy* sb;
+    int count = 0;
+    LIST_FOREACH(sb,&g->members,entries){
+        lwqq_verbose(1,"[uin:%s nick:%s card:%s ]",sb->uin,sb->nick,sb->card);
+        count ++;
+    }
+    return count;
+}
+
 //=====================INSTRUCTION====================//
 /**
  * process head is directly used in do_request_async

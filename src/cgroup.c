@@ -66,7 +66,7 @@ static void set_user_list(qq_chat_group* cg)
                 else
                     users = g_list_append(users,buddy->uin);
             } else {
-                users = (member->card)?g_list_append(users,member->card):g_list_append(users,member->nick);
+                users = g_list_append(users,member->card?:member->nick);
             }
         }
         purple_conv_chat_add_users(chat,users,extra_msgs,flags,FALSE);
