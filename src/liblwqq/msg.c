@@ -908,7 +908,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->member = lwqq__json_get_string(json,"t_new_member");
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = lwqq__json_get_string(json,"admin_nick");
-        add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
+        add_new_group = msg->member_uin?strcmp(msg->member_uin,lc->myself->uin)==0:1;
     }
     else if(strcmp(type,"group_leave")==0){
         msg->type = GROUP_LEAVE;
@@ -916,7 +916,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->member = lwqq__json_get_string(json,"t_old_member");
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = lwqq__json_get_string(json,"admin_nick");
-        msg->is_myself = strcmp(lc->myself->uin,msg->member_uin)==0;
+        msg->is_myself = msg->member_uin?strcmp(lc->myself->uin,msg->member_uin)==0:1;
         if(msg->is_myself)
             LIST_REMOVE(msg->group,entries);
     }
@@ -929,7 +929,9 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->type = GROUP_REQUEST_JOIN_AGREE;
         msg->member_uin = s_strdup(json_parse_simple_value(json,"new_member"));
         msg->member = lwqq__json_get_string(json,"t_new_member");
-        add_new_group = strcmp(msg->member_uin,lc->myself->uin)==0;
+        add_new_group = msg->member_uin?
+            strcmp(msg->member_uin,lc->myself->uin)==0:
+            1;
     }else if(strcmp(type,"group_request_join_deny")==0){
         msg->type = GROUP_REQUEST_JOIN_DENY;
         msg->msg = lwqq__json_get_string(json, "msg");

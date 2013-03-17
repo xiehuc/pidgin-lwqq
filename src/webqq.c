@@ -2590,3 +2590,4 @@ init_plugin(PurplePlugin *plugin)
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)
+

@@ -1367,6 +1367,7 @@ static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* grou
     int ret;
     int err = 0;
     json_t *json = NULL, *json_tmp;
+    lwqq_puts("[group detail back]");
     if (req->http_code != 200) {
         err = LWQQ_EC_HTTP_ERROR;
         goto done;

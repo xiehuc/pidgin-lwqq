@@ -280,7 +280,7 @@ static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
     double length = 0.0;
     curl_easy_getinfo(req->req,CURLINFO_CONTENT_LENGTH_DOWNLOAD,&length);
     if(req->response==NULL&&SIMPLEQ_EMPTY(&req_->trunks) ){
-        if(length!=-1.0){
+        if(length!=-1.0&&length!=0.0){
             req->response = s_malloc0((unsigned long)(length)+10);
             position = req->response;
         }
