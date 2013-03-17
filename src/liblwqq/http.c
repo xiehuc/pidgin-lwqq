@@ -29,7 +29,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int 
 typedef struct GLOBAL {
     CURLM* multi;
     CURLSH* share;
-    pthread_mutex_t share_lock[2];
+    pthread_mutex_t share_lock[3];
     int still_running;
     LwqqAsyncTimer timer_event;
     LIST_HEAD(,D_ITEM) conn_link;
@@ -868,9 +868,12 @@ static void share_lock(CURL* handle,curl_lock_data data,curl_lock_access access,
     if(access == CURL_LOCK_ACCESS_SHARED) return;
     GLOBAL* g = userptr;
     int idx;
-    if(data == CURL_LOCK_DATA_DNS) idx=0;
-    else if(data == CURL_LOCK_DATA_CONNECT) idx=1;
-    else return;
+    switch(data){
+        case CURL_LOCK_DATA_DNS:idx=0;break;
+        case CURL_LOCK_DATA_CONNECT:idx=1;break;
+        case CURL_LOCK_DATA_SSL_SESSION:idx=2;break;
+        default:return;
+    }
     pthread_mutex_lock(&g->share_lock[idx]);
 
 }
@@ -878,9 +881,12 @@ static void share_unlock(CURL* handle,curl_lock_data data,void* userptr)
 {
     GLOBAL* g = userptr;
     int idx;
-    if(data == CURL_LOCK_DATA_DNS) idx=0;
-    else if(data == CURL_LOCK_DATA_CONNECT) idx=1;
-    else return;
+    switch(data){
+        case CURL_LOCK_DATA_DNS:idx=0;break;
+        case CURL_LOCK_DATA_CONNECT:idx=1;break;
+        case CURL_LOCK_DATA_SSL_SESSION:idx=2;break;
+        default:return;
+    }
     pthread_mutex_unlock(&g->share_lock[idx]);
 }
 void lwqq_http_global_init()
@@ -903,11 +909,13 @@ void lwqq_http_global_init()
         CURLSH* share = global.share;
         curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_DNS);
         curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_CONNECT);
+        curl_share_setopt(share,CURLSHOPT_SHARE,CURL_LOCK_DATA_SSL_SESSION);
         curl_share_setopt(share,CURLSHOPT_LOCKFUNC,share_lock);
         curl_share_setopt(share,CURLSHOPT_UNLOCKFUNC,share_unlock);
         curl_share_setopt(share,CURLSHOPT_USERDATA,&global);
         pthread_mutex_init(&global.share_lock[0],NULL);
         pthread_mutex_init(&global.share_lock[1],NULL);
+        pthread_mutex_init(&global.share_lock[2],NULL);
     }
 }
 
@@ -956,6 +964,7 @@ void lwqq_http_global_free()
         global.share = NULL;
         pthread_mutex_destroy(&global.share_lock[0]);
         pthread_mutex_destroy(&global.share_lock[1]);
+        pthread_mutex_destroy(&global.share_lock[2]);
     }
 }
 void lwqq_http_cleanup(LwqqClient*lc)

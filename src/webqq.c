@@ -791,9 +791,8 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
             ev = lwqq_info_get_group_detail_info(lc,group,NULL);
             lwqq_async_add_event_listener(ev,_C_(3p,rewrite_whole_message_list,ev,ac,group));
         }
-    }else{
-        group_member_list_come(ac, group);
-    }
+    }//else set user list in cgroup_got_msg
+
     qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV, buf, msg->time);
     return SUCCESS;
 }

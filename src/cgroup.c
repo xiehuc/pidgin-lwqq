@@ -152,6 +152,7 @@ void qq_cgroup_got_msg(qq_chat_group* cg,const char* serv_id,PurpleMessageFlags 
         cg->opt->new_msg_notice(cg);
     }else{
         force_open_dialog(cg);
+        set_user_list(cg);
         name = b?(b->qqnumber?:b->nick):(sb?(sb->card?:sb->nick):serv_id);
         serv_got_chat_in(gc, opend_chat_search(ac,cg->group), name, flags, message, t);
     }
