@@ -485,8 +485,6 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
     cg->chat = chat;
     
     if(lwqq_group_is_qun(group)){
-        //*** it failed ***/
-        //purple_blist_alias_chat(chat,group_name(group));
         qq_set_group_name(cg);
         if(purple_buddy_icons_node_has_custom_icon(PURPLE_BLIST_NODE(chat))==0){
             LwqqAsyncEvent* ev = lwqq_info_get_group_avatar(lc,group);
@@ -494,7 +492,6 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
         }
     }else{
         qq_set_group_name(cg);
-        //purple_blist_alias_chat(chat,group_name(group));
     }
 
     qq_account_insert_index_node(ac, NULL, group);
@@ -1088,7 +1085,6 @@ static void login_stage_f(LwqqClient* lc)
     lwdb_userdb_begin(ac->db, "ins");
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(buddy->last_modify == -1 || buddy->last_modify == 0){
-            //write_buddy_to_db(lc, buddy);
             lwdb_userdb_insert_buddy_info(ac->db, buddy);
             friend_come(lc, buddy);
         }
@@ -1152,10 +1148,10 @@ static void login_stage_3(LwqqClient* lc)
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             lwqq_async_evset_add_event(set, ev);
         }
-        if(! buddy->long_nick) {
+        if(buddy->last_modify == 0 || buddy->last_modify == -1) {
             ev = lwqq_info_get_single_long_nick(lc, buddy);
             lwqq_async_evset_add_event(set, ev);
-            if(buddy->last_modify != -1){
+            if(buddy->last_modify == 0){
                 ev = lwqq_info_get_friend_avatar(lc,buddy);
                 lwqq_async_evset_add_event(set, ev);
             }
@@ -1171,7 +1167,7 @@ static void login_stage_3(LwqqClient* lc)
             ev = lwqq_info_get_group_qqnumber(lc,group);
             lwqq_async_evset_add_event(set, ev);
         }
-        if(!group->memo){
+        if(group->last_modify == -1 || group->last_modify == 0){
             ev = lwqq_info_get_group_memo(lc, group);
             lwqq_async_evset_add_event(set, ev);
         }
