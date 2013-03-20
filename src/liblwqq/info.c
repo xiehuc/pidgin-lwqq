@@ -1943,36 +1943,42 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
 {
     if(!lc||!group) return NULL;
     char url[512];
-    char post[2048];
+    //char post[2048];
+    struct ds post = ds_initializer;
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
     const char* mask_type;
 
     mask_type = (group->type == LWQQ_GROUP_QUN)? "groupmask":"discumask";
 
-    snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{",mask_type);
+    //snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{",mask_type);
+    ds_cat(post,"retype=1&app=EQQ&itemlist={\"",mask_type,"\":{",NULL);
     LwqqMask mask_ori = group->mask;
     group->mask = mask;
     if(group->type == LWQQ_GROUP_QUN){
         LwqqGroup* g;
         LIST_FOREACH(g,&lc->groups,entries){
-            format_append(post,"\"%s\":\"%d\",",g->gid,g->mask);
+            //format_append(post,"\"%s\":\"%d\",",g->gid,g->mask);
+            ds_cat(post,"\"",g->gid,"\":\"",ds_itos(g->mask),"\",",NULL);
         }
     }else{
         LwqqGroup* d;
         LIST_FOREACH(d,&lc->discus,entries){
-            format_append(post,"\"%s\":\"%d\",",d->did,d->mask);
+            //format_append(post,"\"%s\":\"%d\",",d->did,d->mask);
+            ds_cat(post,"\"",d->did,"\":\"",ds_itos(d->mask),"\",",NULL);
         }
     }
     group->mask = mask_ori;
-    format_append(post,"\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
-            lc->index,lc->port,lc->vfwebqq);
+    //format_append(post,"\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
+    //        lc->index,lc->port,lc->vfwebqq);
+    ds_cat(post,"\"cAll\":0,\"idx\":",lc->index,",\"port\":",lc->port,"}}&vfwebqq=",lc->vfwebqq,NULL);
     lwqq_verbose(3,"%s\n",url);
-    lwqq_verbose(3,"%s\n",post);
+    lwqq_verbose(3,"%s\n",ds_c_str(post));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");
     LwqqAsyncEvent* ev;
-    ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    ev = req->do_request_async(req,1,ds_c_str(post),_C_(p_i,process_simple_response,req));
+    ds_free(post);
     lwqq_async_add_event_listener(ev, _C_(2pi,do_mask_group,ev,group,mask));
     return ev;
 }

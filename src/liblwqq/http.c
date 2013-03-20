@@ -266,7 +266,7 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
     }
     return size*nmemb;
 }
-static size_t write_content(void* ptr,size_t size,size_t nmemb,void* userdata)
+static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userdata)
 {
     LwqqHttpRequest* req = (LwqqHttpRequest*) userdata;
     LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
