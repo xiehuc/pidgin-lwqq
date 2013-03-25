@@ -2579,6 +2579,7 @@ static void version_statics_dlg(qq_account* ac)
         char body[1024];
         snprintf(body,sizeof(body),"为了支持pidgin-lwqq的持续发展,\n"
                 "需要统计版本数量!仅仅只需要一个版本号而已!!,以下是相关信息:\n"
+                "说明:https://github.com/xiehuc/pidgin-lwqq/wiki/version-statistics\n"
                 "频率:每个版本第一次运行\n"
                 "地址:http://pidginlwqq.sinaapp.com/statics.php\n"
                 "POST:v=%s\n"

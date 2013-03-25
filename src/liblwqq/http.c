@@ -294,9 +294,10 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
     if(req->response){
         position = req->response+req->resp_len;
         if(req->resp_len+size*nmemb>(unsigned long)length){
-            assert(0);
-            //lwqq_puts("[http unexpected]\n");
-            //return 0;
+            req_->internal_failed = 1;
+            //assert(0);
+            lwqq_puts("[http unexpected]\n");
+            return 0;
         }
     }else{
         struct trunk_entry* trunk = s_malloc0(sizeof(*trunk));
@@ -544,6 +545,7 @@ static void check_multi_info(GLOBAL *g)
     int msgs_left;
     D_ITEM *conn;
     LwqqHttpRequest* req;
+    LwqqHttpRequest_* req_;
     LwqqAsyncEvent* ev;
     CURL *easy;
     CURLcode ret;
@@ -555,17 +557,19 @@ static void check_multi_info(GLOBAL *g)
             ret = msg->data.result;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
             req = conn->req;
+            req_ = (LwqqHttpRequest_*) req;
             ev = conn->event;
             if(ret != 0){
                 lwqq_log(LOG_WARNING,"async retcode:%d\n",ret);
             }
             if(ret != CURLE_OK){
-                if(ret == CURLE_ABORTED_BY_CALLBACK){
+                if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
                     ev->failcode = LWQQ_CALLBACK_CANCELED;
                 }
                 req->retry --;
                 if(req->retry > 0){
                     //re add it to libcurl
+                    req_->internal_failed = 0;
                     curl_multi_remove_handle(g->multi, easy);
                     curl_multi_add_handle(g->multi, easy);
                     continue;
@@ -776,8 +780,10 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
     if (!request->req)
         return -1;
     CURLcode ret;
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) request;
 retry:
     ret=0;
+    req_->internal_failed = 0;
 
     int have_read_bytes = 0;
     char **resp = &request->response;
@@ -806,7 +812,7 @@ retry:
     composite_trunks(request);
     if(ret != CURLE_OK){
         lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
-        if(ret == CURLE_ABORTED_BY_CALLBACK){
+        if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
             return LWQQ_EC_CANCELED;
         }
         request->retry -- ;
