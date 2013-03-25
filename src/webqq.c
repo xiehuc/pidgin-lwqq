@@ -34,6 +34,7 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
 static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
 static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
+static void qq_login(PurpleAccount *account);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -1762,45 +1763,6 @@ static void on_create(void *data,PurpleConnection* gc)
     translate_add_smiley_to_conversation(conv);
 }
 #endif
-static void qq_login(PurpleAccount *account)
-{
-    PurpleConnection* pc= purple_account_get_connection(account);
-    qq_account* ac = qq_account_new(account);
-    const char* username = purple_account_get_username(account);
-    const char* password = purple_account_get_password(account);
-    if(password==NULL||strcmp(password,"")==0) {
-        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
-        return;
-    }
-    g_ref_count ++ ;
-    ac->gc = pc;
-    ac->qq->async_opt = &qq_async_opt;
-    ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
-    ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
-    ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
-    ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
-    ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
-    ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
-    char db_path[64]={0};
-    snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
-    ac->db = lwdb_userdb_new(username,db_path,0);
-    ac->qq_use_qqnum = ! purple_account_get_bool(account, "disable_qq_cache", FALSE);
-    //for empathy
-    if(ac->qq_use_qqnum)
-        ac->qq_use_qqnum = (ac->db != NULL);
-    purple_buddy_icons_set_caching(ac->qq_use_qqnum);
-    
-    if(!ac->qq_use_qqnum) 
-        all_reset(ac,RESET_ALL);
-
-    purple_connection_set_protocol_data(pc,ac);
-    client_connect_signals(ac->gc);
-
-    lwqq_client_userdata(ac->qq) = ac;
-    
-    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
-    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
-}
 static void qq_close(PurpleConnection *gc)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
@@ -2565,8 +2527,6 @@ init_plugin(PurplePlugin *plugin)
     //option = purple_account_option_bool_new("兼容Pidgin Conversation integration", 
     //        "compatible_pidgin_conversation_integration", FALSE);
     //options = g_list_append(options, option);
-    //option = purple_account_option_bool_new("不缓存QQ号","disable_qq_cache",FALSE);
-    //options = g_list_append(options, option);
     option = purple_account_option_bool_new("忽略接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("忽略接收消息文字大小", "disable_custom_font_size", FALSE);
@@ -2579,6 +2539,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
+    option = purple_account_option_bool_new("版本统计", "version_statics", TRUE);
+    options = g_list_append(options, option);
     webqq_prpl_info.protocol_options = options;
 
 #ifdef ENABLE_NLS
@@ -2587,6 +2549,90 @@ init_plugin(PurplePlugin *plugin)
     bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
     textdomain(GETTEXT_PACKAGE);
 #endif
+}
+
+static void version_statics(qq_account* ac,LwqqConfirmTable* ct)
+{
+    int ans = 1;
+    if(ct){
+        ans = ct->answer;
+        purple_account_set_bool(ac->account, "version_statics", ans);
+        lwqq_ct_free(ct);
+    }else{
+        ans = purple_account_get_bool(ac->account, "version_statics", TRUE);
+    }
+    if(ans){
+        const char* url = "http://pidginlwqq.sinaapp.com/statics.php";
+        char post[128];
+        snprintf(post,sizeof(post),"v=%s",info.version);
+        LwqqHttpRequest *req = lwqq_http_request_new(url);
+        lwqq_http_set_option(req, LWQQ_HTTP_NOT_SET_COOKIE,1L);
+        req->do_request_async(req,1,post,_C_(p,lwqq_http_request_free,req));
+    }
+}
+static void version_statics_dlg(qq_account* ac)
+{
+    const char* v = lwdb_userdb_read(ac->db, "v");
+    if(v == NULL){
+        LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+        ct->title = s_strdup("需要您的注意");
+        char body[1024];
+        snprintf(body,sizeof(body),"为了支持pidgin-lwqq的持续发展,\n"
+                "需要统计版本数量!仅仅只需要一个版本号而已!!,以下是相关信息:\n"
+                "频率:每个版本第一次运行\n"
+                "地址:http://pidginlwqq.sinaapp.com/statics.php\n"
+                "POST:v=%s\n"
+                "代码:%s:%d\n",
+                info.version,_FILE_NAME_,__LINE__);
+        ct->body = s_strdup(body);
+        ct->yes_label = s_strdup("同意");
+        ct->no_label = s_strdup("拒绝");
+        ct->cmd = _C_(2p,version_statics,ac,ct);
+        show_confirm_table(ac->qq, ct);
+        lwdb_userdb_write(ac->db, "v", info.version);
+    }else if(strcmp(v,info.version)!=0){
+        version_statics(ac,NULL);
+        lwdb_userdb_write(ac->db, "v", info.version);
+    }
+}
+
+static void qq_login(PurpleAccount *account)
+{
+    PurpleConnection* pc= purple_account_get_connection(account);
+    qq_account* ac = qq_account_new(account);
+    const char* username = purple_account_get_username(account);
+    const char* password = purple_account_get_password(account);
+    if(password==NULL||strcmp(password,"")==0) {
+        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
+        return;
+    }
+    g_ref_count ++ ;
+    ac->gc = pc;
+    ac->qq->async_opt = &qq_async_opt;
+    ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
+    ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
+    ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
+    ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
+    ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
+    ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
+    char db_path[64]={0};
+    snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
+    ac->db = lwdb_userdb_new(username,db_path,0);
+    ac->qq->data = ac;
+    //for empathy
+    ac->qq_use_qqnum = (ac->db != NULL);
+    purple_buddy_icons_set_caching(ac->qq_use_qqnum);
+    if(ac->db)
+        version_statics_dlg(ac);
+    
+    if(!ac->qq_use_qqnum) 
+        all_reset(ac,RESET_ALL);
+
+    purple_connection_set_protocol_data(pc,ac);
+    client_connect_signals(ac->gc);
+    
+    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
+    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)

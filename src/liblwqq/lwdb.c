@@ -1050,3 +1050,28 @@ void lwdb_userdb_flush_groups(LwdbUserDB* db,int last,int day)
             day,last);
     sws_exec_sql(db->db, sql, NULL);
 }
+const char* lwdb_userdb_read(LwdbUserDB* db,const char* key)
+{
+    if(!db||!key) return NULL;
+    char sql[256];
+    static char value_[1024];
+    const char* ret_ = value_;
+    snprintf(sql,sizeof(sql),"SELECT value FROM pairs WHERE key='%s';",
+            key);
+    SwsStmt* stmt = NULL;
+    value_[0] = '\0';
+    sws_query_start(db->db, sql, &stmt, NULL);
+    if(sws_query_next(stmt, NULL)) ret_ = NULL;
+    if(sws_query_column(stmt, 0, value_, sizeof(value_), NULL)) ret_ = NULL;
+    sws_query_end(stmt, NULL);
+    return ret_;
+}
+
+int lwdb_userdb_write(LwdbUserDB* db,const char* key,const char* value)
+{
+    if(!db||!key||!value) return -1;
+
+    char sql[1024];
+    snprintf(sql,sizeof(sql),"INSERT OR REPLACE INTO pairs (key,value) VALUES ('%s','%s');",key,value);
+    return sws_exec_sql(db->db, sql, NULL);
+}

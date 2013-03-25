@@ -52,7 +52,6 @@ struct _LwqqHttpRequest {
 
     /* Response length, NB: the response may not terminate with '\0' */
     int resp_len;
-    int resp_realloc;
 
     /**
      * Send a request to server, method is GET(0) or POST(1), if we make a
@@ -129,6 +128,7 @@ typedef enum {
     LWQQ_HTTP_RESET_URL,
     LWQQ_HTTP_VERBOSE,
     LWQQ_HTTP_CANCELABLE,
+    LWQQ_HTTP_NOT_SET_COOKIE = 1<<7
 }LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();

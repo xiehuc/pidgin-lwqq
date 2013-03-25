@@ -47,6 +47,8 @@ struct trunk_entry{
 typedef struct LwqqHttpRequest_
 {
     LwqqHttpRequest parent;
+    int internal_failed;
+    int flags;
     SIMPLEQ_HEAD(,trunk_entry) trunks;
 }LwqqHttpRequest_;
 
@@ -239,6 +241,7 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
 {
     char* str = (char*)ptr;
     LwqqHttpRequest* request = (LwqqHttpRequest*) userdata;
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) userdata;
 
     long http_code;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&http_code);
@@ -261,8 +264,10 @@ static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata
         sscanf(str,"Set-Cookie: %[^=]=%[^;];",node->name,node->value);
         request->cookie = slist_append(request->cookie,node);
         LwqqClient* lc = request->lc;
-        if(!lc->cookies) lc->cookies = s_malloc0(sizeof(LwqqCookies));
-        lwqq_set_cookie(lc->cookies, node->name, node->value);
+        if(lc&&!(req_->flags&LWQQ_HTTP_NOT_SET_COOKIE)){
+            if(!lc->cookies) lc->cookies = s_malloc0(sizeof(LwqqCookies));
+            lwqq_set_cookie(lc->cookies, node->name, node->value);
+        }
     }
     return size*nmemb;
 }
@@ -288,8 +293,11 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
     }
     if(req->response){
         position = req->response+req->resp_len;
-        if(req->resp_len+size*nmemb>(unsigned long)length)
+        if(req->resp_len+size*nmemb>(unsigned long)length){
             assert(0);
+            //lwqq_puts("[http unexpected]\n");
+            //return 0;
+        }
     }else{
         struct trunk_entry* trunk = s_malloc0(sizeof(*trunk));
         trunk->size = size*nmemb;
@@ -1073,8 +1081,11 @@ void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* pro
 
 void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 {
+    if(!req) return;
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
     va_list args;
     va_start(args,opt);
+    long val=0;
     switch(opt){
         case LWQQ_HTTP_TIMEOUT:
             curl_easy_setopt(req->req,CURLOPT_LOW_SPEED_TIME,va_arg(args,unsigned long));
@@ -1095,6 +1106,10 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
         case LWQQ_HTTP_CANCELABLE:
             if(va_arg(args,long)&&req->progress_func==NULL)
                 lwqq_http_on_progress(req, NULL, NULL);
+            break;
+        default:
+            val = va_arg(args,long);
+            val?(req_->flags&=opt):(req_->flags|=~opt);
             break;
     }
     va_end(args);
