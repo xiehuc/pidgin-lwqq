@@ -30,11 +30,11 @@ Build Option
 - UOA[=Off] 
 > Ubuntu-Account-Online Support
 
-- DB_NOSYNC[=Off]
-> Enable sqlite3 nosync pragma, when first run build db.would not block ui
-
 - VERBOSE[=0]
 > set the verbose level .0 means no verbose,3 means max verbose.
+
+- SSL[=On]
+> enable ssl support.
 
 See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detail install guide.
 
@@ -109,11 +109,11 @@ lwqq 即是 linux webqq 之意
 - UOA[=Off] 
 > 编译对Ubuntu-Account-Online的支持
 
-- DB_NOSYNC[=Off]
-> 开启sqlite3不同步的选项.当第一次运行建立数据库时,能够提供更好的体验不卡ui.
-
 - VERBOSE[=0]
 > 设置输出等级 .0表示没有输出,3表示最大输出.
+
+- SSL=[On]
+> 开启SSL的支持
 
 
 功能列表

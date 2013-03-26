@@ -1090,10 +1090,14 @@ static void login_stage_f(LwqqClient* lc)
             friend_come(lc, buddy);
         }
     }
+    int auto_load_group = purple_account_get_bool(ac->account, "auto_load_group", FALSE);
     LIST_FOREACH(group,&lc->groups,entries){
         if(group->last_modify == -1 || group->last_modify == 0){
             lwdb_userdb_insert_group_info(ac->db, group);
             group_come(lc,group);
+        }
+        if(auto_load_group){
+            lwqq_info_get_group_detail_info(lc, group, NULL);
         }
     }
     lwdb_userdb_commit(ac->db, "ins");
@@ -2524,9 +2528,6 @@ init_plugin(PurplePlugin *plugin)
 {
     PurpleAccountOption *option;
     GList* options = NULL;
-    //option = purple_account_option_bool_new("兼容Pidgin Conversation integration", 
-    //        "compatible_pidgin_conversation_integration", FALSE);
-    //options = g_list_append(options, option);
     option = purple_account_option_bool_new("忽略接收消息字体", "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("忽略接收消息文字大小", "disable_custom_font_size", FALSE);
@@ -2541,6 +2542,9 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("版本统计", "version_statics", TRUE);
     options = g_list_append(options, option);
+    option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
+    options = g_list_append(options, option);
+
     webqq_prpl_info.protocol_options = options;
 
 #ifdef ENABLE_NLS

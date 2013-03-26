@@ -99,6 +99,14 @@ static int lwqq_gdb_whats_running()
     }
     return num;
 }
+static void http_clean(LwqqHttpRequest* req)
+{
+    s_free(req->response);
+    req->resp_len = 0;
+    req->http_code = 0;
+    curl_slist_free_all(req->recv_head);
+    req->recv_head = NULL;
+}
 
 static void composite_trunks(LwqqHttpRequest* req)
 {
@@ -571,6 +579,7 @@ static void check_multi_info(GLOBAL *g)
                     //re add it to libcurl
                     req_->internal_failed = 0;
                     curl_multi_remove_handle(g->multi, easy);
+                    http_clean(req);
                     curl_multi_add_handle(g->multi, easy);
                     continue;
                 }
@@ -733,14 +742,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int 
     char **resp = &request->response;
 
     /* Clear off last response */
-    if (*resp) {
-        s_free(*resp);
-        *resp = NULL;
-        request->http_code = 0;
-        request->resp_len = 0;
-        curl_slist_free_all(request->recv_head);
-        request->recv_head = NULL;
-    }
+    http_clean(request);
 
     /* Set http method */
     if (method==0){
@@ -789,14 +791,7 @@ retry:
     char **resp = &request->response;
 
     /* Clear off last response */
-    if (*resp) {
-        s_free(*resp);
-        *resp = NULL;
-        request->http_code = 0;
-        request->resp_len = 0;
-        curl_slist_free_all(request->recv_head);
-        request->recv_head = NULL;
-    }
+    http_clean(request);
 
     /* Set http method */
     if (method==0){
