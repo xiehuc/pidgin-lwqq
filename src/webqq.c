@@ -1352,11 +1352,11 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
 }
 static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
 {
-    PurpleChat* chat = g->data;
-    if(!chat) return;
-    qq_account* ac = chat->account->gc->proto_data;
+    qq_chat_group* cg = g->data;
+    if(!cg) return;
+    qq_account* ac = lc->data;
     qq_account_remove_index_node(ac, NULL, g);
-    purple_blist_remove_chat(chat);
+    purple_blist_remove_chat(cg->chat);
 }
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,

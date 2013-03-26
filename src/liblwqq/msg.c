@@ -1219,7 +1219,8 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
     s_free(dbg_str);
     
     if (ret != JSON_OK) {
-        lwqq_log(LOG_ERROR, "Parse json object of friends error: %s\n", str);
+        lwqq_log(LOG_ERROR, "Parse recvmsg from json error: %s\n", str);
+        assert(0);
         goto done;
     }
     const char* retcode_str = json_parse_simple_value(json,"retcode");

@@ -2092,21 +2092,24 @@ LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group)
     char post[512];
 
     LwqqHttpRequest* req;
+    LwqqAsyncEvent* ev;
     if(group->type == LWQQ_GROUP_QUN){
         snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/quit_group2");
         snprintf(post,sizeof(post),"r={\"gcode\":\"%s\",\"vfwebqq\":\"%s\"}",group->code,lc->vfwebqq);
         req = lwqq_http_create_default_request(lc, url, NULL);
+        req->set_header(req,"Cookie",lwqq_get_cookies(lc));
         req->set_header(req,"Referer",WEBQQ_S_REF_URL);
         lwqq_verbose(3,"%s\n",post);
+        ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     }else{
         snprintf(url,sizeof(url),WEBQQ_D_HOST"/channel/quit_discu?did=%s&clientid=%s&psessionid=%s&vfwebqq=%s&t=%ld",
                 group->did,lc->clientid,lc->psessionid,lc->vfwebqq,time(NULL));
         req = lwqq_http_create_default_request(lc, url, NULL);
+        req->set_header(req,"Cookie",lwqq_get_cookies(lc));
         req->set_header(req,"Referer",WEBQQ_D_REF_URL);
+        ev = req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
     }
     lwqq_verbose(3,"%s\n",url);
-    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
-    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(2p,do_delete_group,ev,group));
     return ev;
 }
