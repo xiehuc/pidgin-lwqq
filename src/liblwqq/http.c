@@ -40,7 +40,7 @@ typedef struct GLOBAL {
 
 struct trunk_entry{
     char* trunk;
-    unsigned int size;
+    size_t size;
     SIMPLEQ_ENTRY(trunk_entry) entries;
 };
 
@@ -284,10 +284,11 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
     LwqqHttpRequest* req = (LwqqHttpRequest*) userdata;
     LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
     long http_code;
+    size_t sz_ = size*nmemb;
     curl_easy_getinfo(req->req,CURLINFO_RESPONSE_CODE,&http_code);
     //this is a redirection. ignore it.
     if(http_code == 301||http_code == 302){
-        return size*nmemb;
+        return sz_;
     }
     char* position = NULL;
     double length = 0.0;
@@ -301,7 +302,7 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
     }
     if(req->response){
         position = req->response+req->resp_len;
-        if(req->resp_len+size*nmemb>(unsigned long)length){
+        if(req->resp_len+sz_>(unsigned long)length){
             req_->internal_failed = 1;
             //assert(0);
             lwqq_puts("[http unexpected]\n");
@@ -309,14 +310,14 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
         }
     }else{
         struct trunk_entry* trunk = s_malloc0(sizeof(*trunk));
-        trunk->size = size*nmemb;
-        trunk->trunk = s_malloc0(size*nmemb);
+        trunk->size = sz_;
+        trunk->trunk = s_malloc0(sz_);
         position = trunk->trunk;
         SIMPLEQ_INSERT_TAIL(&req_->trunks,trunk,entries);
     }
-    memcpy(position,ptr,size*nmemb);
-    req->resp_len+=size*nmemb;
-    return size*nmemb;
+    memcpy(position,ptr,sz_);
+    req->resp_len+=sz_;
+    return sz_;
 }
 /** 
  * Create a new Http request instance
@@ -501,16 +502,28 @@ LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url
 /************************************************************************/
 /* Those Code for async API */
 
+static void uncompress_response(LwqqHttpRequest* req)
+{
+    char *outdata;
+    char **resp = &req->response;
+    int total = 0;
+
+    outdata = ungzip(*resp, req->resp_len, &total);
+    if (!outdata) return;
+
+    s_free(*resp);
+    /* Update response data to uncompress data */
+    *resp = outdata;
+    req->resp_len = total;
+}
 
 static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
     composite_trunks(request);
-    int have_read_bytes;
     int res;
     char** resp = &request->response;
 
-    have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
 
     /* NB: *response may null */
@@ -522,22 +535,7 @@ static void async_complete(D_ITEM* conn)
     const char *enc_type = NULL;
     enc_type = lwqq_http_get_header(request, "Content-Encoding");
     if (enc_type && strstr(enc_type, "gzip")) {
-        char *outdata;
-        int total = 0;
-        
-        outdata = ungzip(*resp, have_read_bytes, &total);
-        outdata[total] = '\0';
-        if (!outdata) {
-            goto failed;
-        }
-
-        s_free(*resp);
-        /* Update response data to uncompress data */
-        *resp = s_strdup(outdata);
-        (*resp)[total] = '\0';
-        s_free(outdata);
-        have_read_bytes = total;
-        request->resp_len = total;
+        uncompress_response(request);
     }
 failed:
     vp_do(conn->cmd,&res);
@@ -588,19 +586,6 @@ static void check_multi_info(GLOBAL *g)
                 else
                     ev->failcode = LWQQ_CALLBACK_FAILED;
             }
-/*            if(ret == CURLE_OPERATION_TIMEDOUT){
-                req->retry --;
-                if(req->retry == 0){
-                    ev->failcode = LWQQ_CALLBACK_TIMEOUT;
-                }else{
-                    //re add it to libcurl
-                    curl_multi_remove_handle(g->multi, easy);
-                    curl_multi_add_handle(g->multi, easy);
-                    continue;
-                }
-            }else if(ret == CURLE_ABORTED_BY_CALLBACK){
-                ev->failcode = LWQQ_CALLBACK_CANCELED;
-            }*/
 
             curl_multi_remove_handle(g->multi, easy);
             LIST_REMOVE(conn,entries);
@@ -787,7 +772,6 @@ retry:
     ret=0;
     req_->internal_failed = 0;
 
-    int have_read_bytes = 0;
     char **resp = &request->response;
 
     /* Clear off last response */
@@ -819,23 +803,7 @@ retry:
         else return LWQQ_EC_NETWORK_ERROR;
     }
     //perduce timeout.
-    /*if(ret == CURLE_OPERATION_TIMEDOUT ){
-        lwqq_log(LOG_WARNING,"do_request timeout\n");
-        request->retry --;
-        if(request->retry == 0){
-            lwqq_log(LOG_WARNING,"do_request retry used out\n");
-            return LWQQ_EC_TIMEOUT_OVER;
-        }
-        goto retry;
-    }
-    if(ret == CURLE_ABORTED_BY_CALLBACK ){
-    }
-    if(ret != CURLE_OK){
-        lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
-        return ret;
-    }*/
     request->retry = LWQQ_RETRY_VALUE;
-    have_read_bytes = request->resp_len;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
 
     // NB: *response may null 
@@ -848,19 +816,7 @@ retry:
     const char *enc_type = NULL;
     enc_type = lwqq_http_get_header(request, "Content-Encoding");
     if (enc_type && strstr(enc_type, "gzip")) {
-        char *outdata;
-        int total = 0;
-        
-        outdata = ungzip(*resp, have_read_bytes, &total);
-        if (!outdata) {
-            goto failed;
-        }
-
-        s_free(*resp);
-        /* Update response data to uncompress data */
-        *resp = s_strdup(outdata);
-        s_free(outdata);
-        have_read_bytes = total;
+        uncompress_response(request);
     }
 
     return 0;

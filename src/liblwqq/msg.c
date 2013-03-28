@@ -1469,6 +1469,7 @@ static void *start_poll_msg(void *msg_list)
         }
 
         if (ret || req->http_code != 200) continue;
+        req->response[req->resp_len] = '\0';
         retcode = parse_recvmsg_from_json(list, req->response);
         if(!lwqq_client_logined(lc)) break;
         switch(retcode){
