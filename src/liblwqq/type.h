@@ -55,8 +55,8 @@ typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
  */
 
 typedef enum {
-    LWQQ_CALLBACK_FAILED = 0x0,
     LWQQ_CALLBACK_VALID,
+    LWQQ_CALLBACK_FAILED,
     LWQQ_CALLBACK_TIMEOUT,
     LWQQ_CALLBACK_CANCELED,
 }LwqqCallbackCode;

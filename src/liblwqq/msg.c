@@ -1909,14 +1909,16 @@ failed:
 }
 static int msg_send_back(LwqqHttpRequest* req,void* data)
 {
-    if (req == LWQQ_CALLBACK_FAILED ) return -1;
     json_t *root = NULL;
     int ret;
     int errno = 0;
+
+    if(req->failcode>0) {errno = 1;goto failed;}
     if (req->http_code != 200) {
         errno = 1;
         goto failed;
     }
+
     lwqq_verbose(3,"%s\n",req->response);
 
     //we check result if ok return 1,fail return 0;

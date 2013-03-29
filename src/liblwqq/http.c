@@ -538,6 +538,7 @@ static void async_complete(D_ITEM* conn)
         uncompress_response(request);
     }
 failed:
+    if(conn->req)conn->req->failcode = conn->event->failcode;
     vp_do(conn->cmd,&res);
     lwqq_async_event_set_result(conn->event,res);
     lwqq_async_event_finish(conn->event);
@@ -912,8 +913,8 @@ void lwqq_http_global_free()
         LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
             LIST_REMOVE(item,entries);
             //let callback delete data
+            item->req->failcode = item->event->failcode = LWQQ_CALLBACK_CANCELED;
             vp_do(item->cmd,NULL);
-            lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);
         }
@@ -948,9 +949,9 @@ void lwqq_http_cleanup(LwqqClient*lc)
         LIST_FOREACH_SAFE(item,&global.conn_link,entries,tvar){
             if(item->req->lc != lc) continue;
             LIST_REMOVE(item,entries);
+            item->req->failcode = item->event->failcode = LWQQ_CALLBACK_CANCELED;
             //let callback delete data
             vp_do(item->cmd,NULL);
-            lwqq_async_event_set_code(item->event,LWQQ_CALLBACK_FAILED);
             lwqq_async_event_finish(item->event);
             s_free(item);
         }

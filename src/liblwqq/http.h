@@ -44,6 +44,7 @@ struct _LwqqHttpRequest {
      * after do_request() called.
      */
     long http_code;
+    LwqqCallbackCode failcode;
     int retry;
 
     /* Server response, used when do async request */
