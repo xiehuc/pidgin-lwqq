@@ -340,6 +340,7 @@ void lwqq_vc_free(LwqqVerifyCode *vc);
  * @param client LwqqClient instance
  */
 void lwqq_client_free(LwqqClient *client);
+void* lwqq_get_http_handle(LwqqClient* lc);
 
 /* LwqqClient API end */
 

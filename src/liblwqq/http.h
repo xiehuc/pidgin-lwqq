@@ -94,6 +94,34 @@ struct _LwqqHttpRequest {
 
 } ;
 
+typedef struct {
+    struct {
+        enum {
+            LWQQ_HTTP_PROXY_NONE,
+            LWQQ_HTTP_PROXY_HTTP,
+            LWQQ_HTTP_PROXY_SOCKS4,
+            LWQQ_HTTP_PROXY_SOCKS5
+        }type;
+        char* host;
+        int port;
+        char* username;
+        char* password;
+    }proxy;
+}LwqqHttpHandle;
+
+void lwqq_http_handle_remove(LwqqHttpHandle* http);
+#define lwqq_http_proxy_set(_handle,_type,_host,_port,_username,_password)\
+do{\
+    LwqqHttpHandle* h = (LwqqHttpHandle*) (_handle);\
+    h->proxy.type = _type;\
+    h->proxy.host = s_strdup(_host);\
+    h->proxy.port = _port;\
+    h->proxy.username = s_strdup(_username);\
+    h->proxy.password = s_strdup(_password);\
+}while(0);
+
+void lwqq_http_proxy_apply(LwqqHttpHandle* handle,LwqqHttpRequest* req);
+
 /**
  * Free Http Request
  *

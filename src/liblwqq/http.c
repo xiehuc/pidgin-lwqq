@@ -9,6 +9,7 @@
 #include "http.h"
 #include "logger.h"
 #include "queue.h"
+#include "util.h"
 
 #define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
 //#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
@@ -43,6 +44,12 @@ struct trunk_entry{
     size_t size;
     SIMPLEQ_ENTRY(trunk_entry) entries;
 };
+
+TABLE_BEGIN(proxy_map,long,0)
+    TR(LWQQ_HTTP_PROXY_HTTP,     CURLPROXY_HTTP  )
+    TR(LWQQ_HTTP_PROXY_SOCKS4,   CURLPROXY_SOCKS4)
+    TR(LWQQ_HTTP_PROXY_SOCKS5,   CURLPROXY_SOCKS5)
+TABLE_END()
 
 typedef struct LwqqHttpRequest_
 {
@@ -494,6 +501,7 @@ LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url
     }
 
     lwqq_http_set_default_header(req);
+    lwqq_http_proxy_apply(lwqq_get_http_handle(lc), req);
     req->lc = lc;
     //lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
     return req;
@@ -1075,4 +1083,33 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 void lwqq_http_cancel(LwqqHttpRequest* req)
 {
     req->retry = 0;
+}
+void lwqq_http_handle_remove(LwqqHttpHandle* http)
+{
+    if(http){
+        s_free(http->proxy.username);
+        s_free(http->proxy.password);
+        s_free(http->proxy.host);
+    }
+}
+void lwqq_http_proxy_apply(LwqqHttpHandle* handle,LwqqHttpRequest* req)
+{
+    CURL* c = req->req;
+    char* v;
+    long l;
+    if(handle->proxy.type == LWQQ_HTTP_PROXY_NONE){
+        curl_easy_setopt(c, CURLOPT_PROXY,"");
+    }else{
+        l = handle->proxy.type;
+        curl_easy_setopt(c, CURLOPT_PROXYTYPE,proxy_map(l));
+        v = handle->proxy.username;
+        if(v) curl_easy_setopt(c, CURLOPT_PROXYUSERNAME,v);
+        v = handle->proxy.password;
+        if(v) curl_easy_setopt(c, CURLOPT_PROXYPASSWORD,v);
+        v = handle->proxy.host;
+        if(v) curl_easy_setopt(c, CURLOPT_PROXY,v);
+        l = handle->proxy.port;
+        if(l) curl_easy_setopt(c, CURLOPT_PROXYPORT, l);
+    }
+    curl_easy_setopt(c, CURLOPT_PROXYTYPE,handle->proxy.type);
 }

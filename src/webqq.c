@@ -2635,6 +2635,9 @@ static void qq_login(PurpleAccount *account)
 
     purple_connection_set_protocol_data(pc,ac);
     client_connect_signals(ac->gc);
+
+    PurpleProxyInfo* proxy = purple_proxy_get_setup(ac->account);
+    lwqq_http_proxy_set(lwqq_get_http_handle(ac->qq),proxy->type,proxy->host,proxy->port,proxy->username,proxy->password);
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
     lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);

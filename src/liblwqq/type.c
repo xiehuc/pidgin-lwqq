@@ -38,6 +38,12 @@ static LwqqAsyncOption default_async_opt = {
     .poll_lost = null_action,
 };
 
+typedef struct LwqqClient_
+{
+    LwqqClient parent;
+    LwqqHttpHandle http;
+}LwqqClient_;
+
 /** 
  * Create a new lwqq client
  * 
@@ -57,7 +63,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
         return NULL;
     }
 
-    LwqqClient *lc = s_malloc0(sizeof(*lc));
+    LwqqClient *lc = s_malloc0(sizeof(LwqqClient_));
     lc->magic = LWQQ_MAGIC;
     lc->username = s_strdup(username);
     lc->password = s_strdup(password);
@@ -91,6 +97,11 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
 failed:
     lwqq_client_free(lc);
     return NULL;
+}
+
+void* lwqq_get_http_handle(LwqqClient* lc)
+{
+    return &((LwqqClient_*)lc)->http;
 }
 
 /** 
@@ -157,6 +168,7 @@ static void lwqq_categories_free(LwqqFriendCategory *cate)
  */
 void lwqq_client_free(LwqqClient *client)
 {
+    LwqqClient_* lc_ = (LwqqClient_*) client;
     LwqqBuddy *b_entry, *b_next;
     LwqqFriendCategory *c_entry, *c_next;
     LwqqGroup *g_entry, *g_next;
@@ -167,6 +179,7 @@ void lwqq_client_free(LwqqClient *client)
 
     //important remove all http request
     lwqq_http_cleanup(client);
+    lwqq_http_handle_remove(&lc_->http);
 
     /* Free LwqqVerifyCode instance */
     s_free(client->username);

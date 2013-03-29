@@ -29,6 +29,18 @@ void lwqq_ct_free(LwqqConfirmTable* table);
 #define lwqq_group_pretty_name(g) (g->markname?:g->name)
 #define lwqq_buddy_pretty_name(b) (b->markname?:b->nick)
 
+
+#define TABLE_BEGIN(name,type,init) \
+    type name(long k){\
+        type ret_ = init;\
+        switch(k){
+#define TR(k,v)\
+            case k:ret_ = v;break;
+#define TABLE_END()\
+        }\
+        return ret_;\
+    }
+
 /* dynamic string manipulation nano-library */
 #ifndef ds_init
 struct ds { char * d; int p; int s; };
