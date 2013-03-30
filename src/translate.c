@@ -137,7 +137,7 @@ const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
 static char* build_smiley_exp()
 {
     char* exp = s_malloc0(2048);
-    char* spec_char = "()[]*$\\|";
+    char* spec_char = "()[]*$\\|+";
     //<IMG ID=''> is belongs to <.*?>
     //first html label .then smiley
     strcpy(exp,"<[^>]+>|\\[FACE_\\d+\\]|/\\S+");
