@@ -1,6 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+master (04/01/2014)
+	* release 0.1d
+
 dev (03/02/2013):
 	* new feature: support ssl
 
