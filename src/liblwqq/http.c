@@ -363,12 +363,13 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
-    curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,10);
+    curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,20);
     //set normal operate timeout to 30.official value.
     //curl_easy_setopt(request->req,CURLOPT_TIMEOUT,30);
     //5B/s
     curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,8*5);
     curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,30);
+    //curl_easy_setopt(request->req,CURLOPT_SSL_VERIFYPEER,0);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
     request->set_header = lwqq_http_set_header;

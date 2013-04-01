@@ -102,7 +102,7 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
 static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
 {
     //now xfer is not valid.
-    if(event->failcode == LWQQ_CALLBACK_CANCELED) return;
+    if(event->failcode != LWQQ_CALLBACK_VALID) return;
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqClient* lc = ac->qq;
     long errno = 0;

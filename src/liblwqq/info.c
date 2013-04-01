@@ -308,6 +308,7 @@ static int process_online_buddies(LwqqHttpRequest* req,LwqqClient* lc)
     int err = 0;
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
+    req->response[req->resp_len] = '\0';
     lwqq__jump_if_json_fail(root,req->response,err);
     result = lwqq__parse_retcode_result(root, &err);
     lwqq__jump_if_retcode_fail(err);
