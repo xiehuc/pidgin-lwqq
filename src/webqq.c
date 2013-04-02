@@ -631,7 +631,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                 LwqqBuddy* buddy = lwqq_buddy_new();
                 LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
                 lwqq_msg_move(nmsg,msg);
-                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
+                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg->member_uin,"group_request_join",nmsg->group_uin,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
                 return;
             } break;
@@ -2412,7 +2412,7 @@ static const char* qq_list_emblem(PurpleBuddy* b)
 }
 #endif
 
-static void display_user_info(PurpleConnection* gc,LwqqBuddy* b)
+static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 {
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
     char buf[32]={0};
@@ -2444,7 +2444,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b)
     ADD_STRING("学校",b->college);
     ADD_STRING("网页",b->homepage);
     ADD_STRING("简介","");
-    purple_notify_userinfo(gc, try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
+    purple_notify_userinfo(gc, who?who:try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
 #undef ADD_STRING
 #undef ADD_HEADER
 }
@@ -2454,13 +2454,37 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy;
+    char nick[32]={0},gname[32]={0};
+    const char* pos;
     if(ac->qq_use_qqnum)
         buddy = lc->find_buddy_by_qqnumber(lc,who);
     else 
         buddy = lc->find_buddy_by_uin(lc,who);
     if(buddy){
         LwqqAsyncEvent* ev = lwqq_info_get_friend_detail_info(lc, buddy);
-        lwqq_async_add_event_listener(ev, _C_(2p,display_user_info,gc,buddy));
+        lwqq_async_add_event_listener(ev, _C_(3p,display_user_info,gc,buddy,NULL));
+    }
+    else{
+    // Not a buddy? try fetch stranger info
+        if((pos = strstr(who," ### "))!=NULL) {
+            buddy = lwqq_buddy_new();
+            strcpy(gname,pos+strlen(" ### "));
+            strncpy(nick,who,pos-who);
+            nick[pos-who] = '\0';
+            LwqqGroup* group = find_group_by_name(lc,gname);
+            LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,nick);
+            buddy->uin = s_strdup(sb->uin);
+
+            LwqqAsyncEvset* set = lwqq_async_evset_new();
+            LwqqAsyncEvent* ev = NULL;
+            ev = lwqq_info_get_stranger_info(lc,sb->uin,NULL,NULL,buddy);
+            lwqq_async_evset_add_event(set, ev);
+            ev = lwqq_info_get_friend_qqnumber(lc,buddy);
+            lwqq_async_evset_add_event(set, ev);
+            lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,s_strdup(who)));
+        } else {
+            // What should be done here?
+        }
     }
 }
 
