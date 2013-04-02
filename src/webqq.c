@@ -1985,8 +1985,22 @@ static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guin
 static char* qq_status_text(PurpleBuddy* pb)
 {
     LwqqBuddy* buddy = pb->proto_data;
-    if(!buddy) return NULL;
-    return s_strdup(buddy->long_nick);
+    if(!buddy||!buddy->long_nick) return NULL;
+    char* nick = s_strdup(buddy->long_nick);
+    char* ptr = nick;
+    while((ptr = strpbrk(ptr, "><")))
+        *ptr = ' ';
+    /**
+     * why nick cannot contain > and < ?
+     *
+     * maybe: the server return response is \u003e and \u003f
+     * and converted by json_unescape
+     * so > and < is a unicode string not a char
+     *
+     * maybe: the > and < is ambiguous with html tag < >
+     *
+     */
+    return nick;
 }
 static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean full)
 {
