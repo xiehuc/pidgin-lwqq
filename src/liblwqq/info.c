@@ -1795,8 +1795,9 @@ LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,Lwqq
 {
     if(!lc||!qq||!out) return NULL;
 
+    char* qq_ = s_strdup(qq);
     s_free(out->qqnumber);
-    out->qqnumber = s_strdup(qq);
+    out->qqnumber = qq_;
     LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
     ev->lc = lc;
     LwqqVerifyCode* c = s_malloc0(sizeof(*c));

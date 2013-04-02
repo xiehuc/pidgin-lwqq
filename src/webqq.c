@@ -1941,6 +1941,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* messa
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
+    //captcha wrong
     if(err == WEBQQ_FATAL){
         LwqqAsyncEvent* event = lwqq_info_search_friend_by_qq(lc,buddy->qqnumber,buddy);
         lwqq_async_add_event_listener(event, _C_(3p,search_buddy_receipt,event,buddy,message));
@@ -1966,6 +1967,7 @@ static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,Pur
     qq_account* ac = purple_connection_get_protocol_data(pc);
     const char* qqnum = purple_buddy_get_name(buddy);
     LwqqBuddy* friend = lwqq_buddy_new();
+    friend->qqnumber = s_strdup(qqnum);
     LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
     if(cate == NULL){
         friend->cate_index = 0;
