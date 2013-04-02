@@ -2353,6 +2353,46 @@ static void qq_merge_group_history(PurpleChat* chat)
         lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,NULL,g,history));
         */
 }
+static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
+{
+    int level=b->level;
+    char level_str[10];
+    GString *level_output = g_string_new("");
+
+    sprintf(level_str, "%d", level);
+
+    while(level>0)
+        if(level>=64){
+            g_string_append(level_output,"♚");
+            level-=64;
+        }else if(level>=16){
+            g_string_append(level_output,"☀");
+            level-=16;
+        }else if(level>=4){
+            g_string_append(level_output,"☾");
+            level-=4;
+        }else{
+            g_string_append(level_output,"★");
+            level-=1;
+        }
+
+    g_string_append(level_output, " (");
+    g_string_append(level_output, level_str);
+    g_string_append(level_output, "级)");
+
+    purple_notify_info(gc, "QQ等级", level_output->str, NULL);
+    g_string_free(level_output, TRUE);
+}
+static void qq_level_popup(PurpleBuddy* buddy)
+{
+    qq_account* ac = buddy->account->gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* b = buddy->proto_data;
+
+    LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b);
+    lwqq_async_add_event_listener(ev,
+            _C_(2p,display_qq_level_popup,ac->gc,b));
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2367,6 +2407,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
         action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        act = g_list_append(act,action);
+        action = purple_menu_action_new("查看QQ等级",(PurpleCallback)qq_level_popup,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
