@@ -2447,6 +2447,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING("网页",b->homepage);
     ADD_STRING("简介","");
     purple_notify_userinfo(gc, who?who:try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
+    if(who) s_free(who);
 #undef ADD_STRING
 #undef ADD_HEADER
 }
