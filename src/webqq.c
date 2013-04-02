@@ -630,8 +630,10 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             {
                 LwqqBuddy* buddy = lwqq_buddy_new();
                 LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
+                char code[512];
                 lwqq_msg_move(nmsg,msg);
-                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg->member_uin,"group_request_join",nmsg->group_uin,buddy);
+                snprintf(code,sizeof(code),"%s-%s","group_request_join",nmsg->group_uin);
+                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg->member_uin,code,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
                 return;
             } break;
@@ -2477,7 +2479,7 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
 
             LwqqAsyncEvset* set = lwqq_async_evset_new();
             LwqqAsyncEvent* ev = NULL;
-            ev = lwqq_info_get_stranger_info(lc,sb->uin,NULL,NULL,buddy);
+            ev = lwqq_info_get_stranger_info(lc,sb->uin,NULL,buddy);
             lwqq_async_evset_add_event(set, ev);
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             lwqq_async_evset_add_event(set, ev);
