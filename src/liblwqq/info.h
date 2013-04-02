@@ -159,7 +159,7 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
  * when succees. lwqq would fill out necessary info.
  * note lwqq would call async_opt->need_verify to process captcha
  */
-LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out);
+LwqqAsyncEvent* lwqq_info_search_friend(LwqqClient* lc,const char* qq_email,LwqqBuddy* out);
 /**@param out : use what you get in lwqq_info_search_friend_by_qq. and you can add other info
  * such as cate_index
  * @param message : the extra reason .

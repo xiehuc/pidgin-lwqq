@@ -1948,22 +1948,24 @@ done:
     lwqq_buddy_free(b);
     s_free(message);
 }
-static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* message)
+static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* uni_id,char* message)
 {
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     //captcha wrong
     if(err == WEBQQ_FATAL){
-        LwqqAsyncEvent* event = lwqq_info_search_friend_by_qq(lc,buddy->qqnumber,buddy);
-        lwqq_async_add_event_listener(event, _C_(3p,search_buddy_receipt,event,buddy,message));
+        LwqqAsyncEvent* event = lwqq_info_search_friend(lc,uni_id,buddy);
+        lwqq_async_add_event_listener(event, _C_(4p,search_buddy_receipt,event,buddy,uni_id,message));
         return;
+    }
+    if(err == LWQQ_EC_NO_RESULT){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","帐号不存在或不是主显帐号",NULL,NULL,NULL);
+        goto failed;
     }
     if(!buddy->token){
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","好友信息获取失败",NULL,NULL,NULL);
-        lwqq_buddy_free(buddy);
-        s_free(message);
-        return;
+        goto failed;
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup("好友确认");
@@ -1972,21 +1974,27 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* messa
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
     show_confirm_table(lc,confirm);
+    s_free(uni_id);
+    return;
+failed:
+    lwqq_buddy_free(buddy);
+    s_free(message);
+    s_free(uni_id);
 }
 #if ! PURPLE_OUTDATE
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
-    const char* qqnum = purple_buddy_get_name(buddy);
+    const char* uni_id = purple_buddy_get_name(buddy);
     LwqqBuddy* friend = lwqq_buddy_new();
-    friend->qqnumber = s_strdup(qqnum);
+    //friend->qqnumber = s_strdup(qqnum);
     LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
     if(cate == NULL){
         friend->cate_index = 0;
     }else
         friend->cate_index = cate->index;
-    LwqqAsyncEvent* ev = lwqq_info_search_friend_by_qq(ac->qq,qqnum,friend);
-    lwqq_async_add_event_listener(ev, _C_(3p,search_buddy_receipt,ev,friend,s_strdup(message)));
+    LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
+    lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(message)));
 }
 #endif
 static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guint type)

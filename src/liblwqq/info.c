@@ -37,7 +37,6 @@ static int get_group_name_list_back(LwqqHttpRequest* req,LwqqClient* lc);
 static int group_detail_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* group);
 static int get_discu_list_back(LwqqHttpRequest* req,void* data);
 static int get_discu_detail_info_back(LwqqHttpRequest* req,LwqqClient* lc,LwqqGroup* discu);
-static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out);
 static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGroup* g);
 static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
 static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g,char* msg);
@@ -156,10 +155,8 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
 
     //{"face":567,"birthday":{"month":6,"year":1991,"day":14},"occupation":"","phone":"","allow":1,"college":"","uin":289056851,"constel":5,"blood":0,"homepage":"","stat":10,"vip_info":0,"country":"中国","city":"威海","personal":"","nick":"d3dd","shengxiao":8,"email":"","client_type":41,"province":"山东","gender":"male","mobile":""}}
     //
-#define  SET_BUDDY_INFO(key, name) {                                    \
-            s_free(buddy->key);                                         \
-            buddy->key = s_strdup(json_parse_simple_value(json, name)); \
-        }
+    //
+#define  SET_BUDDY_INFO(key, name) parse_key_value(buddy->key,name)
         SET_BUDDY_INFO(uin, "uin");
         SET_BUDDY_INFO(face, "face");
         json_t* birth_tmp = json_find_first_label(json, "birthday");
@@ -193,6 +190,7 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(gender, "gender");
         SET_BUDDY_INFO(mobile, "mobile");
         SET_BUDDY_INFO(token, "token");
+        SET_BUDDY_INFO(qqnumber, "account");
 #undef SET_BUDDY_INFO
 }
 
@@ -273,6 +271,7 @@ static int process_friend_detail(LwqqHttpRequest* req,LwqqBuddy* out)
     if(err != WEBQQ_OK) goto done;
     if(result)
         parse_friend_detail(result,out);
+    else err = LWQQ_EC_NO_RESULT;
 
 done:
     lwqq__clean_json_and_req(root,req);
@@ -1807,21 +1806,8 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status)
     lwqq_async_add_event_listener(ev, _C_(2pi,do_change_status,ev,lc,status));
     return ev;
 }
-LwqqAsyncEvent* lwqq_info_search_friend_by_qq(LwqqClient* lc,const char* qq,LwqqBuddy* out)
-{
-    if(!lc||!qq||!out) return NULL;
 
-    char* qq_ = s_strdup(qq);
-    s_free(out->qqnumber);
-    out->qqnumber = qq_;
-    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
-    ev->lc = lc;
-    LwqqVerifyCode* c = s_malloc0(sizeof(*c));
-    c->cmd = _C_(3p,add_friend_stage_2,ev,c,out);
-    lwqq__request_captcha(lc, c);
-    return ev;
-}
-static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqBuddy* out)
+static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,char* qq_email,LwqqBuddy* out)
 {
     if(!code->str){
         called->result = LWQQ_EC_ERROR;
@@ -1830,8 +1816,9 @@ static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqB
     }
     char url[512];
     LwqqClient* lc = called->lc;
+    char* uin = url_encode(qq_email);
     snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/search_qq_by_uin2?tuin=%s&verifysession=%s&code=%s&vfwebqq=%s&t=%ld",
-            out->qqnumber,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
+            uin,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
     lwqq_verbose(3,"%s\n",url);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
@@ -1840,7 +1827,24 @@ static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqB
     LwqqAsyncEvent* ev = req->do_request_async(req,0,NULL,_C_(2p_i,process_friend_detail,req,out));
     lwqq_async_add_event_chain(ev, called);
 done:
+    s_free(uin);
+    s_free(qq_email);
     lwqq_vc_free(code);
+}
+
+LwqqAsyncEvent* lwqq_info_search_friend(LwqqClient* lc,const char* qq_email,LwqqBuddy* out)
+{
+    if(!lc||!qq_email||!out) return NULL;
+
+    /*char* qq_ = s_strdup(qq);
+    s_free(out->qqnumber);
+    out->qqnumber = qq_;*/
+    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+    ev->lc = lc;
+    LwqqVerifyCode* c = s_malloc0(sizeof(*c));
+    c->cmd = _C_(4p,add_friend_stage_2,ev,c,s_strdup(qq_email),out);
+    lwqq__request_captcha(lc, c);
+    return ev;
 }
 LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char* message)
 {

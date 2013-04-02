@@ -103,6 +103,7 @@ typedef enum {
 /* Lwqq Error Code */
 typedef enum {
     LWQQ_EC_ERROR = -1,                 //<general error
+    LWQQ_EC_NO_RESULT = -2,
     //old uncleard api
     LWQQ_EC_OK = 0,
     LWQQ_EC_NULL_POINTER,
@@ -113,7 +114,6 @@ typedef enum {
     LWQQ_EC_HTTP_ERROR = 30,
     LWQQ_EC_DB_EXEC_FAIELD = 50,
     LWQQ_EC_DB_CLOSE_FAILED,
-    LWQQ_EC_NO_RESULT,
     LWQQ_EC_TIMEOUT_OVER,
     LWQQ_EC_CANCELED
 } LwqqErrorCode;
@@ -162,12 +162,15 @@ typedef struct LwqqBuddy {
     size_t avatar_len;
     time_t last_modify;
     char *token;                /**< Only used in add friend */
+    //char *uiuin;                /**< Only used in add friend */
     void *data;                 /**< user defined data */
     int level;
     //short page;
     //pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
+
+
 typedef LIST_HEAD(LwqqFriendList,LwqqBuddy) 
     LwqqFriendList;
 typedef struct LwqqSimpleBuddy{
