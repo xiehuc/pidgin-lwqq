@@ -178,7 +178,7 @@ LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* group,const char* 
  *              because poll msg would auto free original message data. so we should 
  *              'move' it to another handle.
  */
-LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,char* tuin,char *code,LwqqBuddy* buddy);
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out);
 /** use this when you received sys g message with type (request join).
  * normally you should use get_stanger_info first and ask user whether accept or deny request.
  * @param msg : use you moved message.
@@ -198,5 +198,6 @@ LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic);
 void lwqq_recent_list_free(LwqqRecentList* list);
 LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
+LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
 
 #endif  /* LWQQ_INFO_H */

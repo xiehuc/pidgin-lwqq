@@ -1985,16 +1985,27 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     return ev;
 }
 
-LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,char* tuin,char *code,LwqqBuddy* buddy)
+LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out)
 {
-    if(!lc||!tuin||!buddy) return NULL;
+    if(!lc||!serv_id||!out) return NULL;
     char url[512];
-    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s&vfwebqq=%s&t=%ld",tuin,code?code:"",lc->vfwebqq,time(NULL));
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=&vfwebqq=%s&t=%ld",serv_id,lc->vfwebqq,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer",WEBQQ_S_REF_URL);
     lwqq_verbose(3,"%s\n",url);
-    return req->do_request_async(req,0,NULL,_C_(2p,process_friend_detail,req,buddy));
+    return req->do_request_async(req,0,NULL,_C_(2p,process_friend_detail,req,out));
+}
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out)
+{
+    if(!lc||!msg||!out) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->member_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
+    lwqq_verbose(3,"%s\n",url);
+    return req->do_request_async(req,0,NULL,_C_(2p,process_friend_detail,req,out));
 }
 
 LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMsg* msg ,LwqqAnswer answer,const char* reason)

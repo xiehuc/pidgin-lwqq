@@ -110,6 +110,22 @@ static LwqqSimpleBuddy* find_group_member_by_nick_or_card(LwqqGroup* group,const
     return NULL;
 }
 
+static int find_group_and_member_by_card(LwqqClient* lc,const char* card,LwqqGroup** p_g,LwqqSimpleBuddy** p_sb)
+{
+    if(!card) return 0;
+    char nick[128]={0};
+    char gname[128]={0};
+    const char* pos;
+    if((pos = strstr(card," ### "))!=NULL) {
+        strcpy(gname,pos+strlen(" ### "));
+        strncpy(nick,card,pos-card);
+        nick[pos-card] = '\0';
+        *p_g = find_group_by_name(lc,gname);
+        *p_sb = find_group_member_by_nick_or_card(*p_g,nick);
+        return 1;
+    }
+    return 0;
+}
 static void action_about_webqq(PurplePluginAction *action)
 {
     PurpleConnection *gc = (PurpleConnection *) action->context;
@@ -630,10 +646,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             {
                 LwqqBuddy* buddy = lwqq_buddy_new();
                 LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
-                char code[512];
                 lwqq_msg_move(nmsg,msg);
-                snprintf(code,sizeof(code),"%s-%s","group_request_join",nmsg->group_uin);
-                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg->member_uin,code,buddy);
+                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
                 return;
             } break;
@@ -1468,18 +1482,14 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
     LwqqClient* lc = ac->qq;
-    char nick[32]={0},gname[32]={0};
-    const char* pos;
     LwqqMsg* msg;
     LwqqMsgMessage *mmsg;
-    if((pos = strstr(who," ### "))!=NULL) {
-        strcpy(gname,pos+strlen(" ### "));
-        strncpy(nick,who,pos-who);
-        nick[pos-who] = '\0';
+    LwqqGroup* group = NULL;
+    LwqqSimpleBuddy* sb = NULL;
+    if(find_group_and_member_by_card(lc, who, &group, &sb)){
         msg = lwqq_msg_new(LWQQ_MS_SESS_MSG);
         mmsg = (LwqqMsgMessage*)msg;
-        LwqqGroup* group = find_group_by_name(lc,gname);
-        LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,nick);
+
         mmsg->super.to = s_strdup(sb->uin);
         if(!sb->group_sig)
             lwqq_info_get_group_sig(lc,group,sb->uin);
@@ -2449,18 +2459,20 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING("网页",b->homepage);
     ADD_STRING("简介","");
     purple_notify_userinfo(gc, who?who:try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
-    if(who) s_free(who);
+    //if who is not NULL,this is a group member 
+    //detail info display.we should free buddy.
+    if(who) {
+        lwqq_buddy_free(b);
+        s_free(who);
+    }
 #undef ADD_STRING
 #undef ADD_HEADER
 }
-
 static void qq_get_user_info(PurpleConnection* gc,const char* who)
 {
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy;
-    char nick[32]={0},gname[32]={0};
-    const char* pos;
     if(ac->qq_use_qqnum)
         buddy = lc->find_buddy_by_qqnumber(lc,who);
     else 
@@ -2468,27 +2480,21 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
     if(buddy){
         LwqqAsyncEvent* ev = lwqq_info_get_friend_detail_info(lc, buddy);
         lwqq_async_add_event_listener(ev, _C_(3p,display_user_info,gc,buddy,NULL));
-    }
-    else{
-    // Not a buddy? try fetch stranger info
-        if((pos = strstr(who," ### "))!=NULL) {
+    }else{
+        // Not a buddy? try fetch stranger info
+        LwqqGroup* g = NULL;
+        LwqqSimpleBuddy* sb = NULL;
+        if(find_group_and_member_by_card(lc,who, &g, &sb)){
             buddy = lwqq_buddy_new();
-            strcpy(gname,pos+strlen(" ### "));
-            strncpy(nick,who,pos-who);
-            nick[pos-who] = '\0';
-            LwqqGroup* group = find_group_by_name(lc,gname);
-            LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,nick);
             buddy->uin = s_strdup(sb->uin);
 
             LwqqAsyncEvset* set = lwqq_async_evset_new();
             LwqqAsyncEvent* ev = NULL;
-            ev = lwqq_info_get_stranger_info(lc,sb->uin,NULL,buddy);
+            ev = lwqq_info_get_group_member_detail(lc,sb->uin,buddy);
             lwqq_async_evset_add_event(set, ev);
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             lwqq_async_evset_add_event(set, ev);
             lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,s_strdup(who)));
-        } else {
-            // What should be done here?
         }
     }
 }
