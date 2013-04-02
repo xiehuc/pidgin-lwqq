@@ -2351,22 +2351,45 @@ static void qq_merge_group_history(PurpleChat* chat)
         lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,NULL,g,history));
         */
 }
-static void display_qq_level_popup(PurpleConnection* gc, GString *level)
+static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
 {
-    purple_notify_info(gc, "QQ等级", level->str, NULL);
-    g_string_free(level, TRUE);
+    int level=b->level;
+    char level_str[10];
+    GString *level_output = g_string_new("");
+
+    sprintf(level_str, "%d", level);
+
+    while(level>0)
+        if(level>=64){
+            g_string_append(level_output,"♚");
+            level-=64;
+        }else if(level>=16){
+            g_string_append(level_output,"☀");
+            level-=16;
+        }else if(level>=4){
+            g_string_append(level_output,"☾");
+            level-=4;
+        }else{
+            g_string_append(level_output,"★");
+            level-=1;
+        }
+
+    g_string_append(level_output, " (");
+    g_string_append(level_output, level_str);
+    g_string_append(level_output, "级)");
+
+    purple_notify_info(gc, "QQ等级", level_output->str, NULL);
+    g_string_free(level_output, TRUE);
 }
 static void qq_level_popup(PurpleBuddy* buddy)
 {
     qq_account* ac = buddy->account->gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
-    GString *level;
-    level = g_string_new("");
 
-    LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b->uin,level);
+    LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b);
     lwqq_async_add_event_listener(ev,
-            _C_(2p,display_qq_level_popup,ac->gc,level));
+            _C_(2p,display_qq_level_popup,ac->gc,b));
 }
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
