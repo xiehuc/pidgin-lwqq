@@ -401,7 +401,23 @@ done:
     return err;
 }
 
-
+static int process_qq_level(LwqqHttpRequest* req,LwqqBuddy* b)
+{
+    //{"retcode":0,"result":{"level":37,"days":1534,"hours":12219,"remainDays":62,"tuin":1990734287}}
+    int err = 0;
+    json_t *root = NULL,*result;
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
+    result = lwqq__parse_retcode_result(root, &err);
+    if(result){
+        char* raw_level = lwqq__json_get_value(result,"level");
+        b->level = s_atoi(raw_level, 0);
+        s_free(raw_level);
+    }
+done:
+    lwqq__clean_json_and_req(root,req);
+    return err;
+}
 
 
 
@@ -2182,4 +2198,17 @@ void lwqq_recent_list_free(LwqqRecentList* list)
         s_free(recent);
     }
     memset(list,0,sizeof(*list));
+}
+
+
+LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc, LwqqBuddy* b)
+{
+    if(!lc||!b) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_qq_level2?tuin=%s&vfwebqq=%s&t=%ld",b->uin,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
+    lwqq_verbose(3,"%s\n",url);
+    return req->do_request_async(req,0,NULL,_C_(2p,process_qq_level,req,b));
 }

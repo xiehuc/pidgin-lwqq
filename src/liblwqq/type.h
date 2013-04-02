@@ -163,6 +163,7 @@ typedef struct LwqqBuddy {
     time_t last_modify;
     char *token;                /**< Only used in add friend */
     void *data;                 /**< user defined data */
+    int level;
     //short page;
     //pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
