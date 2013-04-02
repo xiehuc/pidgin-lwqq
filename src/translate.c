@@ -345,6 +345,30 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
 static void paste_content_string(const char* from,char* to)
 {
     const char* read = from;
+    const char* ptr = read;
+    char* write = to;
+    size_t n = 0;
+    while((ptr = strpbrk(read,"<>&\""))){
+        if(ptr>read){
+            n = ptr-read;
+            strncpy(write,read,n);
+            write += n;
+        }
+        switch(*ptr){
+            case '<' : strcpy(write,"&lt;");break;
+            case '>' : strcpy(write,"&gt;");break;
+            case '&' : strcpy(write,"&amp;");break;
+            case '"' : strcpy(write,"&quot;");break;
+        }
+        read = ptr+1;
+        write+=strlen(write);
+    }
+    if(*read != '\0'){
+        strcpy(write,read);
+        write+=strlen(read);
+    }
+    *write = '\0';
+    /*const char* read = from;
     char* write = to;
     size_t idx;
     while(*read!='\0'){
@@ -366,6 +390,13 @@ static void paste_content_string(const char* from,char* to)
         write+=strlen(write);
     }
     *write='\0';
+    */
+}
+char* translate_to_html_symbol(const char* s)
+{
+    char buf[2048] = {0};
+    paste_content_string(s, buf);
+    return s_strdup(buf);
 }
 void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
 {
