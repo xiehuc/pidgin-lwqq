@@ -1985,11 +1985,11 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     return ev;
 }
 
-LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* buddy)
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,char* tuin,char *code,LwqqBuddy* buddy)
 {
-    if(!lc||!msg||!buddy) return NULL;
+    if(!lc||!tuin||!buddy) return NULL;
     char url[512];
-    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s-%s&vfwebqq=%s&t=%ld",msg->member_uin,"group_request_join",msg->group_uin,lc->vfwebqq,time(NULL));
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_stranger_info2?tuin=%s&verifysession=&gid=0&code=%s&vfwebqq=%s&t=%ld",tuin,code?code:"",lc->vfwebqq,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer",WEBQQ_S_REF_URL);
