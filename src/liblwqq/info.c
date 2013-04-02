@@ -2171,3 +2171,52 @@ void lwqq_recent_list_free(LwqqRecentList* list)
     }
     memset(list,0,sizeof(*list));
 }
+
+static int process_qq_level(LwqqHttpRequest* req,GString *level_output)
+{
+    //{"retcode":0,"result":{"level":37,"days":1534,"hours":12219,"remainDays":62,"tuin":1990734287}}
+    int err = 0;
+    json_t *root = NULL,*result;
+    lwqq__jump_if_http_fail(req,err);
+    lwqq__jump_if_json_fail(root,req->response,err);
+    result = lwqq__parse_retcode_result(root, &err);
+    if(result){
+        char* raw_level = lwqq__json_get_value(result,"level");
+        int level = s_atoi(raw_level, 0);
+
+        while(level>0)
+            if(level>=64){
+                g_string_append(level_output,"♚");
+                level-=64;
+            }else if(level>=16){
+                g_string_append(level_output,"☀");
+                level-=16;
+            }else if(level>=4){
+                g_string_append(level_output,"☾");
+                level-=4;
+            }else{
+                g_string_append(level_output,"★");
+                level-=1;
+            }
+
+        g_string_append(level_output, " (");
+        g_string_append(level_output, raw_level);
+        g_string_append(level_output, "级)");
+        s_free(raw_level);
+    }
+done:
+    lwqq__clean_json_and_req(root,req);
+    return err;
+}
+
+LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc, char *tuin, GString *level)
+{
+    if(!lc||!tuin) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_qq_level2?tuin=%s&vfwebqq=%s&t=%ld",tuin,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
+    lwqq_verbose(3,"%s\n",url);
+    return req->do_request_async(req,0,NULL,_C_(2p,process_qq_level,req,level));
+}

@@ -2351,6 +2351,23 @@ static void qq_merge_group_history(PurpleChat* chat)
         lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,NULL,g,history));
         */
 }
+static void display_qq_level_popup(PurpleConnection* gc, GString *level)
+{
+    purple_notify_info(gc, "QQ等级", level->str, NULL);
+    g_string_free(level, TRUE);
+}
+static void qq_level_popup(PurpleBuddy* buddy)
+{
+    qq_account* ac = buddy->account->gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* b = buddy->proto_data;
+    GString *level;
+    level = g_string_new("");
+
+    LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b->uin,level);
+    lwqq_async_add_event_listener(ev,
+            _C_(2p,display_qq_level_popup,ac->gc,level));
+}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2365,6 +2382,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
         action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        act = g_list_append(act,action);
+        action = purple_menu_action_new("查看QQ等级",(PurpleCallback)qq_level_popup,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);

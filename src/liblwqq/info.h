@@ -13,6 +13,7 @@
 
 #include "type.h"
 #include "msg.h"
+#include <glib.h>
 
 typedef struct LwqqBusinessCard {
     char* phone;
@@ -198,5 +199,6 @@ LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic);
 void lwqq_recent_list_free(LwqqRecentList* list);
 LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
+LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc, char *tuin, GString *level);
 
 #endif  /* LWQQ_INFO_H */
