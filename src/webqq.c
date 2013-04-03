@@ -2331,9 +2331,15 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
 }
 static void qq_merge_online_history(PurpleBuddy* buddy)
 {
-    qq_account* ac = buddy->account->gc->proto_data;
+    PurpleConnection* gc = buddy->account->gc;
+    qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
+    if(b == NULL){
+        if(strstr(buddy->name," ### "))
+            purple_notify_info(gc,"错误","临时会话不支持此功能",NULL);
+        return;
+    }
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
     history->row = 60;
     history->page = 0;
@@ -2403,9 +2409,15 @@ static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
 }
 static void qq_level_popup(PurpleBuddy* buddy)
 {
-    qq_account* ac = buddy->account->gc->proto_data;
+    PurpleConnection* gc = buddy->account->gc;
+    qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* b = buddy->proto_data;
+    if(b == NULL){
+        if(strstr(buddy->name," ### "))
+            purple_notify_info(gc,"错误","临时会话不支持此功能",NULL);
+        return;
+    }
 
     LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b);
     lwqq_async_add_event_listener(ev,
