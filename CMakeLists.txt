@@ -31,7 +31,7 @@ message("")
 
 if(PURPLE_VERSION VERSION_LESS "2.8")
     message("libpurple version outdate")
-    add_definitions(-DPURPLE_OUTDATE="1")
+    add_definitions(-DPURPLE_OUTDATE=1)
 endif(PURPLE_VERSION VERSION_LESS "2.8")
 
 add_definitions(-DINST_PREFIX="${CMAKE_INSTALL_PREFIX}")

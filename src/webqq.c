@@ -1981,7 +1981,23 @@ failed:
     s_free(message);
     s_free(uni_id);
 }
-#if ! PURPLE_OUTDATE
+#if PURPLE_OUTDATE
+static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group)
+{
+    qq_account* ac = purple_connection_get_protocol_data(pc);
+    const char* uni_id = purple_buddy_get_name(buddy);
+    const char *message = "";
+    LwqqBuddy* friend = lwqq_buddy_new();
+    //friend->qqnumber = s_strdup(qqnum);
+    LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
+    if(cate == NULL){
+        friend->cate_index = 0;
+    }else
+        friend->cate_index = cate->index;
+    LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
+    lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(message)));
+}
+#else
 static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
@@ -2014,13 +2030,13 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
 {
     LwqqBuddy* buddy = pb->proto_data;
     if(buddy->qqnumber)
-        purple_notify_user_info_add_pair_plaintext(info, "QQ", buddy->qqnumber);
+        purple_notify_user_info_add_pair(info, "QQ", buddy->qqnumber);
     if(buddy->nick)
-        purple_notify_user_info_add_pair_plaintext(info, "昵称", buddy->nick);
+        purple_notify_user_info_add_pair(info, "昵称", buddy->nick);
     if(buddy->markname)
-        purple_notify_user_info_add_pair_plaintext(info, "备注", buddy->markname);
+        purple_notify_user_info_add_pair(info, "备注", buddy->markname);
     if(buddy->long_nick)
-        purple_notify_user_info_add_pair_plaintext(info, "签名", buddy->long_nick);
+        purple_notify_user_info_add_pair(info, "签名", buddy->long_nick);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
@@ -2563,7 +2579,11 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
+#if PURPLE_OUTDATE
+    .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_CHAT_TOPIC,
+#else
     .options=           OPT_PROTO_IM_IMAGE|OPT_PROTO_INVITE_MESSAGE|OPT_PROTO_CHAT_TOPIC,
+#endif
     .icon_spec=         {"jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND},
     .list_icon=         qq_list_icon,
     .login=             qq_login,
@@ -2595,7 +2615,9 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .group_buddy=       qq_change_category  /* change buddy category on server */,
     .rename_group=      qq_rename_category,
     .remove_buddy=      qq_remove_buddy,
-#if ! PURPLE_OUTDATE
+#if PURPLE_OUTDATE
+    .add_buddy=         qq_add_buddy,
+#else
     .add_buddy_with_invite=qq_add_buddy_with_invite,
 #endif
 
