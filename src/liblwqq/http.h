@@ -97,6 +97,7 @@ struct _LwqqHttpRequest {
 typedef struct {
     struct {
         enum {
+            LWQQ_HTTP_PROXY_NOT_SET = -1, //let curl auto set proxy
             LWQQ_HTTP_PROXY_NONE,
             LWQQ_HTTP_PROXY_HTTP,
             LWQQ_HTTP_PROXY_SOCKS4,

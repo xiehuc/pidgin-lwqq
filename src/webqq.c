@@ -2720,6 +2720,16 @@ static void version_statics_dlg(qq_account* ac)
     }
 }
 
+static
+TABLE_BEGIN(proxy_map,long,0)
+    TR(PURPLE_PROXY_USE_GLOBAL, LWQQ_HTTP_PROXY_NOT_SET)
+    TR(PURPLE_PROXY_USE_ENVVAR, LWQQ_HTTP_PROXY_NOT_SET)
+    TR(PURPLE_PROXY_NONE,       LWQQ_HTTP_PROXY_NONE)
+    TR(PURPLE_PROXY_HTTP,       LWQQ_HTTP_PROXY_HTTP)
+    TR(PURPLE_PROXY_SOCKS4,     LWQQ_HTTP_PROXY_SOCKS4)
+    TR(PURPLE_PROXY_SOCKS5,     LWQQ_HTTP_PROXY_SOCKS5)
+TABLE_END()
+
 static void qq_login(PurpleAccount *account)
 {
     PurpleConnection* pc= purple_account_get_connection(account);
@@ -2756,7 +2766,7 @@ static void qq_login(PurpleAccount *account)
     client_connect_signals(ac->gc);
 
     PurpleProxyInfo* proxy = purple_proxy_get_setup(ac->account);
-    lwqq_http_proxy_set(lwqq_get_http_handle(ac->qq),proxy->type,proxy->host,proxy->port,proxy->username,proxy->password);
+    lwqq_http_proxy_set(lwqq_get_http_handle(ac->qq),proxy_map(proxy->type),proxy->host,proxy->port,proxy->username,proxy->password);
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
     lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);

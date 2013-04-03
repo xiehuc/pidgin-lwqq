@@ -45,6 +45,7 @@ struct trunk_entry{
     SIMPLEQ_ENTRY(trunk_entry) entries;
 };
 
+static
 TABLE_BEGIN(proxy_map,long,0)
     TR(LWQQ_HTTP_PROXY_HTTP,     CURLPROXY_HTTP  )
     TR(LWQQ_HTTP_PROXY_SOCKS4,   CURLPROXY_SOCKS4)
@@ -1098,7 +1099,9 @@ void lwqq_http_proxy_apply(LwqqHttpHandle* handle,LwqqHttpRequest* req)
     CURL* c = req->req;
     char* v;
     long l;
-    if(handle->proxy.type == LWQQ_HTTP_PROXY_NONE){
+    if(handle->proxy.type == LWQQ_HTTP_PROXY_NOT_SET){
+        return;
+    }else if(handle->proxy.type == LWQQ_HTTP_PROXY_NONE){
         curl_easy_setopt(c, CURLOPT_PROXY,"");
     }else{
         l = handle->proxy.type;
