@@ -281,6 +281,7 @@ static int process_msg_list(LwqqHttpRequest* req,char* serv_id,LwqqHistoryMsgLis
         log = log->previous;
     }
 done:
+    if(err&&req->response) lwqq_verbose(3,"%s\n",req->response);
     lwqq__clean_json_and_req(root,req);
     return err;
 }
@@ -328,6 +329,8 @@ static int process_group_msg_list(LwqqHttpRequest* req,char* unused,LwqqHistoryM
     }
 
 done:
+    //output only error.
+    if(err&&req->response) lwqq_verbose(3,"%s\n",req->response);
     lwqq__clean_json_and_req(root,req);
     return err;
 #undef SET_ERR
