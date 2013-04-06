@@ -107,14 +107,6 @@ static int lwqq_gdb_whats_running()
     }
     return num;
 }
-static void http_clean(LwqqHttpRequest* req)
-{
-    s_free(req->response);
-    req->resp_len = 0;
-    req->http_code = 0;
-    curl_slist_free_all(req->recv_head);
-    req->recv_head = NULL;
-}
 
 static void composite_trunks(LwqqHttpRequest* req)
 {
@@ -134,6 +126,15 @@ static void composite_trunks(LwqqHttpRequest* req)
         s_free(trunk->trunk);
         s_free(trunk);
     }
+}
+static void http_clean(LwqqHttpRequest* req)
+{
+    composite_trunks(req);
+    s_free(req->response);
+    req->resp_len = 0;
+    req->http_code = 0;
+    curl_slist_free_all(req->recv_head);
+    req->recv_head = NULL;
 }
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
