@@ -69,6 +69,7 @@ LwqqAsyncEvent* lwqq__request_captcha(LwqqClient* lc,LwqqVerifyCode* c);
 #define lwqq__json_get_value(json,k) s_strdup(json_parse_simple_value(json,k))
 #define lwqq__json_get_string(json,k) json_unescape_s(json_parse_simple_value(json,k))
 #define lwqq__json_parse_child(json,k,sub) sub=json_find_first_label(json,k);if(sub) sub=sub->child;
+#define lwqq__override(k,v) {char* tmp_ = v;if(tmp_){s_free(k);k=tmp_;}}
 
 //json function expand
 json_t *json_find_first_label_all (const json_t * json, const char *text_label);

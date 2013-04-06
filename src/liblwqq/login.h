@@ -22,6 +22,8 @@
  */
 void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err);
 
+LwqqAsyncEvent* lwqq_relogin(LwqqClient* lc);
+
 /** 
  * WebQQ logout function
  * 

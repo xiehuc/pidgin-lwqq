@@ -25,6 +25,7 @@
 #include "internal.h"
 #include "util.h"
 #include "json.h"
+#include "login.h"
 
 #define LWQQ_MT_BITS  (~((-1)<<8))
 
@@ -1231,10 +1232,8 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         retcode = atoi(retcode_str);
 
     if(retcode == WEBQQ_NEW_PTVALUE){
-        char * pt = json_parse_simple_value(json, "p");
         LwqqClient* lc = list->lc;
-        s_free(lc->new_ptwebqq);
-        lc->new_ptwebqq = s_strdup(pt);
+        lwqq__override(lc->new_ptwebqq,lwqq__json_get_value(json,"p"));
         lwqq_verbose(3,"[new ptwebqq:%s]\n",lc->new_ptwebqq);
     }
     if(retcode != WEBQQ_OK) goto done;
@@ -1413,6 +1412,18 @@ static int poll_progress(void * data,size_t now,size_t total)
     LwqqRecvMsgList_* list = data;
     return list->on_quit;
 }
+
+void check_connection_lost(LwqqAsyncEvent* ev)
+{
+    LwqqClient* lc = ev->lc;
+    if(ev->result == LWQQ_EC_OK){
+        LwqqRecvMsgList_* msg_list = (LwqqRecvMsgList_*)lc->msg_list;
+        lwqq_recvmsg_poll_msg(lc->msg_list, msg_list->flags);
+    }else{
+        lc->async_opt->poll_lost(lc);
+    }
+}
+
 /**
  * Poll to receive message.
  * 
@@ -1458,16 +1469,13 @@ static void *start_poll_msg(void *msg_list)
     lwqq_http_on_progress(req, poll_progress, list);
     while(1) {
         ret = req->do_request(req, 1, msg);
-        /*if(ret != 0){
-            lwqq_verbose(2,"poll_msg:err:%d\n",ret);
-        }*/
         if(!lwqq_client_logined(lc)) break;
-        /*if(ret == LWQQ_EC_TIMEOUT_OVER){
-            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
-            break;
-        }*/
         if(ret != LWQQ_EC_OK){
-            lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+            /*lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+            break;*/
+            //some thing is wrong. try relogin first. 
+            LwqqAsyncEvent* ev = lwqq_relogin(lc);
+            lwqq_async_add_event_listener(ev, _C_(p,check_connection_lost,ev));
             break;
         }
 
