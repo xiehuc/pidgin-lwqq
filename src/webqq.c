@@ -1267,6 +1267,9 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
         case LWQQ_CONTENT_OFFPIC:
             qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
             break;
+        case LWQQ_CONTENT_CFACE:
+            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
+            break;
         default:break;
     }
 }

@@ -36,7 +36,6 @@ static json_t *get_result_json_object(json_t *json);
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
 
 static int msg_send_back(LwqqHttpRequest* req,void* data);
-static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c);
 static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const char* to);
 static int upload_offline_file_back(LwqqHttpRequest* req,void* data);
 static int send_offfile_back(LwqqHttpRequest* req,void* data);
@@ -1600,13 +1599,15 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
                 break;
             case LWQQ_CONTENT_CFACE:
                 //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
-                if(msg_type == LWQQ_MS_GROUP_MSG)
-                    format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
-                            c->data.cface.name);
-                else if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG)
-                    format_append(buf,"["KEY("cface")","KEY("%s")"],",
-                            c->data.cface.name);
-                *has_cface = 1;
+                if(c->data.cface.name){
+                    if(msg_type == LWQQ_MS_GROUP_MSG)
+                        format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
+                                c->data.cface.name);
+                    else if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG)
+                        format_append(buf,"["KEY("cface")","KEY("%s")"],",
+                                c->data.cface.name);
+                    *has_cface = 1;
+                }
                 break;
             case LWQQ_CONTENT_STRING:
                 strcat(buf,LEFT);
@@ -1732,8 +1733,50 @@ static LwqqAsyncEvent* query_gface_sig(LwqqClient* lc)
     return req->do_request_async(req,0,NULL,_C_(p,process_gface_sig,req));
 }
 
+static int upload_cface_back(LwqqHttpRequest *req,LwqqMsgContent* c,const char* to)
+{
+    int ret;
+    int errno = 0;
+    char msg[256];
+
+    lwqq_verbose(3,"%s\n",req->response);
+    if(req->http_code!=200){
+        errno = 1;
+        goto done;
+    }
+    char* ptr = strstr(req->response,"({");
+    if(ptr==NULL){
+        errno = 1;
+        goto done;
+    }
+    sscanf(ptr,"({'ret':%d,'msg':'%[^\']'",&ret,msg);
+    if(ret !=0 && ret !=4){
+        errno = 1;
+        goto done;
+    }
+    c->type = LWQQ_CONTENT_CFACE;
+    char *file = msg;
+    char *pos;
+    //force to cut down the filename
+    if((pos = strchr(file,' '))){
+        *pos = '\0';
+    }
+    s_free(c->data.cface.name);
+    c->data.cface.name = s_strdup(file);
+
+done:
+    if(errno){
+        LwqqClient* lc = req->lc;
+        lc->async_opt->upload_fail(lc,to,c);
+        s_free(c->data.cface.name);
+    }
+    s_free(c->data.cface.data);
+    c->data.cface.size = 0;
+    lwqq_http_request_free(req);
+    return errno;
+}
 static LwqqAsyncEvent* lwqq_msg_upload_cface(
-        LwqqClient* lc,LwqqMsgContent* c,LwqqMsgType type)
+        LwqqClient* lc,LwqqMsgContent* c,LwqqMsgType type,const char* to)
 {
     if(c->type != LWQQ_CONTENT_CFACE) return NULL;
     if(!c->data.cface.name || !c->data.cface.data || !c->data.cface.size) return NULL;
@@ -1773,44 +1816,7 @@ static LwqqAsyncEvent* lwqq_msg_upload_cface(
     /*void **data = s_malloc0(sizeof(void*)*2);
     data[0] = lc;
     data[1] = c;*/
-    return req->do_request_async(req,0,NULL,_C_(3p_i,upload_cface_back,req,lc,c));
-}
-static int upload_cface_back(LwqqHttpRequest *req,LwqqClient* lc,LwqqMsgContent* c)
-{
-    int ret;
-    int errno = 0;
-    char msg[256];
-
-    lwqq_verbose(3,"%s\n",req->response);
-    if(req->http_code!=200){
-        errno = 1;
-        goto done;
-    }
-    char* ptr = strstr(req->response,"({");
-    if(ptr==NULL){
-        errno = 1;
-        goto done;
-    }
-    sscanf(ptr,"({'ret':%d,'msg':'%[^\']'",&ret,msg);
-    if(ret !=0 && ret !=4){
-        errno = 1;
-        goto done;
-    }
-    c->type = LWQQ_CONTENT_CFACE;
-    char *file = msg;
-    char *pos;
-    //force to cut down the filename
-    if((pos = strchr(file,' '))){
-        *pos = '\0';
-    }
-    s_free(c->data.cface.name);
-    s_free(c->data.cface.data);
-    c->data.cface.name = s_strdup(file);
-    c->data.cface.size = 0;
-
-done:
-    lwqq_http_request_free(req);
-    return errno;
+    return req->do_request_async(req,0,NULL,_C_(3p_i,upload_cface_back,req,c,to));
 }
 
 void lwqq_msg_send_continue(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyncEvent* event)
@@ -1847,7 +1853,8 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
     TAILQ_FOREACH(c,&mmsg->content,entries){
         event = NULL;
         if(c->type == LWQQ_CONTENT_CFACE && c->data.cface.data > 0){
-            event = lwqq_msg_upload_cface(lc,c,mmsg->super.super.type);
+            event = lwqq_msg_upload_cface(lc,c,mmsg->super.super.type,
+                    mmsg->super.to);
             if(!lc->gface_sig) lwqq_async_evset_add_event(evset,query_gface_sig(lc));
         } else if(c->type == LWQQ_CONTENT_OFFPIC && c->data.img.data > 0)
             event = lwqq_msg_upload_offline_pic(lc,c,mmsg->super.to);
