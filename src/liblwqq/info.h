@@ -201,4 +201,11 @@ LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
 LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
 LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc,LwqqBuddy* b);
 
+typedef struct LwqqDiscuMemChange LwqqDiscuMemChange;
+LwqqDiscuMemChange* lwqq_discu_mem_change_new();
+void lwqq_discu_mem_change_free(LwqqDiscuMemChange* chg);
+LwqqErrorCode lwqq_discu_add_buddy(LwqqDiscuMemChange* mem,LwqqBuddy* b);
+LwqqErrorCode lwqq_discu_add_group_member(LwqqDiscuMemChange* mem,LwqqSimpleBuddy* sb,LwqqGroup* g);
+LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqDiscuMemChange* chg);
+
 #endif  /* LWQQ_INFO_H */

@@ -41,6 +41,11 @@ static void add_group_stage_1(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqGr
 static int add_group_stage_2(LwqqHttpRequest* req,LwqqGroup* g);
 static void add_group_stage_4(LwqqAsyncEvent* called,LwqqVerifyCode* c,LwqqGroup* g,char* msg);
 
+struct LwqqDiscuMemChange {
+    struct str_list_* buddies;
+    struct str_list_* group_members;
+    struct str_list_* relate_groups;
+};
 
 static int lwqq_gdb_list_group_member(LwqqGroup* g)
 {
@@ -109,6 +114,48 @@ static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
     if(lc->async_opt && lc->async_opt->delete_group)
         lc->async_opt->delete_group(lc,g);
     lwqq_group_free(g);
+}
+
+static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMemChange* chg)
+{
+    lwqq__return_if_ev_fail(ev);
+    struct str_list_* ptr = chg->buddies,*g = NULL;
+    LwqqClient* lc = ev->lc;
+    while(ptr){
+        if(!lwqq_group_find_group_member_by_uin(discu, ptr->str)){
+            LwqqBuddy* target = lc->find_buddy_by_uin(lc,ptr->str);
+            if(target){
+                LwqqSimpleBuddy* sb  = lwqq_simple_buddy_new();
+                sb->qq = s_strdup(target->qqnumber);
+                sb->nick = s_strdup(target->nick);
+                sb->card = s_strdup(target->markname);
+                sb->uin = s_strdup(target->uin);
+                LIST_INSERT_HEAD(&discu->members,sb,entries);
+            }
+        }
+        ptr = ptr->next;
+    }
+    ptr = chg->group_members;
+    g = chg->relate_groups;
+    while(ptr){
+        if(!lwqq_group_find_group_member_by_uin(discu, ptr->str)){
+            LwqqGroup* group = lwqq_group_find_group_by_gid(lc, g->str);
+            if(g){
+                LwqqSimpleBuddy* target = lwqq_group_find_group_member_by_uin(group, ptr->str);
+                if(target){
+                    LwqqSimpleBuddy* sb  = lwqq_simple_buddy_new();
+                    sb->qq = s_strdup(target->qq);
+                    sb->nick = s_strdup(target->nick);
+                    sb->card = s_strdup(target->card);
+                    sb->uin = s_strdup(target->uin);
+                    LIST_INSERT_HEAD(&discu->members,sb,entries);
+                }
+            }
+        }
+        ptr = ptr->next;
+        g = g->next;
+    }
+    lwqq_discu_mem_change_free(chg);
 }
 
 #define parse_key_value(k,v) {\
@@ -2215,4 +2262,73 @@ LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc, LwqqBuddy* b)
     req->set_header(req,"Referer",WEBQQ_S_REF_URL);
     lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(2p,process_qq_level,req,b));
+}
+LwqqDiscuMemChange* lwqq_discu_mem_change_new()
+{
+    return s_malloc0(sizeof(LwqqDiscuMemChange));
+}
+void lwqq_discu_mem_change_free(LwqqDiscuMemChange* chg)
+{
+    if(!chg) return;
+    str_list_free_all(chg->buddies);
+    str_list_free_all(chg->group_members);
+    str_list_free_all(chg->relate_groups);
+    s_free(chg);
+}
+LwqqErrorCode lwqq_discu_add_buddy(LwqqDiscuMemChange* mem,LwqqBuddy* b)
+{
+    if(!mem||!b) return LWQQ_EC_ERROR;
+    mem->buddies = str_list_prepend(mem->buddies, b->uin);
+    return LWQQ_EC_OK;
+}
+
+LwqqErrorCode lwqq_discu_add_group_member(LwqqDiscuMemChange* mem,LwqqSimpleBuddy* sb,LwqqGroup* g)
+{
+    if(!mem||!sb||!g) return LWQQ_EC_ERROR;
+    if(g->type != LWQQ_GROUP_QUN) return LWQQ_EC_ERROR;
+    mem->group_members = str_list_prepend(mem->group_members, sb->uin);
+    mem->relate_groups = str_list_prepend(mem->relate_groups, g->gid);
+    return LWQQ_EC_OK;
+}
+
+LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqDiscuMemChange* chg)
+{
+    if(!discu||!chg) return NULL;
+    if(discu->type != LWQQ_GROUP_DISCU) return NULL;
+    char url[128];
+    char post[1024];
+    snprintf(url, sizeof(url), WEBQQ_D_HOST"/channel/change_discu_mem");
+    snprintf(post, sizeof(post), "r={\"did\":\"%s\",\"mem_list\":[",discu->did);
+    struct str_list_* ptr = chg->buddies;
+    while(ptr){
+        format_append(post,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(post,",");
+    }
+    strcat(post,"],\"mem_list_u\":[");
+    ptr = chg->group_members;
+    while(ptr){
+        format_append(post,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(post,",");
+    }
+    strcat(post,"],\"mem_list_g\":[");
+    ptr = chg->relate_groups;
+    while(ptr){
+        format_append(post,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(post,",");
+    }
+    format_append(post,"],\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
+            lc->clientid,lc->psessionid,lc->vfwebqq);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer",WEBQQ_D_REF_URL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
+
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    lwqq_async_add_event_listener(ev, _C_(3p,do_change_discu_mem,ev,discu,chg));
+    //lwqq_discu_mem_change_free(chg);
+    return ev;
 }

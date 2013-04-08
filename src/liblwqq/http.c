@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "queue.h"
 #include "util.h"
+#include "internal.h"
 
 #define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
 //#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
@@ -86,14 +87,6 @@ typedef struct D_ITEM{
 }D_ITEM;
 /* For async request */
 
-#define slist_free_all(list) \
-while(list!=NULL){ \
-    void *ptr = list; \
-    list = list->next; \
-    s_free(ptr); \
-}
-#define slist_append(list,node) \
-(node->next = list,node)
 
 static int lwqq_gdb_whats_running()
 {

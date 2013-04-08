@@ -145,3 +145,12 @@ char *json_unescape_s(char* str)
     if(str==NULL) return NULL;
     return json_unescape(str);
 }
+
+
+struct str_list_* str_list_prepend(struct str_list_* list,const char* str)
+{
+    struct str_list_* ret = s_malloc0(sizeof(struct str_list_));
+    ret->str = s_strdup(str);
+    ret->next = list;
+    return ret;
+}

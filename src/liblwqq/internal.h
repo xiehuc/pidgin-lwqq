@@ -39,6 +39,29 @@ struct LwqqStrMapEntry_ {
 };
 
 
+#define slist_free_all(list) \
+while(list!=NULL){ \
+    void *ptr = list; \
+    list = list->next; \
+    s_free(ptr); \
+}
+#define slist_append(list,node) \
+(node->next = list,node)
+
+struct str_list_{
+    char* str;
+    struct str_list_* next;
+};
+
+struct str_list_* str_list_prepend(struct str_list_* list,const char* str);
+#define str_list_free_all(list) \
+while(list!=NULL){ \
+    struct str_list_ *ptr = list; \
+    list = list->next; \
+    s_free(ptr->str);\
+    s_free(ptr); \
+}
+
 int lwqq__map_to_type_(const struct LwqqStrMapEntry_* maps,const char* key);
 const char* lwqq__map_to_str_(const struct LwqqStrMapEntry_* maps,int type);
 int lwqq__get_retcode_from_str(const char* str);

@@ -302,6 +302,7 @@ static void qq_add_group(PurplePluginAction* action)
     purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
             "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
+#if 0
 static void qq_open_recent(PurplePluginAction* action)
 {
     PurpleConnection* gc = action->context;
@@ -309,8 +310,31 @@ static void qq_open_recent(PurplePluginAction* action)
     PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber, gc->account);
     if(conv == NULL) purple_conversation_new(PURPLE_CONV_TYPE_IM, gc->account, buddy->qqnumber);
 }
+#endif
 
-static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
+static void add_buddies_to_talkgroup(PurpleConnection* gc,GList* row,void* data)
+{
+}
+
+static void close_add_buddies_to_talkgroup(void* ac)
+{
+}
+
+static void search_result_test(PurplePluginAction* act)
+{
+    PurpleConnection* gc = act->context;
+    PurpleNotifySearchResults* res = purple_notify_searchresults_new();
+    purple_notify_searchresults_column_add(res, purple_notify_searchresults_column_new("QQ"));
+    purple_notify_searchresults_column_add(res, purple_notify_searchresults_column_new("name"));
+    purple_notify_searchresults_button_add(res, PURPLE_NOTIFY_BUTTON_ADD, add_buddies_to_talkgroup);
+    GList* l = NULL;
+    l = g_list_append(l,s_strdup("123456"));
+    l = g_list_append(l,s_strdup("测试"));
+    purple_notify_searchresults_row_add(res, l);
+    purple_notify_searchresults(gc, "添加成员", NULL, NULL, res, close_add_buddies_to_talkgroup, gc->proto_data);
+}
+
+static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context)
 {
 
     GList *m = NULL;
@@ -329,6 +353,8 @@ static GList *plugin_actions(PurplePlugin *UNUSED(plugin), gpointer context)
     act = purple_plugin_action_new("添加群",qq_add_group);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("测试", search_result_test);
     m = g_list_append(m, act);
 
     return m;
@@ -1612,16 +1638,10 @@ GList *qq_chat_info(PurpleConnection *gc)
     m = NULL;
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = "QQ:";
+    pce->label = "QQ";
     pce->identifier = QQ_ROOM_KEY_GID;
     pce->required = TRUE;
     m = g_list_append(m, pce);
-
-    /*pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = ":";
-    pce->identifier = QQ_ROOM_TYPE;
-    pce->required = TRUE;
-    m = g_list_append(m, pce);*/
 
     return m;
 }
@@ -2579,6 +2599,25 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
         }
     }
 }
+static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* message,const char* local_id)
+{
+    qq_account* ac = gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqGroup* discu = opend_chat_index(ac,id);
+    if(discu->type != LWQQ_GROUP_DISCU){
+        purple_notify_info(gc,"错误","只有讨论组才能增加成员",NULL);
+        return;
+    }
+    LwqqBuddy* b = NULL;
+    if(ac->qq_use_qqnum)
+        b = find_buddy_by_qqnumber(lc, local_id);
+    else
+        b = find_buddy_by_uin(lc, local_id);
+    LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
+    lwqq_discu_add_buddy(chg, b);
+
+    lwqq_info_change_discu_mem(lc,discu, chg);
+}
 
 PurplePluginProtocolInfo webqq_prpl_info = {
     /* options */
@@ -2603,6 +2642,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .chat_info_defaults=qq_chat_info_defaults, /* chat_info_defaults */
     .roomlist_get_list =qq_get_all_group_list,
     .join_chat=         qq_group_add_or_join,
+    .chat_invite=       qq_add_buddies_to_discu,
     //.set_chat_topic=    qq_set_chat_topic,
     .get_cb_real_name=  qq_get_cb_real_name,
     /**group part end*/
@@ -2642,7 +2682,7 @@ static PurplePluginInfo info = {
     .author=        "xiehuc<xiehuc@gmail.com>", /* author */
     .homepage=      "https://github.com/xiehuc/pidgin-lwqq",
     .extra_info=    &webqq_prpl_info, /* extra_info */
-    .actions=       plugin_actions,
+    .actions=       plugin_actions_menu,
 };
 
 static void
