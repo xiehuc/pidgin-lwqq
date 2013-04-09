@@ -302,6 +302,21 @@ static void qq_add_group(PurplePluginAction* action)
     purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
             "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
+static void create_discu(qq_account* ac,const char* name)
+{
+    LwqqClient* lc = ac->qq;
+    LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
+    lwqq_info_create_discu(lc, chg, name);
+}
+static void qq_create_discu(PurplePluginAction* action)
+{
+    PurpleConnection* gc = action->context;
+    qq_account* ac = purple_connection_get_protocol_data(gc);
+
+
+    purple_request_input(gc, "创建讨论组", "名称", NULL, NULL, FALSE, FALSE, NULL, 
+            "创建", G_CALLBACK(create_discu), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+}
 #if 0
 static void qq_open_recent(PurplePluginAction* action)
 {
@@ -351,6 +366,8 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     //act = purple_plugin_action_new("好友管理",visit_my_qq_center);
     //m = g_list_append(m, act);
     act = purple_plugin_action_new("添加群",qq_add_group);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new("创建讨论组",qq_create_discu);
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
     m = g_list_append(m, act);
@@ -491,7 +508,7 @@ static struct qq_chat_group_opt qq_cg_opt_default = {
 };
 #define QQ_CG_OPT &qq_cg_opt_default
 
-static int group_come(LwqqClient* lc,LwqqGroup* group)
+static void group_come(LwqqClient* lc,LwqqGroup* group)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
@@ -540,7 +557,6 @@ static int group_come(LwqqClient* lc,LwqqGroup* group)
     qq_account_insert_index_node(ac, NULL, group);
 
     ac->disable_send_server = 0;
-    return 0;
 }
 #define discu_come(lc,data) (group_come(lc,data))
 static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
@@ -1411,6 +1427,7 @@ static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
     .new_friend = friend_come,
+    .new_group = group_come,
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,

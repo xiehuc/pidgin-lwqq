@@ -118,7 +118,8 @@ static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
 
 static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMemChange* chg)
 {
-    lwqq__return_if_ev_fail(ev);
+    int err = 0;
+    lwqq__jump_if_ev_fail(ev,err);
     struct str_list_* ptr = chg->buddies,*g = NULL;
     LwqqClient* lc = ev->lc;
     while(ptr){
@@ -155,7 +156,21 @@ static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMem
         ptr = ptr->next;
         g = g->next;
     }
+done:
     lwqq_discu_mem_change_free(chg);
+}
+
+static void do_create_discu(LwqqAsyncEvent* ev,LwqqGroup* discu)
+{
+    int err=0;
+    lwqq__jump_if_ev_fail(ev,err);
+    LwqqClient* lc = ev->lc;
+    LIST_INSERT_HEAD(&lc->discus,discu,entries);
+    lc->async_opt->new_group(lc,discu);
+done:
+    if(err){
+        lwqq_group_free(discu);
+    }
 }
 
 #if 0
@@ -1872,14 +1887,15 @@ LwqqAsyncEvent* lwqq_info_change_status(LwqqClient* lc,LwqqStatus status)
 
 static void add_friend_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,char* qq_email,LwqqBuddy* out)
 {
+    char* uin = NULL;
     if(!code->str){
         called->result = LWQQ_EC_ERROR;
         lwqq_async_event_finish(called);
         goto done;
     }
     char url[512];
+    uin = url_encode(qq_email);
     LwqqClient* lc = called->lc;
-    char* uin = url_encode(qq_email);
     snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/search_qq_by_uin2?tuin=%s&verifysession=%s&code=%s&vfwebqq=%s&t=%ld",
             uin,lc->cookies->verifysession,code->str,lc->vfwebqq,time(NULL));
     lwqq_verbose(3,"%s\n",url);
@@ -2312,6 +2328,32 @@ LwqqErrorCode lwqq_discu_add_group_member(LwqqDiscuMemChange* mem,LwqqSimpleBudd
     return LWQQ_EC_OK;
 }
 
+static void lwqq_discu_mem_change_to_str(LwqqDiscuMemChange* chg,char* buf,size_t len)
+{
+    strcat(buf,"\"mem_list\":[");
+    struct str_list_* ptr = chg->buddies;
+    while(ptr){
+        format_append(buf,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(buf,",");
+    }
+    strcat(buf,"],\"mem_list_u\":[");
+    ptr = chg->group_members;
+    while(ptr){
+        format_append(buf,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(buf,",");
+    }
+    strcat(buf,"],\"mem_list_g\":[");
+    ptr = chg->relate_groups;
+    while(ptr){
+        format_append(buf,"\"%s\"",ptr->str);
+        ptr = ptr->next;
+        if(ptr) strcat(buf,",");
+    }
+    strcat(buf,"]");
+}
+
 LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqDiscuMemChange* chg)
 {
     if(!discu||!chg) return NULL;
@@ -2319,28 +2361,11 @@ LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqD
     char url[128];
     char post[1024];
     snprintf(url, sizeof(url), WEBQQ_D_HOST"/channel/change_discu_mem");
-    snprintf(post, sizeof(post), "r={\"did\":\"%s\",\"mem_list\":[",discu->did);
-    struct str_list_* ptr = chg->buddies;
-    while(ptr){
-        format_append(post,"\"%s\"",ptr->str);
-        ptr = ptr->next;
-        if(ptr) strcat(post,",");
-    }
-    strcat(post,"],\"mem_list_u\":[");
-    ptr = chg->group_members;
-    while(ptr){
-        format_append(post,"\"%s\"",ptr->str);
-        ptr = ptr->next;
-        if(ptr) strcat(post,",");
-    }
-    strcat(post,"],\"mem_list_g\":[");
-    ptr = chg->relate_groups;
-    while(ptr){
-        format_append(post,"\"%s\"",ptr->str);
-        ptr = ptr->next;
-        if(ptr) strcat(post,",");
-    }
-    format_append(post,"],\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
+    snprintf(post, sizeof(post), "r={\"did\":\"%s\",",discu->did);
+
+    lwqq_discu_mem_change_to_str(chg, post, sizeof(post)-strlen(post));
+    
+    format_append(post,",\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
             lc->clientid,lc->psessionid,lc->vfwebqq);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer",WEBQQ_D_REF_URL);
@@ -2391,4 +2416,48 @@ LwqqAsyncEvent* lwqq_info_add_group_member_as_friend(LwqqClient* lc,LwqqBuddy* m
     LwqqAsyncEvent* ev = lwqq_info_get_allow_info(lc, buddy);
     lwqq_async_add_event_listener(ev, _C_(4p,add_group_member_as_friend_stage_2,ev,buddy,s_strdup(markname),ret));
     return ret;
+}
+
+
+static void create_discu_stage_2(LwqqAsyncEvent* called,LwqqVerifyCode* code,LwqqDiscuMemChange* chg,char* dname)
+{
+    if(!code->str){
+        called->failcode = LWQQ_EC_ERROR;
+        lwqq_async_event_finish(called);
+        goto done;
+    }
+    LwqqClient* lc = called->lc;
+    char url[128];
+    char post[1024];
+    snprintf(url, sizeof(url), WEBQQ_D_HOST"/channel/create_discu");
+    snprintf(post, sizeof(post), "r={\"discu_name\":\"%s\",",dname);
+
+    lwqq_discu_mem_change_to_str(chg, post, sizeof(post)-strlen(post));
+    
+    format_append(post,",\"code\":\"%s\",\"verifysession\":\"%s\",\"clientid\":\"%s\",\"psessionid\":\"%s\",\"vfwebqq\":\"%s\"}",
+            code->str,lc->cookies->verifysession,lc->clientid,lc->psessionid,lc->vfwebqq);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer",WEBQQ_D_REF_URL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    LwqqGroup* discu = lwqq_group_new(LWQQ_GROUP_DISCU);
+    discu->name = s_strdup(dname);
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(3p_i,process_simple_string,req,"did",&discu->did));
+    lwqq_async_add_event_listener(ev, _C_(2p,do_create_discu,ev,discu));
+    lwqq_async_add_event_chain(ev, called);
+done:
+    lwqq_discu_mem_change_free(chg);
+    s_free(dname);
+    lwqq_vc_free(code);
+}
+LwqqAsyncEvent* lwqq_info_create_discu(LwqqClient* lc,LwqqDiscuMemChange* chg,const char* dname)
+{
+    if(!lc||!chg) return NULL;
+    if(!dname) dname="";
+
+    LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+    ev->lc = lc;
+    LwqqVerifyCode* code = s_malloc0(sizeof(*code));
+    code->cmd = _C_(4p,create_discu_stage_2,ev,code,chg,s_strdup(dname));
+    lwqq__request_captcha(lc, code);
+    return ev;
 }

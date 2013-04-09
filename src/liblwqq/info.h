@@ -223,5 +223,6 @@ void lwqq_discu_mem_change_free(LwqqDiscuMemChange* chg);
 LwqqErrorCode lwqq_discu_add_buddy(LwqqDiscuMemChange* mem,LwqqBuddy* b);
 LwqqErrorCode lwqq_discu_add_group_member(LwqqDiscuMemChange* mem,LwqqSimpleBuddy* sb,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqDiscuMemChange* chg);
+LwqqAsyncEvent* lwqq_info_create_discu(LwqqClient* lc,LwqqDiscuMemChange* chg,const char* dname);
 
 #endif  /* LWQQ_INFO_H */

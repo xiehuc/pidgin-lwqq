@@ -162,6 +162,7 @@ struct _LwqqAsyncOption {
      * you should add buddy to gui level.
      */
     void (*new_friend)(LwqqClient* lc,LwqqBuddy* buddy);
+    void (*new_group)(LwqqClient* lc,LwqqGroup* g);
     void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
     /* this called when successfully delete group from server
      * and the last chance to visit group
