@@ -158,6 +158,21 @@ static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMem
     lwqq_discu_mem_change_free(chg);
 }
 
+#if 0
+//most of the case webqq server would send blist_change message to add buddy
+static void do_add_new_friend(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqBuddy* b)
+{
+    int err=0;
+    lwqq__jump_if_ev_fail(ev,err);
+    LIST_INSERT_HEAD(&lc->friends,b,entries);
+    lc->async_opt->new_friend(lc,b);
+    b = NULL;
+done:
+    if(err)
+        lwqq_buddy_free(b);
+}
+#endif
+
 #define parse_key_value(k,v) {\
     char* s=json_parse_simple_value(json,v);\
     if(s){\
@@ -414,8 +429,9 @@ static int process_simple_string(LwqqHttpRequest* req,const char* key,char ** pt
     result = lwqq__parse_retcode_result(json, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result){
-        char* str = parse_string(result, key);
-        if(str){ s_free(*ptr); *ptr = str;}
+        lwqq__override(*ptr,lwqq__json_get_string(result,key));
+        /*char* str = parse_string(result, key);
+        if(str){ s_free(*ptr); *ptr = str;}*/
     }
 done:
     lwqq__clean_json_and_req(json,req);
@@ -1896,24 +1912,29 @@ LwqqAsyncEvent* lwqq_info_search_friend(LwqqClient* lc,const char* qq_email,Lwqq
 LwqqAsyncEvent* lwqq_info_add_friend(LwqqClient* lc,LwqqBuddy* buddy,const char* message)
 {
     if(!lc||!buddy) return NULL;
-    if(!buddy->token){
-        return NULL;
-    }
+    if(!buddy->token||!buddy->qqnumber) return NULL;
     if(message==NULL)message="";
-
     char url[512];
-    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/add_need_verify2");
     char post[1024];
-    //r:{"account":291205909,"myallow":1,"groupid":0,"msg":"xxx","token":"0a74690f4e7fb3df33de80b679515306f8def8cf7987251a","vfwebqq":"c674f106453f333320cd04a6499123807c7fc25137eac4137f564bdbe516b5ecfe143b8969707d30"}
-    snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
-            "\"groupid\":%d,\"msg\":\"%s\","
-            "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
+    if(buddy->allow&&s_atoi(buddy->allow,0)==0){
+        snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/add_no_verify2");
+        snprintf(post, sizeof(post), "r={\"account\":%s,\"myallow\":1,"
+                "\"groupid\":%d,\"mname\":\"%s\",\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
+    }else{
+        snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/add_need_verify2");
+        snprintf(post,sizeof(post),"r={\"account\":%s,\"myallow\":1,"
+                "\"groupid\":%d,\"msg\":\"%s\","
+                "\"token\":\"%s\",\"vfwebqq\":\"%s\"}",buddy->qqnumber,buddy->cate_index,message,buddy->token,lc->vfwebqq);
+    }
+
     lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",post);
+    lwqq_verbose(3,"%s\n",lwqq_get_cookies(lc));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     req->set_header(req,"Referer",WEBQQ_S_REF_URL);
-    return req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
+    return ev;
 }
 
 LwqqAsyncEvent* lwqq_info_search_group_by_qq(LwqqClient* lc,const char* qq,LwqqGroup* group)
@@ -2329,6 +2350,45 @@ LwqqAsyncEvent* lwqq_info_change_discu_mem(LwqqClient* lc,LwqqGroup* discu,LwqqD
 
     LwqqAsyncEvent* ev = req->do_request_async(req,1,post,_C_(p_i,process_simple_response,req));
     lwqq_async_add_event_listener(ev, _C_(3p,do_change_discu_mem,ev,discu,chg));
-    //lwqq_discu_mem_change_free(chg);
     return ev;
+}
+
+static LwqqAsyncEvent* lwqq_info_get_allow_info(LwqqClient* lc,LwqqBuddy* b)
+{
+//http://s.web2.qq.com/api/get_allow_info2?tuin=106017864&retainKey=allow&vfwebqq=561652d029ab3b84cc233b85a15b8f47123d0b4b69e92ba4e0efd4e73d4bc4712ecec28375961d44&t=1365477470708
+    if(!lc||!b) return NULL;
+    char url[512];
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_allow_info2?tuin=%s&retainKey=allow&vfwebqq=%s&t=%ld",b->uin,lc->vfwebqq,time(NULL));
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
+    req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"allow",&b->allow));
+}
+
+static void add_group_member_as_friend_stage_2(LwqqAsyncEvent* event,LwqqBuddy* b,char* markname,LwqqAsyncEvent* ret)
+{
+    int err = 0;
+    LwqqClient* lc = event->lc;
+    lwqq__jump_if_ev_fail(event,err);
+    LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b, markname);
+    lwqq_async_add_event_chain(ev, ret);
+done:
+    s_free(markname);
+    if(err){
+        ret->result = LWQQ_EC_ERROR;
+        lwqq_async_event_finish(ret);
+        lwqq_buddy_free(b);
+    }
+}
+
+LwqqAsyncEvent* lwqq_info_add_group_member_as_friend(LwqqClient* lc,LwqqBuddy* mem_detail,const char* markname)
+{
+    LwqqBuddy* buddy = mem_detail;
+    if(!lc||!buddy||!buddy->token||!buddy->qqnumber) return NULL;
+    if(!markname) markname="";
+    LwqqAsyncEvent* ret = lwqq_async_event_new(NULL);
+    ret->lc = lc;
+    LwqqAsyncEvent* ev = lwqq_info_get_allow_info(lc, buddy);
+    lwqq_async_add_event_listener(ev, _C_(4p,add_group_member_as_friend_stage_2,ev,buddy,s_strdup(markname),ret));
+    return ret;
 }

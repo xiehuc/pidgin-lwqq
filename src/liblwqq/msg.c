@@ -790,7 +790,7 @@ static int parse_kick_message(json_t *json,void *opaque)
 static void confirm_friend_request_notify(LwqqClient* lc,LwqqBuddy* buddy)
 {
     LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-    lc->async_opt->request_confirm(lc,buddy);
+    lc->async_opt->new_friend(lc,buddy);
 }*/
 static int parse_system_message(json_t *json,void* opaque,void* _lc)
 {

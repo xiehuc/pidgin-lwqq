@@ -187,6 +187,23 @@ LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,L
  *                 if answer is no . then there is reason.
  */
 LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMsg* msg ,LwqqAnswer answer,const char* reason);
+/**
+ * get a group member detail
+ * @param serv_id: the uin for LwqqSimpleBuddy
+ * @param out: use lwqq_buddy_new() to create a new empty buddy.
+ *             if successed.necessary infomation would fill into this.
+ *             free it after used.
+ */
+LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
+/**
+ * add a group member as friend
+ * @param mem_detail : you should create a empty buddy and make sure use this function after both
+ *                     lwqq_info_get_group_member_detail and lwqq_info_get_friend_qqnumber
+ *                     if successed. mem_detail would added into LwqqClient
+ *                     if failed. it would be freed by lwqq
+ *                     so never free it by your self.
+ */
+LwqqAsyncEvent* lwqq_info_add_group_member_as_friend(LwqqClient* lc,LwqqBuddy* mem_detail,const char* markname);
 LwqqAsyncEvent* lwqq_info_answer_request_friend(LwqqClient* lc,const char* qq,LwqqAnswer allow,const char* extra);
 
 LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g);
@@ -198,7 +215,6 @@ LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic);
 void lwqq_recent_list_free(LwqqRecentList* list);
 LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
-LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
 LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc,LwqqBuddy* b);
 
 typedef struct LwqqDiscuMemChange LwqqDiscuMemChange;

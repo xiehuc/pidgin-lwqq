@@ -1410,7 +1410,7 @@ static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
-    .request_confirm = friend_come,
+    .new_friend = friend_come,
     .poll_msg = qq_msg_check,
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
@@ -2004,7 +2004,7 @@ failed:
     s_free(message);
     s_free(uni_id);
 }
-#if PURPLE_OUTDATE
+/*#if PURPLE_OUTDATE
 static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group)
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
@@ -2020,22 +2020,57 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
     LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
     lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(message)));
 }
+#else*/
+
+static void delete_back_broken_buddy(PurpleConnection* pc,char* name)
+{
+    qq_account* ac = pc->proto_data;
+    PurpleBuddy* buddy = purple_find_buddy(ac->account, name);
+    if(buddy){
+        purple_blist_remove_buddy(buddy);
+    }
+}
+static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group
+#if PURPLE_OUTDATE
+        )
 #else
-static void qq_add_buddy_with_invite(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group,const char* message)
+        ,const char* message)
+#endif
 {
     qq_account* ac = purple_connection_get_protocol_data(pc);
+    LwqqClient* lc = ac->qq;
     const char* uni_id = purple_buddy_get_name(buddy);
+    LwqqGroup* g = NULL;
+    LwqqSimpleBuddy* sb = NULL;
     LwqqBuddy* friend = lwqq_buddy_new();
-    //friend->qqnumber = s_strdup(qqnum);
     LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
     if(cate == NULL){
         friend->cate_index = 0;
     }else
         friend->cate_index = cate->index;
-    LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
-    lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(message)));
-}
+
+    if(find_group_and_member_by_card(lc, uni_id, &g, &sb)){
+        LwqqAsyncEvset* set = lwqq_async_evset_new();
+        LwqqAsyncEvent* ev;
+        friend->uin = s_strdup(sb->uin);
+        ev = lwqq_info_get_group_member_detail(lc, sb->uin, friend);
+        lwqq_async_evset_add_event(set, ev);
+        ev = lwqq_info_get_friend_qqnumber(lc,friend);
+        lwqq_async_evset_add_event(set,ev);
+        lwqq_async_add_evset_listener(set, _C_(3p,lwqq_info_add_group_member_as_friend,lc,friend,NULL));
+        lc->dispatch(vp_func_2p,(CALLBACK_FUNC)delete_back_broken_buddy,pc,s_strdup(buddy->name));
+    }else{
+        //friend->qqnumber = s_strdup(qqnum);
+        LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
+#if PURPLE_OUTDATE
+        const char* msg = NULL;
+#else
+        const char* msg = message;
 #endif
+        lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),msg));
+    }
+}
+//#endif
 static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guint type)
 {
     qq_account* ac = gc->proto_data;
@@ -2052,6 +2087,7 @@ static char* qq_status_text(PurpleBuddy* pb)
 static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean full)
 {
     LwqqBuddy* buddy = pb->proto_data;
+    if(!buddy) return;
     if(buddy->qqnumber)
         purple_notify_user_info_add_pair(info, "QQ", buddy->qqnumber);
     if(buddy->nick)
@@ -2661,7 +2697,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
 #if PURPLE_OUTDATE
     .add_buddy=         qq_add_buddy,
 #else
-    .add_buddy_with_invite=qq_add_buddy_with_invite,
+    .add_buddy_with_invite=qq_add_buddy,
 #endif
 
     .struct_size=       sizeof(PurplePluginProtocolInfo)

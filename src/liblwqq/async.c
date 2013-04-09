@@ -134,7 +134,7 @@ void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
     _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
     if(event == NULL){
-        event->failcode = LWQQ_CALLBACK_FAILED;
+        //event->failcode = LWQQ_CALLBACK_FAILED;
         vp_do(cmd,NULL);
         return ;
     }else if(_event->cmd.func== NULL)
@@ -156,8 +156,13 @@ void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
     _LwqqAsyncEvsetInternal* _evset = (_LwqqAsyncEvsetInternal*)evset;
-    if(!evset) return;
-    _evset->cmd = cmd;
+    if(evset == NULL){
+        //event->failcode = LWQQ_CALLBACK_FAILED;
+        return ;
+    }else if(_evset->cmd.func== NULL)
+        _evset->cmd = cmd;
+    else
+        vp_link(&_evset->cmd,&cmd);
     if(_evset->ref_count == 0) s_free(evset);
 }
 
