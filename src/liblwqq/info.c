@@ -678,6 +678,48 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     }
 }
 
+char* hash_friends(char* uin,char* ptwebqq)
+{
+    int alen=strlen(uin);
+    int *c = malloc(sizeof(int)*strlen(uin));
+    int d,b,k,clen;
+    int elen=strlen(ptwebqq);
+    char* e = ptwebqq;
+    int h;
+    int i;
+    for(d=0;d<alen;d++){
+        c[d]=uin[d]-'0';
+    }
+    clen = d;
+    for(b=0,k=-1,d=0;d<clen;d++){
+        b += c[d];
+        b %= elen;
+        int f = 0;
+        if(b+4>elen){
+            int g;
+            for(g=4+b-elen,h=0;h<4;h++)
+                f |= h<g?((e[b+h]&255)<<(3-h)*8):((e[h-g]&255)<<(3-h)*8);
+        }else{
+            for(h=0;h<4;h++)
+                f |= (e[b+h]&255)<<(3-h)*8;
+        }
+        k ^= f;
+    }
+    memset(c,0,sizeof(int)*alen);
+    c[0] = k >> 24&255;
+    c[1] = k >> 16&255;
+    c[2] = k >> 8&255;
+    c[3] = k & 255;
+    char* ch = "0123456789ABCDEF";
+    char* ret = malloc(10);
+    memset(ret,0,10);
+    for(b=0,i=0;b<4;b++){
+        ret[i++]=ch[c[b]>>4&15];
+        ret[i++]=ch[c[b]&15];
+    }
+    free(c);
+    return ret;
+}
 /**
  * Get QQ friends information. These information include basic friend
  * information, friends group information, and so on
@@ -687,12 +729,15 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
  */
 LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
 {
-    char msg[256] = {0};
+    char post[512];
     LwqqHttpRequest *req = NULL;
 
+    char* hash = hash_friends(lc->myself->uin, lc->cookies->ptwebqq);
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
-    create_post_data(lc, msg, sizeof(msg));
+    snprintf(post, sizeof(post), "r={\"h\":\"hello\",\"hash\":\"%s\",\"vfwebqq\":\"%s\"}",hash,lc->vfwebqq);
+    s_free(hash);
 
+    lwqq_verbose(3,"%s\n",post);
     /* Create a POST request */
     const char* url = WEBQQ_S_HOST"/api/get_user_friends2";
     req = lwqq_http_create_default_request(lc,url, err);
@@ -704,7 +749,7 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
-    return req->do_request_async(req, 1, msg,_C_(p_i,get_friends_info_back,req));
+    return req->do_request_async(req, 1, post,_C_(p_i,get_friends_info_back,req));
 
     /**
      * Here, we got a json object like this:
@@ -772,6 +817,9 @@ static int get_friends_info_back(LwqqHttpRequest* req)
     }
 
 done:
+    if(err){
+        lwqq_verbose(3,"%s\n",req->response);
+    }
     if (json)
         json_free_value(&json);
     lwqq_http_request_free(req);
