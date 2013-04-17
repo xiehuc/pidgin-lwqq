@@ -58,6 +58,17 @@ static int lwqq_gdb_list_group_member(LwqqGroup* g)
     return count;
 }
 
+static int lwqq_gdb_list_buddies(LwqqClient* lc)
+{
+    LwqqBuddy* b;
+    int count = 0;
+    LIST_FOREACH(b,&lc->friends,entries){
+        lwqq_verbose(1,"[uin:%s nick:%s card:%s ]",b->uin,b->nick,b->markname);
+        count ++;
+    }
+    return count;
+}
+
 //=====================INSTRUCTION====================//
 /**
  * process head is directly used in do_request_async
@@ -678,13 +689,13 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     }
 }
 
-char* hash_friends(char* uin,char* ptwebqq)
+static char* calc_hash(const char* uin,const char* ptwebqq)
 {
     int alen=strlen(uin);
     int *c = malloc(sizeof(int)*strlen(uin));
     int d,b,k,clen;
     int elen=strlen(ptwebqq);
-    char* e = ptwebqq;
+    const char* e = ptwebqq;
     int h;
     int i;
     for(d=0;d<alen;d++){
@@ -732,7 +743,7 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     char post[512];
     LwqqHttpRequest *req = NULL;
 
-    char* hash = hash_friends(lc->myself->uin, lc->cookies->ptwebqq);
+    char* hash = calc_hash(lc->myself->uin, lc->cookies->ptwebqq);
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
     snprintf(post, sizeof(post), "r={\"h\":\"hello\",\"hash\":\"%s\",\"vfwebqq\":\"%s\"}",hash,lc->vfwebqq);
     s_free(hash);
