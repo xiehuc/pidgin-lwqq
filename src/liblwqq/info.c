@@ -689,7 +689,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     }
 }
 
-static char* calc_hash(const char* uin,const char* ptwebqq)
+static char* hashN(const char* uin,const char* ptwebqq)
 {
     int alen=strlen(uin);
     int *c = malloc(sizeof(int)*strlen(uin));
@@ -721,7 +721,7 @@ static char* calc_hash(const char* uin,const char* ptwebqq)
     c[1] = k >> 16&255;
     c[2] = k >> 8&255;
     c[3] = k & 255;
-    char* ch = "0123456789ABCDEF";
+    const char* ch = "0123456789ABCDEF";
     char* ret = malloc(10);
     memset(ret,0,10);
     for(b=0,i=0;b<4;b++){
@@ -730,6 +730,37 @@ static char* calc_hash(const char* uin,const char* ptwebqq)
     }
     free(c);
     return ret;
+}
+
+static char* hashO(const char* uin,const char* ptwebqq)
+{
+    char* a = s_malloc0(strlen(ptwebqq)+strlen("password error")+3);
+    const char* b = uin;
+    strcat(strcpy(a,ptwebqq),"password error");
+    size_t alen = strlen(a);
+    char* s = s_malloc0(2048);
+    int *j = malloc(sizeof(int)*alen);
+    for(;;){
+        if(strlen(s)<=alen){
+            if(strcat(s,b),strlen(s)==alen) break;
+        }else{
+            s[alen]='\0';
+            break;
+        }
+    }
+    int d;
+    for(d=0;d<strlen(s);d++){
+        j[d]=s[d]^a[d];
+    }
+    const char* ch = "0123456789ABCDEF";
+    s[0]=0;
+    for(d=0;d<alen;d++){
+        s[2*d]=ch[j[d]>>4&15];
+        s[2*d+1]=ch[j[d]&15];
+    }
+    s_free(a);
+    s_free(j);
+    return s;
 }
 /**
  * Get QQ friends information. These information include basic friend
@@ -743,7 +774,7 @@ LwqqAsyncEvent* lwqq_info_get_friends_info(LwqqClient *lc, LwqqErrorCode *err)
     char post[512];
     LwqqHttpRequest *req = NULL;
 
-    char* hash = calc_hash(lc->myself->uin, lc->cookies->ptwebqq);
+    char* hash = hashO(lc->myself->uin, lc->cookies->ptwebqq);
     /* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
     snprintf(post, sizeof(post), "r={\"h\":\"hello\",\"hash\":\"%s\",\"vfwebqq\":\"%s\"}",hash,lc->vfwebqq);
     s_free(hash);
