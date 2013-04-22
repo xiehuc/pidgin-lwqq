@@ -32,10 +32,10 @@ static const char html[]=
 "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html\r\n"
 "Cache-Control: no-cache\r\n"
-"Set-Cookie: uin=o350512021; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
-"Set-Cookie: ptui_loginuin=350512021; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
-"Set-Cookie: pt2gguin=o350512021; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
-"Set-Cookie: o_cookie=o350512021; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
+"Set-Cookie: uin=oxxxxxxxxx; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
+"Set-Cookie: ptui_loginuin=xxxxxxxxx; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
+"Set-Cookie: pt2gguin=oxxxxxxxxx; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
+"Set-Cookie: o_cookie=oxxxxxxxxx; Domain=.qq.com; Path=/; Expires=Thu, 02 Jan 2020 00:00:00 GMT\r\n"
 ;
 static const char body[]=
 "<html><head><script>window.location.href='http://mail.qq.com/'</script></head></html>";

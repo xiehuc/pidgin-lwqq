@@ -874,17 +874,17 @@ static int parse_blist_change(json_t* json,void* opaque,void* _lc)
 static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
 {
     /*group create
-      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":39194,"from_uin":1528509098,"to_uin":350512021,"msg_id2":539171,"msg_type":38,"reply_ip":176752410,"type":"group_create","gcode":2676780935,"t_gcode":249818602,"owner_uin":350512021}}]}
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":39194,"from_uin":1528509098,"to_uin":xxxxxxxxx,"msg_id2":539171,"msg_type":38,"reply_ip":176752410,"type":"group_create","gcode":2676780935,"t_gcode":249818602,"owner_uin":xxxxxxxxx}}]}
 
       group join
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":5940,"from_uin":370154409,"to_uin":2501542492,"msg_id2":979390,"msg_type":33,"reply_ip":176498394,"type":"group_join","gcode":2570026216,"t_gcode":249818602,"op_type":3,"new_member":2501542492,"t_new_member":"","admin_uin":1448380605,"admin_nick":"\u521B\u5EFA\u8005"}}]}
 
       group leave
-      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":51488,"from_uin":1528509098,"to_uin":350512021,"msg_id2":180256,"msg_type":34,"reply_ip":176882139,"type":"group_leave","gcode":2676780935,"t_gcode":249818602,"op_type":2,"old_member":574849996,"t_old_member":""}}]}
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":51488,"from_uin":1528509098,"to_uin":xxxxxxxxx,"msg_id2":180256,"msg_type":34,"reply_ip":176882139,"type":"group_leave","gcode":2676780935,"t_gcode":249818602,"op_type":2,"old_member":574849996,"t_old_member":""}}]}
       {"poll_type":"sys_g_msg","value""msg_id":14601,"from_uin":529044675,"to_uin":411927578,"msg_id2":563796,"msg_type":34,"reply_ip":176752044,"type":"group_leave","gcode":423970275,"t_gcode":57128682,"op_type":3,"old_member":1096278260,"t_old_member":"","admin_uin":2738646735,"t_admin_uin":"","admin_nick":"\347\256\241\347\220\206\345\221\230"}}
 
       group request
-      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":10899,"from_uin":3060007976,"to_uin":350512021,"msg_id2":693883,"msg_type":35,"reply_ip":176752016,"type":"group_request_join","gcode":406247342,"t_gcode":249818602,"request_uin":2297680537,"t_request_uin":"","msg":""}}]}
+      {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":10899,"from_uin":3060007976,"to_uin":xxxxxxxxx,"msg_id2":693883,"msg_type":35,"reply_ip":176752016,"type":"group_request_join","gcode":406247342,"t_gcode":249818602,"request_uin":2297680537,"t_request_uin":"","msg":""}}]}
 
       group request join agree
       {"retcode":0,"result":[{"poll_type":"sys_g_msg","value":{"msg_id":29407,"from_uin":1735178063,"to_uin":2501542492,"msg_id2":28428,"msg_type":36,"reply_ip":176498075,"type":"group_request_join_agree","gcode":3557387121,"t_gcode":249818602,"admin_uin":4005533729,"msg":""}}]}
@@ -1017,7 +1017,7 @@ static int parse_notify_offfile(json_t* json,void* opaque)
 {
     /*
      * {"retcode":0,"result":[{"poll_type":"notify_offfile","value":
-     * {"msg_id":9948,"from_uin":495653555,"to_uin":350512021,"msg_id2":460591,"msg_type":9,"reply_ip":178847911,"action":2,"filename":"12.jpg","filesize":137972}}]}
+     * {"msg_id":9948,"from_uin":495653555,"to_uin":xxxxxxxxx,"msg_id2":460591,"msg_type":9,"reply_ip":178847911,"action":2,"filename":"12.jpg","filesize":137972}}]}
     */
     LwqqMsgNotifyOfffile* notify = opaque;
     notify->action = atoi(json_parse_simple_value(json,"action"));
@@ -1030,7 +1030,7 @@ static int parse_input_notify(json_t* json,void* opaque)
 {
     /**
      *  {"retcode":0,"result":[{"poll_type":"input_notify","value":
-     *  {"msg_id":21940,"from_uin":3228283951,"to_uin":350512021,"msg_id2":3588813984,"msg_type":121,"reply_ip":4294967295}
+     *  {"msg_id":21940,"from_uin":3228283951,"to_uin":xxxxxxxxx,"msg_id2":3588813984,"msg_type":121,"reply_ip":4294967295}
      *  }]}
      *
      */

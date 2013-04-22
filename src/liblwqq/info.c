@@ -317,7 +317,7 @@ static void parse_group_info(json_t* json,LwqqGroup* g)
 
 static void parse_business_card(json_t* json,LwqqBusinessCard* c)
 {
-    //{"phone":"","muin":350512021,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}
+    //{"phone":"","muin":xxxxxxxxx,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}
     if(!json) return;
     parse_key_value(c->phone,"phone");
     parse_key_value(c->uin,"muin");
@@ -429,7 +429,7 @@ done:
 
 static int process_business_card(LwqqHttpRequest* req,LwqqBusinessCard* card)
 {
-    //{"retcode":0,"result":{"phone":"","muin":350512021,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}}
+    //{"retcode":0,"result":{"phone":"","muin":xxxxxxxxx,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}}
     int err = 0;
     json_t *root = NULL,*result;
     lwqq__jump_if_http_fail(req,err);
