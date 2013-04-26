@@ -10,6 +10,12 @@ Intro
 
 License: GPLv3
 
+Effect
+------
+
+![gnome3](http://i.imgur.com/8kuEPHI.png)
+
+want above effect? see:
 
 Quick Install
 -------------
@@ -19,16 +25,10 @@ Quick Install
     make
     sudo make install
 
-### Building With Ubuntu-Online-Account Support
-    cmake .. -DUOA=On
-    make
-    sudo make install
+first use? see:
 
 Build Option
 ------------
-
-- UOA[=Off] 
-> Ubuntu-Account-Online Support
 
 - VERBOSE[=0]
 > set the verbose level .0 means no verbose,3 means max verbose.
