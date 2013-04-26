@@ -1,96 +1,19 @@
 pidgin-lwqq
 ===========
 
-Intro
------
- provide qq protocol for pidgin on linux. based on webqq service.  
- a pidgin plugin based on [lwqq](https://github.com/mathslinux/lwqq).
- a excellent compact useful library for webqq protocol.   
- since the name may confused. lwqq is linux webqq
-
-License: GPLv3
-
-Effect
-------
-
-![gnome3](http://i.imgur.com/8kuEPHI.png)
-
-want above effect? see:
-
-Quick Install
--------------
-
-### Building From Source
-    cmake .. 
-    make
-    sudo make install
-
-first use? see:
-
-Build Option
-------------
-
-- VERBOSE[=0]
-> set the verbose level .0 means no verbose,3 means max verbose.
-
-- SSL[=On]
-> enable ssl support.
-
-See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detail install guide.
-
-
-### Notice
-
-*recommand libcurl >=7.22.0*
-
-Function list
--------------
-
-### pidgin support
-
-* send / recv buddy|group|discu messages
-* send / recv picture messages
-* send / recv qq face (you should use webqq faces theme in settings)
-* send / recv input notify | shake message
-* change buddy|group|discu markname
-* add members for discu
-* create discu
-* avatar
-* change buddy category
-* confirm buddy added request
-* visit buddy qzone
-* group whisper message
-* change status/business card
-* support multi webqq account
-* support send/recv offline file
-* support font style
-* support block group message
-* support recv file trans
-* support local qqnumber cache
-* support add friend/group
-* support import online chat log
-
-### empathy support (via telepathy-haze)
-
-* send / recv text messages
-* avatar
-* **not** support local qqnumber cache
-
-
-Known Issue
------------
-
-* send picture abnormal when libcurl < = 7.22.0
-* telepathy-haze itself doesn't support group or picture.
-* telepathy-haze store buddy list on /tmp/haze-XXX.
-  every time startup recreate every thing.
-
 简  介
 -----
 为linux的pidgin提供qq协议,基于webqq服务.
 是在[lwqq](https://github.com/mathslinux/lwqq)基础上开发而来.
 lwqq库是一个非常严谨有效的webqq协议的库.  
 lwqq 即是 linux webqq 之意
+
+效  果
+------
+
+![gnome3](http://i.imgur.com/8kuEPHI.png)
+
+想实现上面的效果? 猛击:[gnome3集成聊天](wiki/gnome3-support)
 
 快速安装
 --------
@@ -101,22 +24,15 @@ lwqq 即是 linux webqq 之意
     make
     sudo make install
 
-### 编译 Ubuntu-Account-Online 支持
-
-    cmake .. -DUOA=On
-    make
-    sudo make install
+第一次使用? 猛击:[简易使用教程](wiki/simple-user-guide)
 
 ### 编译选项
-- UOA[=Off] 
-> 编译对Ubuntu-Account-Online的支持
 
 - VERBOSE[=0]
 > 设置输出等级 .0表示没有输出,3表示最大输出.
 
 - SSL=[On]
 > 开启SSL的支持
-
 
 功能列表
 --------
