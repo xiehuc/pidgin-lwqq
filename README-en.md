@@ -15,7 +15,7 @@ Effect
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
-want above effect? see:[gnome3 support](wiki/gnome3-support)
+want above effect? see:[gnome3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
 
 Quick Install
 -------------
@@ -25,7 +25,7 @@ Quick Install
     make
     sudo make install
 
-first use? see:[user guide](wiki/simple-user-guide)
+first use? see:[user guide](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
 
 Build Option
 ------------

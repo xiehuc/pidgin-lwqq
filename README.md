@@ -13,7 +13,7 @@ lwqq 即是 linux webqq 之意
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
-想实现上面的效果? 猛击:[gnome3集成聊天](wiki/gnome3-support)
+想实现上面的效果? 猛击:[gnome3集成聊天](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
 
 快速安装
 --------
@@ -24,7 +24,7 @@ lwqq 即是 linux webqq 之意
     make
     sudo make install
 
-第一次使用? 猛击:[简易使用教程](wiki/simple-user-guide)
+第一次使用? 猛击:[简易使用教程](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
 
 ### 编译选项
 
