@@ -25,12 +25,8 @@ char *s_strdup(const char *s1);
 char *s_strndup(const char *s1, size_t n);
 int s_vasprintf(char **buf, const char * format, va_list arg);
 int s_asprintf(char **buf, const char *format, ...);
-int s_atoi(const char* s,int init);
-int s_atol(const char* s,int init);
-#define s_free(p) \
-do{ \
-    if(p) free(p);\
-    p = NULL;\
-}while(0)
+long s_atol(const char* s,long init);
+#define s_atoi(s,init) s_atol(s,init)
+#define s_free(p) (p=p?free(p),NULL:NULL)
 
 #endif  /* SMEMORY_H */

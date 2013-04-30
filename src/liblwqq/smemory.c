@@ -16,10 +16,7 @@
 
 void *s_malloc(size_t size)
 {
-	if(size == 0)
-		return NULL;
-
-    return malloc(size);
+    return size?malloc(size):NULL;
 }
 
 void *s_malloc0(size_t size)
@@ -34,12 +31,6 @@ void *s_malloc0(size_t size)
     return ptr;
 }
 
-/*j
-void s_free(void* ptr)
-{
-    if(ptr) free(ptr);
-}*/
-
 void *s_calloc(size_t nmemb, size_t lsize)
 {
     return calloc(nmemb, lsize);
@@ -52,18 +43,12 @@ void *s_realloc(void *ptr, size_t size)
 
 char *s_strdup(const char *s1)
 {
-    if (!s1)
-        return NULL;
-
-    return strdup(s1);
+    return s1?strdup(s1):NULL;
 }
 
 char *s_strndup(const char *s1, size_t n)
 {
-    if (!s1)
-        return NULL;
-
-    return strndup(s1, n);
+    return s1?strndup(s1, n):NULL;
 }
 
 int s_vasprintf(char **buf, const char * format,
@@ -83,13 +68,10 @@ int s_asprintf(char **buf, const char *format, ...)
 
     return rv;
 }
-int s_atoi(const char* s,int init)
+long s_atol(const char* s,long init)
 {
-    if(s) return strtol(s,NULL,10);
-    return init;
-}
-int s_atol(const char* s,int init)
-{
-    if(s) return strtol(s,NULL,10);
-    return init;
+    char* end;
+    if(!s) return init;
+    long ret = strtol(s,&end,10);
+    return (end==s)?init:ret;
 }
