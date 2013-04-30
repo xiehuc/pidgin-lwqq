@@ -587,33 +587,15 @@ static int set_online_status_back(LwqqHttpRequest* req)
      * but from the response we got like above, we dont need
      * 
      */
-    if ((value = json_parse_simple_value(json, "seskey"))) {
-        lc->seskey = s_strdup(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "cip"))) {
-        lc->cip = s_strdup(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "index"))) {
-        lc->index = s_strdup(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "port"))) {
-        lc->port = s_strdup(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "status"))) {
-        lc->stat = lwqq_status_from_str(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "vfwebqq"))) {
-        lc->vfwebqq = s_strdup(value);
-    }
-
-    if ((value = json_parse_simple_value(json, "psessionid"))) {
-        lc->psessionid = s_strdup(value);
-    }
+    lwqq__override(lc->seskey,lwqq__json_get_value(json,"seskey"));
+    lwqq__override(lc->cip,lwqq__json_get_value(json,"cip"));
+    lwqq__override(lc->myself->uin,lwqq__json_get_value(json,"uin"));
+    lwqq__override(lc->index,lwqq__json_get_value(json,"index"));
+    lwqq__override(lc->port,lwqq__json_get_value(json,"port"));
+    lwqq__override(lc->vfwebqq,lwqq__json_get_value(json,"vfwebqq"));
+    lwqq__override(lc->psessionid,lwqq__json_get_value(json,"psessionid"));
+    lc->stat = lwqq_status_from_str(
+            json_parse_simple_value(json, "status"));
 
     err = LWQQ_EC_OK;
     

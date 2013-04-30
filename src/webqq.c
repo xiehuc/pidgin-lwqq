@@ -699,18 +699,6 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
     }
     purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body,NULL, NULL, NULL);
 }
-//open chat conversation dialog
-/*static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
-{
-    g_return_if_fail(group);
-    const char* key = try_get(group->account,group->gid);
-    g_return_if_fail(key);
-    qq_account* ac = purple_connection_get_protocol_data(gc);
-    PurpleConversation *conv = purple_find_chat(gc,opend_chat_search(ac,group));
-    if(conv == NULL&&key) {
-        serv_got_joined_chat(gc,open_new_chat(ac,group),key);
-    }
-}*/
 struct rewrite_pic_entry {
     LwqqGroup* owner;
     int ori_id;
