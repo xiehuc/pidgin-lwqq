@@ -320,10 +320,12 @@ void lwqq_async_global_quit()
     pid = 0;
     global_quit_lock = 0;
 }
+#if USE_DEBUG
 static int lwqq_gdb_still_waiting()
 {
     return ev_pending_count(ev_default);
 }
+#endif
 void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer)
 {
     ev_timer_again(ev_default, &timer->h);

@@ -88,6 +88,7 @@ typedef struct D_ITEM{
 /* For async request */
 
 
+#if USE_DEBUG
 static int lwqq_gdb_whats_running()
 {
     D_ITEM* item;
@@ -100,6 +101,7 @@ static int lwqq_gdb_whats_running()
     }
     return num;
 }
+#endif
 
 static void composite_trunks(LwqqHttpRequest* req)
 {
@@ -566,7 +568,10 @@ static void check_multi_info(GLOBAL *g)
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
             ret = msg->data.result;
-            curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
+            char* pridat = NULL;
+            //avoid warnning
+            curl_easy_getinfo(easy, CURLINFO_PRIVATE, &pridat);
+            conn=(D_ITEM*)pridat;
             req = conn->req;
             req_ = (LwqqHttpRequest_*) req;
             ev = conn->event;

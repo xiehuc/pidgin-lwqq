@@ -700,7 +700,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
     purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body,NULL, NULL, NULL);
 }
 //open chat conversation dialog
-static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
+/*static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
 {
     g_return_if_fail(group);
     const char* key = try_get(group->account,group->gid);
@@ -710,7 +710,7 @@ static void qq_conv_open(PurpleConnection* gc,LwqqGroup* group)
     if(conv == NULL&&key) {
         serv_got_joined_chat(gc,open_new_chat(ac,group),key);
     }
-}
+}*/
 struct rewrite_pic_entry {
     LwqqGroup* owner;
     int ori_id;
@@ -2275,7 +2275,7 @@ static void qq_get_group_info(PurpleBlistNode* node)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqGroup* g = find_group_by_chat(chat);
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
-#define ADD_STRING(k,v) purple_notify_user_info_add_pair_plaintext(info,k,v)
+#define ADD_STRING(k,v) purple_notify_user_info_add_pair(info,k,v)
     ADD_STRING("QQ",g->account);
     ADD_STRING("名称",g->name);
     ADD_STRING("备注",g->markname);
@@ -2584,7 +2584,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 {
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
     char buf[32]={0};
-#define ADD_STRING(k,v)   purple_notify_user_info_add_pair_plaintext(info,k,v)
+#define ADD_STRING(k,v)   purple_notify_user_info_add_pair(info,k,v)
 #define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
     //ADD_HEADER("基本信息");

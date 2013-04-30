@@ -46,7 +46,7 @@ struct LwqqDiscuMemChange {
     struct str_list_* group_members;
     struct str_list_* relate_groups;
 };
-
+#if USE_DEBUG
 static int lwqq_gdb_list_group_member(LwqqGroup* g)
 {
     LwqqSimpleBuddy* sb;
@@ -68,6 +68,7 @@ static int lwqq_gdb_list_buddies(LwqqClient* lc)
     }
     return count;
 }
+#endif
 
 //=====================INSTRUCTION====================//
 /**
@@ -168,6 +169,8 @@ static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMem
         g = g->next;
     }
 done:
+    if(err)
+        lwqq_puts("[change discu member failed]");
     lwqq_discu_mem_change_free(chg);
 }
 
@@ -231,12 +234,6 @@ static json_t* parse_key_child(json_t* json,const char* key)
     json_t* result = json_find_first_label(json, key);
     if(result == NULL) return NULL;
     return result->child;
-}
-static char* parse_string(json_t* json,const char* key)
-{
-    char* ret = NULL;
-    parse_key_string(ret,key);
-    return ret;
 }
 static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
 {
@@ -689,6 +686,7 @@ static void parse_friends_child(LwqqClient *lc, json_t *json)
     }
 }
 
+#if 0
 static char* hashN(const char* uin,const char* ptwebqq)
 {
     int alen=strlen(uin);
@@ -731,6 +729,7 @@ static char* hashN(const char* uin,const char* ptwebqq)
     free(c);
     return ret;
 }
+#endif
 
 static char* hashO(const char* uin,const char* ptwebqq)
 {
