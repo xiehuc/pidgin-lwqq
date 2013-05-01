@@ -602,7 +602,7 @@ static void shake_message(LwqqClient* lc,LwqqMsgShakeMessage* shake)
     PurpleConnection* pc = ac->gc;
     serv_got_attention(pc, serv_id_to_local(ac, shake->super.from), 0);
 }
-static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
+static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
 {
     char body_[1024] = {0};
 #define ADD_INFO(k,v)  if(v) format_append(body_,k":%s\n",v)
@@ -625,7 +625,7 @@ static void format_body_from_buddy(char* body,LwqqBuddy* buddy)
     ADD_INFO("主页", buddy->homepage);
     //ADD_INFO("说明", buddy->);
 #undef ADD_INFO
-    strcat(body,body_);
+    strncat(body,body_,buf_len-strlen(body));
 }
 static void request_join_confirm(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqConfirmTable* ct)
 {
@@ -639,7 +639,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
     char body[1024]={0};
     LwqqGroup* g = find_group_by_gid(lc, msg->group_uin);
     format_append(body,"申请的群:%s\n申请理由:%s\n",g->name,msg->msg);
-    format_body_from_buddy(body,buddy);
+    format_body_from_buddy(body,sizeof(body),buddy);
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
     ct->title = s_strdup("群申请确认");
     ct->body = s_strdup(body);
@@ -689,7 +689,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                 LwqqBuddy* buddy = lwqq_buddy_new();
                 LwqqMsgSysGMsg* nmsg = s_malloc0(sizeof(*nmsg));
                 lwqq_msg_move(nmsg,msg);
-                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(lc,nmsg,buddy);
+                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info_by_msg(lc,nmsg,buddy);
                 lwqq_async_add_event_listener(ev, _C_(3p,sys_g_request_join,lc,buddy,nmsg));
                 return;
             } break;
@@ -940,20 +940,25 @@ static void verify_required_confirm(LwqqClient* lc,char* account,LwqqConfirmTabl
     lwqq_ct_free(ct);
     s_free(account);
 }
-static void system_message(LwqqClient* lc,LwqqMsgSystem* system)
+static void system_message(LwqqClient* lc,LwqqMsgSystem* system,LwqqBuddy* buddy)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     char buf1[256]={0};
     if(system->type == VERIFY_REQUIRED) {
+        char buf2[2048];
         LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
         ct->title = s_strdup("好友确认");
-        snprintf(buf1,sizeof(buf1),"%s\n请求加您为好友\n附加信息:%s",system->account,system->verify_required.msg);
-        ct->body = s_strdup(buf1);
+        snprintf(buf2,sizeof(buf2),
+                "%s\n请求加您为好友\n附加信息:%s\n\n",system->account,system->verify_required.msg);
+        format_body_from_buddy(buf2,sizeof(buf2),buddy);
+        ct->body = s_strdup(buf2);
         ct->exans_label = s_strdup("同意并加为好友");
         ct->input_label = s_strdup("拒绝理由");
         ct->flags = LWQQ_CT_ENABLE_IGNORE;
         ct->cmd = _C_(3p,verify_required_confirm,lc,s_strdup(system->account),ct);
         show_confirm_table(lc, ct);
+        lwqq_buddy_free(buddy);
+        lwqq_msg_free((LwqqMsg*)system);
     } else if(system->type == VERIFY_PASS_ADD) {
         snprintf(buf1,sizeof(buf1),"%s通过了您的请求,并添加您为好友",system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
@@ -1033,6 +1038,7 @@ void qq_msg_check(LwqqClient* lc)
     if(!lwqq_client_valid(lc)) return;
     LwqqRecvMsgList* l = lc->msg_list;
     LwqqRecvMsg *msg,*prev;
+    LwqqMsgSystem* sys_msg;
 
     pthread_mutex_lock(&l->mutex);
     if (TAILQ_EMPTY(&l->head)) {
@@ -1067,7 +1073,17 @@ void qq_msg_check(LwqqClient* lc)
                 kick_message(lc,(LwqqMsgKickMessage*)msg->msg);
                 break;
             case LWQQ_MT_SYSTEM:
-                system_message(lc,(LwqqMsgSystem*)msg->msg);
+                sys_msg = (LwqqMsgSystem*)msg->msg;
+                if(sys_msg->type == VERIFY_REQUIRED){
+                    msg->msg = NULL;
+                    LwqqBuddy* buddy = lwqq_buddy_new();
+                    LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(
+                            lc, sys_msg->super.from, buddy);
+                    lwqq_async_add_event_listener(ev, 
+                            _C_(3p,system_message,lc,sys_msg,buddy));
+                }else{
+                    system_message(lc,(LwqqMsgSystem*)msg->msg,NULL);
+                }
                 break;
             case LWQQ_MT_BLIST_CHANGE:
                 blist_change(lc,(LwqqMsgBlistChange*)msg->msg);
@@ -1998,7 +2014,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* uni_i
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup("好友确认");
     char body[1024] = {0};
-    format_body_from_buddy(body, buddy);
+    format_body_from_buddy(body,sizeof(body),buddy);
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(4p,add_friend,lc,confirm,buddy,message);
     show_confirm_table(lc,confirm);

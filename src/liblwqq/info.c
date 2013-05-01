@@ -2178,7 +2178,7 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
     return ev;
 }
 
-LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out)
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,const char* serv_id,LwqqBuddy* out)
 {
     if(!lc||!serv_id||!out) return NULL;
     char url[512];
@@ -2189,7 +2189,7 @@ LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* ser
     lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(2p,process_friend_detail,req,out));
 }
-LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out)
+LwqqAsyncEvent* lwqq_info_get_stranger_info_by_msg(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out)
 {
     if(!lc||!msg||!out) return NULL;
     char url[512];

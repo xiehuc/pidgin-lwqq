@@ -178,7 +178,7 @@ LwqqAsyncEvent* lwqq_info_add_group(LwqqClient* lc,LwqqGroup* group,const char* 
  *              because poll msg would auto free original message data. so we should 
  *              'move' it to another handle.
  */
-LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out);
+LwqqAsyncEvent* lwqq_info_get_stranger_info_by_msg(LwqqClient* lc,LwqqMsgSysGMsg* msg,LwqqBuddy* out);
 /** use this when you received sys g message with type (request join).
  * normally you should use get_stanger_info first and ask user whether accept or deny request.
  * @param msg : use you moved message.
@@ -194,7 +194,8 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
  *             if successed.necessary infomation would fill into this.
  *             free it after used.
  */
-LwqqAsyncEvent* lwqq_info_get_group_member_detail(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
+LwqqAsyncEvent* lwqq_info_get_stranger_info(LwqqClient* lc,const char* serv_id,LwqqBuddy* out);
+#define lwqq_info_get_group_member_detail(lc,serv_id,out) lwqq_info_get_stranger_info(lc,serv_id,out)
 /**
  * add a group member as friend
  * @param mem_detail : you should create a empty buddy and make sure use this function after both
