@@ -2117,6 +2117,19 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
         purple_notify_user_info_add_pair(info, "备注", buddy->markname);
     if(buddy->long_nick)
         purple_notify_user_info_add_pair(info, "签名", buddy->long_nick);
+    const char* client="";
+    switch(buddy->client_type){
+        case LWQQ_CLIENT_DESKTOP:
+            client="pc";
+            break;
+        case LWQQ_CLIENT_MOBILE:
+            client="phone";
+            break;
+        case LWQQ_CLIENT_WEBQQ:
+            client="webqq";
+            break;
+    }
+    purple_notify_user_info_add_pair(info, "终端", client);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
