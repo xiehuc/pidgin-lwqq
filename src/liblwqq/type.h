@@ -24,6 +24,7 @@
 #endif
 
 #define LWQQ_DEFAULT_CATE "My Friends"
+#define LWQQ_PASSERBY_CATE "Passerby"
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
@@ -118,6 +119,8 @@ typedef enum {
     LWQQ_EC_CANCELED
 } LwqqErrorCode;
 
+#define LWQQ_FRIEND_CATE_IDX_DEFAULT 0
+#define LWQQ_FRIEND_CATE_IDX_PASSERBY -1
 /* Struct defination */
 typedef struct LwqqFriendCategory {
     int index;

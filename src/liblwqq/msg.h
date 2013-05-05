@@ -100,6 +100,9 @@ typedef struct LwqqMsgMessage {
     time_t time;
     union{
         struct {
+            LwqqBuddy* from;
+        }buddy;
+        struct {
             char *send; /* only group use it to identify who send the group message */
             char *group_code; /* only avaliable in group message */
         }group;

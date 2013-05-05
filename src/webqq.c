@@ -440,8 +440,12 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     LwqqFriendCategory* cate;
 
     int cate_index = buddy->cate_index;
-    PurpleGroup* group = purple_group_new(QQ_DEFAULT_CATE);
-    if(cate_index != 0) {
+    PurpleGroup* group = NULL;
+    if(cate_index == LWQQ_FRIEND_CATE_IDX_DEFAULT){
+        group = purple_group_new(QQ_DEFAULT_CATE);
+    }else if(cate_index == LWQQ_FRIEND_CATE_IDX_PASSERBY){
+        group = purple_group_new(QQ_PASSERBY_CATE);
+    }else if(cate_index != 0) {
         LIST_FOREACH(cate,&lc->categories,entries) {
             if(cate->index==cate_index) {
                 group = purple_group_new(cate->name);
@@ -566,9 +570,11 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     char buf[BUFLEN]={0};
     //clean buffer
     strcpy(buf,"");
+    LwqqBuddy* buddy = msg->buddy.from;
+    const char* local_id = ac->qq_use_qqnum?buddy->qqnumber:buddy->uin;
 
     translate_struct_to_message(ac,msg,buf);
-    serv_got_im(pc, serv_id_to_local(ac,msg->super.from), buf, PURPLE_MESSAGE_RECV, msg->time);
+    serv_got_im(pc, local_id, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
