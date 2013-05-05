@@ -914,8 +914,9 @@ void lwqq_http_global_free()
     if(global.multi){
         if(!LIST_EMPTY(&global.conn_link)){
             lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,NULL);
+            struct timespec timeout = {2,0};
             pthread_mutex_lock(&async_lock);
-            pthread_cond_wait(&async_cond,&async_lock);
+            pthread_cond_timedwait(&async_cond,&async_lock,&timeout);
             pthread_mutex_unlock(&async_lock);
         }
 
@@ -950,8 +951,9 @@ void lwqq_http_cleanup(LwqqClient*lc)
     if(global.multi){
         if(!LIST_EMPTY(&global.conn_link)){
             lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,lc);
+            struct timespec timeout = {2,0};
             pthread_mutex_lock(&async_lock);
-            pthread_cond_wait(&async_cond,&async_lock);
+            pthread_cond_timedwait(&async_cond,&async_lock,&timeout);
             pthread_mutex_unlock(&async_lock);
         }
 
