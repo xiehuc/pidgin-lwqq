@@ -386,7 +386,7 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin);
 LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber);
 
 
-LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name,const char* def_name);
+LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name);
 
 /* LwqqBuddy API END*/
 

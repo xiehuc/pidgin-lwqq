@@ -1301,7 +1301,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
                 ret = parse_new_msg(cur,msg);
                 if(ret == RET_WELLFORM_MSG)
                     ret = lwqq_msg_request_picture(list->lc, (LwqqMsgMessage*)msg);
-                if(ret == RET_WELLFORM_MSG)
+                if(ret == RET_WELLFORM_MSG && msg->type == LWQQ_MS_BUDDY_MSG)
                     ret = lwqq_msg_message_bind_buddy(list->lc,(LwqqMsgMessage*)msg);
                 break;
             case LWQQ_MT_STATUS_CHANGE:

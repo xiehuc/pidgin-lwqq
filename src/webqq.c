@@ -1889,30 +1889,53 @@ static void change_category_back(LwqqAsyncEvent* event,void* data)
         s_free(data);
     }
 }
+static void add_passerby_to_friend_failed(LwqqAsyncEvent* ev,LwqqBuddy* b,void* data)
+{
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    b->cate_index = LWQQ_FRIEND_CATE_IDX_PASSERBY;
+    if(ev->result == 0){
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,NULL,"添加陌生人为好友","成功发送添加好友请求",move_buddy_back,data);
+    }else
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"添加好友失败","???",move_buddy_back,data);
+}
 static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy = ac->qq_use_qqnum?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
+    LwqqFriendCategory* cate = NULL;
     if(buddy==NULL) return;
 
-    const char* category;
-    if(strcmp(new_group,"QQ好友")==0)
-        category = "My Friends";
-    else category = new_group;
-    LwqqAsyncEvent* event;
-    event = lwqq_info_modify_buddy_category(lc,buddy,category);
+    int cate_index=0;
 
     void** data = s_malloc0(sizeof(void*)*3);
-    data[0] = purple_find_buddy(ac->account,who);
+    data[0] = buddy->data;
     data[1] = s_strdup(old_group);
     data[2] = ac;
-    if(event == NULL) {
-        purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
-    } else{
-        lwqq_async_add_event_listener(event,_C_(2p,change_category_back,event,data));
+
+    if(strcmp(new_group,QQ_DEFAULT_CATE)==0)
+        cate_index = LWQQ_FRIEND_CATE_IDX_DEFAULT;
+    else{
+        cate = lwqq_category_find_by_name(lc, new_group);
+        if(cate ==NULL){
+            purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
+            return;
+        }else
+            cate_index = cate->index;
     }
+    if(buddy->cate_index == LWQQ_FRIEND_CATE_IDX_PASSERBY){
+        //purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不可移动陌生人",move_buddy_back,data);
+        buddy->cate_index = cate_index;
+        LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, buddy, "");
+        lwqq_async_add_event_listener(ev, _C_(3p,add_passerby_to_friend_failed,ev,buddy,data));
+        return ;
+    }
+    LwqqAsyncEvent* event;
+    event = lwqq_info_modify_buddy_category(lc,buddy,cate_index);
+
+    lwqq_async_add_event_listener(event,_C_(2p,change_category_back,event,data));
 }
 //keep this empty to ensure rename category dont crash
 static void qq_rename_category(PurpleConnection* gc,const char* old_name,PurpleGroup* group,GList* moved_buddies)
@@ -2070,7 +2093,7 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
     LwqqGroup* g = NULL;
     LwqqSimpleBuddy* sb = NULL;
     LwqqBuddy* friend = lwqq_buddy_new();
-    LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
+    LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name);
     if(cate == NULL){
         friend->cate_index = 0;
     }else

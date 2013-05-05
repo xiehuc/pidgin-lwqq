@@ -140,7 +140,7 @@ LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,con
 /**
  * @param new_cate the catetory name. if lwqq cannot find out such cate .would return NULL
  */
-LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,const char* new_cate);
+LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,int new_cate);
 /** after call this. poll would recv blist change message.
  * in there do real delete work and ui should delete buddy info
  */
