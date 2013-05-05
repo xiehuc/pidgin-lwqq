@@ -699,6 +699,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
 static void login_stage_4(LwqqClient* lc)
 {
     if(!lwqq_client_valid(lc)) return;
+    if(!lc->vc) return;
     /* Third: calculate the md5 */
     char *md5 = lwqq_enc_pwd(lc->password, lc->vc->str, lc->vc->uin);
 

@@ -579,7 +579,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
              "到期时间: %s"
              "<a href=\"%s\">点此下载</a>",
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
-    serv_got_im(pc,serv_id_to_local(ac,msg->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
+    serv_got_im(pc,serv_id_to_local(ac,msg->super.from),buf,PURPLE_MESSAGE_RECV,time(NULL));
 }
 static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
 {
