@@ -125,10 +125,11 @@ void lwqq_http_proxy_apply(LwqqHttpHandle* handle,LwqqHttpRequest* req);
 
 /**
  * Free Http Request
+ * always return 0
  *
  * @param request
  */
-void lwqq_http_request_free(LwqqHttpRequest *request);
+int lwqq_http_request_free(LwqqHttpRequest *request);
 
 /**
  * Create a new Http request instance

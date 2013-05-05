@@ -512,11 +512,11 @@ done:
 #undef PUT_COOKIE_KEY
 }
 
-unsigned long long lwqq_time()
+long lwqq_time()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    unsigned long long ret;
+    long ret;
     ret = tv.tv_sec*1000+tv.tv_usec/1000;
     return ret;
 }

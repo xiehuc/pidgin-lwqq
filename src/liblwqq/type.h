@@ -437,7 +437,7 @@ LwqqStatus lwqq_status_from_str(const char* str);
 
 //long time
 #define LTIME lwqq_time()
-unsigned long long lwqq_time();
+long lwqq_time();
 
 
 

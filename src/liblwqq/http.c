@@ -229,10 +229,10 @@ static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
  * 
  * @param request 
  */
-void lwqq_http_request_free(LwqqHttpRequest *request)
+int lwqq_http_request_free(LwqqHttpRequest *request)
 {
     if (!request)
-        return ;
+        return 0;
     
     if (request) {
         composite_trunks(request);
@@ -247,6 +247,7 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
         }
         s_free(request);
     }
+    return 0;
 }
 
 static size_t write_header( void *ptr, size_t size, size_t nmemb, void *userdata)
