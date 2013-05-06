@@ -484,7 +484,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     }
     purple_buddy_set_protocol_data(bu, buddy);
     buddy->data = bu;
-    if(purple_buddy_get_group(bu)!=group) 
+    if(purple_buddy_get_group(bu)!=group&&strcmp(purple_buddy_get_group(bu)->name,ac->recent_group_name)!=0) 
         purple_blist_add_buddy(bu,NULL,group,NULL);
     if(!bu->alias || strcmp(bu->alias,disp)!=0 )
         purple_blist_alias_buddy(bu,disp);
@@ -1928,6 +1928,7 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
+    if(strcmp(new_group,ac->recent_group_name)==0||strcmp(old_group,ac->recent_group_name)==0) return;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy = ac->qq_use_qqnum?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
     LwqqFriendCategory* cate = NULL;
@@ -2833,6 +2834,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
     options = g_list_append(options, option);
+    option = purple_account_option_string_new("忽略的组(兼容recent plugin)", "recent_group_name", "Recent Contacts");
+    options = g_list_append(options, option);
 
     webqq_prpl_info.protocol_options = options;
 
@@ -2919,6 +2922,7 @@ static void qq_login(PurpleAccount *account)
     ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
     ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
     ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
+    ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path,0);

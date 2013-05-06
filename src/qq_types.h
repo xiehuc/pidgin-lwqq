@@ -60,6 +60,7 @@ typedef struct qq_account {
     int msg_poll_handle;
     GPtrArray* opend_chat;
     GList* rewrite_pic_list;
+    char* recent_group_name;
     struct{
     gboolean qq_use_qqnum;
     gboolean disable_custom_font_face;

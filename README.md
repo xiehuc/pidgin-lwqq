@@ -73,6 +73,9 @@ lwqq 即是 linux webqq 之意
 已知问题
 --------
 
+* pidgin使用明文保存密码
+    请配合使用[pidgin-gnome-keyring](https://code.google.com/p/pidgin-gnome-keyring/)并开启插件
+
 * 当libcurl版本低于7.22.0时可能造成图片发送失败
 
 *telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*

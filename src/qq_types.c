@@ -63,6 +63,7 @@ void qq_account_free(qq_account* ac)
         purple_conversation_destroy(purple_find_chat(gc, i));
     }
     g_ptr_array_free(ac->opend_chat,1);
+    s_free(ac->recent_group_name);
 #if QQ_USE_FAST_INDEX
     g_hash_table_destroy(ac->fast_index.qqnum_index);
     g_hash_table_destroy(ac->fast_index.uin_index);
