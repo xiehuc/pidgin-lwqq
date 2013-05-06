@@ -42,7 +42,7 @@ static int get_verify_code_back(LwqqHttpRequest* req);
 static int do_login_back(LwqqHttpRequest* req);
 static int set_online_status_back(LwqqHttpRequest* req);
 static int get_verify_image_back(LwqqHttpRequest* req);
-static void login_stage_2(LwqqAsyncEvent* ev);
+static void login_stage_2(/*LwqqAsyncEvent* ev*/LwqqClient* lc);
 static void login_stage_3(LwqqAsyncEvent* ev);
 static void login_stage_4(LwqqClient* lc);
 static void login_stage_5(LwqqAsyncEvent* ev);
@@ -628,24 +628,14 @@ void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err)
     client->stat = status;
 
     lwqq_puts("[login stage 1:get webqq version]\n");
-    /* First: get webqq version */
-    LwqqAsyncEvent* ev = get_version(client, err);
-    lwqq_async_add_event_listener(ev,_C_(p,login_stage_2,ev));
+    /* optional: get webqq version */
+    get_version(client, err);
+    login_stage_2(client);
 }
 
-static void login_stage_2(LwqqAsyncEvent* ev)
+static void login_stage_2(LwqqClient* lc)
 {
-    if(lwqq_async_event_get_code(ev) == LWQQ_CALLBACK_FAILED) return;
-    LwqqClient* lc = lwqq_async_event_get_owner(ev);
     if(!lwqq_client_valid(lc)) return;
-    int err = lwqq_async_event_get_result(ev);
-    if (err) {
-        lwqq_log(LOG_ERROR, "Get webqq version error\n");
-        lc->async_opt->login_complete(lc,err);
-        return ;
-    }
-    lwqq_log(LOG_NOTICE, "Get webqq version: %s\n", lc->version);
-
 
     /**
      * Second, we get the verify code from server.
