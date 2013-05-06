@@ -337,6 +337,17 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnum)
     }
     return NULL;
 }
+LwqqBuddy* lwqq_buddy_find_buddy_by_name(LwqqClient* lc,const char* name)
+{
+    if(!lc || !name ) return NULL;
+    LwqqBuddy * buddy = NULL;
+    LIST_FOREACH(buddy,&lc->friends,entries){
+        if((buddy->markname && !strcmp(buddy->markname,name) )||
+                (buddy->nick && !strcmp(buddy->nick,name)))
+            return buddy;
+    }
+    return NULL;
+}
 LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name)
 {
     if(!lc||!name) return NULL;

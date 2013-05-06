@@ -171,6 +171,7 @@ static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMem
 done:
     if(err)
         lwqq_puts("[change discu member failed]");
+    lc->async_opt->group_members_chg(lc,discu);
     lwqq_discu_mem_change_free(chg);
 }
 

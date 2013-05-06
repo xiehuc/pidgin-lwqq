@@ -170,6 +170,10 @@ struct _LwqqAsyncOption {
      * it would deleted later.
      */
     void (*delete_group)(LwqqClient* lc,const LwqqGroup* g);
+    /** this called when group member changes
+     * you need flush displayed group member
+     */
+    void (*group_members_chg)(LwqqClient* lc,LwqqGroup* g);
 };
 
 void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...);

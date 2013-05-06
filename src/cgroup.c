@@ -196,6 +196,14 @@ void qq_cgroup_open(qq_chat_group* cg)
     }
 }
 
+void qq_cgroup_flush_members(qq_chat_group* cg)
+{
+    PurpleConversation* conv = CGROUP_GET_CONV(cg);
+    if(conv == NULL) return;
+    PurpleConvChat* chat = PURPLE_CONV_CHAT(conv);
+    purple_conv_chat_clear_users(chat);
+    set_user_list(cg);
+}
 
 unsigned int qq_cgroup_unread_num(qq_chat_group* cg)
 {

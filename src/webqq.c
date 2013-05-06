@@ -302,20 +302,39 @@ static void qq_add_group(PurplePluginAction* action)
     purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
             "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
-static void create_discu(qq_account* ac,const char* name)
+static void create_discu(qq_account* ac,PurpleRequestFields* root)
 {
     LwqqClient* lc = ac->qq;
+    const char* name = purple_request_fields_get_string(root, "name");
+    char* members = s_strdup(purple_request_fields_get_string(root, "members"));
+    char* ptr = members;
+    char* piece;
     LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
+    while((piece = strsep(&ptr,";"))){
+        LwqqBuddy* b = find_buddy_by_qqnumber(lc, piece);
+        if(b == NULL) b = lwqq_buddy_find_buddy_by_name(lc, piece);
+        lwqq_discu_add_buddy(chg, b);
+    }
     lwqq_info_create_discu(lc, chg, name);
+    s_free(members);
 }
 static void qq_create_discu(PurplePluginAction* action)
 {
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
 
+    PurpleRequestField* leaf;
+    PurpleRequestFields* root = purple_request_fields_new();
+    PurpleRequestFieldGroup* branch = purple_request_field_group_new("");
+    purple_request_fields_add_group(root, branch);
+    leaf = purple_request_field_string_new("name", "讨论组名称", "未命名讨论组", FALSE);
+    purple_request_field_string_set_editable(leaf, TRUE);
+    purple_request_field_group_add_field(branch, leaf);
+    leaf = purple_request_field_string_new("members", "成员(用;分隔)", "", TRUE);
+    purple_request_field_string_set_editable(leaf, TRUE);
+    purple_request_field_group_add_field(branch, leaf);
 
-    purple_request_input(gc, "创建讨论组", "名称", NULL, NULL, FALSE, FALSE, NULL, 
-            "创建", G_CALLBACK(create_discu), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+    purple_request_fields(gc, "创建讨论组", NULL, NULL, root, "创建", G_CALLBACK(create_discu), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
 #if 0
 static void qq_open_recent(PurplePluginAction* action)
@@ -1433,6 +1452,11 @@ static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
     qq_account_remove_index_node(ac, NULL, g);
     purple_blist_remove_chat(cg->chat);
 }
+static void flush_group_members(LwqqClient* lc,LwqqGroup* g)
+{
+    qq_chat_group* cg = g->data;
+    qq_cgroup_flush_members(cg);
+}
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
     .login_verify = verify_come,
@@ -1444,6 +1468,7 @@ static LwqqAsyncOption qq_async_opt = {
     .need_verify2 = show_verify_image,
     //.need_confirm = show_confirm_table,
     .delete_group = delete_group_local,
+    .group_members_chg = flush_group_members,
 };
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
@@ -2712,6 +2737,9 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
         b = find_buddy_by_qqnumber(lc, local_id);
     else
         b = find_buddy_by_uin(lc, local_id);
+    if(b == NULL)
+        b = lwqq_buddy_find_buddy_by_name(lc, local_id);
+
     LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
     lwqq_discu_add_buddy(chg, b);
 

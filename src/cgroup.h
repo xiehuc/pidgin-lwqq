@@ -41,5 +41,7 @@ void qq_cgroup_open(qq_chat_group* cg);
 
 void qq_cgroup_got_msg(qq_chat_group* cg,const char* local_id,PurpleMessageFlags flags,const char* message,time_t t);
 
+void qq_cgroup_flush_members(qq_chat_group* cg);
+
 unsigned int qq_cgroup_unread_num(qq_chat_group* cg);
 #define CGROUP_UNREAD(cg) qq_cgroup_unread_num(cg)

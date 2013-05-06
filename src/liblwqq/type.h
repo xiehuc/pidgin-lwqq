@@ -384,6 +384,7 @@ void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy);
  */
 LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin);
 LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber);
+LwqqBuddy* lwqq_buddy_find_buddy_by_name(LwqqClient* lc,const char* name);
 
 
 LwqqFriendCategory* lwqq_category_find_by_name(LwqqClient* lc,const char* name);
