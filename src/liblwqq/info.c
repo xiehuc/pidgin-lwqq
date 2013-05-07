@@ -188,6 +188,17 @@ done:
     }
 }
 
+static void do_modify_longnick(LwqqAsyncEvent* ev,char* longnick)
+{
+    int err=0;
+    lwqq__jump_if_ev_fail(ev,err);
+    LwqqClient* lc = ev->lc;
+    lwqq__override(lc->myself->long_nick,longnick);
+done:
+    if(err)
+        s_free(longnick);
+}
+
 #if 0
 //most of the case webqq server would send blist_change message to add buddy
 static void do_add_new_friend(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqBuddy* b)
@@ -2291,6 +2302,23 @@ LwqqAsyncEvent* lwqq_info_get_single_long_nick(LwqqClient* lc,LwqqBuddy* buddy)
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
     req->set_header(req,"Referer",WEBQQ_S_REF_URL);
     return req->do_request_async(req,0,NULL,_C_(3p_i,process_simple_string,req,"lnick",&buddy->long_nick));
+}
+
+LwqqAsyncEvent* lwqq_info_set_self_long_nick(LwqqClient* lc,const char* nick)
+{
+    if(!lc||!nick) return NULL;
+    char url[512];
+    char post[1024];
+
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/set_long_nick2");
+    snprintf(post,sizeof(post),"r={\"nlk\":\"%s\",\"vfwebqq\":\"%s\"}",nick,lc->vfwebqq);
+    lwqq_verbose(3,"%s\n",url);
+    lwqq_verbose(3,"%s\n",post);
+    LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
+    LwqqAsyncEvent* ev =  req->do_request_async(req,1,post,_C_(3p_i,process_simple_response,req));
+    lwqq_async_add_event_listener(ev, _C_(2p,do_modify_longnick,ev,s_strdup(nick)));
+    return ev;
 }
 
 LwqqAsyncEvent* lwqq_info_delete_group(LwqqClient* lc,LwqqGroup* group)

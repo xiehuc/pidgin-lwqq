@@ -368,6 +368,29 @@ static void search_result_test(PurplePluginAction* act)
     purple_notify_searchresults(gc, "添加成员", NULL, NULL, res, close_add_buddies_to_talkgroup, gc->proto_data);
 }
 
+static void modify_self_longnick(LwqqClient* lc,LwqqConfirmTable* ct)
+{
+    if(ct->answer == LWQQ_YES){
+        const char* longnick = ct->input;
+        lwqq_info_set_self_long_nick(lc, longnick);
+    }
+    lwqq_ct_free(ct);
+}
+
+static void qq_modify_self_longnick(PurplePluginAction* act)
+{
+    PurpleConnection* gc = act->context;
+    qq_account* ac = gc->proto_data;
+    LwqqClient* lc = ac->qq;
+
+    LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+    ct->title = s_strdup("修改个性签名");
+    ct->input_label = s_strdup("个性签名");
+    ct->input = s_strdup(lc->myself->long_nick);
+    ct->cmd = _C_(2p,modify_self_longnick,lc,ct);
+    show_confirm_table(lc, ct);
+}
+
 static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context)
 {
 
@@ -390,8 +413,10 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     m = g_list_append(m, act);
     act = purple_plugin_action_new("全部重载",all_reset_action);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("测试", search_result_test);
+    act = purple_plugin_action_new("修改签名",qq_modify_self_longnick);
     m = g_list_append(m, act);
+    /*act = purple_plugin_action_new("测试", search_result_test);
+    m = g_list_append(m, act);*/
 
     return m;
 }
@@ -1434,7 +1459,8 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     }
 
     if(table->input_label){
-        PurpleRequestField* i = purple_request_field_string_new("input", table->input_label, "", FALSE);
+        PurpleRequestField* i = purple_request_field_string_new("input", table->input_label, table->input?:"", FALSE);
+        s_free(table->input);
         purple_request_field_group_add_field(field_group,i);
     }
 
@@ -1491,6 +1517,8 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
     ev = lwqq_info_get_friends_info(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_group_name_list(lc,NULL);
+    lwqq_async_evset_add_event(set,ev);
+    ev = lwqq_info_get_single_long_nick(lc, lc->myself);
     lwqq_async_evset_add_event(set,ev);
     //ev = lwqq_info_recent_list(lc, &ac->recent_list);
     //lwqq_async_evset_add_event(set, ev);
