@@ -42,6 +42,11 @@ enum ResetOption{
     RESET_DISCU=0x4,
     RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
     RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
+    
+static const char sxarr[13][4] = {"", "鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"};
+static const char xxarr[6][8] = {"", "A", "B", "O", "AB", "其它"};
+static const char xzarr[13][12] = {"", "水瓶座", "双鱼座", "白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", 
+				"处女座", "天秤座", "天蝎座", "射手座", "摩羯座"};
 
 ///###  global data area ###///
 int g_ref_count = 0;
@@ -659,10 +664,10 @@ static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
     ADD_INFO("QQ", buddy->qqnumber);
     ADD_INFO("昵称", buddy->nick);
     ADD_INFO("签名", buddy->personal);
-    ADD_INFO("性别", buddy->gender);
-    ADD_INFO("生肖", buddy->shengxiao);
-    ADD_INFO("星座", buddy->constel);
-    ADD_INFO("血型", buddy->blood);
+    ADD_INFO("性别", (strcmp(buddy->gender, "male") ? "女" : "男"));
+    ADD_INFO("生肖", sxarr[atoi(buddy->shengxiao)]);
+    ADD_INFO("星座", xzarr[atoi(buddy->constel)]);
+    ADD_INFO("血型", xxarr[atoi(buddy->blood)]);
     //ADD_INFO("生日", buddy->birthday);
     ADD_INFO("国籍", buddy->country);
     ADD_INFO("省份", buddy->province);
@@ -2203,13 +2208,13 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
     const char* client="";
     switch(buddy->client_type){
         case LWQQ_CLIENT_DESKTOP:
-            client="pc";
+            client="电脑";
             break;
         case LWQQ_CLIENT_MOBILE:
-            client="phone";
+            client="手机";
             break;
         case LWQQ_CLIENT_WEBQQ:
-            client="webqq";
+            client="WebQQ";
             break;
     }
     purple_notify_user_info_add_pair(info, "终端", client);
@@ -2693,10 +2698,10 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING("备注",b->markname);
     ADD_STRING("签名",b->long_nick);
     ADD_HEADER("个人信息");
-    ADD_STRING("性别",b->gender);
-    ADD_STRING("生肖",b->shengxiao);
-    ADD_STRING("星座",b->constel);
-    ADD_STRING("血型",b->blood);
+    ADD_STRING("性别", strcmp(b->gender, "male") ? "女" : "男");
+    ADD_STRING("生肖",sxarr[atoi(b->shengxiao)]);
+    ADD_STRING("星座",xzarr[atoi(b->constel)]);
+    ADD_STRING("血型",xxarr[atoi(b->blood)]);
     struct tm *tm_ = localtime(&b->birthday);
     strftime(buf,sizeof(buf),"%Y年%m月%d日",tm_);
     ADD_STRING("生日",buf);
