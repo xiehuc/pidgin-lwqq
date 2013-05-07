@@ -1575,7 +1575,7 @@ static void parse_unescape(char* source,char *buf,int buf_len)
     size_t idx;
     while(*ptr!='\0'){
         if(buf_len<=0) return;
-        idx = strcspn(ptr,"\n\t\\;&\"+");
+        idx = strcspn(ptr,"\r\n\t\\;&\"+");
         if(ptr[idx] == '\0'){
             strncpy(buf,ptr,buf_len);
             buf+=idx;
@@ -1589,6 +1589,7 @@ static void parse_unescape(char* source,char *buf,int buf_len)
         switch(ptr[idx]){
             //note buf point the end position
             case '\n': strncpy(buf,"\\\\n",buf_len);break;
+            case '\r': strncpy(buf,"\\\\n",buf_len);break;
             case '\t': strncpy(buf,"\\\\t",buf_len);break;
             case '\\': strncpy(buf,"\\\\\\\\",buf_len);break;
             //i dont know why ; is not worked.so we use another expression
