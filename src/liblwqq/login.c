@@ -560,6 +560,10 @@ static int set_online_status_back(LwqqHttpRequest* req)
     char* value;
     json_t * json = NULL;
     LwqqClient* lc = req->lc;
+    if(!lwqq_client_valid(lc)){
+        err = LWQQ_EC_ERROR;
+        goto done;
+    }
     if (req->http_code != 200) {
         err = LWQQ_EC_HTTP_ERROR;
         goto done;
