@@ -1206,9 +1206,9 @@ static void lwqq_msg_message_bind_buddy(LwqqClient* lc,LwqqMsgMessage* msg,LwqqA
         buddy->uin = s_strdup(serv_id);
         if(set == NULL) set = lwqq_async_evset_new();
         event = lwqq_info_get_stranger_info(lc, serv_id, buddy);
-        lwqq_async_add_event_listener(event, _C_(2p,add_passerby,lc,buddy));
         lwqq_async_evset_add_event(set, event);
         event = lwqq_info_get_friend_qqnumber(lc,buddy);
+        lwqq_async_add_evset_listener(set, _C_(2p,add_passerby,lc,buddy));
         lwqq_async_evset_add_event(set, event);
         msg->buddy.from = buddy;
     }else{
