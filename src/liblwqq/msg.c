@@ -1174,10 +1174,10 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static int lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg)
+static void lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyncEvset** ptr)
 {
     LwqqMsgContent* c;
-    LwqqAsyncEvset* set = NULL;
+    LwqqAsyncEvset* set = *ptr;
     LwqqAsyncEvent* event;
     TAILQ_FOREACH(c,&msg->content,entries){
         if(c->type == LWQQ_CONTENT_OFFPIC){
@@ -1193,34 +1193,28 @@ static int lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg)
             lwqq_async_evset_add_event(set,event);
         }
     }
-    if(set){
-        lwqq_async_add_evset_listener(set,_C_(2p,insert_msg_delay_by_request_content,lc->msg_list,msg));
-        return RET_DELAYINS_MSG;
-    }else
-        return RET_WELLFORM_MSG;
+    *ptr = set;
 }
-static int lwqq_msg_message_bind_buddy(LwqqClient* lc,LwqqMsgMessage* msg)
+static void lwqq_msg_message_bind_buddy(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyncEvset** ptr)
 {
-    LwqqAsyncEvset* set=NULL;
+    LwqqAsyncEvset* set=*ptr;
     LwqqAsyncEvent* event=NULL;
     const char* serv_id = msg->super.from;
     LwqqBuddy* buddy = lc->find_buddy_by_uin(lc,serv_id);
     if(buddy == NULL){
         buddy = lwqq_buddy_new();
         buddy->uin = s_strdup(serv_id);
-        set = lwqq_async_evset_new();
+        if(set == NULL) set = lwqq_async_evset_new();
         event = lwqq_info_get_stranger_info(lc, serv_id, buddy);
+        lwqq_async_add_event_listener(event, _C_(2p,add_passerby,lc,buddy));
         lwqq_async_evset_add_event(set, event);
         event = lwqq_info_get_friend_qqnumber(lc,buddy);
         lwqq_async_evset_add_event(set, event);
-        lwqq_async_add_evset_listener(set, _C_(2p,add_passerby,lc,buddy));
-        lwqq_async_add_evset_listener(set, _C_(2p,insert_msg_delay_by_request_content,lc->msg_list,msg));
         msg->buddy.from = buddy;
-        return RET_DELAYINS_MSG;
     }else{
         msg->buddy.from = buddy;
-        return RET_WELLFORM_MSG;
     }
+    *ptr = set;
 }
 static int parse_msg_seq(json_t* json,LwqqMsg* msg)
 {
@@ -1299,10 +1293,15 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
         switch(msg_type&LWQQ_MT_BITS){
             case LWQQ_MT_MESSAGE:
                 ret = parse_new_msg(cur,msg);
+                LwqqAsyncEvset* set = NULL;
                 if(ret == RET_WELLFORM_MSG)
-                    ret = lwqq_msg_request_picture(list->lc, (LwqqMsgMessage*)msg);
+                    lwqq_msg_request_picture(list->lc, (LwqqMsgMessage*)msg,&set);
                 if(ret == RET_WELLFORM_MSG && msg->type == LWQQ_MS_BUDDY_MSG)
-                    ret = lwqq_msg_message_bind_buddy(list->lc,(LwqqMsgMessage*)msg);
+                    lwqq_msg_message_bind_buddy(list->lc,(LwqqMsgMessage*)msg,&set);
+                if(set){
+                    lwqq_async_add_evset_listener(set, _C_(2p,insert_msg_delay_by_request_content,list,msg));
+                    ret = RET_DELAYINS_MSG;
+                }
                 break;
             case LWQQ_MT_STATUS_CHANGE:
                 ret = parse_status_change(cur, msg);
