@@ -239,8 +239,8 @@ typedef struct LwqqVerifyCode {
     char *type;
     char *img;
     char *uin;
-    char *data;
     char *verifysession;
+    char *data;
     size_t size;
     LwqqCommand cmd;
 } LwqqVerifyCode ;

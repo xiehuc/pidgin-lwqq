@@ -170,6 +170,23 @@ failed:
     return err;
 }
 
+static int request_captcha_back(LwqqHttpRequest* req,LwqqVerifyCode* code)
+{
+    int err = 0;
+    if(req->http_code!=200){
+        err = -1;
+        goto done;
+    }
+    LwqqClient* lc = req->lc;
+    code->data = req->response;
+    code->size = req->resp_len;
+    req->response = NULL;
+    lc->async_opt->need_verify2(lc,code);
+done:
+    lwqq_http_request_free(req);
+    return err;
+}
+
 static LwqqAsyncEvent* get_verify_image(LwqqClient *lc)
 {
     LwqqHttpRequest *req = NULL;  
@@ -182,8 +199,9 @@ static LwqqAsyncEvent* get_verify_image(LwqqClient *lc)
      
     snprintf(chkuin, sizeof(chkuin), "chkuin=%s", lc->username);
     req->set_header(req, "Cookie", chkuin);
-    return req->do_request_async(req, 0, NULL,_C_(p_i,get_verify_image_back,req));
+    return req->do_request_async(req, 0, NULL,_C_(2p_i,request_captcha_back,req,lc->vc));
 }
+#if 0
 static int get_verify_image_back(LwqqHttpRequest* req)
 {
     int ret;
@@ -221,6 +239,7 @@ failed:
     lwqq_http_request_free(req);
     return err;
 }
+#endif
  
 
 static void upcase_string(char *str, int len)
@@ -668,8 +687,9 @@ static void login_stage_3(LwqqAsyncEvent* ev)
     switch (err) {
         case LWQQ_EC_LOGIN_NEED_VC:
             lwqq_log(LOG_WARNING, "Need to enter verify code\n");
+            lc->vc->cmd = _C_(p,login_stage_4,lc);
             LwqqAsyncEvent* ev = get_verify_image(lc);
-            lwqq_async_add_event_listener(ev,_C_(p,lc->async_opt->login_verify,lc));
+            lwqq_async_add_event_listener(ev,_C_(p,lc->async_opt->need_verify2,lc,lc->vc));
             return ;
 
         case LWQQ_EC_NETWORK_ERROR:
@@ -723,9 +743,9 @@ static void login_stage_f(LwqqAsyncEvent* ev)
     int err = lwqq_async_event_get_result(ev);
     LwqqClient* lc = lwqq_async_event_get_owner(ev);
     if(!lwqq_client_valid(lc)) return;
-    lc->async_opt->login_complete(lc,err);
     lwqq_vc_free(lc->vc);
     lc->vc = NULL;
+    lc->async_opt->login_complete(lc,err);
 }
 
 /** 
