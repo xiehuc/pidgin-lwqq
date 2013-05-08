@@ -665,9 +665,9 @@ static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
     ADD_INFO("昵称", buddy->nick);
     ADD_INFO("签名", buddy->personal);
     ADD_INFO("性别", (strcmp(buddy->gender, "male") ? "女" : "男"));
-    ADD_INFO("生肖", sxarr[atoi(buddy->shengxiao)]);
-    ADD_INFO("星座", xzarr[atoi(buddy->constel)]);
-    ADD_INFO("血型", xxarr[atoi(buddy->blood)]);
+    ADD_INFO("生肖", sxarr[s_atoi(buddy->shengxiao,0)]);
+    ADD_INFO("星座", xzarr[s_atoi(buddy->constel,0)]);
+    ADD_INFO("血型", xxarr[s_atoi(buddy->blood,0)]);
     //ADD_INFO("生日", buddy->birthday);
     ADD_INFO("国籍", buddy->country);
     ADD_INFO("省份", buddy->province);
@@ -2699,9 +2699,9 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING("签名",b->long_nick);
     ADD_HEADER("个人信息");
     ADD_STRING("性别", strcmp(b->gender, "male") ? "女" : "男");
-    ADD_STRING("生肖",sxarr[atoi(b->shengxiao)]);
-    ADD_STRING("星座",xzarr[atoi(b->constel)]);
-    ADD_STRING("血型",xxarr[atoi(b->blood)]);
+    ADD_STRING("生肖",sxarr[s_atoi(b->shengxiao,0)]);
+    ADD_STRING("星座",xzarr[s_atoi(b->constel,0)]);
+    ADD_STRING("血型",xxarr[s_atoi(b->blood,0)]);
     struct tm *tm_ = localtime(&b->birthday);
     strftime(buf,sizeof(buf),"%Y年%m月%d日",tm_);
     ADD_STRING("生日",buf);
