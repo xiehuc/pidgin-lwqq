@@ -351,6 +351,7 @@ static void qq_open_recent(PurplePluginAction* action)
 }
 #endif
 
+#if 0 
 static void add_buddies_to_talkgroup(PurpleConnection* gc,GList* row,void* data)
 {
 }
@@ -372,6 +373,7 @@ static void search_result_test(PurplePluginAction* act)
     purple_notify_searchresults_row_add(res, l);
     purple_notify_searchresults(gc, "添加成员", NULL, NULL, res, close_add_buddies_to_talkgroup, gc->proto_data);
 }
+#endif
 
 static void modify_self_longnick(LwqqClient* lc,LwqqConfirmTable* ct)
 {
@@ -1317,51 +1319,6 @@ static void login_stage_3(LwqqClient* lc)
     lc->msg_list->poll_msg(lc->msg_list,flags);
 }
 
-static void pic_ok_cb(qq_account *ac, PurpleRequestFields *fields)
-{
-    const gchar *code;
-    code = purple_request_fields_get_string(fields, "code_entry");
-    ac->qq->vc->str = s_strdup(code);
-
-    const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
-    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
-    //background_login(ac);
-}
-static void pic_cancel_cb(qq_account* ac, PurpleRequestFields *fields)
-{
-    PurpleConnection* gc = purple_account_get_connection(ac->account);
-    purple_connection_error_reason(gc,
-                                   PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
-                                   _("Login Failed."));
-}
-static void verify_come(LwqqClient* lc)
-{
-    qq_account* ac = lwqq_client_userdata(lc);
-    PurpleRequestFieldGroup *field_group;
-    PurpleRequestField *code_entry;
-    PurpleRequestField *code_pic;
-    PurpleRequestFields *fields;
-
-    fields = purple_request_fields_new();
-    field_group = purple_request_field_group_new((gchar*)0);
-    purple_request_fields_add_group(fields, field_group);
-
-    code_pic = purple_request_field_image_new("code_pic", _("Confirmation code"), lc->vc->data, lc->vc->size);
-    purple_request_field_group_add_field(field_group, code_pic);
-
-    code_entry = purple_request_field_string_new("code_entry", _("Please input the code"), "", FALSE);
-    purple_request_field_set_required(code_entry,TRUE);
-    purple_request_field_group_add_field(field_group, code_entry);
-
-    purple_request_fields(ac->account, NULL,
-                          "验证码", (gchar*)0,
-                          fields, _("OK"), G_CALLBACK(pic_ok_cb),
-                          _("Cancel"), G_CALLBACK(pic_cancel_cb),
-                          ac->account, NULL, NULL, ac);
-
-    return ;
-}
-
 static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c)
 {
     switch(c->type){
@@ -1490,7 +1447,6 @@ static void flush_group_members(LwqqClient* lc,LwqqGroup* g)
 }
 static LwqqAsyncOption qq_async_opt = {
     .login_complete = login_stage_1,
-    .login_verify = verify_come,
     .new_friend = friend_come,
     .new_group = group_come,
     .poll_msg = qq_msg_check,

@@ -236,10 +236,7 @@ typedef struct LwqqGroup {
 
 typedef struct LwqqVerifyCode {
     char *str;
-    char *type;
-    char *img;
     char *uin;
-    char *verifysession;
     char *data;
     size_t size;
     LwqqCommand cmd;

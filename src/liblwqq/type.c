@@ -124,12 +124,9 @@ void lwqq_vc_free(LwqqVerifyCode *vc)
 {
     if (vc) {
         s_free(vc->str);
-        s_free(vc->type);
-        s_free(vc->img);
         s_free(vc->uin);
-        s_free(vc->verifysession);
+        s_free(vc->data);
         s_free(vc);
-
     }
 }
 

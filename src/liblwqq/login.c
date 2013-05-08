@@ -41,8 +41,7 @@ static int get_version_back(LwqqHttpRequest* req);
 static int get_verify_code_back(LwqqHttpRequest* req);
 static int do_login_back(LwqqHttpRequest* req);
 static int set_online_status_back(LwqqHttpRequest* req);
-static int get_verify_image_back(LwqqHttpRequest* req);
-static void login_stage_2(/*LwqqAsyncEvent* ev*/LwqqClient* lc);
+static void login_stage_2(LwqqClient* lc);
 static void login_stage_3(LwqqAsyncEvent* ev);
 static void login_stage_4(LwqqClient* lc);
 static void login_stage_5(LwqqAsyncEvent* ev);
@@ -140,7 +139,6 @@ static int get_verify_code_back(LwqqHttpRequest* req)
         c = strstr(s, "'");
         *c = '\0';
 
-        lc->vc->type = s_strdup("0");
         lc->vc->str = s_strdup(s);
 
         /* We need get the ptvfsession from the header "Set-Cookie" */
@@ -158,7 +156,6 @@ static int get_verify_code_back(LwqqHttpRequest* req)
         s = c + 1;
         c = strstr(s, "'");
         *c = '\0';
-        lc->vc->type = s_strdup("1");
         // ptui_checkVC('1','7ea19f6d3d2794eb4184c9ae860babf3b9c61441520c6df0', '\x00\x00\x00\x00\x04\x7e\x73\xb2');
         lc->vc->str = s_strdup(s);
         err = LWQQ_EC_LOGIN_NEED_VC;
@@ -201,46 +198,6 @@ static LwqqAsyncEvent* get_verify_image(LwqqClient *lc)
     req->set_header(req, "Cookie", chkuin);
     return req->do_request_async(req, 0, NULL,_C_(2p_i,request_captcha_back,req,lc->vc));
 }
-#if 0
-static int get_verify_image_back(LwqqHttpRequest* req)
-{
-    int ret;
-    int err = LWQQ_EC_OK;
-    char image_file[256];
-    int image_length = 0;
-    LwqqClient* lc = req->lc;
-    if (req->http_code != 200) {
-        err = LWQQ_EC_ERROR;
-        goto failed;
-    }
- 
-    const char *content_length = req->get_header(req, "Content-Length");
-    if (content_length) {
-        image_length = atoi(content_length);
-    }
-    //update_cookies(lc->cookies, req, "verifysession", 1);
-    snprintf(image_file, sizeof(image_file), "/tmp/%s.jpeg", lc->username);
-    /* Delete old file first */
-    unlink(image_file);
-    int fd = creat(image_file, S_IRUSR | S_IWUSR);
-    if (fd != -1) {
-        ret = write(fd, req->response, image_length);
-        if (ret <= 0) {
-            lwqq_log(LOG_ERROR, "Saving erify image file error\n");
-        }
-        close(fd);
-    }
-
-    lc->vc->data = req->response;
-    lc->vc->size = req->resp_len;
-    req->response = NULL;
- 
-failed:
-    lwqq_http_request_free(req);
-    return err;
-}
-#endif
- 
 
 static void upcase_string(char *str, int len)
 {
@@ -688,12 +645,12 @@ static void login_stage_3(LwqqAsyncEvent* ev)
         case LWQQ_EC_LOGIN_NEED_VC:
             lwqq_log(LOG_WARNING, "Need to enter verify code\n");
             lc->vc->cmd = _C_(p,login_stage_4,lc);
-            LwqqAsyncEvent* ev = get_verify_image(lc);
-            lwqq_async_add_event_listener(ev,_C_(p,lc->async_opt->need_verify2,lc,lc->vc));
+            get_verify_image(lc);
             return ;
 
         case LWQQ_EC_NETWORK_ERROR:
             lwqq_log(LOG_ERROR, "Network error\n");
+            lc->stat = LWQQ_STATUS_LOGOUT;
             lc->async_opt->login_complete(lc,err);
             return ;
 
@@ -703,6 +660,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
 
         default:
             lwqq_log(LOG_ERROR, "Unknown error\n");
+            lc->stat = LWQQ_STATUS_LOGOUT;
             lc->async_opt->login_complete(lc,err);
             return ;
     }
@@ -732,7 +690,9 @@ static void login_stage_5(LwqqAsyncEvent* ev)
     /* Free old value */
 
     if(err != LWQQ_EC_OK){
+        lc->stat = LWQQ_STATUS_LOGOUT;
         lc->async_opt->login_complete(lc,err);
+        return;
     }
     LwqqAsyncEvent* event = set_online_status(lc, lwqq_status_to_str(lc->stat));
     lwqq_async_add_event_listener(event,_C_(p,login_stage_f,event));
@@ -745,6 +705,7 @@ static void login_stage_f(LwqqAsyncEvent* ev)
     if(!lwqq_client_valid(lc)) return;
     lwqq_vc_free(lc->vc);
     lc->vc = NULL;
+    if(err) lc->stat = LWQQ_STATUS_LOGOUT;
     lc->async_opt->login_complete(lc,err);
 }
 

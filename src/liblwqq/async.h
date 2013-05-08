@@ -150,8 +150,6 @@ struct _LwqqAsyncOption {
      * except need verify code
      */
     void (*login_complete)(LwqqClient* lc,LwqqErrorCode ec);
-    /* this is login complete when need verify code */
-    void (*login_verify)(LwqqClient* lc);
     /* this is very important when poll message come */
     void (*poll_msg)(LwqqClient* lc);
     /* this is poll lost after recv retcode 112 or 108 */

@@ -131,9 +131,9 @@ static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
 static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMemChange* chg)
 {
     int err = 0;
+    LwqqClient* lc = ev->lc;
     lwqq__jump_if_ev_fail(ev,err);
     struct str_list_* ptr = chg->buddies,*g = NULL;
-    LwqqClient* lc = ev->lc;
     while(ptr){
         if(!lwqq_group_find_group_member_by_uin(discu, ptr->str)){
             LwqqBuddy* target = lc->find_buddy_by_uin(lc,ptr->str);
