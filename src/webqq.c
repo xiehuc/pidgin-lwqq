@@ -1895,13 +1895,15 @@ static void change_category_back(LwqqAsyncEvent* event,void* data)
 {
     void**d = data;
     qq_account* ac = d[2];
+    if(event == NULL) goto clean;
     if(lwqq_async_event_get_result(event)!=0) {
         move_buddy_back(data);
         purple_notify_error(ac->gc,NULL,"更改好友分组失败","服务器返回错误");
-    } else {
-        s_free(d[1]);
-        s_free(data);
-    }
+        return;
+    } 
+clean:
+    s_free(d[1]);
+    s_free(data);
 }
 static void add_passerby_to_friend_failed(LwqqAsyncEvent* ev,LwqqBuddy* b,void* data)
 {

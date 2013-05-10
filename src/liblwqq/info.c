@@ -1849,13 +1849,12 @@ LwqqAsyncEvent* lwqq_info_change_discu_topic(LwqqClient* lc,LwqqGroup* group,con
 
 LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,int new_cate)
 {
-    if(!lc||!buddy||!new_cate) return NULL;
-    long cate_idx = -1;
+    if(!lc||!buddy) return NULL;
+    int cate_idx = -1;
     LwqqFriendCategory *c;
     if(new_cate != 0){
-        LIST_FOREACH(c,&lc->categories,entries){
-            if(c->index == cate_idx) break;
-        }
+        LIST_FOREACH(c,&lc->categories,entries)
+            if(c->index == new_cate){cate_idx = new_cate;break;}
     }else{
         cate_idx = 0;
     }
@@ -1864,7 +1863,7 @@ LwqqAsyncEvent* lwqq_info_modify_buddy_category(LwqqClient* lc,LwqqBuddy* buddy,
     char post[256];
     snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/modify_friend_group");
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
-    snprintf(post,sizeof(post),"tuin=%s&newid=%ld&vfwebqq=%s",
+    snprintf(post,sizeof(post),"tuin=%s&newid=%d&vfwebqq=%s",
             buddy->uin,cate_idx,lc->vfwebqq );
     lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",post);
