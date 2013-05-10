@@ -2163,7 +2163,7 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
         purple_notify_user_info_add_pair(info, "签名", buddy->long_nick);
     const char* client="";
     switch(buddy->client_type){
-        case LWQQ_CLIENT_DESKTOP:
+        case LWQQ_CLIENT_PC:
             client="电脑";
             break;
         case LWQQ_CLIENT_MOBILE:
@@ -2171,6 +2171,9 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
             break;
         case LWQQ_CLIENT_WEBQQ:
             client="WebQQ";
+            break;
+        case LWQQ_CLIENT_QQFORPAD:
+            client="QQ For Pad";
             break;
     }
     purple_notify_user_info_add_pair(info, "终端", client);

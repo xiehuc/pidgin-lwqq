@@ -57,6 +57,7 @@ typedef struct LwqqHttpRequest_
 {
     LwqqHttpRequest parent;
     int internal_failed;
+    int retry_;
     int flags;
     SIMPLEQ_HEAD(,trunk_entry) trunks;
 }LwqqHttpRequest_;
@@ -583,8 +584,8 @@ static void check_multi_info(GLOBAL *g)
                 if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
                     ev->failcode = LWQQ_CALLBACK_CANCELED;
                 }
-                req->retry --;
-                if(req->retry > 0){
+                req_->retry_ --;
+                if(req_->retry_ > 0){
                     //re add it to libcurl
                     req_->internal_failed = 0;
                     curl_multi_remove_handle(g->multi, easy);
@@ -603,7 +604,7 @@ static void check_multi_info(GLOBAL *g)
             LwqqClient* lc = conn->req->lc;
 
             //if this handle doesn't timeout.so we restore it retry times
-            if(ev->failcode != LWQQ_CALLBACK_TIMEOUT) req->retry = LWQQ_RETRY_VALUE;
+            if(ev->failcode != LWQQ_CALLBACK_TIMEOUT) req_->retry_ = req->retry;
             //执行完成时候的回调
             if(lwqq_client_valid(lc))
             lc->dispatch(vp_func_p,(CALLBACK_FUNC)async_complete,conn);
@@ -734,6 +735,8 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int 
         //if(callback) callback(request,data);
         return NULL;
     }
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) request;
+    req_->retry_ = request->retry;
 
     char **resp = &request->response;
 
@@ -779,6 +782,7 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         return -1;
     CURLcode ret;
     LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) request;
+    req_->retry_ = request->retry;
 retry:
     ret=0;
     req_->internal_failed = 0;
@@ -805,8 +809,8 @@ retry:
         if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
             return LWQQ_EC_CANCELED;
         }
-        request->retry -- ;
-        if(request->retry > 0){
+        req_->retry_ -- ;
+        if(req_->retry_ > 0){
             goto retry;
         }
         if(ret == CURLE_OPERATION_TIMEDOUT)
@@ -814,7 +818,7 @@ retry:
         else return LWQQ_EC_NETWORK_ERROR;
     }
     //perduce timeout.
-    request->retry = LWQQ_RETRY_VALUE;
+    req_->retry_ = request->retry;
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);
 
     // NB: *response may null 
@@ -1028,7 +1032,8 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
     LwqqHttpRequest* req = d;
-    if(req->retry == 0) return 1;
+    LwqqHttpRequest_* req_ = d;
+    if(req_->retry_ == 0) return 1;
     time_t ct = time(NULL);
     if(ct<=req->last_prog) return 0;
 
@@ -1086,7 +1091,8 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 }
 void lwqq_http_cancel(LwqqHttpRequest* req)
 {
-    req->retry = 0;
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*)req;
+    req_->retry_ = 0;
 }
 void lwqq_http_handle_remove(LwqqHttpHandle* http)
 {

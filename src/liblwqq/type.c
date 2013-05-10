@@ -238,7 +238,7 @@ LwqqBuddy *lwqq_buddy_new()
 {
     LwqqBuddy *b = s_malloc0(sizeof(*b));
     b->stat = LWQQ_STATUS_OFFLINE;
-    b->client_type = LWQQ_CLIENT_DESKTOP;
+    b->client_type = LWQQ_CLIENT_PC;
     return b;
 }
 

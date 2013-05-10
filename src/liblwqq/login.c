@@ -827,7 +827,7 @@ done:
     return err;
 }
 
-LwqqAsyncEvent* lwqq_relogin(LwqqClient* lc)
+LwqqAsyncEvent* lwqq_relink(LwqqClient* lc)
 {
     if(!lc) return NULL;
     char url[128];

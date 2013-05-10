@@ -22,7 +22,7 @@
  */
 void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err);
 
-LwqqAsyncEvent* lwqq_relogin(LwqqClient* lc);
+LwqqAsyncEvent* lwqq_relink(LwqqClient* lc);
 
 /** 
  * WebQQ logout function

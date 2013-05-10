@@ -72,9 +72,10 @@ typedef enum {
     LWQQ_STATUS_SLIENT = 70
 }LwqqStatus;
 typedef enum {
-    LWQQ_CLIENT_DESKTOP=1,
-    LWQQ_CLIENT_MOBILE=21,
+    LWQQ_CLIENT_PC=1,/*1-10*/
+    LWQQ_CLIENT_MOBILE=21,/*21-24*/
     LWQQ_CLIENT_WEBQQ=41,
+    LWQQ_CLIENT_QQFORPAD=42
 }LwqqClientType;
 typedef enum { 
     LWQQ_MASK_NONE = 0,

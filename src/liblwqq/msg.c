@@ -1422,7 +1422,7 @@ static int _continue_poll(LwqqHttpRequest* req,void* data)
     if(req->http_code==200){
         req->response[req->resp_len] = '\0';
         retcode = parse_recvmsg_from_json(list, req->response);
-        if(retcode == 121 || retcode == 108){
+        if(retcode == 121 || retcode == 108 || retcode == 120){
             lc->async_opt->poll_lost(lc);
             return 0;
         }else{
@@ -1489,20 +1489,20 @@ static void *start_poll_msg(void *msg_list)
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     //long poll timeout is 90s.official value
     lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,90);
+    req->retry = 5;
     //lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1);
 
 #if USE_MSG_THREAD
     int retcode;
     int ret;
     lwqq_http_on_progress(req, poll_progress, list);
+    LwqqAsyncEvent* ev = NULL;
     while(1) {
         ret = req->do_request(req, 1, msg);
         if(!lwqq_client_logined(lc)) break;
         if(ret != LWQQ_EC_OK){
-            /*lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
-            break;*/
             //some thing is wrong. try relogin first. 
-            LwqqAsyncEvent* ev = lwqq_relogin(lc);
+            ev = lwqq_relink(lc);
             lwqq_async_add_event_listener(ev, _C_(p,check_connection_lost,ev));
             break;
         }
@@ -1519,8 +1519,13 @@ static void *start_poll_msg(void *msg_list)
                 continue;
                 break;
             case 109:
-            case WEBQQ_LOST_CONN:
                 lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+                break;
+            case 120:
+            case 121:
+                ev = lwqq_relink(lc);
+                lwqq_async_add_event_listener(ev, _C_(p,check_connection_lost,ev));
+                goto failed;
                 break;
             case WEBQQ_NEW_PTVALUE:
                 //just need do some things when relogin

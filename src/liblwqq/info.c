@@ -282,7 +282,7 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(nick, "nick");
         SET_BUDDY_INFO(shengxiao, "shengxiao");
         SET_BUDDY_INFO(email, "email");
-        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_DESKTOP);
+        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_PC);
         SET_BUDDY_INFO(province, "province");
         SET_BUDDY_INFO(gender, "gender");
         SET_BUDDY_INFO(mobile, "mobile");
@@ -304,7 +304,7 @@ static void parse_and_do_set_status(json_t* cur,LwqqClient* lc)
     if (b) {
         b->stat = lwqq_status_from_str(status);
         if (client_type) {
-            b->client_type = s_atoi(client_type,LWQQ_CLIENT_DESKTOP);
+            b->client_type = s_atoi(client_type,LWQQ_CLIENT_PC);
         }
     }
 }
@@ -1490,7 +1490,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_group_find_group_member_by_uin(group, uin);
         if (!member)
             continue;
-        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"),LWQQ_CLIENT_DESKTOP);
+        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"),LWQQ_CLIENT_PC);
         member->stat = s_atoi(json_parse_simple_value(cur, "stat"),LWQQ_STATUS_LOGOUT);
 
     }
@@ -1673,7 +1673,7 @@ static void parse_discus_other_child(LwqqClient* lc,LwqqGroup* discu,json_t* roo
     while(json){
         uin = json_parse_simple_value(json,"uin");
         LwqqSimpleBuddy* sb = lwqq_group_find_group_member_by_uin(discu,uin);
-        sb->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_DESKTOP);
+        sb->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_PC);
         sb->stat = lwqq_status_from_str(json_parse_simple_value(json,"status"));
         json = json->next;
     }
