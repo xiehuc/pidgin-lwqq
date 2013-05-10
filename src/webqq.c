@@ -666,10 +666,10 @@ static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
     ADD_INFO("QQ", buddy->qqnumber);
     ADD_INFO("昵称", buddy->nick);
     ADD_INFO("签名", buddy->personal);
-    ADD_INFO("性别", (strcmp(buddy->gender, "male") ? "女" : "男"));
-    ADD_INFO("生肖", sxarr[s_atoi(buddy->shengxiao,0)]);
-    ADD_INFO("星座", xzarr[s_atoi(buddy->constel,0)]);
-    ADD_INFO("血型", xxarr[s_atoi(buddy->blood,0)]);
+    ADD_INFO("性别", buddy->gender ? (strcmp(buddy->gender, "male") ? "女" : "男") : 0);
+    ADD_INFO("生肖", buddy->shengxiao ? sxarr[s_atoi(buddy->shengxiao,0)] : 0);
+    ADD_INFO("星座", buddy->constel ? xzarr[s_atoi(buddy->constel,0)] : 0);
+    ADD_INFO("血型", buddy->blood ? xxarr[s_atoi(buddy->blood,0)] : 0);
     //ADD_INFO("生日", buddy->birthday);
     ADD_INFO("国籍", buddy->country);
     ADD_INFO("省份", buddy->province);
