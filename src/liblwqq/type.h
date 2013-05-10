@@ -25,6 +25,8 @@
 
 #define LWQQ_DEFAULT_CATE "My Friends"
 #define LWQQ_PASSERBY_CATE "Passerby"
+#define LWQQ_RETRY_VALUE 3
+
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
 typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
@@ -90,10 +92,11 @@ typedef enum {
 }LwqqGender;
 /* Lwqq Error Code */
 typedef enum {
-    LWQQ_EC_ERROR = -1,                 //<general error
-    LWQQ_EC_NO_RESULT = -2,
-    LWQQ_EC_TIMEOUT_OVER = -3,
-    LWQQ_EC_CANCELED = -4,
+    LWQQ_EC_ERROR =                -1,                 //<general error
+    LWQQ_EC_NO_RESULT =            -2,
+    LWQQ_EC_TIMEOUT_OVER =         -3,
+    LWQQ_EC_CANCELED =             -4,
+    LWQQ_EC_UPLOADRETRY_OVER =     -10,
     LWQQ_EC_NULL_POINTER,
     LWQQ_EC_FILE_NOT_EXIST,
 

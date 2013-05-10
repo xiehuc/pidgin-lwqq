@@ -418,6 +418,7 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType msg_type)
             {
             msg = s_malloc0(sizeof(LwqqMsgMessage));
             LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+            mmsg->upload_retry = LWQQ_RETRY_VALUE;
             strcpy(mmsg->f_color,"000000");
             TAILQ_INIT(&mmsg->content);
             }
@@ -1884,7 +1885,8 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
     LwqqMsgContent* c;
     int will_upload = 0;
     LwqqAsyncEvent* event;
-    LwqqAsyncEvset* evset = lwqq_async_evset_new();
+    LwqqAsyncEvset* evset = NULL;
+    if(mmsg->upload_retry>=0){
     TAILQ_FOREACH(c,&mmsg->content,entries){
         event = NULL;
         if(c->type == LWQQ_CONTENT_CFACE && c->data.cface.data > 0){
@@ -1893,18 +1895,20 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
             if(!lc->gface_sig) lwqq_async_evset_add_event(evset,query_gface_sig(lc));
         } else if(c->type == LWQQ_CONTENT_OFFPIC && c->data.img.data > 0)
             event = lwqq_msg_upload_offline_pic(lc,c,mmsg->super.to);
-        //event = lwqq_msg_upload_content(lc,mmsg,c);
-        lwqq_async_evset_add_event(evset,event);
-        will_upload |= (event!=NULL);
+        if(event){
+            if(evset==NULL)evset = lwqq_async_evset_new();
+            lwqq_async_evset_add_event(evset,event);
+            will_upload = 1;
+        }
     }
+    }
+    mmsg->upload_retry--;
     if(will_upload){
         event = lwqq_async_event_new(NULL);
         lwqq_async_add_evset_listener(evset, _C_(3p,lwqq_msg_send_continue, lc,msg,event));
         //if we need upload first. we break this send msg 
         //and use event chain to resume later.
         return event;
-    }else{
-        s_free(evset);
     }
 
     //we do send msg

@@ -15,8 +15,6 @@
 #define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
 //#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
 
-#define LWQQ_RETRY_VALUE 3
-
 /**HTTP RETRY POLICY **/
 /** if http request is canceled by lwqq_http_cancel. we should immediately stop http.
  * or we just try req->retry times.

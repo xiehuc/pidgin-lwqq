@@ -98,6 +98,7 @@ typedef struct LwqqMsgContent {
 typedef struct LwqqMsgMessage {
     LwqqMsgSeq super;
     time_t time;
+    int upload_retry;
     union{
         struct {
             LwqqBuddy* from;

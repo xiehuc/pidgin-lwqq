@@ -1523,6 +1523,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 {
     if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) goto failed;
     qq_account* ac = lwqq_async_event_get_owner(ev)->data;
+    LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
 
     if(ev == NULL){
         qq_sys_msg_write(ac,msg->type,serv_id,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
@@ -1542,8 +1543,9 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
             ac->qq->async_opt->poll_lost(ac->qq);
         }
     }
+    if(mmsg->upload_retry <0)
+        qq_sys_msg_write(ac, msg->type, serv_id, "上传内容超过重试次数", PURPLE_MESSAGE_ERROR, time(NULL));
 
-    LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
     if(msg->type == LWQQ_MS_GROUP_MSG) mmsg->group.group_code = NULL;
     else if(msg->type == LWQQ_MS_DISCU_MSG) mmsg->discu.did = NULL;
 failed:
