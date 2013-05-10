@@ -56,12 +56,6 @@ typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
  */
 
 typedef enum {
-    LWQQ_CALLBACK_VALID,
-    LWQQ_CALLBACK_FAILED,
-    LWQQ_CALLBACK_TIMEOUT,
-    LWQQ_CALLBACK_CANCELED,
-}LwqqCallbackCode;
-typedef enum {
     LWQQ_STATUS_LOGOUT = 0,
     LWQQ_STATUS_ONLINE = 10,
     LWQQ_STATUS_OFFLINE = 20,
@@ -89,14 +83,6 @@ typedef enum {
     LWQQ_DEL_FROM_OTHER = 2/* delete buddy and remove myself from other buddy list */
 }LwqqDelFriendType;
 
-typedef enum {
-    WEBQQ_OK = 0,
-    WEBQQ_NO_MESSAGE = 102,
-    WEBQQ_108 = 108,
-    WEBQQ_NEW_PTVALUE = 116,
-    WEBQQ_LOST_CONN = 121,
-    WEBQQ_FATAL = 100000
-}WebqqRetCode;
 
 typedef enum {
     LWQQ_FEMALE = 1,
@@ -106,19 +92,38 @@ typedef enum {
 typedef enum {
     LWQQ_EC_ERROR = -1,                 //<general error
     LWQQ_EC_NO_RESULT = -2,
-    //old uncleard api
-    LWQQ_EC_OK = 0,
+    LWQQ_EC_TIMEOUT_OVER = -3,
+    LWQQ_EC_CANCELED = -4,
     LWQQ_EC_NULL_POINTER,
     LWQQ_EC_FILE_NOT_EXIST,
-    LWQQ_EC_LOGIN_NEED_VC = 10,
-    LWQQ_EC_LOGIN_ABNORMAL = 60,///<登录需要解禁
+
     LWQQ_EC_NETWORK_ERROR = 20,
     LWQQ_EC_HTTP_ERROR = 30,
     LWQQ_EC_DB_EXEC_FAIELD = 50,
     LWQQ_EC_DB_CLOSE_FAILED,
-    LWQQ_EC_TIMEOUT_OVER,
-    LWQQ_EC_CANCELED
+    //old uncleard api
+    LWQQ_EC_OK = 0,
+    LWQQ_EC_LOGIN_NEED_VC = 10,
+    LWQQ_EC_LOGIN_ABNORMAL = 60,///<登录需要解禁
+    LWQQ_EC_NO_MESSAGE = 102,
+    LWQQ_EC_PTWEBQQ = 116
 } LwqqErrorCode;
+//**should depreciate **/
+typedef enum {
+    LWQQ_CALLBACK_VALID = LWQQ_EC_OK,
+    LWQQ_CALLBACK_FAILED = LWQQ_EC_ERROR,
+    LWQQ_CALLBACK_TIMEOUT = LWQQ_EC_TIMEOUT_OVER,
+    LWQQ_CALLBACK_CANCELED = LWQQ_EC_CANCELED,
+}LwqqCallbackCode;
+//**should depreciate **/
+typedef enum {
+    WEBQQ_OK = 0,
+    WEBQQ_NO_MESSAGE = 102,
+    WEBQQ_108 = 108,
+    WEBQQ_NEW_PTVALUE = 116,
+    WEBQQ_LOST_CONN = 121,
+    WEBQQ_FATAL = 100000
+}WebqqRetCode;
 
 #define LWQQ_FRIEND_CATE_IDX_DEFAULT 0
 #define LWQQ_FRIEND_CATE_IDX_PASSERBY -1

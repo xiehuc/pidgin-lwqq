@@ -384,18 +384,24 @@ static void modify_self_longnick(LwqqClient* lc,LwqqConfirmTable* ct)
     lwqq_ct_free(ct);
 }
 
-static void qq_modify_self_longnick(PurplePluginAction* act)
+static void display_self_longnick(LwqqClient* lc)
 {
-    PurpleConnection* gc = act->context;
-    qq_account* ac = gc->proto_data;
-    LwqqClient* lc = ac->qq;
-
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
     ct->title = s_strdup("修改个性签名");
     ct->input_label = s_strdup("个性签名");
     ct->input = s_strdup(lc->myself->long_nick);
     ct->cmd = _C_(2p,modify_self_longnick,lc,ct);
     show_confirm_table(lc, ct);
+}
+
+static void qq_modify_self_longnick(PurplePluginAction* act)
+{
+    PurpleConnection* gc = act->context;
+    qq_account* ac = gc->proto_data;
+    LwqqClient* lc = ac->qq;
+
+    LwqqAsyncEvent* ev = lwqq_info_get_single_long_nick(lc, lc->myself);
+    lwqq_async_add_event_listener(ev, _C_(p,display_self_longnick,lc));
 }
 
 static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context)
@@ -1479,8 +1485,8 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
     lwqq_async_evset_add_event(set,ev);
     ev = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_evset_add_event(set,ev);
-    ev = lwqq_info_get_single_long_nick(lc, lc->myself);
-    lwqq_async_evset_add_event(set,ev);
+    //ev = lwqq_info_get_single_long_nick(lc, lc->myself);
+    //lwqq_async_evset_add_event(set,ev);
     //ev = lwqq_info_recent_list(lc, &ac->recent_list);
     //lwqq_async_evset_add_event(set, ev);
     lwqq_async_add_evset_listener(set,_C_(2p,login_stage_2,set,lc));
@@ -1943,7 +1949,6 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
             cate_index = cate->index;
     }
     if(buddy->cate_index == LWQQ_FRIEND_CATE_IDX_PASSERBY){
-        //purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不可移动陌生人",move_buddy_back,data);
         buddy->cate_index = cate_index;
         LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, buddy, "");
         lwqq_async_add_event_listener(ev, _C_(3p,add_passerby_to_friend_failed,ev,buddy,data));

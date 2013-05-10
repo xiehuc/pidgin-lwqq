@@ -146,10 +146,12 @@ static void on_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
     called->result = caller->result;
     called->failcode = caller->failcode;
+    called->lc = caller->lc;
     lwqq_async_event_finish(called);
 }
 void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
+    /**indeed caller->lc may be NULL when recursor */
     called->lc = caller->lc;
     lwqq_async_add_event_listener(caller,_C_(2p,on_chain,caller,called));
 }

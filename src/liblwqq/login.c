@@ -757,6 +757,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     
     //lwqq_http_set_timeout(req,5);
     lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,5L);
+    req->retry = 0;
     ret = req->do_request(req, 0, NULL);
     if (ret) {
         lwqq_log(LOG_ERROR, "Send logout request failed\n");

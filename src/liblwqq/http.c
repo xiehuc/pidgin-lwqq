@@ -16,6 +16,17 @@
 //#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
 
 #define LWQQ_RETRY_VALUE 3
+
+/**HTTP RETRY POLICY **/
+/** if http request is canceled by lwqq_http_cancel. we should immediately stop http.
+ * or we just try req->retry times.
+ * the common operate http has:
+ *
+ * overtime
+ *
+ */
+
+
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
                                  const char *value);
@@ -53,12 +64,18 @@ TABLE_BEGIN(proxy_map,long,0)
     TR(LWQQ_HTTP_PROXY_SOCKS5,   CURLPROXY_SOCKS5)
 TABLE_END()
 
+typedef enum{
+    HTTP_UNEXPECTED_RECV = 1<<1,
+    HTTP_FORCE_CANCEL = 1<<2
+}HttpBits;
+
 typedef struct LwqqHttpRequest_
 {
     LwqqHttpRequest parent;
-    int internal_failed;
+    HttpBits bits;               /**store http internal status**/
+    //int internal_failed;
     int retry_;
-    int flags;
+    int flags;              /**store http option settings**/
     SIMPLEQ_HEAD(,trunk_entry) trunks;
 }LwqqHttpRequest_;
 
@@ -125,12 +142,14 @@ static void composite_trunks(LwqqHttpRequest* req)
 }
 static void http_clean(LwqqHttpRequest* req)
 {
+    LwqqHttpRequest_* req_ = (LwqqHttpRequest_*) req;
     composite_trunks(req);
     s_free(req->response);
     req->resp_len = 0;
     req->http_code = 0;
     curl_slist_free_all(req->recv_head);
     req->recv_head = NULL;
+    req_->bits = 0;
 }
 
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -309,7 +328,7 @@ static size_t write_content(const char* ptr,size_t size,size_t nmemb,void* userd
     if(req->response){
         position = req->response+req->resp_len;
         if(req->resp_len+sz_>(unsigned long)length){
-            req_->internal_failed = 1;
+            req_->bits |= HTTP_UNEXPECTED_RECV;
             //assert(0);
             lwqq_puts("[http unexpected]\n");
             return 0;
@@ -365,7 +384,7 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,20);
     //set normal operate timeout to 30.official value.
     //curl_easy_setopt(request->req,CURLOPT_TIMEOUT,30);
-    //5B/s
+    //low speed: 5B/s
     curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,8*5);
     curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,30);
     curl_easy_setopt(request->req,CURLOPT_SSL_VERIFYPEER,0);
@@ -581,22 +600,19 @@ static void check_multi_info(GLOBAL *g)
                 lwqq_log(LOG_WARNING,"async retcode:%d\n",ret);
             }
             if(ret != CURLE_OK){
-                if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
-                    ev->failcode = LWQQ_CALLBACK_CANCELED;
+                if(ret == CURLE_ABORTED_BY_CALLBACK && req_->bits & HTTP_FORCE_CANCEL){
+                    req_->retry_ = 0;
                 }
                 req_->retry_ --;
-                if(req_->retry_ > 0){
+                if(req_->retry_ >= 0){
                     //re add it to libcurl
-                    req_->internal_failed = 0;
                     curl_multi_remove_handle(g->multi, easy);
                     http_clean(req);
                     curl_multi_add_handle(g->multi, easy);
                     continue;
                 }
-                if(ret == CURLE_OPERATION_TIMEDOUT)
-                    ev->failcode = LWQQ_CALLBACK_TIMEOUT;
-                else
-                    ev->failcode = LWQQ_CALLBACK_FAILED;
+                ev->failcode = ev->result = (ret == CURLE_OPERATION_TIMEDOUT)?LWQQ_EC_TIMEOUT_OVER:
+                    (ret==CURLE_ABORTED_BY_CALLBACK)?LWQQ_EC_CANCELED:LWQQ_EC_ERROR;
             }
 
             curl_multi_remove_handle(g->multi, easy);
@@ -785,8 +801,6 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
     req_->retry_ = request->retry;
 retry:
     ret=0;
-    req_->internal_failed = 0;
-
     char **resp = &request->response;
 
     /* Clear off last response */
@@ -806,16 +820,15 @@ retry:
     composite_trunks(request);
     if(ret != CURLE_OK){
         lwqq_log(LOG_ERROR,"do_request fail curlcode:%d\n",ret);
-        if(ret == CURLE_ABORTED_BY_CALLBACK && !req_->internal_failed){
-            return LWQQ_EC_CANCELED;
+        if(ret == CURLE_ABORTED_BY_CALLBACK && req_->bits & HTTP_FORCE_CANCEL){
+            req_->retry_ = 0;
         }
         req_->retry_ -- ;
-        if(req_->retry_ > 0){
+        if(req_->retry_ >= 0){
             goto retry;
         }
-        if(ret == CURLE_OPERATION_TIMEDOUT)
-            return LWQQ_EC_TIMEOUT_OVER;
-        else return LWQQ_EC_NETWORK_ERROR;
+        return (ret == CURLE_OPERATION_TIMEDOUT)?LWQQ_EC_TIMEOUT_OVER:
+            (ret == CURLE_ABORTED_BY_CALLBACK)?LWQQ_EC_CANCELED:LWQQ_EC_ERROR;
     }
     //perduce timeout.
     req_->retry_ = request->retry;
@@ -1093,6 +1106,7 @@ void lwqq_http_cancel(LwqqHttpRequest* req)
 {
     LwqqHttpRequest_* req_ = (LwqqHttpRequest_*)req;
     req_->retry_ = 0;
+    req_->bits |= HTTP_FORCE_CANCEL;
 }
 void lwqq_http_handle_remove(LwqqHttpHandle* http)
 {

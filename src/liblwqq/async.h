@@ -110,7 +110,7 @@ void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd);
 #define lwqq_async_event_set_result(ev,res) (ev->result = res)
 #define lwqq_async_event_set_code(ev,code)  (ev->failcode = code)
 /** this return a errno of a event. */
-#define lwqq_async_event_get_result(ev)     (ev?ev->result:-1)
+#define lwqq_async_event_get_result(ev)     (ev?ev->result:LWQQ_EC_ERROR)
 #define lwqq_async_event_get_code(ev)       (ev?ev->failcode:LWQQ_CALLBACK_FAILED)
 #define lwqq_async_event_get_owner(ev)      (ev->lc)
 LwqqHttpRequest* lwqq_async_event_get_conn(LwqqAsyncEvent* ev);
