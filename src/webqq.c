@@ -1807,7 +1807,7 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
         if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
             group = lwqq_group_find_group_by_qqnumber(lc,key);
         else
-            group = lwqq_group_find_group_by_gid(lc,key);
+            group = lwqq_group_find_group_by_gid(lc,key);;
         if(group == NULL) return;
     }
 
@@ -1856,9 +1856,10 @@ static void qq_close(PurpleConnection *gc)
     qq_account* ac = purple_connection_get_protocol_data(gc);
     LwqqErrorCode err;
 
+    if(ac->relink_timer>0) purple_timeout_remove(ac->relink_timer);
+    ac->qq->msg_list->poll_close(ac->qq->msg_list);
     if(lwqq_client_logined(ac->qq))
         lwqq_logout(ac->qq,&err);
-    ac->qq->msg_list->poll_close(ac->qq->msg_list);
     LwqqGroup* g;
     LIST_FOREACH(g,&ac->qq->groups,entries){
         qq_cgroup_free((qq_chat_group*)g->data);
@@ -2825,17 +2826,19 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("暗色主题下文字加亮", "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
-    options = g_list_append(options, option);
     option = purple_account_option_bool_new("消息去重","remove_duplicated_msg",FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
-    options = g_list_append(options, option);
     option = purple_account_option_bool_new("版本统计", "version_statics", TRUE);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
+    options = g_list_append(options, option);
+    option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_string_new("忽略的组(兼容recent plugin)", "recent_group_name", "Recent Contacts");
+    options = g_list_append(options, option);
+    option = purple_account_option_int_new("发送Relink间隔(m)", "relink_retry", 0);
     options = g_list_append(options, option);
 
     webqq_prpl_info.protocol_options = options;
@@ -2904,6 +2907,13 @@ TABLE_BEGIN(proxy_map,long,0)
     TR(PURPLE_PROXY_SOCKS5,     LWQQ_HTTP_PROXY_SOCKS5)
 TABLE_END()
 
+static int relink_keepalive(void* data)
+{
+    qq_account* ac = data;
+    lwqq_relink(ac->qq);
+    return 1;
+}
+
 static void qq_login(PurpleAccount *account)
 {
     PurpleConnection* pc= purple_account_get_connection(account);
@@ -2924,6 +2934,9 @@ static void qq_login(PurpleAccount *account)
     ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
     ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
+    int relink_retry = 0;
+    if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
+        ac->relink_timer = purple_timeout_add_seconds(relink_retry*60, relink_keepalive, ac);
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path,0);

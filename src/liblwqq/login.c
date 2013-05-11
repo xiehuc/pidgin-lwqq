@@ -814,7 +814,25 @@ static int process_login2(LwqqHttpRequest* req)
     lwqq__jump_if_http_fail(req,err);
     lwqq__jump_if_json_fail(root,req->response,err);
     result = lwqq__parse_retcode_result(root, &err);
-    if(err!=WEBQQ_OK) goto done;
+    switch(err){
+        case 0:
+            lwqq_puts("[ReLinkSuccess]");
+            break;
+        case 103:
+            lwqq_puts("[Not Relogin]");
+            lc->async_opt->poll_lost(lc);
+            goto done;
+        case 113:
+        case 115:
+        case 112:
+            lwqq_puts("[RelinkFailure]");
+            lc->async_opt->poll_lost(lc);
+            goto done;
+        default:
+            lwqq_puts("[RelinkStop]");
+            lc->async_opt->poll_lost(lc);
+            goto done;
+    }
     if(result){
         lwqq__override(lc->cip,lwqq__json_get_value(result,"cip"));
         lwqq__override(lc->index,lwqq__json_get_value(result,"index"));

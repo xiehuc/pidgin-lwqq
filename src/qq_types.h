@@ -58,6 +58,7 @@ typedef struct qq_account {
         LOAD_COMPLETED
     }state;
     int msg_poll_handle;
+    int relink_timer;
     GPtrArray* opend_chat;
     GList* rewrite_pic_list;
     char* recent_group_name;
