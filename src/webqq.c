@@ -1857,9 +1857,9 @@ static void qq_close(PurpleConnection *gc)
     LwqqErrorCode err;
 
     if(ac->relink_timer>0) purple_timeout_remove(ac->relink_timer);
-    ac->qq->msg_list->poll_close(ac->qq->msg_list);
     if(lwqq_client_logined(ac->qq))
         lwqq_logout(ac->qq,&err);
+    ac->qq->msg_list->poll_close(ac->qq->msg_list);
     LwqqGroup* g;
     LIST_FOREACH(g,&ac->qq->groups,entries){
         qq_cgroup_free((qq_chat_group*)g->data);
