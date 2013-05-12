@@ -723,23 +723,29 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
             {
-                snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
-                        msg->is_myself?"您":msg->member,
-                        msg->group->name,
-                        msg->admin);
-                if(msg->is_myself)
-                    group_come(lc, msg->group);
+                if(msg->group)
+                {
+                    snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
+                            msg->is_myself?"您":msg->member,
+                            msg->group->name,
+                            msg->admin);
+                    if(msg->is_myself)
+                        group_come(lc, msg->group);
+                }
             }
             break;
         case GROUP_LEAVE:
             {
-                snprintf(body,sizeof(body),"%s离开了群[%s]",
-                        msg->is_myself?"您":msg->member,
-                        msg->group->name);
-                PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
-                if(chat&&msg->is_myself){
-                    purple_blist_remove_chat(chat);
-                    //purple_chat_destroy(chat);
+                if(msg->group)
+                {
+                    snprintf(body,sizeof(body),"%s离开了群[%s]",
+                            msg->is_myself?"您":msg->member,
+                            msg->group->name);
+                    PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
+                    if(chat&&msg->is_myself){
+                        purple_blist_remove_chat(chat);
+                        //purple_chat_destroy(chat);
+                    }
                 }
             }
             break;
@@ -760,7 +766,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             return;
             break;
     }
-    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body,NULL, NULL, NULL);
+    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body, NULL, NULL, NULL);
 }
 struct rewrite_pic_entry {
     LwqqGroup* owner;
