@@ -928,7 +928,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         msg->admin_uin = s_strdup(json_parse_simple_value(json,"admin_uin"));
         msg->admin = lwqq__json_get_string(json,"admin_nick");
         msg->is_myself = msg->member_uin?strcmp(lc->myself->uin,msg->member_uin)==0:1;
-        if(msg->is_myself)
+        if(msg->is_myself&&msg->group)
             LIST_REMOVE(msg->group,entries);
     }
     else if(strcmp(type,"group_request_join")==0){
