@@ -2834,8 +2834,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
-    options = g_list_append(options, option);
+    //option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
+    //options = g_list_append(options, option);
     option = purple_account_option_string_new("忽略的组(兼容recent plugin)", "recent_group_name", "Recent Contacts");
     options = g_list_append(options, option);
     option = purple_account_option_int_new("发送Relink间隔(m)", "relink_retry", 0);
