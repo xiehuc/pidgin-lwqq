@@ -53,8 +53,7 @@ Function list
 * send / recv qq face (you should use webqq faces theme in settings)
 * send / recv input notify | shake message
 * change buddy|group|discu markname
-* add members for discu
-* create discu
+* full support discu function
 * avatar
 * change buddy category
 * confirm buddy added request
