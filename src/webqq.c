@@ -723,6 +723,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
             {
+                if(!msg->group)
+                    return;
                 snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
                         msg->is_myself?"您":msg->member,
                         msg->group->name,
@@ -733,6 +735,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             break;
         case GROUP_LEAVE:
             {
+                if(!msg->group)
+                    return;
                 snprintf(body,sizeof(body),"%s离开了群[%s]",
                         msg->is_myself?"您":msg->member,
                         msg->group->name);
