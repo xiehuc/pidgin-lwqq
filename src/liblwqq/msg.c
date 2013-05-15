@@ -2191,10 +2191,8 @@ LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file)
     req->set_header(req,"Referer",WEBQQ_D_REF_URL);
     snprintf(post,sizeof(post),"r={\"to\":\"%s\",\"file_path\":\"%s\","
             "\"filename\":\"%s\",\"to_uin\":\"%s\","
-            "\"clientid\":\"%s\",\"psessionid\":\"%s\"}&"
-            "clientid=%s&psessionid=%s",
-            file->super.to,file->path,file->name,file->super.to,lc->clientid,lc->psessionid,
-            lc->clientid,lc->psessionid);
+            "\"clientid\":\"%s\",\"psessionid\":\"%s\"}",
+            file->super.to,file->path,file->name,file->super.to,lc->clientid,lc->psessionid);
     lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",post);
     return req->do_request_async(req,1,post,_C_(2p_i,send_offfile_back,req,file));
@@ -2317,7 +2315,7 @@ LwqqAsyncEvent* lwqq_msg_group_history(LwqqClient* lc,LwqqGroup* g,LwqqHistoryMs
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/top/groupchatlog?ps=%d&bs=%d&es=%d&gid=%s&mode=1&vfwebqq=%s&t=%ld",
             list->row,list->begin,list->end,g->code,lc->vfwebqq,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc, url, NULL);
-    req->set_header(req,"Referer","http://cgi.web2.qq.com/proxy.html?v=20110412001&id=2");
+    req->set_header(req,"Referer","http://cgi.web2.qq.com/cfproxy.html?v=20110412001&id=2");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(3p,process_group_msg_list,req,NULL,list));
