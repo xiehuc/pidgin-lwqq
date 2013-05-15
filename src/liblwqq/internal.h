@@ -28,9 +28,9 @@
 #define WEBQQ_D_HOST        H_"d.web2.qq.com"
 #define WEBQQ_S_HOST        "http://s.web2.qq.com"
 
-#define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/proxy.html"
-#define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/proxy.html"
-#define WEBQQ_LOGIN_REF_URL WEBQQ_LOGIN_HOST"/proxy.html"
+#define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/cfproxy.html"
+#define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/cfproxy.html"
+#define WEBQQ_LOGIN_REF_URL WEBQQ_LOGIN_HOST"/cfproxy.html"
 #define WEBQQ_VERSION_URL   WEBQQ_LOGIN_UI_HOST"/cgi-bin/ver"
 
 struct LwqqStrMapEntry_ {
