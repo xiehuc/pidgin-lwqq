@@ -20,6 +20,7 @@
 //standard http header+ssl switcher
 #define H_S_ H_ S_("")
 
+#define WEBQQ_PROXY SSL_("cfproxy.html?v=20110331002&callback=1","proxy.html?v=20110331002&callback=1")
 
 #define WEBQQ_LOGIN_UI_HOST H_"ui.ptlogin2.qq.com"
 #define WEBQQ_CHECK_HOST    H_ S_("check.")"ptlogin2.qq.com"
@@ -28,9 +29,9 @@
 #define WEBQQ_D_HOST        H_"d.web2.qq.com"
 #define WEBQQ_S_HOST        "http://s.web2.qq.com"
 
-#define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/cfproxy.html?v=20110331002&callback=1"
-#define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/cfproxy.html?v=20110331002&callback=1"
-#define WEBQQ_LOGIN_REF_URL WEBQQ_LOGIN_HOST"/cfproxy.html"
+#define WEBQQ_D_REF_URL     WEBQQ_D_HOST"/"WEBQQ_PROXY
+#define WEBQQ_S_REF_URL     WEBQQ_S_HOST"/proxy.html?v=201103311002&callback=1"
+#define WEBQQ_LOGIN_REF_URL WEBQQ_LOGIN_HOST"/proxy.html"
 #define WEBQQ_VERSION_URL   WEBQQ_LOGIN_UI_HOST"/cgi-bin/ver"
 
 struct LwqqStrMapEntry_ {
