@@ -368,29 +368,6 @@ static void paste_content_string(const char* from,char* to)
         write+=strlen(read);
     }
     *write = '\0';
-    /*const char* read = from;
-    char* write = to;
-    size_t idx;
-    while(*read!='\0'){
-        idx = strcspn(read,"<>");
-        if(read[idx]=='\0'){
-            strcpy(write,read);
-            write+=idx;
-            break;
-        }
-        strncpy(write,read,idx);
-        write+=idx;
-        switch(read[idx]){
-            case '<' : strcpy(write,"&lt;");break;
-            case '>' : strcpy(write,"&gt;");break;
-            case '&' : strcpy(write,"&amp;");break;
-            case '"' : strcpy(write,"&quote;");break;
-        }
-        read+=idx+1;
-        write+=strlen(write);
-    }
-    *write='\0';
-    */
 }
 char* translate_to_html_symbol(const char* s)
 {
@@ -435,7 +412,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
                 }else{
-                    strcat(buf,"【图片】");
+                    strcat(buf,_("【PIC】"));
                 }
                 break;
             case LWQQ_CONTENT_CFACE:
@@ -448,7 +425,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                 }else if(c->data.cface.direct_url){
                     format_append(buf,"<IMG SRC=\"%s\">",c->data.cface.direct_url);
                 }else
-                    strcat(buf,"【图片】");
+                    strcat(buf,_("【PIC】"));
                 break;
         }
     }
@@ -635,38 +612,6 @@ const char* translate_smile(int face)
         if(buf[0]=='/') strcat(buf," ");
     }
     return buf;
-    /*
-#define SMILE_MAP(face,str) \
-    case face:\
-    ret=str;\
-    break;
-    const char* ret;
-    static char piece[20];
-    switch(face) {
-        SMILE_MAP(14,":)");
-        SMILE_MAP(13,":-D");
-        SMILE_MAP(50,":-(");
-        SMILE_MAP(12,";-)");
-        //SMILE_MAP(12,":P");
-        SMILE_MAP(57,"=-O");
-        SMILE_MAP(116,":-*");
-        SMILE_MAP(51,"8-)");
-        SMILE_MAP(74,":-[");
-        SMILE_MAP(9,":'(");
-        SMILE_MAP(76,":-/");
-        SMILE_MAP(58,"O:-)");
-        SMILE_MAP(106,":-x");
-        SMILE_MAP(107,":-$");
-        SMILE_MAP(85,":-!");
-        SMILE_MAP(110,":-!");
-    default:
-        snprintf(piece,sizeof(piece),"[FACE_%d]",face);
-        ret = piece;
-        break;
-    }
-    return ret;
-#undef SMILE_MAP
-*/
 }
 
 void add_smiley(void* data,void* userdata)

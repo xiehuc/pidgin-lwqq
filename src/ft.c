@@ -29,11 +29,11 @@ static void recv_file_complete(PurpleXfer* xfer,LwqqAsyncEvent* ev)
     char buf[512];
     const char* extra = NULL;
     if(ev->result){
-        snprintf(buf,sizeof(buf),"传输失败,错误号:%d\n",ev->result);
+        snprintf(buf,sizeof(buf),_("Transport Failed,Error Code:%d\n"),ev->result);
         if(ev->result == 102)
-            extra = "对方是用webqq发送的吧.\n让对方发离线文件或邮件吧.";
+            extra = _("Other may send via webqq.\nPlease call him send via email or offline file.");
         else extra = NULL;
-        purple_notify_error(ac->gc,"文件传输",buf,extra);
+        purple_notify_error(ac->gc,_("File Transport"),buf,extra);
     }
     purple_xfer_set_completed(xfer,1);
     lwqq_msg_free((LwqqMsg*)file);
@@ -48,7 +48,7 @@ static void recv_file_init(PurpleXfer* xfer)
     LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc,file,filename);
     if(ev == NULL){ 
         lwqq_puts("file trans error ");
-        purple_xfer_error(PURPLE_XFER_RECEIVE, ac->account, purple_xfer_get_remote_user(xfer), "接受文件失败");
+        purple_xfer_error(PURPLE_XFER_RECEIVE, ac->account, purple_xfer_get_remote_user(xfer), _("Receive file failed"));
         purple_xfer_cancel_local(xfer);
         return;
     }
@@ -89,10 +89,10 @@ static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
     LwqqMsgOffFile* file = xfer->data;
 
     if(errno == 0){
-        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, "发送离线文件成功", PURPLE_MESSAGE_SYSTEM, time(NULL));
+        qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, _("Send offline file successful"), PURPLE_MESSAGE_SYSTEM, time(NULL));
     }else{
         char buf[512];
-        snprintf(buf,sizeof(buf),"发送离线文件失败,错误号:%d",errno);
+        snprintf(buf,sizeof(buf),_("Send offline file failed,Error Code:%d"),errno);
         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, buf, PURPLE_MESSAGE_ERROR, time(NULL));
     }
     lwqq_msg_free((LwqqMsg*)file);
@@ -113,7 +113,7 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     errno = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = xfer->data;
     if(errno) {
-        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,"发送离线文件失败",PURPLE_MESSAGE_ERROR,time(NULL));
+        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,_("Send offlien file failed"),PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_free((LwqqMsg*)file);
         purple_xfer_set_completed(xfer,1);
     } else {
@@ -224,9 +224,9 @@ void file_message(LwqqClient* lc,LwqqMsgFileMessage* file)
         purple_xfer_request(xfer);
     } else if(file->mode == MODE_REFUSE) {
         if(file->refuse.cancel_type == CANCEL_BY_USER) {
-            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "对方取消文件传输", PURPLE_MESSAGE_SYSTEM, time(NULL));
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, _("Other canceled file transport"), PURPLE_MESSAGE_SYSTEM, time(NULL));
         } else if(file->refuse.cancel_type == CANCEL_BY_OVERTIME) {
-            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, "文件传输超时", PURPLE_MESSAGE_SYSTEM, time(NULL));
+            qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from, _("File transport timeout"), PURPLE_MESSAGE_SYSTEM, time(NULL));
         }
     }
 }

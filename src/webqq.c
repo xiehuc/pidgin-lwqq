@@ -1,6 +1,5 @@
 #define PURPLE_PLUGINS
-#include <glib/gi18n.h>
-#include <locale.h>
+
 #include <plugin.h>
 #include <version.h>
 #include <smemory.h>
@@ -18,13 +17,10 @@
 #include <login.h>
 #include <lwdb.h>
 
-#include "internal.h"
 #include "qq_types.h"
 #include "translate.h"
 #include "remote.h"
 #include "cgroup.h"
-
-
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);

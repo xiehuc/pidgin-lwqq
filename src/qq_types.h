@@ -1,6 +1,8 @@
 #ifndef QQ_TYPES_H_H
 #define QQ_TYPES_H_H
 
+#include <glib/gi18n.h>
+#include <locale.h>
 #include <type.h>
 #include <connection.h>
 #include "msg.h"

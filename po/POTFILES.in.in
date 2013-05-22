@@ -1,3 +1,6 @@
 # List of source files which contain translatable strings.
 [encoding: UTF-8]
 @REL_SOURCE_ROOT@src/webqq.c
+@REL_SOURCE_ROOT@src/ft.c
+@REL_SOURCE_ROOT@src/translate.c
+
