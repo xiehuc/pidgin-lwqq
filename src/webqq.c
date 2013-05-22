@@ -153,7 +153,7 @@ static void action_about_webqq(PurplePluginAction *action)
                             "so it remaind a easy job<br/>"
                             "thanks riegamaths@gmail.com's great guide");
     g_string_append(info, "<br/><br/></body></html>");
-    title = g_strdup_printf(_("About WebQQ %s"), DISPLAY_VERSION);
+    title = g_strdup_printf(_("About pidgin-lwqq %s"), DISPLAY_VERSION);
     purple_notify_formatted(gc, title, title, NULL, info->str, NULL, NULL);
 
     g_free(title);
@@ -219,7 +219,7 @@ static void all_reset_action(PurplePluginAction* action)
 
     all_reset(ac,RESET_ALL);
 
-    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"全部重载,请重新登录");
+    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("all reloaded,please relogin"));
 }
 #if 0
 static void visit_my_qq_center(PurplePluginAction* action)
@@ -417,22 +417,20 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     ///分割线
     m = g_list_append(m, NULL);
 
-    act = purple_plugin_action_new(_("About WebQQ"), action_about_webqq);
+    act = purple_plugin_action_new(_("About pidgin-lwqq"), action_about_webqq);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("访问个人中心",visit_self_infocenter);
+    act = purple_plugin_action_new(_("Self Center"),visit_self_infocenter);
     m = g_list_append(m, act);
     //act = purple_plugin_action_new("好友管理",visit_my_qq_center);
     //m = g_list_append(m, act);
-    act = purple_plugin_action_new("添加群",qq_add_group);
+    act = purple_plugin_action_new(_("Add QQ Group"),qq_add_group);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("创建讨论组",qq_create_discu);
+    act = purple_plugin_action_new(_("Create Discu Group"),qq_create_discu);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("全部重载",all_reset_action);
+    act = purple_plugin_action_new(_("Modify Self LongNick"),qq_modify_self_longnick);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new("修改签名",qq_modify_self_longnick);
+    act = purple_plugin_action_new(_("All Reload(Debug)"),all_reset_action);
     m = g_list_append(m, act);
-    /*act = purple_plugin_action_new("测试", search_result_test);
-    m = g_list_append(m, act);*/
 
     return m;
 }

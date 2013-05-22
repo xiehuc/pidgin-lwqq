@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-22 10:11+0800\n"
+"POT-Creation-Date: 2013-05-22 12:27+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,45 +17,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:153
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:156
 #, c-format
-msgid "About WebQQ %s"
+msgid "About pidgin-lwqq %s"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:417
-msgid "About WebQQ"
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:222
+msgid "all reloaded,please relogin"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:420
+msgid "About pidgin-lwqq"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:422
+msgid "Self Center"
+msgstr ""
+
+#. act = purple_plugin_action_new("好友管理",visit_my_qq_center);
+#. m = g_list_append(m, act);
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:426
+msgid "Add QQ Group"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:428
+msgid "Create Discu Group"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:430
+msgid "Modify Self LongNick"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:432
+msgid "All Reload(Debug)"
 msgstr ""
 
 #. status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:455
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:476
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:456
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:477
 msgid "我在线上"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:458
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:459
 msgid "Q我吧"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:461
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:462
 msgid "离开"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:464
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:465
 msgid "忙碌"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:467
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:468
 msgid "请勿打扰"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:470
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:471
 msgid "隐身"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:473
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:474
 msgid "离线"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2670
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2671
 msgid "昵称"
 msgstr ""
