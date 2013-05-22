@@ -260,18 +260,14 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy->allow);
     s_free(buddy->college);
     s_free(buddy->reg_time);
-    s_free(buddy->constel);
-    s_free(buddy->blood);
     s_free(buddy->homepage);
     s_free(buddy->country);
     s_free(buddy->city);
     s_free(buddy->personal);
     s_free(buddy->nick);
     s_free(buddy->long_nick);
-    s_free(buddy->shengxiao);
     s_free(buddy->email);
     s_free(buddy->province);
-    s_free(buddy->gender);
     s_free(buddy->mobile);
     s_free(buddy->vip_info);
     s_free(buddy->markname);

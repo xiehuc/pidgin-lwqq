@@ -113,7 +113,7 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     errno = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = xfer->data;
     if(errno) {
-        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,_("Send offlien file failed"),PURPLE_MESSAGE_ERROR,time(NULL));
+        qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,_("Send offline file failed"),PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_free((LwqqMsg*)file);
         purple_xfer_set_completed(xfer,1);
     } else {

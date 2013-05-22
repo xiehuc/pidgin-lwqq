@@ -81,15 +81,30 @@ typedef enum {
 typedef enum {
     LWQQ_MEMBER_IS_ADMIN = 0x1,
 }LwqqMemberFlags;
+#define LWQQ_UNKNOW 0
+typedef enum {
+    LWQQ_MOUTH=1,  LWQQ_CATTLE,    LWQQ_TIGER,    LWQQ_RABBIT,
+    LWQQ_DRAGON,   LWQQ_SNACK,     LWQQ_HORSE,    LWQQ_SHEEP,
+    LWQQ_MONKEY,   LWQQ_CHOOK,     LWQQ_DOG,      LWQQ_PIG
+}LwqqShengxiao;
+typedef enum {
+    LWQQ_AQUARIUS=1,  LWQQ_PISCES,    LWQQ_ARIES,    LWQQ_TAURUS,
+    LWQQ_GEMINI,      LWQQ_CANCER,    LWQQ_LEO,      LWQQ_VIRGO,
+    LWQQ_LIBRA,       LWQQ_SCORPIO,   LWQQ_SAGITTARIUS,    LWQQ_CAPRICORNUS
+}LwqqConstel;
+typedef enum {
+    LWQQ_BLOOD_A=1,   LWQQ_BLOOD_B,    LWQQ_BLOOD_O,
+    LWQQ_BLOOD_AB,    LWQQ_BLOOD_OTHER
+}LwqqBloodType;
+typedef enum {
+    LWQQ_FEMALE = 1,
+    LWQQ_MALE = 2
+}LwqqGender;
 typedef enum {
     LWQQ_DEL_FROM_OTHER = 2/* delete buddy and remove myself from other buddy list */
 }LwqqDelFriendType;
 
 
-typedef enum {
-    LWQQ_FEMALE = 1,
-    LWQQ_MALE = 2
-}LwqqGender;
 /* Lwqq Error Code */
 typedef enum {
     LWQQ_EC_ERROR =                -1,                 //<general error
@@ -149,18 +164,18 @@ typedef struct LwqqBuddy {
     char *allow;
     char *college;
     char *reg_time;
-    char *constel;
-    char *blood;
+    LwqqConstel constel;
+    LwqqBloodType blood;
     char *homepage;
     char *country;
     char *city;
     char *personal;
     char *nick;
     char *long_nick;
-    char *shengxiao;
+    LwqqShengxiao shengxiao;
     char *email;
     char *province;
-    char *gender;
+    LwqqGender gender;
     char *mobile;
     char *vip_info;
     char *markname;

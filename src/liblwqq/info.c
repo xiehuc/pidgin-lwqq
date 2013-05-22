@@ -25,7 +25,7 @@
 #include "smemory.h"
 #include "json.h"
 #include "async.h"
-#include "util.h"
+#include "utility.h"
 #include "internal.h"
 
 #define LWQQ_CACHE_DIR "/tmp/lwqq/"
@@ -271,8 +271,10 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(allow, "allow");
         SET_BUDDY_INFO(college, "college");
         SET_BUDDY_INFO(reg_time, "reg_time");
-        SET_BUDDY_INFO(constel, "constel");
-        SET_BUDDY_INFO(blood, "blood");
+        //SET_BUDDY_INFO(constel, "constel");
+        buddy->stat = s_atoi(json_parse_simple_value(json,"constel"),LWQQ_UNKNOW);
+        //SET_BUDDY_INFO(blood, "blood");
+        buddy->blood = s_atoi(json_parse_simple_value(json,"blood"),LWQQ_UNKNOW);
         SET_BUDDY_INFO(homepage, "homepage");
         buddy->stat = s_atoi(json_parse_simple_value(json,"stat"),LWQQ_STATUS_LOGOUT);
         SET_BUDDY_INFO(vip_info, "vip_info");
@@ -280,11 +282,14 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(city, "city");
         SET_BUDDY_INFO(personal, "personal");
         SET_BUDDY_INFO(nick, "nick");
-        SET_BUDDY_INFO(shengxiao, "shengxiao");
+        //SET_BUDDY_INFO(shengxiao, "shengxiao");
+        buddy->shengxiao = s_atoi(json_parse_simple_value(json,"shengxiao"),LWQQ_UNKNOW);
         SET_BUDDY_INFO(email, "email");
         buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_PC);
         SET_BUDDY_INFO(province, "province");
-        SET_BUDDY_INFO(gender, "gender");
+        //SET_BUDDY_INFO(gender, "gender");
+        const char* gender = json_parse_simple_value(json,"gender");
+        buddy->gender = (gender==NULL)?LWQQ_UNKNOW:strcmp(gender,"male")==0?LWQQ_MALE:strcmp(gender,"female")?LWQQ_FEMALE:LWQQ_UNKNOW;
         SET_BUDDY_INFO(mobile, "mobile");
         SET_BUDDY_INFO(token, "token");
         SET_BUDDY_INFO(qqnumber, "account");

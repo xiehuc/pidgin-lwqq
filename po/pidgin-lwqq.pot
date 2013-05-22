@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-22 19:39+0800\n"
+"POT-Creation-Date: 2013-05-22 23:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,243 +17,233 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:152
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:149
 #, c-format
 msgid "About pidgin-lwqq %s"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:218
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:215
 msgid "all reloaded,please relogin"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:248
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:273
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2034
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2062
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2066
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:245
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:270
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2031
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2059
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2063
 msgid "Error Message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:248
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2034
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:245
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2031
 msgid ""
 "ErrCode:6\n"
 "Please try agagin later\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:273
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:270
 msgid "Get QQ Group Infomation Failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:278
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:275
 msgid "Confirm QQ Group"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:279
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:276
 msgid "Additional Reason"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:281
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:668
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:278
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:665
 #, c-format
 msgid ":%s\n"
 msgstr ""
 
 #. act = purple_plugin_action_new("好友管理",visit_my_qq_center);
 #. m = g_list_append(m, act);
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:306
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:422
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:303
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:419
 msgid "Add QQ Group"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:306
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:303
 msgid "QQ Number"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:307
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:304
 msgid "Search"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:307
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:341
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1378
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2271
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2323
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:304
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1375
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2268
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2320
 msgid "Cancel"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:334
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
 msgid "Discu Name"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:334
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
 msgid "UnName Discu"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:337
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:334
 msgid "members(seperate by ;)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:341
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
 msgid "Create Discu"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:341
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
 msgid "Create"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:389
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:386
 msgid "Modify Self Longnick"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:390
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2156
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2339
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2626
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:387
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2153
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2336
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2623
 msgid "Longnick"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:416
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:413
 msgid "About pidgin-lwqq"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:418
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:415
 msgid "Self Center"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:424
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:421
 msgid "Create Discu Group"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:426
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:423
 msgid "Modify Self LongNick"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:428
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:425
 msgid "All Reload(Debug)"
 msgstr ""
 
 #. status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:452
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:473
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:449
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:470
 msgid "Online"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:455
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:452
 msgid "Callme"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:458
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:455
 msgid "Away"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:461
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:458
 msgid "Busy"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:464
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:461
 msgid "Slience"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:467
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:464
 msgid "Hidden"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:470
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:467
 msgid "Offline"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:575
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:572
 msgid "Discu"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:638
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:635
 #, c-format
 msgid ""
 "You Got a Offline File: %s\n"
 "End timeline: %s<a href=\"%s\">Click to download</a>"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:649
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:646
 msgid "Refuse"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:649
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2845
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:646
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2842
 msgid "Agree"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:650
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:647
 #, c-format
 msgid "Peer %s Accept receive Offline file(%s)\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:672
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
-msgid "Female"
-msgstr ""
-
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:672
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
-msgid "Male"
-msgstr ""
-
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:701
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:698
 #, c-format
 msgid ""
 "Request QQ Group:%s\n"
 "Request Reason:%s\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:704
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:701
 msgid "QQ Group Request Confirm"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:707
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:704
 msgid "Deny Reason"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:718
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:749
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:715
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:746
 msgid "QQ Group Sys Message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:718
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:715
 msgid "You create a new group"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:725
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:722
 #, c-format
 msgid ""
 "%s Added in QQ Group[%s]\n"
 "Admin:%s"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:726
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:738
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:723
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:735
 msgid "You"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:737
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:734
 #, c-format
 msgid "%s Leave QQ Group[%s]"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:748
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:745
 #, c-format
 msgid "QQ Group [%s] refused your request"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:993
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:990
 msgid "Oups, You was kicked offline by somewhat"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1014
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2070
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1011
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2067
 msgid "Friend Confirm"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1016
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1013
 #, c-format
 msgid ""
 "%s\n"
@@ -262,435 +252,435 @@ msgid ""
 "\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1019
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1016
 msgid "Agree and add back"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1020
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1017
 msgid "Refuse reason"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1027
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1024
 #, c-format
 msgid "%s accept your request,and add back you as friend too"
 msgstr ""
 
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1025
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1028
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1031
 msgid "System Message"
 msgstr ""
 
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1025
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1028
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1031
 msgid "Add Friend"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1030
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1027
 #, c-format
 msgid "%s accept your request"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1098
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1095
 msgid "webqq lost connection,relogin now,please retry by hand later"
 msgstr ""
 
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1330
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1333
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1336
 msgid "Send Pic Failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1376
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1373
 msgid "Captcha"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1377
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1374
 msgid "OK"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1422
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1419
 msgid "Please Select"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1423
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1439
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2846
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1420
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1436
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2843
 msgid "Deny"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1424
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1421
 msgid "Accept"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1437
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1438
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1434
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1435
 msgid "Confirm"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1439
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1436
 msgid "Ignore"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1472
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1469
 msgid "Account Problem Occurs,Need lift the ban"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1502
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1499
 msgid "Get Friend|Group List Failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1530
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1527
 msgid "Message body too long"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1538
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1535
 #, c-format
 msgid ""
 "Send too fast:\n"
 "%s"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1540
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1537
 #, c-format
 msgid ""
 "Send failed, err:%d:\n"
 "%s"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1548
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1545
 msgid "Upload content retry over limit"
 msgstr ""
 
 #. #define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
 #. ADD_HEADER("基本信息");
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1719
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2336
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2623
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1716
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2333
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2620
 msgid "QQ"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1721
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1718
 msgid "Type"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1911
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1950
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1908
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1947
 msgid "Change friend category failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1911
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1908
 msgid "Server fault returns"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1924
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1921
 msgid "Add passerby as friend"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1924
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1921
 msgid "Send add request successful"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1926
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1923
 msgid "Add friend failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1926
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1923
 msgid "???"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1950
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1947
 msgid "no such category exists"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2062
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2059
 msgid "Account not exists or not main display account"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2066
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2063
 msgid "Get friend infomation failed"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2152
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2624
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2149
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2621
 msgid "Nick"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2154
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2338
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2625
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2151
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2335
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2622
 msgid "Mark"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2172
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2169
 msgid "Client"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2218
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2215
 msgid "Block Setting"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2219
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2216
 msgid "No Block"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2220
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2217
 msgid "Slience Receive"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2221
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2587
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2218
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2584
 msgid "Block"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2260
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2337
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2257
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2334
 msgid "Name"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2262
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2640
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2259
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2637
 msgid "Phone"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2264
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2642
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2261
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2639
 msgid "Email"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2266
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2263
 msgid "Remark"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2270
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2267
 msgid "Group Business Card"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2271
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2323
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2268
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2320
 msgid "Update"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2322
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2319
 msgid "Modify Mark"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2322
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2319
 msgid "Input Mark"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2324
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2321
 msgid "Set Topic"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2324
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2321
 msgid "Input Topic"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2325
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2322
 msgid ""
 "Note:You are setting discu topic on server.\n"
 "Which would affect all discu member"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2352
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2349
 #, c-format
 msgid "Error Code:%d"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2353
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2460
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2489
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2551
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2693
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2350
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2457
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2486
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2548
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2690
 msgid "Error"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2414
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2411
 #, c-format
 msgid "Merge %d Entry"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2415
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2425
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2572
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2584
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2412
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2422
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2569
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2581
 msgid "Merge Online History"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2425
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2422
 msgid "Merge 0 Entry"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2460
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2457
 msgid "Input Invalid"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2489
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2551
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2486
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2548
 msgid "Tempory Session not support this function"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2507
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2504
 msgid "How many pages want to merge"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2508
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2505
 msgid "Each Page has 60 Entry"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2509
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2506
 msgid "Pages"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2538
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2535
 msgid "Level)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2540
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2537
 msgid "QQ Level"
 msgstr ""
 
 #. LwqqBuddy* friend = buddy->proto_data;
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2566
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2563
 msgid "Visit QZone"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2568
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2565
 msgid "Send Offline File"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2570
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2567
 msgid "Send Email"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2574
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2571
 msgid "Display QQ Level"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2580
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2577
 msgid "Get Information"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2582
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2579
 msgid "Change Business Card"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2589
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2586
 msgid "Change Mark"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2591
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2588
 msgid "Quit Group"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2627
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2624
 msgid "Self Information"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2625
 msgid "Gender"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2629
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2626
 msgid "Shengxiao"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2630
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2627
 msgid "Constellation"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2631
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
 msgid "Blood Type"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2633
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2630
 msgid "%Y year %m mon %d day"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2634
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2631
 msgid "Birthday"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2635
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2632
 msgid "Place Information"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2636
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2633
 msgid "Contry"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2637
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2634
 msgid "Province"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2638
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2635
 msgid "City"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2639
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2636
 msgid "Conmunicate Information"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2641
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2638
 msgid "Mobile"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2643
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2640
 msgid "Occupation"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2644
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2641
 msgid "College"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2645
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2642
 msgid "Homepage"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2693
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2690
 msgid "Only Discu Can Add new member"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2781
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2778
 msgid "Ignore Received Message Font Family"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2783
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2780
 msgid "Ignore Received Message Font Size"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2785
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2782
 msgid "Text Lighter In Dark Theme"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2787
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2784
 msgid "Remove Duplicated Message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2789
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2786
 msgid "Version Statics"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2791
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2788
 msgid "Debug File Transport"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2793
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2790
 msgid "Do not use Expected:100 Continue when send offline message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2795
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2792
 msgid "Ignore Group(Compatible with recent plugin)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2797
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2794
 msgid "Send Relink Time Interval(m)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2834
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2831
 msgid "Need Your Attention"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2836
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2833
 #, c-format
 msgid ""
 "To Support the sustained development of pidgin-lwqq,\n"
@@ -703,7 +693,7 @@ msgid ""
 "Code:%s:%d\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2880
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2877
 msgid "Password is empty"
 msgstr ""
 
@@ -736,7 +726,7 @@ msgid "Send offline file failed,Error Code:%d"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/ft.c:116
-msgid "Send offlien file failed"
+msgid "Send offline file failed"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/ft.c:227
@@ -750,4 +740,128 @@ msgstr ""
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:415
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:428
 msgid "【PIC】"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:13
+msgid "Mouth"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:13
+msgid "Cattle"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:13
+msgid "Tiger"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:13
+msgid "Rabbit"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:14
+msgid "Dragon"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:14
+msgid "Snack"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:14
+msgid "Horse"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:14
+msgid "Sheep"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:15
+msgid "Monkey"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:15
+msgid "Chook"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:15
+msgid "Dog"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:15
+msgid "Pig"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:19
+msgid "A"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:19
+msgid "B"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:19
+msgid "O"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:20
+msgid "AB"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:20
+msgid "Other"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:24
+msgid "Aquarius"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:24
+msgid "Pisces"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:24
+msgid "Aries"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:24
+msgid "Taurus"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:25
+msgid "Gemini"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:25
+msgid "Cancer"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:25
+msgid "Leo"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:25
+msgid "Virgo"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:26
+msgid "Libra"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:26
+msgid "Scorpio"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:26
+msgid "Sagittarius"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:27
+msgid "Capricornus"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:31
+msgid "Female"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:32
+msgid "Male"
 msgstr ""

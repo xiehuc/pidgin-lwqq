@@ -30,10 +30,13 @@ void lwqq_ct_free(LwqqConfirmTable* table);
 #define lwqq_buddy_pretty_name(b) (b->markname?:b->nick)
 
 
-#define TABLE_BEGIN(name,type,init) \
-    type name(long k){\
-        type ret_ = init;\
+#define TABLE_BEGIN_LONG(name,rettp,paratp,init) \
+    rettp name(paratp k){\
+        rettp ret_ = init;\
         switch(k){
+
+#define TABLE_BEGIN(name,type,init) TABLE_BEGIN_LONG(name,type,long,init)
+
 #define TR(k,v)\
             case k:ret_ = v;break;
 #define TABLE_END()\

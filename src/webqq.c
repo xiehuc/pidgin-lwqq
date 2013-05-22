@@ -16,6 +16,7 @@
 #include <http.h>
 #include <login.h>
 #include <lwdb.h>
+#include <utility.h>
 
 #include "qq_types.h"
 #include "translate.h"
@@ -42,10 +43,6 @@ enum ResetOption{
     RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
     RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
     
-static const char sxarr[13][4] = {"", "鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"};
-static const char xxarr[6][8] = {"", "A", "B", "O", "AB", "其它"};
-static const char xzarr[13][12] = {"", "水瓶座", "双鱼座", "白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", 
-				"处女座", "天秤座", "天蝎座", "射手座", "摩羯座"};
 
 ///###  global data area ###///
 int g_ref_count = 0;
@@ -669,10 +666,10 @@ static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
     ADD_INFO("QQ", buddy->qqnumber);
     ADD_INFO("Nick", buddy->nick);
     ADD_INFO("Longnick", buddy->personal);
-    ADD_INFO("Gender", buddy->gender ? (strcmp(buddy->gender, "male") ? _("Female") : _("Male")) : 0);
-    ADD_INFO("Shengxiao", buddy->shengxiao ? sxarr[s_atoi(buddy->shengxiao,0)] : 0);
-    ADD_INFO("Constellation", buddy->constel ? xzarr[s_atoi(buddy->constel,0)] : 0);
-    ADD_INFO("Blood Type", buddy->blood ? xxarr[s_atoi(buddy->blood,0)] : 0);
+    ADD_INFO("Gender", qq_gender_to_str(buddy->gender));
+    ADD_INFO("Shengxiao", qq_shengxiao_to_str(buddy->shengxiao));
+    ADD_INFO("Constellation", qq_constel_to_str(buddy->constel));
+    ADD_INFO("Blood Type", qq_blood_to_str(buddy->blood));
     //ADD_INFO("生日", buddy->birthday);
     ADD_INFO("Country", buddy->country);
     ADD_INFO("Province", buddy->province);
@@ -2625,10 +2622,10 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING(_("Mark"),b->markname);
     ADD_STRING(_("Longnick"),b->long_nick);
     ADD_HEADER(_("Self Information"));
-    ADD_STRING(_("Gender"), strcmp(b->gender, "male") ? _("Female") : _("Male"));
-    ADD_STRING(_("Shengxiao"),sxarr[s_atoi(b->shengxiao,0)]);
-    ADD_STRING(_("Constellation"),xzarr[s_atoi(b->constel,0)]);
-    ADD_STRING(_("Blood Type"),xxarr[s_atoi(b->blood,0)]);
+    ADD_STRING(_("Gender"), qq_gender_to_str(b->gender));
+    ADD_STRING(_("Shengxiao"),qq_shengxiao_to_str(b->shengxiao));
+    ADD_STRING(_("Constellation"),qq_constel_to_str(b->constel));
+    ADD_STRING(_("Blood Type"),qq_blood_to_str(b->blood));
     struct tm *tm_ = localtime(&b->birthday);
     strftime(buf,sizeof(buf),_("%Y year %m mon %d day"),tm_);
     ADD_STRING(_("Birthday"),buf);

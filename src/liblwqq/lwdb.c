@@ -45,7 +45,7 @@ static char *global_database_name;
 
 ///when save friend info need update version
 //to clean old error
-#define LWDB_VERSION 1002
+#define LWDB_VERSION 1003
 #define VAL(v) #v
 #define STR(v) VAL(v)
 
@@ -71,8 +71,8 @@ static const char *create_user_db_sql =
     "    allow default '',"
     "    college default '',"
     "    reg_time default '',"
-    "    constel default '',"
-    "    blood default '',"
+    "    constel int default 0,"
+    "    blood int default 0,"
     "    homepage default '',"
     "    stat int default 0,"
     "    country default '',"
@@ -80,14 +80,15 @@ static const char *create_user_db_sql =
     "    personal default '',"
     "    nick default '',"
     "    long_nick default '',"   
-    "    shengxiao default '',"
+    "    shengxiao int default 0,"
     "    email default '',"
     "    province default '',"
-    "    gender default '',"
+    "    gender int default 0,"
     "    mobile default '',"
     "    vip_info default '',"
     "    markname default '',"
     "    flag default '',"
+    "    level int default 0,"
     "    cate_index int default 0,"
     "    last_modify timestamp default 0);"
     
@@ -564,8 +565,8 @@ static LwqqBuddy* read_buddy_from_stmt(SwsStmt* stmt)
         GET_BUDDY_MEMBER_VALUE(3, allow);
         GET_BUDDY_MEMBER_VALUE(4, college);
         GET_BUDDY_MEMBER_VALUE(5, reg_time);
-        GET_BUDDY_MEMBER_VALUE(6, constel);
-        GET_BUDDY_MEMBER_VALUE(7, blood);
+        GET_BUDDY_MEMBER_INT(6, constel);
+        GET_BUDDY_MEMBER_INT(7, blood);
         GET_BUDDY_MEMBER_VALUE(8, homepage);
         GET_BUDDY_MEMBER_INT(9, stat);
         //GET_BUDDY_MEMBER_VALUE(9, stat);
@@ -573,16 +574,17 @@ static LwqqBuddy* read_buddy_from_stmt(SwsStmt* stmt)
         GET_BUDDY_MEMBER_VALUE(11, city);
         GET_BUDDY_MEMBER_VALUE(12, personal);
         GET_BUDDY_MEMBER_VALUE(13, nick);
-        GET_BUDDY_MEMBER_VALUE(14, shengxiao);
+        GET_BUDDY_MEMBER_INT(14, shengxiao);
         GET_BUDDY_MEMBER_VALUE(15, email);
         GET_BUDDY_MEMBER_VALUE(16, province); 
-        GET_BUDDY_MEMBER_VALUE(17, gender);
+        GET_BUDDY_MEMBER_INT(17, gender);
         GET_BUDDY_MEMBER_VALUE(18, mobile);
         GET_BUDDY_MEMBER_VALUE(19, vip_info);
         GET_BUDDY_MEMBER_VALUE(20, markname);
         GET_BUDDY_MEMBER_VALUE(21, flag);
         GET_BUDDY_MEMBER_INT(22, cate_index);
         GET_BUDDY_MEMBER_VALUE(23, qqnumber);
+        GET_BUDDY_MEMBER_INT(24, level);
 #undef GET_BUDDY_MEMBER_VALUE
 #undef GET_BUDDY_MEMBER_INT
         return buddy;
@@ -631,7 +633,7 @@ static LwqqBuddy *lwdb_userdb_query_buddy_info(
              "SELECT face,occupation,phone,allow,college,reg_time,constel,"
              "blood,homepage,stat,country,city,personal,nick,shengxiao,"
              "email,province,gender,mobile,vip_info,markname,flag,"
-             "cate_index,qqnumber FROM buddies WHERE qqnumber='%s';", qqnumber);
+             "cate_index,qqnumber,level FROM buddies WHERE qqnumber='%s';", qqnumber);
     ret = sws_query_start(db->db, sql, &stmt, NULL);
     if (ret) {
         goto failed;

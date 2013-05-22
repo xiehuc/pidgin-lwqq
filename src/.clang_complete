@@ -1,2 +1,4 @@
+-I ../
+-I ./
 -I ./liblwqq
 -I /usr/include/libpurple/

@@ -1,13 +1,36 @@
 #include "qq_types.h"
 #include "smemory.h"
-#include "msg.h"
-#include "async.h"
+#include "utility.h"
+
 
 struct dispatch_data{
     DISPATCH_FUNC dsph;
     CALLBACK_FUNC func;
     vp_list data;
 };
+
+TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
+    TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))     TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
+    TR(LWQQ_DRAGON,_("Dragon"))   TR(LWQQ_SNACK,_("Snack"))       TR(LWQQ_HORSE,_("Horse"))    TR(LWQQ_SHEEP,_("Sheep"))
+    TR(LWQQ_MONKEY,_("Monkey"))   TR(LWQQ_CHOOK,_("Chook"))       TR(LWQQ_DOG,_("Dog"))        TR(LWQQ_PIG,_("Pig"))
+TABLE_END()
+
+TABLE_BEGIN_LONG(qq_blood_to_str, const char*,LwqqBloodType , "")
+    TR(LWQQ_BLOOD_A,_("A"))      TR(LWQQ_BLOOD_B,_("B"))          TR(LWQQ_BLOOD_O,_("O"))
+    TR(LWQQ_BLOOD_AB,_("AB"))    TR(LWQQ_BLOOD_OTHER,_("Other"))
+TABLE_END()
+
+TABLE_BEGIN_LONG(qq_constel_to_str,const char*,LwqqConstel ,"")
+    TR(LWQQ_AQUARIUS,_("Aquarius"))  TR(LWQQ_PISCES,_("Pisces"))     TR(LWQQ_ARIES,_("Aries"))    TR(LWQQ_TAURUS,_("Taurus"))
+    TR(LWQQ_GEMINI,_("Gemini"))      TR(LWQQ_CANCER,_("Cancer"))     TR(LWQQ_LEO,_("Leo"))        TR(LWQQ_VIRGO,_("Virgo"))
+    TR(LWQQ_LIBRA,_("Libra"))        TR(LWQQ_SCORPIO,_("Scorpio"))   TR(LWQQ_SAGITTARIUS,_("Sagittarius"))   
+    TR(LWQQ_CAPRICORNUS,_("Capricornus"))
+TABLE_END()
+
+TABLE_BEGIN_LONG(qq_gender_to_str,const char*,LwqqGender,"")
+    TR(LWQQ_FEMALE,_("Female"))
+    TR(LWQQ_MALE,_("Male"))
+TABLE_END()
 
 static int did_dispatch(void* param)
 {

@@ -21,7 +21,7 @@ set(LWQQ_LIST
   liblwqq/lwdb.c
   liblwqq/swsqlite.c
   liblwqq/vplist.c
-  liblwqq/util.c
+  liblwqq/utility.c
   liblwqq/internal.c
   liblwqq/async.c
   liblwqq/http.c
@@ -36,8 +36,9 @@ ADD_LIBRARY(webqq MODULE
 include_directories(
   ${PURPLE_INCLUDE_DIRS}
   ${GLIB_INCLUDE_DIRS}
+  liblwqq
   ${CMAKE_CURRENT_BINARY_DIR}
-  liblwqq)
+  )
 
 #if(WITH_LIBEV)
 add_definitions(-DUSE_LIBEV)
