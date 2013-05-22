@@ -7,6 +7,7 @@
 #include "info.h"
 #include "lwdb.h"
 #include "logger.h"
+#include "config.h"
 
 #define QQ_MAGIC 0x4153
 #define QQ_USE_FAST_INDEX 1

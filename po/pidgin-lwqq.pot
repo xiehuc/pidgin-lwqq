@@ -1,0 +1,61 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-22 10:11+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:153
+#, c-format
+msgid "About WebQQ %s"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:417
+msgid "About WebQQ"
+msgstr ""
+
+#. status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:455
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:476
+msgid "我在线上"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:458
+msgid "Q我吧"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:461
+msgid "离开"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:464
+msgid "忙碌"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:467
+msgid "请勿打扰"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:470
+msgid "隐身"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:473
+msgid "离线"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2670
+msgid "昵称"
+msgstr ""

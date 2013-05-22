@@ -42,11 +42,15 @@ if(NLS)
   find_package(Gettext)
 endif(NLS)
 
-#option(WITH_LIBEV "build in libev for async process" On)
+if(NLS AND GETTEXT_FOUND)
+    set(ENABLE_NLS true)
+    message(STATUS "Native Language Support: Yes")
+else(NLS AND GETTEXT_FOUND)
+    set(ENABLE_NLS false)
+    message(STATUS "Native Language Support: No")
+endif(NLS AND GETTEXT_FOUND)
 
-#if(WITH_LIBEV)
 find_package(EV REQUIRED)
-#endif(WITH_LIBEV)
 
 if(VERBOSE)
     add_definitions(-DLWQQ_VERBOSE_LEVEL=${VERBOSE})
@@ -56,8 +60,13 @@ endif(VERBOSE)
 
 option(SSL "Enable SSL Support " On)
 
+set(package pidgin-lwqq)
+set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
+configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
+
 add_subdirectory(src)
 add_subdirectory(res)
+add_subdirectory(po)
 
 option(UOA "ubuntu online account support" Off)
 if(UOA)

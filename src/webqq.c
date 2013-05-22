@@ -1,4 +1,6 @@
 #define PURPLE_PLUGINS
+#include <glib/gi18n.h>
+#include <locale.h>
 #include <plugin.h>
 #include <version.h>
 #include <smemory.h>
@@ -21,6 +23,7 @@
 #include "translate.h"
 #include "remote.h"
 #include "cgroup.h"
+
 
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
@@ -2667,7 +2670,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
     //ADD_HEADER("基本信息");
     ADD_STRING("QQ",b->qqnumber);
-    ADD_STRING("昵称",b->nick);
+    ADD_STRING(_("昵称"),b->nick);
     ADD_STRING("备注",b->markname);
     ADD_STRING("签名",b->long_nick);
     ADD_HEADER("个人信息");
@@ -2850,7 +2853,7 @@ init_plugin(PurplePlugin *plugin)
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    bindtextdomain(GETTEXT_PACKAGE , LOCALE_DIR);
+    bindtextdomain(GETTEXT_PACKAGE , LOCALEDIR);
     textdomain(GETTEXT_PACKAGE);
 #endif
 }

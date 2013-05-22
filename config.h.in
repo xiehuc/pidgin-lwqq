@@ -1,0 +1,11 @@
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+
+#cmakedefine ENABLE_NLS
+
+#define PACKAGE "@package@"
+#define LOCALEDIR "@localedir@"
+#define GETTEXT_PACKAGE "@package@"
+
+#endif /* __CONFIG_H__ */
+
