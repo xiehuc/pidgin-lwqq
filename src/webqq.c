@@ -249,7 +249,7 @@ static void add_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(err == 6 ){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","添加群过于频繁\n请等一段时间再试\n",NULL,NULL,NULL);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("ErrCode:6\nPlease try agagin later\n"),NULL,NULL,NULL);
     }
     lwqq_group_free(g);
 }
@@ -274,17 +274,17 @@ static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
         return;
     }
     if(err == LWQQ_EC_NO_RESULT){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","群信息获取失败",NULL,NULL,NULL);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("Get QQ Group Infomation Failed"),NULL,NULL,NULL);
         lwqq_group_free(g);
         return;
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
-    confirm->title = s_strdup("群确认");
-    confirm->input_label = s_strdup("附加理由");
+    confirm->title = s_strdup(_("Confirm QQ Group"));
+    confirm->input_label = s_strdup(_("Additional Reason"));
     char body[1024] = {0};
-#define ADD_INFO(k,v)  format_append(body,k":%s\n",v)
+#define ADD_INFO(k,v)  format_append(body,_(k":%s\n"),v)
     ADD_INFO("QQ",g->qq);
-    ADD_INFO("名称",g->name);
+    ADD_INFO("Name",g->name);
 #undef ADD_INFO
     confirm->body = s_strdup(body);
     confirm->cmd = _C_(3p,add_group,lc,confirm,g);
@@ -307,8 +307,8 @@ static void qq_add_group(PurplePluginAction* action)
     qq_account* ac = purple_connection_get_protocol_data(gc);
 
 
-    purple_request_input(gc, "添加群", "群号码", NULL, NULL, FALSE, FALSE, NULL, 
-            "查找", G_CALLBACK(search_group), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+    purple_request_input(gc,_("Add QQ Group"), _("QQ Number"), NULL, NULL, FALSE, FALSE, NULL, 
+            _("Search"), G_CALLBACK(search_group), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
 static void create_discu(qq_account* ac,PurpleRequestFields* root)
 {
@@ -335,14 +335,14 @@ static void qq_create_discu(PurplePluginAction* action)
     PurpleRequestFields* root = purple_request_fields_new();
     PurpleRequestFieldGroup* branch = purple_request_field_group_new("");
     purple_request_fields_add_group(root, branch);
-    leaf = purple_request_field_string_new("name", "讨论组名称", "未命名讨论组", FALSE);
+    leaf = purple_request_field_string_new("name", _("Discu Name"), _("UnName Discu"), FALSE);
     purple_request_field_string_set_editable(leaf, TRUE);
     purple_request_field_group_add_field(branch, leaf);
-    leaf = purple_request_field_string_new("members", "成员(用;分隔)", "", TRUE);
+    leaf = purple_request_field_string_new("members", _("members(seperate by ;)"), "", TRUE);
     purple_request_field_string_set_editable(leaf, TRUE);
     purple_request_field_group_add_field(branch, leaf);
 
-    purple_request_fields(gc, "创建讨论组", NULL, NULL, root, "创建", G_CALLBACK(create_discu), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+    purple_request_fields(gc, _("Create Discu"), NULL, NULL, root, _("Create"), G_CALLBACK(create_discu), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
 #if 0
 static void qq_open_recent(PurplePluginAction* action)
@@ -390,8 +390,8 @@ static void modify_self_longnick(LwqqClient* lc,LwqqConfirmTable* ct)
 static void display_self_longnick(LwqqClient* lc)
 {
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-    ct->title = s_strdup("修改个性签名");
-    ct->input_label = s_strdup("个性签名");
+    ct->title = s_strdup(_("Modify Self Longnick"));
+    ct->input_label = s_strdup(_("Longnick"));
     ct->input = s_strdup(lc->myself->long_nick);
     ct->cmd = _C_(2p,modify_self_longnick,lc,ct);
     show_confirm_table(lc, ct);
@@ -453,28 +453,28 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
     //status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-             "online", _("我在线上"), WEBQQ_STATUS_TYPE_ATTR);
+             "online", _("Online"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
-             "callme",_("Q我吧"),WEBQQ_STATUS_TYPE_ATTR);
+             "callme",_("Callme"),WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY,
-             "away", _("离开"), WEBQQ_STATUS_TYPE_ATTR);
+             "away", _("Away"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE,
-             "busy", _("忙碌"), WEBQQ_STATUS_TYPE_ATTR);
+             "busy", _("Busy"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE,
-             "slience", _("请勿打扰"), WEBQQ_STATUS_TYPE_ATTR);
+             "slience", _("Slience"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_INVISIBLE,
-             "hidden", _("隐身"), WEBQQ_STATUS_TYPE_ATTR);
+             "hidden", _("Hidden"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_OFFLINE,
-             "offline", _("离线"), WEBQQ_STATUS_TYPE_ATTR);
+             "offline", _("Offline"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-             "mobile", _("我在线上"), WEBQQ_STATUS_TYPE_ATTR);
+             "mobile", _("Online"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
 
 #undef WEBQQ_STATUS_TYPE_ATTR
@@ -576,7 +576,7 @@ static void group_come(LwqqClient* lc,LwqqGroup* group)
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     PurpleGroup* qun = purple_group_new(QQ_GROUP_DEFAULT_CATE);
-    PurpleGroup* talk = purple_group_new("讨论组");
+    PurpleGroup* talk = purple_group_new(_("Discu"));
     GHashTable* components;
     PurpleChat* chat;
     const char* type;
@@ -639,9 +639,9 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     char buf[512]={0};
-    snprintf(buf,sizeof(buf),"您收到一个离线文件: %s\n"
-             "到期时间: %s"
-             "<a href=\"%s\">点此下载</a>",
+    snprintf(buf,sizeof(buf),_("You Got a Offline File: %s\n"
+             "End timeline: %s"
+             "<a href=\"%s\">Click to download</a>"),
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
     serv_got_im(pc,serv_id_to_local(ac,msg->super.from),buf,PURPLE_MESSAGE_RECV,time(NULL));
 }
@@ -650,8 +650,8 @@ static void notify_offfile(LwqqClient* lc,LwqqMsgNotifyOfffile* notify)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     char buf[512]={0};
-    const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?"拒绝":"同意";
-    snprintf(buf,sizeof(buf),"对方%s接受离线文件(%s)\n",action,notify->filename);
+    const char* action = (notify->action==NOTIFY_OFFFILE_REFUSE)?_("Refuse"):_("Agree");
+    snprintf(buf,sizeof(buf),_("Peer %s Accept receive Offline file(%s)\n"),action,notify->filename);
     serv_got_im(pc,serv_id_to_local(ac,notify->super.from),buf,PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM,time(NULL));
 }
 static void input_notify(LwqqClient* lc,LwqqMsgInputNotify* input)
@@ -669,24 +669,24 @@ static void shake_message(LwqqClient* lc,LwqqMsgShakeMessage* shake)
 static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
 {
     char body_[1024] = {0};
-#define ADD_INFO(k,v)  if(v) format_append(body_,k":%s\n",v)
+#define ADD_INFO(k,v)  if(v) format_append(body_,_(k":%s\n"),v)
     ADD_INFO("QQ", buddy->qqnumber);
-    ADD_INFO("昵称", buddy->nick);
-    ADD_INFO("签名", buddy->personal);
-    ADD_INFO("性别", buddy->gender ? (strcmp(buddy->gender, "male") ? "女" : "男") : 0);
-    ADD_INFO("生肖", buddy->shengxiao ? sxarr[s_atoi(buddy->shengxiao,0)] : 0);
-    ADD_INFO("星座", buddy->constel ? xzarr[s_atoi(buddy->constel,0)] : 0);
-    ADD_INFO("血型", buddy->blood ? xxarr[s_atoi(buddy->blood,0)] : 0);
+    ADD_INFO("Nick", buddy->nick);
+    ADD_INFO("Longnick", buddy->personal);
+    ADD_INFO("Gender", buddy->gender ? (strcmp(buddy->gender, "male") ? _("Female") : _("Male")) : 0);
+    ADD_INFO("Shengxiao", buddy->shengxiao ? sxarr[s_atoi(buddy->shengxiao,0)] : 0);
+    ADD_INFO("Constellation", buddy->constel ? xzarr[s_atoi(buddy->constel,0)] : 0);
+    ADD_INFO("Blood Type", buddy->blood ? xxarr[s_atoi(buddy->blood,0)] : 0);
     //ADD_INFO("生日", buddy->birthday);
-    ADD_INFO("国籍", buddy->country);
-    ADD_INFO("省份", buddy->province);
-    ADD_INFO("城市", buddy->city);
-    ADD_INFO("电话", buddy->phone);
-    ADD_INFO("手机", buddy->mobile);
-    ADD_INFO("邮箱", buddy->email);
-    ADD_INFO("职业", buddy->occupation);
-    ADD_INFO("学校", buddy->college);
-    ADD_INFO("主页", buddy->homepage);
+    ADD_INFO("Country", buddy->country);
+    ADD_INFO("Province", buddy->province);
+    ADD_INFO("City", buddy->city);
+    ADD_INFO("Phone", buddy->phone);
+    ADD_INFO("Mobile", buddy->mobile);
+    ADD_INFO("Email", buddy->email);
+    ADD_INFO("Occupation", buddy->occupation);
+    ADD_INFO("College", buddy->college);
+    ADD_INFO("Homepage", buddy->homepage);
     //ADD_INFO("说明", buddy->);
 #undef ADD_INFO
     strncat(body,body_,buf_len-strlen(body));
@@ -702,13 +702,13 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
 {
     char body[1024]={0};
     LwqqGroup* g = find_group_by_gid(lc, msg->group_uin);
-    format_append(body,"申请的群:%s\n申请理由:%s\n",g->name,msg->msg);
+    format_append(body,_("Request QQ Group:%s\nRequest Reason:%s\n"),g->name,msg->msg);
     format_body_from_buddy(body,sizeof(body),buddy);
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-    ct->title = s_strdup("群申请确认");
+    ct->title = s_strdup(_("QQ Group Request Confirm"));
     ct->body = s_strdup(body);
     ct->flags = LWQQ_CT_ENABLE_IGNORE;
-    ct->input_label = s_strdup("拒绝理由");
+    ct->input_label = s_strdup(_("Deny Reason"));
     ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
     show_confirm_table(lc,ct);
     lwqq_buddy_free(buddy);
@@ -719,15 +719,15 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
     char body[1024]={0};
     switch(msg->type){
         case GROUP_CREATE:
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", "您创建了一个群", NULL, NULL, NULL);
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"), _("You create a new group"), NULL, NULL, NULL);
             break;
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
             {
                 if(!msg->group)
                     return;
-                snprintf(body,sizeof(body),"%s加入了群[%s]\n管理员:%s",
-                        msg->is_myself?"您":msg->member,
+                snprintf(body,sizeof(body),_("%s Added in QQ Group[%s]\nAdmin:%s"),
+                        msg->is_myself?_("You"):msg->member,
                         msg->group->name,
                         msg->admin);
                 if(msg->is_myself)
@@ -738,8 +738,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             {
                 if(!msg->group)
                     return;
-                snprintf(body,sizeof(body),"%s离开了群[%s]",
-                        msg->is_myself?"您":msg->member,
+                snprintf(body,sizeof(body),_("%s Leave QQ Group[%s]"),
+                        msg->is_myself?_("You"):msg->member,
                         msg->group->name);
                 PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
                 if(chat&&msg->is_myself){
@@ -749,8 +749,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             }
             break;
         case GROUP_REQUEST_JOIN_DENY:
-            snprintf(body,sizeof(body),"群[%s]拒绝了您的请求",msg->account);
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body, NULL, NULL, NULL);
+            snprintf(body,sizeof(body),_("QQ Group [%s] refused your request"),msg->account);
+            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"),body, NULL, NULL, NULL);
             break;
         case GROUP_REQUEST_JOIN:
             {
@@ -765,7 +765,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             return;
             break;
     }
-    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, "群系统消息", body,NULL, NULL, NULL);
+    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, ("QQ Group Sys Message"), body,NULL, NULL, NULL);
 }
 struct rewrite_pic_entry {
     LwqqGroup* owner;
@@ -994,7 +994,7 @@ static void kick_message(LwqqClient* lc,LwqqMsgKickMessage* kick)
     qq_account* ac = lwqq_client_userdata(lc);
     char* reason;
     if(kick->show_reason) reason = kick->reason;
-    else reason = "您被不知道什么东西踢下线了额";
+    else reason = _("Oups, You was kicked offline by somewhat");
     purple_connection_error_reason(ac->gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,reason);
 }
 static void verify_required_confirm(LwqqClient* lc,char* account,LwqqConfirmTable* ct)
@@ -1015,24 +1015,24 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system,LwqqBuddy* buddy
     if(system->type == VERIFY_REQUIRED) {
         char buf2[2048];
         LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-        ct->title = s_strdup("好友确认");
+        ct->title = s_strdup(_("Friend Confirm"));
         snprintf(buf2,sizeof(buf2),
-                "%s\n请求加您为好友\n附加信息:%s\n\n",system->account,system->verify_required.msg);
+                _("%s\nRequest as your friend\nAdditional Reason:%s\n\n"),system->account,system->verify_required.msg);
         format_body_from_buddy(buf2,sizeof(buf2),buddy);
         ct->body = s_strdup(buf2);
-        ct->exans_label = s_strdup("同意并加为好友");
-        ct->input_label = s_strdup("拒绝理由");
+        ct->exans_label = s_strdup(_("Agree and add back"));
+        ct->input_label = s_strdup(_("Refuse reason"));
         ct->flags = LWQQ_CT_ENABLE_IGNORE;
         ct->cmd = _C_(3p,verify_required_confirm,lc,s_strdup(system->account),ct);
         show_confirm_table(lc, ct);
         lwqq_buddy_free(buddy);
         lwqq_msg_free((LwqqMsg*)system);
     } else if(system->type == VERIFY_PASS_ADD) {
-        snprintf(buf1,sizeof(buf1),"%s通过了您的请求,并添加您为好友",system->account);
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
+        snprintf(buf1,sizeof(buf1),_("%s accept your request,and add back you as friend too"),system->account);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
     } else if(system->type == VERIFY_PASS) {
-        snprintf(buf1,sizeof(buf1),"%s通过了您的请求",system->account);
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"系统消息","添加好友",buf1,NULL,NULL);
+        snprintf(buf1,sizeof(buf1),_("%s accept your request"),system->account);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
     }
 }
 
@@ -1099,7 +1099,7 @@ static void lost_connection(LwqqClient* lc)
     if(!lwqq_client_valid(lc)) return ;
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = ac->gc;
-    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,"webqq掉线了,正在重新登录,请等待一会儿再重试");
+    purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,_("webqq lost connection,relogin now,please retry by hand later"));
 }
 void qq_msg_check(LwqqClient* lc)
 {
@@ -1334,10 +1334,10 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
 {
     switch(c->type){
         case LWQQ_CONTENT_OFFPIC:
-            qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
+            qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         case LWQQ_CONTENT_CFACE:
-            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, "发送图片失败", PURPLE_MESSAGE_ERROR, time(NULL));
+            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         default:break;
     }
@@ -1377,9 +1377,9 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
     purple_request_field_group_add_field(field_group, code_entry);
 
     purple_request_fields(ac->account, NULL,
-                          "验证码", NULL,
-                          fields, "确认", G_CALLBACK(input_verify_image),
-                          "取消", G_CALLBACK(cancel_verify_image),
+                          _("Captcha"), NULL,
+                          fields, _("OK"), G_CALLBACK(input_verify_image),
+                          _("Cancel"), G_CALLBACK(cancel_verify_image),
                           ac->account, NULL, NULL, code);
 
     return ;
@@ -1423,9 +1423,9 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     }
 
     if(table->exans_label||table->flags&LWQQ_CT_ENABLE_IGNORE||table->flags&LWQQ_CT_CHOICE_MODE){
-        PurpleRequestField* choice = purple_request_field_choice_new("choice", "请选择", table->answer);
-        purple_request_field_choice_add(choice,table->no_label?:"拒绝");
-        purple_request_field_choice_add(choice,table->yes_label?:"同意");
+        PurpleRequestField* choice = purple_request_field_choice_new("choice", _("Please Select"), table->answer);
+        purple_request_field_choice_add(choice,table->no_label?:_("Deny"));
+        purple_request_field_choice_add(choice,table->yes_label?:_("Accept"));
         if(table->exans_label)
             purple_request_field_choice_add(choice,table->exans_label);
         purple_request_field_group_add_field(field_group,choice);
@@ -1438,9 +1438,9 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
     }
 
     purple_request_fields(ac->gc, NULL,
-                          "确认请求", NULL,
-                          fields, "确认", G_CALLBACK(confirm_table_yes),
-                          table->flags&LWQQ_CT_ENABLE_IGNORE?"忽略":"拒绝", G_CALLBACK(confirm_table_no),
+                          _("Confirm"), NULL,
+                          fields, _("Confirm"), G_CALLBACK(confirm_table_yes),
+                          table->flags&LWQQ_CT_ENABLE_IGNORE?_("Ignore"):_("Deny"), G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
 }
 static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
@@ -1473,7 +1473,7 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     if(err==LWQQ_EC_LOGIN_ABNORMAL) {
-        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,"帐号出现问题,需要解禁");
+        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("Account Problem Occurs,Need lift the ban"));
         return ;
     } else if(err!=LWQQ_EC_OK) {
         purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
@@ -1503,7 +1503,7 @@ static void login_stage_2(LwqqAsyncEvset* evset,LwqqClient* lc)
     int errnum = lwqq_async_evset_get_result(evset);
     if(errnum > 0){
         qq_account* ac = lc->data;
-        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "获取好友|群列表失败");
+        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Get Friend|Group List Failed"));
         return;
     }
     LwqqAsyncEvset* set = lwqq_async_evset_new();
@@ -1531,7 +1531,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
     LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
 
     if(ev == NULL){
-        qq_sys_msg_write(ac,msg->type,serv_id,"消息内容过长",PURPLE_MESSAGE_ERROR,time(NULL));
+        qq_sys_msg_write(ac,msg->type,serv_id,_("Message body too long"),PURPLE_MESSAGE_ERROR,time(NULL));
     }else{
         int err = lwqq_async_event_get_result(ev);
         static char buf[1024]={0};
@@ -1539,9 +1539,9 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 
         if(conv && err > 0){
             if(err == WEBQQ_108)
-                snprintf(buf,sizeof(buf),"发送速度过快:\n%s",what);
+                snprintf(buf,sizeof(buf),_("Send too fast:\n%s"),what);
             else 
-                snprintf(buf,sizeof(buf),"发送失败(err:%d):\n%s",err,what);
+                snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
         if(err == WEBQQ_LOST_CONN){
@@ -1549,7 +1549,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         }
     }
     if(mmsg->upload_retry <0)
-        qq_sys_msg_write(ac, msg->type, serv_id, "上传内容超过重试次数", PURPLE_MESSAGE_ERROR, time(NULL));
+        qq_sys_msg_write(ac, msg->type, serv_id, _("Upload content retry over limit"), PURPLE_MESSAGE_ERROR, time(NULL));
 
     if(msg->type == LWQQ_MS_GROUP_MSG) mmsg->group.group_code = NULL;
     else if(msg->type == LWQQ_MS_DISCU_MSG) mmsg->discu.did = NULL;
@@ -1720,9 +1720,9 @@ static PurpleRoomlist* qq_get_all_group_list(PurpleConnection* gc)
 
     GList* fields = NULL;
     PurpleRoomlistField* field;
-    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"QQ号",QQ_ROOM_KEY_GID,FALSE);
+    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,_("QQ"),QQ_ROOM_KEY_GID,FALSE);
     fields = g_list_append(fields,field);
-    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,"类型",QQ_ROOM_TYPE,FALSE);
+    field = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING,_("Type"),QQ_ROOM_TYPE,FALSE);
     fields = g_list_append(fields,field);
     purple_roomlist_set_fields(list,fields);
 
@@ -1912,7 +1912,7 @@ static void change_category_back(LwqqAsyncEvent* event,void* data)
     if(event == NULL) goto clean;
     if(lwqq_async_event_get_result(event)!=0) {
         move_buddy_back(data);
-        purple_notify_error(ac->gc,NULL,"更改好友分组失败","服务器返回错误");
+        purple_notify_error(ac->gc,NULL,_("Change friend category failed"),_("Server fault returns"));
         return;
     } 
 clean:
@@ -1925,9 +1925,9 @@ static void add_passerby_to_friend_failed(LwqqAsyncEvent* ev,LwqqBuddy* b,void* 
     qq_account* ac = lc->data;
     b->cate_index = LWQQ_FRIEND_CATE_IDX_PASSERBY;
     if(ev->result == 0){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,NULL,"添加陌生人为好友","成功发送添加好友请求",move_buddy_back,data);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,NULL,_("Add passerby as friend"),_("Send add request successful"),move_buddy_back,data);
     }else
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"添加好友失败","???",move_buddy_back,data);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_ERROR,NULL,_("Add friend failed"),_("???"),move_buddy_back,data);
 }
 static void qq_change_category(PurpleConnection* gc,const char* who,const char* old_group,const char* new_group)
 {
@@ -1951,7 +1951,7 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     else{
         cate = lwqq_category_find_by_name(lc, new_group);
         if(cate ==NULL){
-            purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,"更改好友分组失败","不存在该分组",move_buddy_back,data);
+            purple_notify_message(gc,PURPLE_NOTIFY_MSG_ERROR,NULL,_("Change friend category failed"),_("no such category exists"),move_buddy_back,data);
             return;
         }else
             cate_index = cate->index;
@@ -2035,7 +2035,7 @@ static void add_friend_receipt(LwqqAsyncEvent* ev)
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(err == 6 ){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","添加好友过于频繁\n请等一段时间再试\n",NULL,NULL,NULL);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("ErrCode:6\nPlease try agagin later\n"),NULL,NULL,NULL);
     }
 }
 
@@ -2063,15 +2063,15 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* uni_i
         return;
     }
     if(err == LWQQ_EC_NO_RESULT){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","帐号不存在或不是主显帐号",NULL,NULL,NULL);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("Account not exists or not main display account"),NULL,NULL,NULL);
         goto failed;
     }
     if(!buddy->token){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,"错误消息","好友信息获取失败",NULL,NULL,NULL);
+        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("Get friend infomation failed"),NULL,NULL,NULL);
         goto failed;
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
-    confirm->title = s_strdup("好友确认");
+    confirm->title = s_strdup(_("Friend Confirm"));
     char body[1024] = {0};
     format_body_from_buddy(body,sizeof(body),buddy);
     confirm->body = s_strdup(body);
@@ -2084,24 +2084,6 @@ failed:
     s_free(message);
     s_free(uni_id);
 }
-/*#if PURPLE_OUTDATE
-static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group)
-{
-    qq_account* ac = purple_connection_get_protocol_data(pc);
-    const char* uni_id = purple_buddy_get_name(buddy);
-    const char *message = "";
-    LwqqBuddy* friend = lwqq_buddy_new();
-    //friend->qqnumber = s_strdup(qqnum);
-    LwqqFriendCategory* cate = lwqq_category_find_by_name(ac->qq,group->name,QQ_DEFAULT_CATE);
-    if(cate == NULL){
-        friend->cate_index = 0;
-    }else
-        friend->cate_index = cate->index;
-    LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
-    lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(message)));
-}
-#else*/
-
 static void delete_back_broken_buddy(PurpleConnection* pc,char* name)
 {
     qq_account* ac = pc->proto_data;
@@ -2171,11 +2153,11 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
     if(buddy->qqnumber)
         purple_notify_user_info_add_pair(info, "QQ", buddy->qqnumber);
     if(buddy->nick)
-        purple_notify_user_info_add_pair(info, "昵称", buddy->nick);
+        purple_notify_user_info_add_pair(info, _("Nick"), buddy->nick);
     if(buddy->markname)
-        purple_notify_user_info_add_pair(info, "备注", buddy->markname);
+        purple_notify_user_info_add_pair(info, _("Mark"), buddy->markname);
     if(buddy->long_nick)
-        purple_notify_user_info_add_pair(info, "签名", buddy->long_nick);
+        purple_notify_user_info_add_pair(info, _("Longnick"), buddy->long_nick);
     const char* client="";
     switch(buddy->client_type){
         case LWQQ_CLIENT_PC:
@@ -2191,7 +2173,7 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
             client="QQ For Pad";
             break;
     }
-    purple_notify_user_info_add_pair(info, "终端", client);
+    purple_notify_user_info_add_pair(info, _("Client"), client);
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
@@ -2237,10 +2219,10 @@ static void qq_block_chat(PurpleBlistNode* node)
     LwqqGroup* group = find_group_by_chat(chat);
 
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-    ct->title = s_strdup("屏蔽设置");
-    ct->no_label = s_strdup("不屏蔽");
-    ct->yes_label = s_strdup("接收不提醒");
-    ct->exans_label = s_strdup("完全屏蔽");
+    ct->title = s_strdup(_("Block Setting"));
+    ct->no_label = s_strdup(_("No Block"));
+    ct->yes_label = s_strdup(_("Slience Receive"));
+    ct->exans_label = s_strdup(_("Block"));
     ct->flags |= LWQQ_CT_CHOICE_MODE|LWQQ_CT_ENABLE_IGNORE;
     ct->answer = group->mask;
     ct->cmd = _C_(3p,set_cgroup_block,ct,lc,group);
@@ -2279,18 +2261,18 @@ static void qq_display_self_card(LwqqClient* lc,LwqqBusinessCard* card)
     PurpleRequestFieldGroup* g = purple_request_field_group_new("cards");
     purple_request_fields_add_group(fields, g);
     PurpleRequestField* f;
-    f = purple_request_field_string_new("name", "名称", card->name, FALSE);
+    f = purple_request_field_string_new("name", _("Name"), card->name, FALSE);
     purple_request_field_group_add_field(g, f);
-    f = purple_request_field_string_new("phone", "电话", card->phone, FALSE);
+    f = purple_request_field_string_new("phone", _("Phone"), card->phone, FALSE);
     purple_request_field_group_add_field(g, f);
-    f = purple_request_field_string_new("email", "邮箱", card->email, FALSE);
+    f = purple_request_field_string_new("email", _("Email"), card->email, FALSE);
     purple_request_field_group_add_field(g, f);
-    f = purple_request_field_string_new("remark", "备注", card->remark, TRUE);
+    f = purple_request_field_string_new("remark", _("Remark"), card->remark, TRUE);
     purple_request_field_group_add_field(g, f);
 
     qq_account* ac = lc->data;
-    purple_request_fields(ac->gc, "群名片", NULL, NULL, fields,
-            "更新", G_CALLBACK(self_card_ok), "取消", G_CALLBACK(self_card_cancel), 
+    purple_request_fields(ac->gc, _("Group Business Card"), NULL, NULL, fields,
+            _("Update"), G_CALLBACK(self_card_ok), _("Cancel"), G_CALLBACK(self_card_cancel), 
             ac->account, NULL, NULL, _P_(2p,card,lc));
 }
 static void qq_set_self_card(PurpleBlistNode* node)
@@ -2341,10 +2323,10 @@ static void qq_set_group_alias(PurpleBlistNode* node)
     char* type = g_hash_table_lookup(chat->components,QQ_ROOM_TYPE);
     if(type == NULL) return;
     if(strcmp(type,QQ_ROOM_TYPE_QUN)==0)
-        purple_request_input(ac->gc, "修改备注", "输入备注", NULL, NULL, FALSE, FALSE, NULL, 
-                "设置", G_CALLBACK(set_group_alias), "取消", G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
-    else purple_request_input(ac->gc,"设置主题","输入主题",
-            "注意:您设置的是讨论组.\n这个将会影响所有讨论组成员",NULL,FALSE,FALSE,NULL,
+        purple_request_input(ac->gc, _("Modify Mark"), _("Input Mark"), NULL, NULL, FALSE, FALSE, NULL, 
+                _("Update"), G_CALLBACK(set_group_alias), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
+    else purple_request_input(ac->gc,_("Set Topic"),_("Input Topic"),
+            _("Note:You are setting discu topic on server.\nWhich would affect all discu member"),NULL,FALSE,FALSE,NULL,
             "设置",G_CALLBACK(set_group_alias),"取消",G_CALLBACK(do_no_thing),ac->account,NULL,NULL,node);
 }
 static void qq_get_group_info(PurpleBlistNode* node)
@@ -2355,10 +2337,10 @@ static void qq_get_group_info(PurpleBlistNode* node)
     LwqqGroup* g = find_group_by_chat(chat);
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
 #define ADD_STRING(k,v) purple_notify_user_info_add_pair(info,k,v)
-    ADD_STRING("QQ",g->account);
-    ADD_STRING("名称",g->name);
-    ADD_STRING("备注",g->markname);
-    ADD_STRING("签名",g->memo);
+    ADD_STRING(_("QQ"),g->account);
+    ADD_STRING(_("Name"),g->name);
+    ADD_STRING(_("Mark"),g->markname);
+    ADD_STRING(_("Longnick"),g->memo);
     //ADD_STRING("创建人",g->owner);
     //ADD_STRING("创建时间",ctime(&g->createtime));
     purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
@@ -2371,8 +2353,8 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     qq_account* ac = lc->data;
     if(ev->result){
         char buf[64]={0};
-        snprintf(buf,sizeof(buf),"错误号:%d",ev->result);
-        purple_notify_warning(ac->account,"错误",buf,NULL);
+        snprintf(buf,sizeof(buf),_("Error Code:%d"),ev->result);
+        purple_notify_warning(ac->account,_("Error"),buf,NULL);
         return ;
     }
     if(history->total == 0) return ;
@@ -2433,8 +2415,8 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
     }
     snprintf(buf,sizeof(buf),"======online history end=======");
     purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
-    snprintf(buf,sizeof(buf),"合并%d条记录",count);
-    purple_notify_info(ac->gc,"消息记录合并",buf,NULL);
+    snprintf(buf,sizeof(buf),_("Merge %d Entry"),count);
+    purple_notify_info(ac->gc,_("Merge Online History"),buf,NULL);
     lwqq_historymsg_free(history);
     purple_log_free(log);
 }
@@ -2444,7 +2426,7 @@ static void download_online_history_continue(LwqqAsyncEvent* ev,LwqqBuddy* b,Lwq
     if((b&&history->total==0)||(g&&history->end == -1)){
         qq_account* ac = lc->data;
         if(TAILQ_EMPTY(&history->msg_list)){
-        purple_notify_info(ac->gc,"消息记录合并","合并0条记录",NULL);
+        purple_notify_info(ac->gc,_("Merge Online History"),_("Merge 0 Entry"),NULL);
         lwqq_historymsg_free(history);
         }else{
             merge_online_history(ev,NULL,g,history);
@@ -2479,7 +2461,7 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
         char* end;
         int day = strtoul(ct->input,&end,10);
         if(end == ct->input){
-            purple_notify_warning(ac->account,"错误","输入不合法",NULL);
+            purple_notify_warning(ac->account,_("Error"),_("Input Invalid"),NULL);
         }else{
             LwqqHistoryMsgList* history = lwqq_historymsg_list();
             history->row = 60;
@@ -2508,7 +2490,7 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
     LwqqBuddy* b = buddy->proto_data;
     if(b == NULL){
         if(strstr(buddy->name," ### "))
-            purple_notify_info(gc,"错误","临时会话不支持此功能",NULL);
+            purple_notify_info(gc,_("Error"),_("Tempory Session not support this function"),NULL);
         return;
     }
     LwqqHistoryMsgList* history = lwqq_historymsg_list();
@@ -2526,27 +2508,11 @@ static void qq_merge_group_history(PurpleChat* chat)
     if(g == NULL) return;
 
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-    ct->title = s_strdup("希望合并多少页的记录");
-    ct->body = s_strdup("每页有60条记录");
-    ct->input_label = s_strdup("页数");
+    ct->title = s_strdup(_("How many pages want to merge"));
+    ct->body = s_strdup(_("Each Page has 60 Entry"));
+    ct->input_label = s_strdup(_("Pages"));
     ct->cmd = _C_(3p,download_online_history_begin,g,ct,ac);
     show_confirm_table(lc, ct);
-    /*
-    struct qq_extra_info* info = get_extra_info(lc, g->gid);
-    LwqqHistoryMsgList* history = lwqq_historymsg_list();
-    history->row = 60;
-    history->begin = info->page?info->page-60:0;
-    history->end = info->total?info->total-60:0;
-    LwqqAsyncEvent* ev = lwqq_msg_group_history(lc, g, history);
-    if(LIST_EMPTY(&g->members)){
-        LwqqAsyncEvset* set = lwqq_async_evset_new();
-        lwqq_async_evset_add_event(set, ev);
-        ev = lwqq_info_get_group_detail_info(lc, g, NULL);
-        lwqq_async_evset_add_event(set, ev);
-        lwqq_async_add_evset_listener(set, _C_(4p,merge_online_history,ev,NULL,g,history));
-    }else
-        lwqq_async_add_event_listener(ev, _C_(4p,merge_online_history,ev,NULL,g,history));
-        */
 }
 static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
 {
@@ -2573,9 +2539,9 @@ static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
 
     g_string_append(level_output, " (");
     g_string_append(level_output, level_str);
-    g_string_append(level_output, "级)");
+    g_string_append(level_output, _("Level)"));
 
-    purple_notify_info(gc, "QQ等级", level_output->str, NULL);
+    purple_notify_info(gc, _("QQ Level"), level_output->str, NULL);
     g_string_free(level_output, TRUE);
 }
 static void qq_level_popup(PurpleBuddy* buddy)
@@ -2586,7 +2552,7 @@ static void qq_level_popup(PurpleBuddy* buddy)
     LwqqBuddy* b = buddy->proto_data;
     if(b == NULL){
         if(strstr(buddy->name," ### "))
-            purple_notify_info(gc,"错误","临时会话不支持此功能",NULL);
+            purple_notify_info(gc,_("Error"),_("Tempory Session not support this function"),NULL);
         return;
     }
 
@@ -2601,47 +2567,38 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
     if(PURPLE_BLIST_NODE_IS_BUDDY(node)) {
         PurpleBuddy* buddy = PURPLE_BUDDY(node);
         //LwqqBuddy* friend = buddy->proto_data;
-        action = purple_menu_action_new("访问空间",(PurpleCallback)qq_visit_qzone,node,NULL);
+        action = purple_menu_action_new(_("Visit QZone"),(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new("发送离线文件",(PurpleCallback)qq_send_offline_file,node,NULL);
+        action = purple_menu_action_new(_("Send Offline File"),(PurpleCallback)qq_send_offline_file,node,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new("发送邮件",(PurpleCallback)qq_send_mail,node,NULL);
+        action = purple_menu_action_new(_("Send Email"),(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
-        action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new("查看QQ等级",(PurpleCallback)qq_level_popup,buddy,NULL);
+        action = purple_menu_action_new(_("Display QQ Level"),(PurpleCallback)qq_level_popup,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
         LwqqGroup* group = qq_get_group_from_chat(chat);
         if(group&&group->type == LWQQ_GROUP_QUN){
-            action = purple_menu_action_new("获取信息",(PurpleCallback)qq_get_group_info,node,NULL);
+            action = purple_menu_action_new(_("Get Information"),(PurpleCallback)qq_get_group_info,node,NULL);
             act = g_list_append(act,action);
-            action = purple_menu_action_new("更改群名片",(PurpleCallback)qq_set_self_card,node,NULL);
+            action = purple_menu_action_new(_("Change Business Card"),(PurpleCallback)qq_set_self_card,node,NULL);
             act = g_list_append(act,action);
-            action = purple_menu_action_new("合并漫游记录",(PurpleCallback)qq_merge_group_history,chat,NULL);
+            action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_group_history,chat,NULL);
             act = g_list_append(act,action);
         }
-        action = purple_menu_action_new("屏蔽",(PurpleCallback)qq_block_chat,node,NULL);
+        action = purple_menu_action_new(_("Block"),(PurpleCallback)qq_block_chat,node,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new("修改备注",(PurpleCallback)qq_set_group_alias,node,NULL);
+        action = purple_menu_action_new(_("Change Mark"),(PurpleCallback)qq_set_group_alias,node,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new("退出群组", (PurpleCallback)qq_quit_group, node, NULL);
+        action = purple_menu_action_new(_("Quit Group"), (PurpleCallback)qq_quit_group, node, NULL);
         act = g_list_append(act,action);
     }
     return act;
 }
 static void client_connect_signals(PurpleConnection* gc)
 {
-/*
-    static int handle;
-
-    void* h = &handle;
-    */
-    //purple_signal_connect(purple_conversations_get_handle(),"conversation-created",h,
-    //        PURPLE_CALLBACK(on_create),gc);
-    //purple_signal_connect(purple_blist_get_handle(),"blist-node-add",h,
-            //PURPLE_CALLBACK(catch_to_add_chat),gc);
 }
 #if 0
 static const char* qq_list_emblem(PurpleBuddy* b)
@@ -2667,30 +2624,30 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 #define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
     //ADD_HEADER("基本信息");
-    ADD_STRING("QQ",b->qqnumber);
-    ADD_STRING(_("昵称"),b->nick);
-    ADD_STRING("备注",b->markname);
-    ADD_STRING("签名",b->long_nick);
-    ADD_HEADER("个人信息");
-    ADD_STRING("性别", strcmp(b->gender, "male") ? "女" : "男");
-    ADD_STRING("生肖",sxarr[s_atoi(b->shengxiao,0)]);
-    ADD_STRING("星座",xzarr[s_atoi(b->constel,0)]);
-    ADD_STRING("血型",xxarr[s_atoi(b->blood,0)]);
+    ADD_STRING(_("QQ"),b->qqnumber);
+    ADD_STRING(_("Nick"),b->nick);
+    ADD_STRING(_("Mark"),b->markname);
+    ADD_STRING(_("Longnick"),b->long_nick);
+    ADD_HEADER(_("Self Information"));
+    ADD_STRING(_("Gender"), strcmp(b->gender, "male") ? _("Female") : _("Male"));
+    ADD_STRING(_("Shengxiao"),sxarr[s_atoi(b->shengxiao,0)]);
+    ADD_STRING(_("Constellation"),xzarr[s_atoi(b->constel,0)]);
+    ADD_STRING(_("Blood Type"),xxarr[s_atoi(b->blood,0)]);
     struct tm *tm_ = localtime(&b->birthday);
-    strftime(buf,sizeof(buf),"%Y年%m月%d日",tm_);
-    ADD_STRING("生日",buf);
-    ADD_HEADER("住宅信息");
-    ADD_STRING("国籍",b->country);
-    ADD_STRING("省份",b->province);
-    ADD_STRING("城市",b->city);
-    ADD_HEADER("通讯信息");
-    ADD_STRING("电话",b->phone);
-    ADD_STRING("手机",b->mobile);
-    ADD_STRING("邮箱",b->email);
-    ADD_STRING("职业",b->occupation);
-    ADD_STRING("学校",b->college);
-    ADD_STRING("网页",b->homepage);
-    ADD_STRING("简介","");
+    strftime(buf,sizeof(buf),_("%Y year %m mon %d day"),tm_);
+    ADD_STRING(_("Birthday"),buf);
+    ADD_HEADER(_("Place Information"));
+    ADD_STRING(_("Contry"),b->country);
+    ADD_STRING(_("Province"),b->province);
+    ADD_STRING(_("City"),b->city);
+    ADD_HEADER(_("Conmunicate Information"));
+    ADD_STRING(_("Phone"),b->phone);
+    ADD_STRING(_("Mobile"),b->mobile);
+    ADD_STRING(_("Email"),b->email);
+    ADD_STRING(_("Occupation"),b->occupation);
+    ADD_STRING(_("College"),b->college);
+    ADD_STRING(_("Homepage"),b->homepage);
+    //ADD_STRING("简介","");
     purple_notify_userinfo(gc, who?who:try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
     //if who is not NULL,this is a group member 
     //detail info display.we should free buddy.
@@ -2737,7 +2694,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     LwqqClient* lc = ac->qq;
     LwqqGroup* discu = opend_chat_index(ac,id);
     if(discu->type != LWQQ_GROUP_DISCU){
-        purple_notify_info(gc,"错误","只有讨论组才能增加成员",NULL);
+        purple_notify_info(gc,_("Error"),_("Only Discu Can Add new member"),NULL);
         return;
     }
     LwqqBuddy* b = NULL;
@@ -2825,25 +2782,23 @@ init_plugin(PurplePlugin *plugin)
 {
     PurpleAccountOption *option;
     GList* options = NULL;
-    option = purple_account_option_bool_new("忽略接收消息字体", "disable_custom_font_face", FALSE);
+    option = purple_account_option_bool_new(_("Ignore Received Message Font Family"), "disable_custom_font_face", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("忽略接收消息文字大小", "disable_custom_font_size", FALSE);
+    option = purple_account_option_bool_new(_("Ignore Received Message Font Size"), "disable_custom_font_size", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("暗色主题下文字加亮", "dark_theme_fix", FALSE);
+    option = purple_account_option_bool_new(_("Text Lighter In Dark Theme"), "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("消息去重","remove_duplicated_msg",FALSE);
+    option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("版本统计", "version_statics", TRUE);
+    option = purple_account_option_bool_new(_("Version Statics"), "version_statics", TRUE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("调试文件传输", "debug_file_send", FALSE);
+    option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new("发送离线文件不使用Expected:100 Continue","dont_expected_100_continue",FALSE);
+    option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
-    //option = purple_account_option_bool_new("启动后加载所有群", "auto_load_group", FALSE);
-    //options = g_list_append(options, option);
-    option = purple_account_option_string_new("忽略的组(兼容recent plugin)", "recent_group_name", "Recent Contacts");
+    option = purple_account_option_string_new(_("Ignore Group(Compatible with recent plugin)"), "recent_group_name", "Recent Contacts");
     options = g_list_append(options, option);
-    option = purple_account_option_int_new("发送Relink间隔(m)", "relink_retry", 0);
+    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 0);
     options = g_list_append(options, option);
 
     webqq_prpl_info.protocol_options = options;
@@ -2880,19 +2835,19 @@ static void version_statics_dlg(qq_account* ac)
     const char* v = lwdb_userdb_read(ac->db, "v");
     if(v == NULL){
         LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
-        ct->title = s_strdup("需要您的注意");
+        ct->title = s_strdup(_("Need Your Attention"));
         char body[1024];
-        snprintf(body,sizeof(body),"为了支持pidgin-lwqq的持续发展,\n"
-                "需要统计版本数量!仅仅只需要一个版本号而已!!,以下是相关信息:\n"
-                "说明:https://github.com/xiehuc/pidgin-lwqq/wiki/version-statistics\n"
-                "频率:每个版本第一次运行\n"
-                "地址:http://pidginlwqq.sinaapp.com/statics.php\n"
+        snprintf(body,sizeof(body),_("To Support the sustained development of pidgin-lwqq,\n"
+                "Need statistics version count!Really Just a version number only!!,following releated information:\n"
+                "Note:https://github.com/xiehuc/pidgin-lwqq/wiki/version-statistics\n"
+                "Frequent:First run of each version\n"
+                "Url:http://pidginlwqq.sinaapp.com/statics.php\n"
                 "POST:v=%s\n"
-                "代码:%s:%d\n",
+                "Code:%s:%d\n"),
                 info.version,_FILE_NAME_,__LINE__);
         ct->body = s_strdup(body);
-        ct->yes_label = s_strdup("同意");
-        ct->no_label = s_strdup("拒绝");
+        ct->yes_label = s_strdup(_("Agree"));
+        ct->no_label = s_strdup(_("Deny"));
         ct->cmd = _C_(2p,version_statics,ac,ct);
         show_confirm_table(ac->qq, ct);
         lwdb_userdb_write(ac->db, "v", info.version);
@@ -2926,7 +2881,7 @@ static void qq_login(PurpleAccount *account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     if(password==NULL||strcmp(password,"")==0) {
-        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,"密码为空");
+        purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,_("Password is empty"));
         return;
     }
     g_ref_count ++ ;
