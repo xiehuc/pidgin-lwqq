@@ -34,9 +34,9 @@
 
 #define DISPLAY_VERSION "0.1"
 #define DBGID   "webqq"
-#define QQ_DEFAULT_CATE "好友"
-#define QQ_PASSERBY_CATE "陌生人"
-#define QQ_GROUP_DEFAULT_CATE "聊天"
+#define QQ_DEFAULT_CATE _("Friend")
+#define QQ_PASSERBY_CATE _("Passerby")
+#define QQ_GROUP_DEFAULT_CATE _("Chat")
 //this is qqnumber of a group
 #define QQ_ROOM_KEY_QUN_ID "account"
 #define QQ_ROOM_KEY_GID "gid"
