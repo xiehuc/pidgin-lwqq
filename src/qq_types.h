@@ -1,8 +1,6 @@
 #ifndef QQ_TYPES_H_H
 #define QQ_TYPES_H_H
 
-#include <glib/gi18n.h>
-#include <locale.h>
 #include <type.h>
 #include <connection.h>
 #include "msg.h"
@@ -10,6 +8,13 @@
 #include "lwdb.h"
 #include "logger.h"
 #include "config.h"
+
+#ifdef ENABLE_NLS
+#include <glib/gi18n.h>
+#include <locale.h>
+#else
+#define _(s) s
+#endif
 
 #define QQ_MAGIC 0x4153
 #define QQ_USE_FAST_INDEX 1

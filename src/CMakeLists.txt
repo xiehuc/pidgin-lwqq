@@ -36,6 +36,7 @@ ADD_LIBRARY(webqq MODULE
 include_directories(
   ${PURPLE_INCLUDE_DIRS}
   ${GLIB_INCLUDE_DIRS}
+  ${ZLIB_INCLUDE_DIRS}
   liblwqq
   ${CMAKE_CURRENT_BINARY_DIR}
   )
@@ -60,6 +61,7 @@ target_link_libraries(webqq
   ${PURPLE_LIBRARIES}
   ${GLIB_LIBRARIES}
   ${CURL_LIBRARIES}
+  ${ZLIB_LIBRARIES}
   )
 
 
