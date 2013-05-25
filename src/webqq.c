@@ -2627,7 +2627,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_STRING(_("Constellation"),qq_constel_to_str(b->constel));
     ADD_STRING(_("Blood Type"),qq_blood_to_str(b->blood));
     struct tm *tm_ = localtime(&b->birthday);
-    strftime(buf,sizeof(buf),_("%Y year %m mon %d day"),tm_);
+    strftime(buf,sizeof(buf),_("%Y-%m-%d"),tm_);
     ADD_STRING(_("Birthday"),buf);
     ADD_HEADER(_("Place Information"));
     ADD_STRING(_("Contry"),b->country);

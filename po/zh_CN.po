@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-23 15:08+0800\n"
+"POT-Creation-Date: 2013-05-25 18:56+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2630
-msgid "%Y year %m mon %d day"
-msgstr ""
+msgid "%Y-%m-%d"
+msgstr "%Y-%m-%d"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1013
 #, c-format
@@ -211,7 +211,7 @@ msgstr "更改备注"
 msgid "Change friend category failed"
 msgstr "更改好友分组失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:39
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:44
 msgid "Chat"
 msgstr "聊天"
 
@@ -353,7 +353,7 @@ msgstr "文件传输"
 msgid "File transport timeout"
 msgstr "文件传输超时"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:37
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:42
 msgid "Friend"
 msgstr "好友"
 
@@ -583,7 +583,7 @@ msgstr "您被不知道什么东西给踢下线了"
 msgid "Pages"
 msgstr "页数"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:38
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.h:43
 msgid "Passerby"
 msgstr "陌生人"
 

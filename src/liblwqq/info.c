@@ -85,6 +85,59 @@ static int lwqq_gdb_list_buddies(LwqqClient* lc)
  * do head is used in this.
  */
 
+static char* ibmpc_ascii_character_convert(char *str)
+{
+    static char buf[256];
+    char *ptr = str;
+    char *write = buf;
+    const char* spec;
+    while(*ptr!='\0'){
+        switch(*ptr){
+            case 0x01:spec="☺";break;
+            case 0x02:spec="☻";break;
+            case 0x03:spec="♥";break;
+            case 0x04:spec="◆";break;
+            case 0x05:spec="♣";break;
+            case 0x06:spec="♠";break;
+            case 0x07:spec="⚫";break;
+            case 0x08:spec="⚫";break;
+            case 0x09:spec="⚪";break;
+            case 0x0A:spec="⚪";break;
+            case 0x0B:spec="♂";break;
+            case 0x0C:spec="♁";break;
+            case 0x0D:spec="♪";break;
+            case 0x0E:spec="♬";break;
+            case 0x0F:spec="☼";break;
+            case 0x10:spec="▶";break;
+            case 0x11:spec="◀";break; 
+            case 0x12:spec="↕";break;
+            case 0x13:spec="‼";break;
+            case 0x14:spec="¶";break;
+            case 0x15:spec="§";break;
+            case 0x16:spec="▁";break;
+            case 0x17:spec="↨";break;
+            case 0x18:spec="↑";break;
+            case 0x19:spec="↓";break;
+            case 0x1A:spec="→";break;
+            case 0x1B:spec="←";break;
+            case 0x1C:spec="∟";break;
+            case 0x1D:spec="↔";break;
+            case 0x1E:spec="▲";break;
+            case 0x1F:spec="▼";break;
+            default:
+                *write++ = *ptr;
+                ptr++;
+                continue;
+                break;
+        }
+        strcpy(write,spec);
+        write+=strlen(write);
+        ptr++;
+    }
+    *write = '\0';
+    s_free(str);
+    return s_strdup(buf);
+}
 
 static void do_change_markname(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,char* mark)
 {
@@ -271,9 +324,7 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(allow, "allow");
         SET_BUDDY_INFO(college, "college");
         SET_BUDDY_INFO(reg_time, "reg_time");
-        //SET_BUDDY_INFO(constel, "constel");
         buddy->stat = s_atoi(json_parse_simple_value(json,"constel"),LWQQ_UNKNOW);
-        //SET_BUDDY_INFO(blood, "blood");
         buddy->blood = s_atoi(json_parse_simple_value(json,"blood"),LWQQ_UNKNOW);
         SET_BUDDY_INFO(homepage, "homepage");
         buddy->stat = s_atoi(json_parse_simple_value(json,"stat"),LWQQ_STATUS_LOGOUT);
@@ -281,8 +332,8 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
         SET_BUDDY_INFO(personal, "personal");
-        SET_BUDDY_INFO(nick, "nick");
-        //SET_BUDDY_INFO(shengxiao, "shengxiao");
+        //SET_BUDDY_INFO(nick, "nick");
+        lwqq__override(buddy->nick,ibmpc_ascii_character_convert(lwqq__json_get_string(json,"nick")));
         buddy->shengxiao = s_atoi(json_parse_simple_value(json,"shengxiao"),LWQQ_UNKNOW);
         SET_BUDDY_INFO(email, "email");
         buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_PC);
@@ -1297,59 +1348,6 @@ void lwqq_info_get_all_friend_qqnumbers(LwqqClient *lc, LwqqErrorCode *err)
 }
 
 
-static char* ibmpc_ascii_character_convert(char *str)
-{
-    static char buf[256];
-    char *ptr = str;
-    char *write = buf;
-    const char* spec;
-    while(*ptr!='\0'){
-        switch(*ptr){
-            case 0x01:spec="☺";break;
-            case 0x02:spec="☻";break;
-            case 0x03:spec="♥";break;
-            case 0x04:spec="◆";break;
-            case 0x05:spec="♣";break;
-            case 0x06:spec="♠";break;
-            case 0x07:spec="⚫";break;
-            case 0x08:spec="⚫";break;
-            case 0x09:spec="⚪";break;
-            case 0x0A:spec="⚪";break;
-            case 0x0B:spec="♂";break;
-            case 0x0C:spec="♁";break;
-            case 0x0D:spec="♪";break;
-            case 0x0E:spec="♬";break;
-            case 0x0F:spec="☼";break;
-            case 0x10:spec="▶";break;
-            case 0x11:spec="◀";break; 
-            case 0x12:spec="↕";break;
-            case 0x13:spec="‼";break;
-            case 0x14:spec="¶";break;
-            case 0x15:spec="§";break;
-            case 0x16:spec="▁";break;
-            case 0x17:spec="↨";break;
-            case 0x18:spec="↑";break;
-            case 0x19:spec="↓";break;
-            case 0x1A:spec="→";break;
-            case 0x1B:spec="←";break;
-            case 0x1C:spec="∟";break;
-            case 0x1D:spec="↔";break;
-            case 0x1E:spec="▲";break;
-            case 0x1F:spec="▼";break;
-            default:
-                *write++ = *ptr;
-                ptr++;
-                continue;
-                break;
-        }
-        strcpy(write,spec);
-        write+=strlen(write);
-        ptr++;
-    }
-    *write = '\0';
-    s_free(str);
-    return s_strdup(buf);
-}
 /**
  * Parse group members info
  * we only get the "nick" and the "uin", and get the members' qq number.
