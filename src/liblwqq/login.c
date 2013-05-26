@@ -516,9 +516,9 @@ static LwqqAsyncEvent* set_online_status(LwqqClient *lc,const char *status)
     /* Create a POST request */
     req = lwqq_http_create_default_request(lc,WEBQQ_D_HOST"/channel/login2", NULL);
 
-    lwqq_puts("[set online status]\n");
+    lwqq_verbose(3,"%s\n",msg);
     /* Set header needed by server */
-    req->set_header(req, "Cookie2", "$Version=1");
+    //req->set_header(req, "Cookie2", "$Version=1");
     req->set_header(req, "Referer", WEBQQ_D_REF_URL);
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     
