@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-25 18:56+0800\n"
+"POT-Creation-Date: 2013-05-27 17:44+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -257,11 +257,11 @@ msgid "Create"
 msgstr "创建"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
-msgid "Create Discu"
+msgid "Create Discussion"
 msgstr "创建讨论组"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:421
-msgid "Create Discu Group"
+msgid "Create Discussion Group"
 msgstr "创建讨论组"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2788
@@ -279,11 +279,11 @@ msgid "Deny Reason"
 msgstr "拒绝理由"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:572
-msgid "Discu"
+msgid "Discussion"
 msgstr "讨论组"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
-msgid "Discu Name"
+msgid "Discussion Name"
 msgstr "讨论组名称"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2571
@@ -527,8 +527,8 @@ msgstr "不屏蔽"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2322
 msgid ""
-"Note:You are setting discu topic on server.\n"
-"Which would affect all discu member"
+"Note:You are setting discussion topic on server.\n"
+"Which would affect all discussion member"
 msgstr ""
 "注意:您正在设置服务器端讨论组的主题.\n"
 "所有讨论组成员都会受到影响"
@@ -556,7 +556,7 @@ msgid "Online"
 msgstr "我在线上"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2690
-msgid "Only Discu Can Add new member"
+msgid "Only Discussion Can Add new member"
 msgstr "只有讨论组能够添加成员"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:20
@@ -840,8 +840,8 @@ msgid "Type"
 msgstr "类型"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
-msgid "UnName Discu"
-msgstr "未命名讨论足"
+msgid "UnName Discussion"
+msgstr "未命名讨论组"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2268
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2320

@@ -328,14 +328,14 @@ static void qq_create_discu(PurplePluginAction* action)
     PurpleRequestFields* root = purple_request_fields_new();
     PurpleRequestFieldGroup* branch = purple_request_field_group_new("");
     purple_request_fields_add_group(root, branch);
-    leaf = purple_request_field_string_new("name", _("Discu Name"), _("UnName Discu"), FALSE);
+    leaf = purple_request_field_string_new("name", _("Discussion Name"), _("UnName Discussion"), FALSE);
     purple_request_field_string_set_editable(leaf, TRUE);
     purple_request_field_group_add_field(branch, leaf);
     leaf = purple_request_field_string_new("members", _("members(seperate by ;)"), "", TRUE);
     purple_request_field_string_set_editable(leaf, TRUE);
     purple_request_field_group_add_field(branch, leaf);
 
-    purple_request_fields(gc, _("Create Discu"), NULL, NULL, root, _("Create"), G_CALLBACK(create_discu), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
+    purple_request_fields(gc, _("Create Discussion"), NULL, NULL, root, _("Create"), G_CALLBACK(create_discu), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
 #if 0
 static void qq_open_recent(PurplePluginAction* action)
@@ -418,7 +418,7 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     //m = g_list_append(m, act);
     act = purple_plugin_action_new(_("Add QQ Group"),qq_add_group);
     m = g_list_append(m, act);
-    act = purple_plugin_action_new(_("Create Discu Group"),qq_create_discu);
+    act = purple_plugin_action_new(_("Create Discussion Group"),qq_create_discu);
     m = g_list_append(m, act);
     act = purple_plugin_action_new(_("Modify Self LongNick"),qq_modify_self_longnick);
     m = g_list_append(m, act);
@@ -569,7 +569,7 @@ static void group_come(LwqqClient* lc,LwqqGroup* group)
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
     PurpleGroup* qun = purple_group_new(QQ_GROUP_DEFAULT_CATE);
-    PurpleGroup* talk = purple_group_new(_("Discu"));
+    PurpleGroup* talk = purple_group_new(_("Discussion"));
     GHashTable* components;
     PurpleChat* chat;
     const char* type;
@@ -2319,7 +2319,7 @@ static void qq_set_group_alias(PurpleBlistNode* node)
         purple_request_input(ac->gc, _("Modify Mark"), _("Input Mark"), NULL, NULL, FALSE, FALSE, NULL, 
                 _("Update"), G_CALLBACK(set_group_alias), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, node);
     else purple_request_input(ac->gc,_("Set Topic"),_("Input Topic"),
-            _("Note:You are setting discu topic on server.\nWhich would affect all discu member"),NULL,FALSE,FALSE,NULL,
+            _("Note:You are setting discussion topic on server.\nWhich would affect all discussion member"),NULL,FALSE,FALSE,NULL,
             "设置",G_CALLBACK(set_group_alias),"取消",G_CALLBACK(do_no_thing),ac->account,NULL,NULL,node);
 }
 static void qq_get_group_info(PurpleBlistNode* node)
@@ -2687,7 +2687,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     LwqqClient* lc = ac->qq;
     LwqqGroup* discu = opend_chat_index(ac,id);
     if(discu->type != LWQQ_GROUP_DISCU){
-        purple_notify_info(gc,_("Error"),_("Only Discu Can Add new member"),NULL);
+        purple_notify_info(gc,_("Error"),_("Only Discussion Can Add new member"),NULL);
         return;
     }
     LwqqBuddy* b = NULL;

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-25 18:56+0800\n"
+"POT-Creation-Date: 2013-05-27 17:44+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,11 +83,11 @@ msgid "Cancel"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
-msgid "Discu Name"
+msgid "Discussion Name"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:331
-msgid "UnName Discu"
+msgid "UnName Discussion"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:334
@@ -95,7 +95,7 @@ msgid "members(seperate by ;)"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
-msgid "Create Discu"
+msgid "Create Discussion"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:338
@@ -122,7 +122,7 @@ msgid "Self Center"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:421
-msgid "Create Discu Group"
+msgid "Create Discussion Group"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:423
@@ -164,7 +164,7 @@ msgid "Offline"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:572
-msgid "Discu"
+msgid "Discussion"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:635
@@ -477,8 +477,8 @@ msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2322
 msgid ""
-"Note:You are setting discu topic on server.\n"
-"Which would affect all discu member"
+"Note:You are setting discussion topic on server.\n"
+"Which would affect all discussion member"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2349
@@ -637,7 +637,7 @@ msgid "Homepage"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2690
-msgid "Only Discu Can Add new member"
+msgid "Only Discussion Can Add new member"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2778
