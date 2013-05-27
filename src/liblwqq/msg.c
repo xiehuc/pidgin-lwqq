@@ -1636,7 +1636,7 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
             case LWQQ_CONTENT_CFACE:
                 //[\"cface\",\"group\",\"0C3AED06704CA9381EDCC20B7F552802.jPg\"]
                 if(c->data.cface.name){
-                    if(msg_type == LWQQ_MS_GROUP_MSG)
+                    if(msg_type == LWQQ_MS_GROUP_MSG || msg_type == LWQQ_MS_DISCU_MSG)
                         format_append(buf,"["KEY("cface")","KEY("group")","KEY("%s")"],",
                                 c->data.cface.name);
                     else if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG)
@@ -1929,6 +1929,10 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
         apistr = "send_sess_msg2";
     }else if(msg->super.super.type == LWQQ_MS_DISCU_MSG){
         format_append(data,"\"did\":\"%s\",",mmsg->discu.did);
+        if(has_cface){
+            format_append(data,"\"key\":\"%s\",\"sig\":\"%s\",",
+                    lc->gface_key,lc->gface_sig);
+        }
         apistr = "send_discu_msg2";
     }else{
         //this would never come.
