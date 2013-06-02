@@ -15,6 +15,10 @@
 #include "queue.h"
 #include "type.h"
 
+/* msg type bits:right->left
+ *  1 |  1  | 32 | many
+ * SEQ|EMPTY|TYPE|SUBTYPE
+ */
 typedef enum LwqqMsgType {
     LWQQ_MF_SEQ = 1<<1,
     LWQQ_MT_MESSAGE = 1<<3|LWQQ_MF_SEQ,
@@ -22,6 +26,7 @@ typedef enum LwqqMsgType {
     LWQQ_MS_GROUP_MSG = LWQQ_MT_MESSAGE|(2<<8),
     LWQQ_MS_DISCU_MSG = LWQQ_MT_MESSAGE|(3<<8),
     LWQQ_MS_SESS_MSG = LWQQ_MT_MESSAGE|(4<<8), //group whisper message
+    LWQQ_MS_GROUP_WEB_MSG = LWQQ_MT_MESSAGE|(5<<8),
 
     LWQQ_MT_STATUS_CHANGE = 2<<3,
     LWQQ_MT_KICK_MESSAGE = 3<<3,
@@ -95,6 +100,13 @@ typedef struct LwqqMsgContent {
     TAILQ_ENTRY(LwqqMsgContent) entries;
 }LwqqMsgContent;
 
+typedef TAILQ_HEAD(LwqqMsgContentHead, LwqqMsgContent) LwqqMsgContentHead;
+typedef enum {
+    LWQQ_FONT_BOLD=1<<1,
+    LWQQ_FONT_ITALIC=1<<2,
+    LWQQ_FONT_UNDERLINE=1<<3,
+}LwqqFontStyle;
+
 typedef struct LwqqMsgMessage {
     LwqqMsgSeq super;
     time_t time;
@@ -107,6 +119,10 @@ typedef struct LwqqMsgMessage {
             char *send; /* only group use it to identify who send the group message */
             char *group_code; /* only avaliable in group message */
         }group;
+        struct { 
+            char* send;
+            char* group_code;
+        }group_web;
         struct {
             char *id;   /* only sess msg use it.means gid */
             char *group_sig; /* you should fill it before send */
@@ -125,8 +141,18 @@ typedef struct LwqqMsgMessage {
     } f_style;
     char f_color[7];
 
-    TAILQ_HEAD(LwqqMsgContentHead, LwqqMsgContent) content;
+    LwqqMsgContentHead content;
 } LwqqMsgMessage;
+
+typedef struct LwqqGroupWebMessage {
+    LwqqMsgSeq super;
+    char* group_code;
+    int group_type;
+    int ver;
+    char* send;
+
+    LwqqMsgContentHead content;
+}LwqqGroupWebMessage;
 
 typedef struct LwqqMsgStatusChange {
     LwqqMsg super;

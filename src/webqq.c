@@ -1119,6 +1119,7 @@ void qq_msg_check(LwqqClient* lc)
                         break;
                     case LWQQ_MS_GROUP_MSG:
                     case LWQQ_MS_DISCU_MSG:
+                    case LWQQ_MS_GROUP_WEB_MSG:
                         res = group_message(lc,(LwqqMsgMessage*)msg->msg);
                         break;
                     case LWQQ_MS_SESS_MSG:

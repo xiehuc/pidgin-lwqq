@@ -59,6 +59,7 @@ static struct LwqqStrMapEntry_ msg_type_map[] = {
     {"group_message",           LWQQ_MS_GROUP_MSG,          },
     {"discu_message",           LWQQ_MS_DISCU_MSG,          },
     {"sess_message",            LWQQ_MS_SESS_MSG,           },
+    {"group_web_message",       LWQQ_MS_GROUP_WEB_MSG,      },
     {"buddies_status_change",   LWQQ_MT_STATUS_CHANGE,      },
     {"kick_message",            LWQQ_MT_KICK_MESSAGE,       },
     {"system_message",          LWQQ_MT_SYSTEM,             },
@@ -177,6 +178,53 @@ static int parse_content(json_t *json,const char* key, LwqqMsgMessage* opaque)
         msg->f_size = 8;
     }
 
+    return 0;
+}
+
+static int parse_xml_content(const char* xml,LwqqMsgMessage* msg)
+{
+    if(!xml||!msg) return -1;
+    const char* ptr=xml;
+    const char* s;
+    size_t len;
+    LwqqMsgContent* c;
+    while((ptr = strstr(ptr+1,"<n t"))!=NULL){
+        ptr = strstr(ptr,"t=\"");
+        if(ptr==NULL) continue;
+        char type = *(ptr+3);
+        switch(type){
+            case 'h':
+                break;//unknow h
+            case 't':
+                c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_STRING;
+                s = strstr(ptr,"s=\"")+3;
+                len = strchr(s,'"')-s;
+                c->data.str = strncpy(s_malloc0(len+1),s,len);
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+                break;
+            case 'b'://unknow b
+                c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_STRING;
+                c->data.str = s_strdup("  ");
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+                break;
+            case 'r':
+                c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_STRING;
+                c->data.str = s_strdup("\n");
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+                break;
+            case 'i':
+                c = s_malloc0(sizeof(*c));
+                c->type = LWQQ_CONTENT_STRING;
+                s = strstr(ptr,"s=\"")+3;
+                len = strchr(s,'"')-s;
+                c->data.str = strncpy(s_malloc0(len+1),s,len);
+                TAILQ_INSERT_TAIL(&msg->content,c,entries);
+                break;
+        }
+    }
     return 0;
 }
 
@@ -482,6 +530,9 @@ static void msg_message_free(LwqqMsg *opaque)
     }else if(opaque->type == LWQQ_MS_DISCU_MSG){
         s_free(msg->discu.send);
         s_free(msg->discu.did);
+    }else if(opaque->type == LWQQ_MS_GROUP_WEB_MSG){
+        s_free(msg->group_web.send);
+        s_free(msg->group_web.group_code);
     }
 
     LwqqMsgContent *c;
@@ -730,9 +781,9 @@ static int parse_new_msg(json_t *json, LwqqMsg *opaque)
 {
     LwqqMsgMessage *msg = (LwqqMsgMessage*)opaque;
     
-    char* time = json_parse_simple_value(json, "time");
-    time = time ?: "0";
-    msg->time = (time_t)strtoll(time, NULL, 10);
+    char* t = json_parse_simple_value(json, "time");
+    t = t ?: "0";
+    msg->time = (time_t)strtoll(t, NULL, 10);
 
     //if it failed means it is not group message.
     //so it equ NULL.
@@ -744,6 +795,17 @@ static int parse_new_msg(json_t *json, LwqqMsg *opaque)
     }else if(opaque->type == LWQQ_MS_DISCU_MSG){
         msg->discu.send = s_strdup(json_parse_simple_value(json, "send_uin"));
         msg->discu.did = s_strdup(json_parse_simple_value(json,"did"));
+    }else if(opaque->type == LWQQ_MS_GROUP_WEB_MSG){
+        int err=0;
+        msg->group_web.send = lwqq__json_get_value(json,"send_uin");
+        msg->group_web.group_code = lwqq__json_get_value(json,"group_code");
+        msg->time = time(NULL);
+        char* xml = lwqq__json_get_string(json,"xml");
+
+        if(parse_xml_content(xml,msg))
+            err=-1;
+        s_free(xml);
+        return err;
     }
 
     if (parse_content(json,"content", msg)) {
