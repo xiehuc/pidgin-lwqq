@@ -631,7 +631,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
-    char buf[512]={0};
+    char buf[4096]={0};
     snprintf(buf,sizeof(buf),_("You Got a Offline File: %s\n"
              "End timeline: %s"
              "<a href=\"%s\">Click to download</a>"),
