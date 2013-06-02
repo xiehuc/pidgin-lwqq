@@ -55,12 +55,12 @@ static struct smile_entry smile_tables[] = {
     {58,    {   ":;",	"/大兵",	"/dab",     0}},
     {79,    {   ":f",	"/奋斗",	"/fendou",  0}},
     {80,    {   ":-S",	"/咒骂",	"/zhm",     0}},
-    {81,    {   "/?",	"/yiw",	    "/yiw",     0}},
+    {81,    {   "???",	"/yiw",	    "/yiw",     0}},
     {82,    {   ";X",	"/嘘",		"/xu",      0}},
     {83,    {   ";@",	"/晕",		"/yun",     0}},
     {84,    {   ":8",	"/折磨",	"/zhem",    0}},
     {85,    {   ":b",	"/哀",		"/shuai",   0}},
-    {86,    {   "/!!!",	"/骷髅",	"/kl",      0}},
+    {86,    {   "/骷髅",	"/kl",      0}},
     {87,    {   "/xx",	"/敲打",	"/qiao",    0}},
     {88,    {   "/bye",	"/再见",	"/zj",      0}},
     {97,    {   "/wipe","/擦汗",	"/ch",      0}},
@@ -140,7 +140,7 @@ static char* build_smiley_exp()
     char* spec_char = "()[]*$\\|+";
     //<IMG ID=''> is belongs to <.*?>
     //first html label .then smiley
-    strcpy(exp,"<[^>]+>|\\[FACE_\\d+\\]|/\\S+");
+    strcpy(exp,"<[^>]+>|\\[FACE_\\d+\\]|\\[TOGGLEFACE\\]|/\\S+");
     struct smile_entry* entry = &smile_tables[0];
     const char *smiley,*beg,*end;
     const char** ptr;
@@ -290,6 +290,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
     if(_regex==NULL) translate_global_init();
     TRex* x = _regex;
     LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+    int translate_face=1;
      
     while(*ptr!='\0'){
         c = NULL;
@@ -327,13 +328,15 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //processing face
             sscanf(begin,"[FACE_%d]",&img_id);
             c = build_face_direct(img_id);
+        }else if(strstr(begin,"[TOGGLEFACE]")==begin){
+            translate_face=!translate_face;
         }else if(begin[0]=='&'){
         }else if(begin[0]=='/'){
-            c = build_face_content(m.begin, m.len);
+            c = translate_face?build_face_content(m.begin, m.len):NULL;
             if(c==NULL) c = build_string_content(begin, end, mmsg);
         }else{
             //other face
-            c = build_face_content(m.begin,m.len);
+            c = translate_face?build_face_content(m.begin,m.len):NULL;
             if(c==NULL) c = build_string_content(begin, end, mmsg);
         }
         ptr = end;
