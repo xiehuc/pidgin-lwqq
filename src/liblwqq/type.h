@@ -111,9 +111,10 @@ typedef enum {
     LWQQ_EC_NO_RESULT =            -2,
     LWQQ_EC_TIMEOUT_OVER =         -3,
     LWQQ_EC_CANCELED =             -4,
-    LWQQ_EC_UPLOADRETRY_OVER =     -10,
-    LWQQ_EC_NULL_POINTER,
-    LWQQ_EC_FILE_NOT_EXIST,
+    LWQQ_EC_NULL_POINTER =         -5,
+    LWQQ_EC_FILE_NOT_EXIST =       -6,
+    LWQQ_EC_UPLOAD_OVERRETRY =     -20,
+    LWQQ_EC_UPLOAD_OVERSIZE =      -21,
 
     LWQQ_EC_NETWORK_ERROR = 20,
     LWQQ_EC_HTTP_ERROR = 30,

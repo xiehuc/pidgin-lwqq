@@ -1324,14 +1324,14 @@ static void login_stage_3(LwqqClient* lc)
     lc->msg_list->poll_msg(lc->msg_list,flags);
 }
 
-static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c)
+static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c,int err)
 {
     switch(c->type){
         case LWQQ_CONTENT_OFFPIC:
             qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         case LWQQ_CONTENT_CFACE:
-            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
+            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, err==LWQQ_EC_UPLOAD_OVERSIZE?_("Send Pic over 1MB"):_("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         default:break;
     }

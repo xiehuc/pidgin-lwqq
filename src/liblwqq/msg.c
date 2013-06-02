@@ -1788,7 +1788,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const 
     c->data.img.file_path = s_strdup(json_parse_simple_value(json,"filepath"));
     if(!strcmp(c->data.img.file_path,"")){
         LwqqClient* lc = req->lc;
-        lc->async_opt->upload_fail(lc,to,c);
+        lc->async_opt->upload_fail(lc,to,c,LWQQ_EC_ERROR);
     }
     s_free(c->data.img.name);
     c->data.img.name = s_strdup(json_parse_simple_value(json,"filename"));
@@ -1848,6 +1848,10 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqMsgContent* c,const char* 
         goto done;
     }
     sscanf(ptr,"({'ret':%d,'msg':'%[^\']'",&ret,msg);
+    if(ret == 2){
+        errno = LWQQ_EC_UPLOAD_OVERSIZE;
+        goto done;
+    }
     if(ret !=0 && ret !=4){
         errno = 1;
         goto done;
@@ -1865,7 +1869,7 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqMsgContent* c,const char* 
 done:
     if(errno){
         LwqqClient* lc = req->lc;
-        lc->async_opt->upload_fail(lc,to,c);
+        lc->async_opt->upload_fail(lc,to,c,errno);
         s_free(c->data.cface.name);
     }
     s_free(c->data.cface.data);

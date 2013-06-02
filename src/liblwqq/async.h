@@ -155,7 +155,7 @@ struct _LwqqAsyncOption {
     /* this is poll lost after recv retcode 112 or 108 */
     void (*poll_lost)(LwqqClient* lc);
     /* this is upload content failed such as lwqq offline pic */
-    void (*upload_fail)(LwqqClient* lc,const char* serv_id,struct LwqqMsgContent* c);
+    void (*upload_fail)(LwqqClient* lc,const char* serv_id,struct LwqqMsgContent* c,int extra_reason);
     /* this is you confirmed a friend request 
      * you should add buddy to gui level.
      */
