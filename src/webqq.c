@@ -160,6 +160,14 @@ static void visit_self_infocenter(PurplePluginAction *action)
     snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
     system(url);
 }
+static void user_help(PurplePluginAction* action)
+{
+    //the web page of user help;
+    const char* url = _("https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide");
+    char cmd[512];
+    snprintf(cmd,sizeof(cmd),"xdg-open '%s'",url);
+    system(cmd);
+}
 static void buddies_all_remove(void* data,void* userdata)
 {
     PurpleBuddy* buddy = data;
@@ -411,6 +419,8 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     m = g_list_append(m, NULL);
 
     act = purple_plugin_action_new(_("About pidgin-lwqq"), action_about_webqq);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new(_("User Help"),user_help);
     m = g_list_append(m, act);
     act = purple_plugin_action_new(_("Self Center"),visit_self_infocenter);
     m = g_list_append(m, act);
