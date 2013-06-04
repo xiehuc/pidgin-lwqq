@@ -23,6 +23,8 @@
 #include "remote.h"
 #include "cgroup.h"
 
+#define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
+
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
 static void group_member_list_come(qq_account* ac,LwqqGroup* group);
@@ -162,10 +164,23 @@ static void visit_self_infocenter(PurplePluginAction *action)
 }
 static void user_help(PurplePluginAction* action)
 {
-    //the web page of user help;
-    const char* url = _("https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide");
     char cmd[512];
-    snprintf(cmd,sizeof(cmd),"xdg-open '%s'",url);
+    //the web page of user help;
+    OPEN_URL(cmd,_("https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide"));
+    system(cmd);
+}
+static void faq(PurplePluginAction* action)
+{
+    char cmd[512];
+    //the web page of faq
+    OPEN_URL(cmd,_("https://github.com/xiehuc/pidgin-lwqq/wiki/FAQ"));
+    system(cmd);
+}
+static void feedback(PurplePluginAction* action)
+{
+    char cmd[512];
+    //the web page of feedback
+    OPEN_URL(cmd,_("https://github.com/xiehuc/pidgin-lwqq/issues"));
     system(cmd);
 }
 static void buddies_all_remove(void* data,void* userdata)
@@ -422,6 +437,10 @@ static GList *plugin_actions_menu(PurplePlugin *UNUSED(plugin), gpointer context
     m = g_list_append(m, act);
     act = purple_plugin_action_new(_("User Help"),user_help);
     m = g_list_append(m, act);
+    act = purple_plugin_action_new(_("FAQ"), faq);
+    m = g_list_append(m, act);
+    act = purple_plugin_action_new(_("Feedback"), feedback);
+    m = g_list_append(m, act);
     act = purple_plugin_action_new(_("Self Center"),visit_self_infocenter);
     m = g_list_append(m, act);
     //act = purple_plugin_action_new("好友管理",visit_my_qq_center);
@@ -672,24 +691,24 @@ static void shake_message(LwqqClient* lc,LwqqMsgShakeMessage* shake)
 static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
 {
     char body_[1024] = {0};
-#define ADD_INFO(k,v)  if(v) format_append(body_,_(k":%s\n"),v)
-    ADD_INFO("QQ", buddy->qqnumber);
-    ADD_INFO("Nick", buddy->nick);
-    ADD_INFO("Longnick", buddy->personal);
-    ADD_INFO("Gender", qq_gender_to_str(buddy->gender));
-    ADD_INFO("Shengxiao", qq_shengxiao_to_str(buddy->shengxiao));
-    ADD_INFO("Constellation", qq_constel_to_str(buddy->constel));
-    ADD_INFO("Blood Type", qq_blood_to_str(buddy->blood));
+#define ADD_INFO(k,v)  if(v) format_append(body_,"%s:%s\n",k,v)
+    ADD_INFO(_("QQ"), buddy->qqnumber);
+    ADD_INFO(_("Nick"), buddy->nick);
+    ADD_INFO(_("Longnick"), buddy->personal);
+    ADD_INFO(_("Gender"), qq_gender_to_str(buddy->gender));
+    ADD_INFO(_("Shengxiao"), qq_shengxiao_to_str(buddy->shengxiao));
+    ADD_INFO(_("Constellation"), qq_constel_to_str(buddy->constel));
+    ADD_INFO(_("Blood Type"), qq_blood_to_str(buddy->blood));
     //ADD_INFO("生日", buddy->birthday);
-    ADD_INFO("Country", buddy->country);
-    ADD_INFO("Province", buddy->province);
-    ADD_INFO("City", buddy->city);
-    ADD_INFO("Phone", buddy->phone);
-    ADD_INFO("Mobile", buddy->mobile);
-    ADD_INFO("Email", buddy->email);
-    ADD_INFO("Occupation", buddy->occupation);
-    ADD_INFO("College", buddy->college);
-    ADD_INFO("Homepage", buddy->homepage);
+    ADD_INFO(_("Country"), buddy->country);
+    ADD_INFO(_("Province"), buddy->province);
+    ADD_INFO(_("City"), buddy->city);
+    ADD_INFO(_("Phone"), buddy->phone);
+    ADD_INFO(_("Mobile"), buddy->mobile);
+    ADD_INFO(_("Email"), buddy->email);
+    ADD_INFO(_("Occupation"), buddy->occupation);
+    ADD_INFO(_("College"), buddy->college);
+    ADD_INFO(_("Homepage"), buddy->homepage);
     //ADD_INFO("说明", buddy->);
 #undef ADD_INFO
     strncat(body,body_,buf_len-strlen(body));

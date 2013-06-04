@@ -1,7 +1,8 @@
-Name=WebQQ faces
-Description=Webqq smileys
+Name=WebQQ faces static
+Description=Webqq smileys static
 Icon=0.png
-Author=xiehuc@gmail.com
+Author=root@mdk3.com
+# modified by xiehuc@gmail.com
 
 # Default smileys
 [default]
