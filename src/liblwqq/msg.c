@@ -1184,7 +1184,7 @@ done:
     lwqq_http_request_free(req);
     return NULL;
 }
-static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgContent* c)
+static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_code,const char* send_uin,LwqqMsgType type,LwqqMsgContent* c)
 {
     LwqqHttpRequest* req;
     LwqqErrorCode error;
@@ -1192,8 +1192,9 @@ static LwqqAsyncEvent* request_content_cface(LwqqClient* lc,const char* group_co
     char url[512];
 /*http://web2.qq.com/cgi-bin/get_group_pic?type=0&gid=3971957129&uin=4174682545&rip=120.196.211.216&rport=9072&fid=2857831080&pic=71A8E53B7F678D035656FECDA1BD7F31.jpg&vfwebqq=762a8682d17931d0cc647515e570435bd82e3a4e957bd052faa9615192eb7a3c4f1719006a7176c1&t=1343130567*/
     snprintf(url, sizeof(url),
-             "%s/get_group_pic?type=0&gid=%s&uin=%s&rip=%s&rport=%s&fid=%s&pic=%s&vfwebqq=%s&t=%ld",
+             "%s/get_group_pic?type=%d&gid=%s&uin=%s&rip=%s&rport=%s&fid=%s&pic=%s&vfwebqq=%s&t=%ld",
              "http://web2.qq.com/cgi-bin",
+             type!=LWQQ_MS_GROUP_MSG,
              group_code,send_uin,c->data.cface.serv_ip,c->data.cface.serv_port,
              c->data.cface.file_id,c->data.cface.name,lc->vfwebqq,time(NULL));
     req = lwqq_http_create_default_request(lc,url, err);
@@ -1252,7 +1253,7 @@ static void lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyn
             if(msg->super.super.type == LWQQ_MS_BUDDY_MSG)
                 event = request_content_cface2(lc,msg->super.msg_id,msg->super.from,c);
             else
-                event = request_content_cface(lc,msg->group.group_code,msg->group.send,c);
+                event = request_content_cface(lc,msg->group.group_code,msg->group.send,msg->super.super.type,c);
             lwqq_async_evset_add_event(set,event);
         }
     }
