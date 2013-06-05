@@ -27,9 +27,9 @@
 #define __LOG_ERROR		3
 #define LOG_ERROR		__LOG_ERROR, _A_
 
-#ifndef LWQQ_VERBOSE_LEVEL
+/*#ifndef LWQQ_VERBOSE_LEVEL
 #define LWQQ_VERBOSE_LEVEL 0
-#endif
+#endif*/
 
 /** 
  * This is standard logger function
@@ -52,8 +52,11 @@ const char* lwqq_log_time();
  * 4        Timeout Verbose
  * 5        Extra Verbose
  */
-#define lwqq_verbose(l,str,...) if(l<=LWQQ_VERBOSE_LEVEL) fprintf(stderr,str,__VA_ARGS__)
+//#define lwqq_verbose(l,str,...) if(l<=LWQQ_VERBOSE_LEVEL) fprintf(stderr,str,__VA_ARGS__)
+void lwqq_verbose(int l,const char* str,...);
 #define lwqq_puts(str) lwqq_verbose(1,"%s\n",str)
+
+void lwqq_log_set_level(int level);
 
 
 #endif  /* LWQQ_LOGGER_H */

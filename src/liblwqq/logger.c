@@ -23,6 +23,8 @@ static char *levels[] = {
 	"ERROR",
 };
 
+static int LWQQ_VERBOSE_LEVEL_ = 0;
+
 /** 
  * This is standard logger function
  * 
@@ -63,4 +65,18 @@ const char* lwqq_log_time()
     struct tm *tm_ = localtime(&t_);
     strftime(tm_str,sizeof(tm_str),"%X",tm_);
     return tm_str;
+}
+
+void lwqq_verbose(int l,const char* str,...)
+{
+    if(l<=LWQQ_VERBOSE_LEVEL_){
+        va_list args;
+        va_start(args,str);
+        vfprintf(stderr,str,args);
+        va_end(args);
+    }
+}
+void lwqq_log_set_level(int level)
+{
+    LWQQ_VERBOSE_LEVEL_ = level;
 }

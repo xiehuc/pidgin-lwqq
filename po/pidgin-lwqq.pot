@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-04 13:51+0800\n"
+"POT-Creation-Date: 2013-06-05 11:00+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -206,7 +206,7 @@ msgid "Refuse"
 msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:675
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2872
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2875
 msgid "Agree"
 msgstr ""
 
@@ -416,7 +416,7 @@ msgstr ""
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1450
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1466
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2873
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2876
 msgid "Deny"
 msgstr ""
 
@@ -690,47 +690,51 @@ msgstr ""
 msgid "Only Discussion Can Add new member"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2808
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2815
 msgid "Ignore Received Message Font Family"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2810
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2817
 msgid "Ignore Received Message Font Size"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2812
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2819
 msgid "Text Lighter In Dark Theme"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2814
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2821
 msgid "Remove Duplicated Message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2816
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2823
 msgid "Version Statics"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2818
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2825
 msgid "Debug File Transport"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2820
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2827
 msgid "Do not use Expected:100 Continue when send offline message"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2822
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2829
 msgid "Ignore Group(Compatible with recent plugin)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2824
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2831
+msgid "Verbose"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2833
 msgid "Send Relink Time Interval(m)"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2861
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2864
 msgid "Need Your Attention"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2863
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2866
 #, c-format
 msgid ""
 "To Support the sustained development of pidgin-lwqq,\n"
@@ -743,7 +747,7 @@ msgid ""
 "Code:%s:%d\n"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2907
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2910
 msgid "Password is empty"
 msgstr ""
 

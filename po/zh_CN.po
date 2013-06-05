@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-04 13:51+0800\n"
+"POT-Creation-Date: 2013-06-05 11:00+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -120,7 +120,7 @@ msgid "Additional Reason"
 msgstr "附加理由"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:675
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2872
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2875
 msgid "Agree"
 msgstr "同意"
 
@@ -272,13 +272,13 @@ msgstr "创建讨论组"
 msgid "Create Discussion Group"
 msgstr "创建讨论组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2818
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2825
 msgid "Debug File Transport"
 msgstr "调试文件传输"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1450
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1466
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2873
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2876
 msgid "Deny"
 msgstr "拒绝"
 
@@ -298,7 +298,7 @@ msgstr "讨论组名称"
 msgid "Display QQ Level"
 msgstr "显示QQ等级"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2820
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2827
 msgid "Do not use Expected:100 Continue when send offline message"
 msgstr "发送离线文件时不使用Expected:100 Continue"
 
@@ -429,15 +429,15 @@ msgstr "您想合并多少页"
 msgid "Ignore"
 msgstr "忽略"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2822
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2829
 msgid "Ignore Group(Compatible with recent plugin)"
 msgstr "忽略的组(兼容recent插件)"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2808
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2815
 msgid "Ignore Received Message Font Family"
 msgstr "忽略接受消息字体"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2810
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2817
 msgid "Ignore Received Message Font Size"
 msgstr "忽略接受消息文字大小"
 
@@ -533,7 +533,7 @@ msgstr "鼠"
 msgid "Name"
 msgstr "名称"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2861
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2864
 msgid "Need Your Attention"
 msgstr "需要您的注意"
 
@@ -610,7 +610,7 @@ msgstr "页数"
 msgid "Passerby"
 msgstr "陌生人"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2907
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2910
 msgid "Password is empty"
 msgstr "密码为空"
 
@@ -701,7 +701,7 @@ msgstr "拒绝理由"
 msgid "Remark"
 msgstr "备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2814
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2821
 msgid "Remove Duplicated Message"
 msgstr "消息去重"
 
@@ -751,7 +751,7 @@ msgstr "发送图片失败"
 msgid "Send Pic over 1MB"
 msgstr "发送图片大小超过1MB"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2824
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2833
 msgid "Send Relink Time Interval(m)"
 msgstr "发送Relink间隔(m)"
 
@@ -833,7 +833,7 @@ msgstr "金牛座"
 msgid "Tempory Session not support this function"
 msgstr "临时绘画不支持此功能"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2812
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2819
 msgid "Text Lighter In Dark Theme"
 msgstr "暗色主题下文字加亮"
 
@@ -841,7 +841,7 @@ msgstr "暗色主题下文字加亮"
 msgid "Tiger"
 msgstr "虎"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2863
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2866
 #, c-format
 msgid ""
 "To Support the sustained development of pidgin-lwqq,\n"
@@ -887,7 +887,11 @@ msgstr "上传内容重试超过限制"
 msgid "User Help"
 msgstr "使用帮助"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2816
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2831
+msgid "Verbose"
+msgstr "输出等级"
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2823
 msgid "Version Statics"
 msgstr "版本统计"
 

@@ -2803,6 +2803,13 @@ static PurplePluginInfo info = {
 static void
 init_plugin(PurplePlugin *plugin)
 {
+#ifdef ENABLE_NLS
+    setlocale(LC_ALL, "");
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    bindtextdomain(GETTEXT_PACKAGE , LOCALEDIR);
+    textdomain(GETTEXT_PACKAGE);
+#endif
+
     PurpleAccountOption *option;
     GList* options = NULL;
     option = purple_account_option_bool_new(_("Ignore Received Message Font Family"), "disable_custom_font_face", FALSE);
@@ -2821,17 +2828,13 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_string_new(_("Ignore Group(Compatible with recent plugin)"), "recent_group_name", "Recent Contacts");
     options = g_list_append(options, option);
+    option = purple_account_option_int_new(_("Verbose"), "verbose", 0);
+    options = g_list_append(options, option);
     option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 0);
     options = g_list_append(options, option);
 
     webqq_prpl_info.protocol_options = options;
 
-#ifdef ENABLE_NLS
-    setlocale(LC_ALL, "");
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    bindtextdomain(GETTEXT_PACKAGE , LOCALEDIR);
-    textdomain(GETTEXT_PACKAGE);
-#endif
 }
 
 static void version_statics(qq_account* ac,LwqqConfirmTable* ct)
@@ -2920,6 +2923,7 @@ static void qq_login(PurpleAccount *account)
     int relink_retry = 0;
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
         ac->relink_timer = purple_timeout_add_seconds(relink_retry*60, relink_keepalive, ac);
+    lwqq_log_set_level(purple_account_get_int(account,"verbose",0));
     char db_path[64]={0};
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path,0);
