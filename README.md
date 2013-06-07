@@ -60,13 +60,10 @@ lwqq 即是 linux webqq 之意
 * 支持添加好友|群
 * 支持下载漫游记录
 
-### empathy support (via telepathy-haze)
+### empathy not support ###
 
-* 支持发送接受文本消息
-* 支持头像
-* **不** 支持本地QQ号缓存机制
-
-### core
+由于telepathy-haze无法顺利的创建本地缓存，造成
+性能低下，所以不推荐使用empathy配合lwqq。
 
 
 已知问题

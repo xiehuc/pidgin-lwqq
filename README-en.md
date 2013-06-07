@@ -69,12 +69,11 @@ Function list
 * support add friend/group
 * support import online chat log
 
-### empathy support (via telepathy-haze)
+### empathy not support ###
 
-* send / recv text messages
-* avatar
-* **not** support local qqnumber cache
-
+because telepathy-haze can not create local cache.
+make lwqq performanced bad. 
+so we do not recommand empathy with lwqq anymore.
 
 Known Issue
 -----------

@@ -2376,7 +2376,7 @@ LwqqAsyncEvent* lwqq_msg_friend_history(LwqqClient* lc,const char* serv_id,LwqqH
     req->set_header(req,"Referer","http://web2.qq.com/");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     lwqq_verbose(3,"%s\n",url);
-    return req->do_request_async(req,0,NULL,_C_(3p,process_msg_list,req,s_strdup(serv_id),list));
+    return req->do_request_async(req,0,NULL,_C_(3p_i,process_msg_list,req,s_strdup(serv_id),list));
 }
 
 LwqqAsyncEvent* lwqq_msg_group_history(LwqqClient* lc,LwqqGroup* g,LwqqHistoryMsgList* list)
@@ -2389,7 +2389,7 @@ LwqqAsyncEvent* lwqq_msg_group_history(LwqqClient* lc,LwqqGroup* g,LwqqHistoryMs
     req->set_header(req,"Referer","http://cgi.web2.qq.com/cfproxy.html?v=20110412001&id=2");
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     lwqq_verbose(3,"%s\n",url);
-    return req->do_request_async(req,0,NULL,_C_(3p,process_group_msg_list,req,NULL,list));
+    return req->do_request_async(req,0,NULL,_C_(3p_i,process_group_msg_list,req,NULL,list));
 }
 
 #if 0
