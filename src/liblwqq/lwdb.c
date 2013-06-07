@@ -131,6 +131,35 @@ static const char* group_query_sql =
     "SELECT account,name,markname FROM groups ;";
 
 
+static LwqqOpCode set_cache(LwdbUserDB* db,const char* sql,SwsStmt* stmt)
+{
+    int i;
+    for(i=0;i<LWDB_CACHE_LEN;i++){
+        if(db->cache[i].sql==NULL){
+            db->cache[i].sql = strdup(sql);
+            db->cache[i].stmt = stmt;
+            return LWQQ_OP_OK;
+        }
+    }
+    return LWQQ_OP_FAILED;
+}
+static LwqqOpCode clear_cache(LwdbUserDB* db)
+{
+    int i;
+    for(i=0;i<LWDB_CACHE_LEN;i++){
+        if(db->cache[i].sql!=NULL){
+            s_free(db->cache[i].sql);
+            sws_query_end(db->cache[i].stmt,NULL);
+        }
+    }
+    return LWQQ_OP_OK;
+}
+#define enable_cache(stmt,sql,ret) \
+    stmt = get_cache(db,sql);\
+    if(stmt==NULL){\
+        sws_query_start(db->db,sql,&stmt,NULL);\
+        ret = set_cache(db,sql,stmt);\
+    }else ret=1
 /** 
  * LWDB initialization
  * 
@@ -540,7 +569,7 @@ failed:
 void lwdb_userdb_free(LwdbUserDB *db)
 {
     if (db) {
-        //sws_exec_sql(db->db,"COMMIT;",NULL);
+        clear_cache(db);
         sws_close_db(db->db, NULL);
         s_free(db);
     }
@@ -651,48 +680,73 @@ failed:
     sws_query_end(stmt, NULL);
     return NULL;
 }
+static SwsStmt* get_cache(LwdbUserDB* db,const char* sql)
+{
+    int i;
+    for(i=0;i<LWDB_CACHE_LEN;i++){
+        if(db->cache[i].sql == NULL) return NULL; 
+        if(strcmp(db->cache[i].sql,sql)==0) return db->cache[i].stmt;
+    }
+    return NULL;
+}
 LwqqErrorCode lwdb_userdb_insert_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
     if(!db || !buddy ) return -1;
     if(!buddy->qqnumber) return -1;
     SwsStmt* stmt = NULL;
+    const char* sql = "INSERT INTO buddies (qqnumber) VALUES (?);";
+    LwqqOpCode cache = 0;
 
-    sws_query_start(db->db, "INSERT INTO buddies ("
-            "qqnumber) VALUES (?);", &stmt, NULL);
+    enable_cache(stmt,sql,cache);
 
-    sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,buddy->qqnumber);
     sws_query_next(stmt,NULL);
     lwdb_userdb_update_buddy_info(db, buddy);
-    sws_query_end(stmt, NULL);
+    sws_query_reset(stmt);
+
+    if(!cache)
+        sws_query_end(stmt, NULL);
     return 0;
 }
 LwqqErrorCode lwdb_userdb_update_buddy_info(LwdbUserDB* db,LwqqBuddy* buddy)
 {
     if(!db || !buddy || !buddy->qqnumber) return LWQQ_EC_ERROR;
     SwsStmt* stmt = NULL;
-    sws_query_start(db->db, "UPDATE buddies SET "
-            "nick=?,markname=?,long_nick=?,last_modify=datetime('now') WHERE qqnumber=?;",&stmt,NULL);
+    int cache = 0;
+    const char* sql = "UPDATE buddies SET "
+        "nick=?,markname=?,long_nick=?,level=?,last_modify=datetime('now') WHERE qqnumber=?;";
+
+    enable_cache(stmt,sql,cache);
+
     sws_query_bind(stmt, 1, SWS_BIND_TEXT,buddy->nick);
     sws_query_bind(stmt, 2, SWS_BIND_TEXT,buddy->markname);
     sws_query_bind(stmt, 3, SWS_BIND_TEXT,buddy->long_nick);
-    sws_query_bind(stmt, 4, SWS_BIND_TEXT,buddy->qqnumber);
+    sws_query_bind(stmt, 4, SWS_BIND_INT, buddy->level);
+    sws_query_bind(stmt, 5, SWS_BIND_TEXT,buddy->qqnumber);
     sws_query_next(stmt, NULL);
-    sws_query_end(stmt,NULL);
+    sws_query_reset(stmt);
+
+    if(!cache)sws_query_end(stmt,NULL);
     return 0;
 }
 LwqqErrorCode lwdb_userdb_update_group_info(LwdbUserDB* db,LwqqGroup* group)
 {
     if(!db || !group || !group->account) return LWQQ_EC_ERROR;
     SwsStmt* stmt = NULL;
-    sws_query_start(db->db,"UPDATE groups SET "
-            "name=? , markname=?,memo=?,last_modify=datetime('now') WHERE account=?;",&stmt,NULL);
+    int cache = 0;
+    const char* sql = "UPDATE groups SET "
+            "name=? , markname=?,memo=?,last_modify=datetime('now') WHERE account=?;";
+
+    enable_cache(stmt,sql,cache);
+
     sws_query_bind(stmt,1,SWS_BIND_TEXT,group->name);
     sws_query_bind(stmt,2,SWS_BIND_TEXT,group->markname);
     sws_query_bind(stmt,3,SWS_BIND_TEXT,group->memo);
     sws_query_bind(stmt,4,SWS_BIND_TEXT,group->account);
     sws_query_next(stmt, NULL);
-    sws_query_end(stmt, NULL);
+    sws_query_reset(stmt);
+
+    if(!cache) sws_query_end(stmt, NULL);
     return 0;
 }
 LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
@@ -700,17 +754,20 @@ LwqqErrorCode lwdb_userdb_insert_group_info(LwdbUserDB* db,LwqqGroup* group)
     if(!db || !group) return -1;
     if(! group->account) return -1;
     SwsStmt* stmt = NULL;
+    int cache = 0;
+    const char* sql="INSERT INTO groups ("
+            "account,name,markname) VALUES (?,?,?);";
 
-    sws_query_start(db->db,"INSERT INTO groups ("
-            "account,name,markname) VALUES (?,?,?);",&stmt,NULL);
+    enable_cache(stmt,sql,cache);
 
-    sws_query_reset(stmt);
     sws_query_bind(stmt,1,SWS_BIND_TEXT,group->account);
     sws_query_bind(stmt,2,SWS_BIND_TEXT,group->name);
     sws_query_bind(stmt,3,SWS_BIND_TEXT,group->markname);
     sws_query_next(stmt,NULL);
     lwdb_userdb_update_group_info(db, group);
-    sws_query_end(stmt, NULL);
+    sws_query_reset(stmt);
+
+    if(!cache) sws_query_end(stmt, NULL);
     return 0;
 }
 /*
@@ -988,25 +1045,30 @@ void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to)
     sws_exec_sql(to->db, "COMMIT TRANSACTION;", NULL);
 }
 
-void lwdb_userdb_begin(LwdbUserDB* db,const char* transaction)
+void lwdb_userdb_begin(LwdbUserDB* db)
 {
     if(!db) return;
     char sql[128];
-    snprintf(sql,sizeof(sql),"BEGIN %s;",transaction?transaction:"");
+    snprintf(sql,sizeof(sql),"BEGIN TRANSACTION;");
     sws_exec_sql(db->db,sql,NULL);
 }
-void lwdb_userdb_commit(LwdbUserDB* db,const char* transaction)
+void lwdb_userdb_commit(LwdbUserDB* db)
 {
     if(!db) return;
     char sql[128];
-    snprintf(sql,sizeof(sql),"COMMIT %s;",transaction?transaction:"");
+    snprintf(sql,sizeof(sql),"COMMIT TRANSACTION;");
     sws_exec_sql(db->db,sql,NULL);
+    clear_cache(db);
 }
 LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy)
 {
     if(!db||!buddy||!buddy->qqnumber) return LWQQ_EC_ERROR;
     SwsStmt* stmt = NULL;
-    sws_query_start(db->db, "SELECT long_nick FROM buddies WHERE qqnumber=? and last_modify != 0;", &stmt, NULL);
+    int cache = 0;
+    const char* sql = "SELECT long_nick,level FROM buddies WHERE qqnumber=? and last_modify != 0;";
+    
+    enable_cache(stmt,sql,cache);
+
     sws_query_bind(stmt, 1, SWS_BIND_TEXT,buddy->qqnumber);
     sws_query_next(stmt, NULL);
     char buf[1024];
@@ -1014,14 +1076,23 @@ LwqqErrorCode lwdb_userdb_query_buddy(LwdbUserDB* db,LwqqBuddy* buddy)
         s_free(buddy->long_nick);
         buddy->long_nick = s_strdup(buf);
     }
-    sws_query_end(stmt, NULL);
+    if(!sws_query_column(stmt, 1, buf, sizeof(buf), NULL)){
+        buddy->level = s_atoi(buf,0);
+    }
+    sws_query_reset(stmt);
+
+    if(!cache) sws_query_end(stmt, NULL);
     return 0;
 }
 LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group)
 {
     if(!db ||!group ||!group->account) return LWQQ_EC_ERROR;
     SwsStmt* stmt = NULL;
-    sws_query_start(db->db, "SELECT memo FROM groups WHERE account=? and last_modify != 0;", &stmt, NULL);
+    int cache=0;
+    const char* sql = "SELECT memo FROM groups WHERE account=? and last_modify != 0;";
+
+    enable_cache(stmt,sql,cache);
+
     sws_query_bind(stmt, 1, SWS_BIND_TEXT,group->account);
     sws_query_next(stmt, NULL);
     char buf[1024];
@@ -1029,7 +1100,9 @@ LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group)
         s_free(group->memo);
         group->memo = s_strdup(buf);
     }
-    sws_query_end(stmt, NULL);
+    sws_query_reset(stmt);
+
+    if(!cache) sws_query_end(stmt, NULL);
     return 0;
 }
 void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last,int day)

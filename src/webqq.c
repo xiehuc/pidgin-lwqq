@@ -94,8 +94,12 @@ static const char* get_name_from_chat(PurpleChat* chat)
 }
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 {
-    LwqqGroup* group;
+    LwqqGroup* group = NULL;
     LIST_FOREACH(group,&lc->groups,entries) {
+        if(group->name&&strcmp(group->name,name)==0)
+            return group;
+    }
+    LIST_FOREACH(group,&lc->discus,entries) {
         if(group->name&&strcmp(group->name,name)==0)
             return group;
     }
@@ -103,11 +107,21 @@ static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 }
 static LwqqSimpleBuddy* find_group_member_by_nick_or_card(LwqqGroup* group,const char* who)
 {
+    if(!group || !who ) return NULL;
     LwqqSimpleBuddy* sb;
     LIST_FOREACH(sb,&group->members,entries) {
         if(sb->nick&&strcmp(sb->nick,who)==0)
             return sb;
         if(sb->card&&strcmp(sb->card,who)==0)
+            return sb;
+    }
+    return NULL;
+}
+static LwqqSimpleBuddy* find_discu_member_by_nick(LwqqGroup* group,const char* who)
+{
+    LwqqSimpleBuddy* sb;
+    LIST_FOREACH(sb,&group->members,entries) {
+        if(sb->nick&&strcmp(sb->nick,who)==0)
             return sb;
     }
     return NULL;
@@ -1236,7 +1250,7 @@ static void login_stage_f(LwqqClient* lc)
     LwqqBuddy* buddy;
     LwqqGroup* group;
     qq_account* ac = lc->data;
-    lwdb_userdb_begin(ac->db, "ins");
+    lwdb_userdb_begin(ac->db);
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(buddy->last_modify == -1 || buddy->last_modify == 0){
             lwdb_userdb_insert_buddy_info(ac->db, buddy);
@@ -1253,7 +1267,7 @@ static void login_stage_f(LwqqClient* lc)
             lwqq_info_get_group_detail_info(lc, group, NULL);
         }
     }
-    lwdb_userdb_commit(ac->db, "ins");
+    lwdb_userdb_commit(ac->db);
 }
 
 static void login_stage_3(LwqqClient* lc)
@@ -1309,7 +1323,11 @@ static void login_stage_3(LwqqClient* lc)
         if(buddy->last_modify == 0 || buddy->last_modify == -1) {
             ev = lwqq_info_get_single_long_nick(lc, buddy);
             lwqq_async_evset_add_event(set, ev);
-            if(buddy->last_modify == 0){
+            ev = lwqq_info_get_level(lc, buddy);
+            lwqq_async_evset_add_event(set, ev);
+            //if buddy is unknow we should update avatar in friend_come
+            //for better speed in first load
+            if(buddy->last_modify == LWQQ_LAST_MODIFY_RESET){
                 ev = lwqq_info_get_friend_avatar(lc,buddy);
                 lwqq_async_evset_add_event(set, ev);
             }
@@ -1561,10 +1579,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
         if(conv && err > 0){
-            if(err == WEBQQ_108)
-                snprintf(buf,sizeof(buf),_("Send too fast:\n%s"),what);
-            else 
-                snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
+            snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
         if(err == WEBQQ_LOST_CONN){
@@ -2171,6 +2186,7 @@ static char* qq_status_text(PurpleBuddy* pb)
 }
 static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean full)
 {
+    char buf[32];
     LwqqBuddy* buddy = pb->proto_data;
     if(!buddy) return;
     if(buddy->qqnumber)
@@ -2181,22 +2197,9 @@ static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean 
         purple_notify_user_info_add_pair(info, _("Mark"), buddy->markname);
     if(buddy->long_nick)
         purple_notify_user_info_add_pair(info, _("Longnick"), buddy->long_nick);
-    const char* client="";
-    switch(buddy->client_type){
-        case LWQQ_CLIENT_PC:
-            client="电脑";
-            break;
-        case LWQQ_CLIENT_MOBILE:
-            client="手机";
-            break;
-        case LWQQ_CLIENT_WEBQQ:
-            client="WebQQ";
-            break;
-        case LWQQ_CLIENT_QQFORPAD:
-            client="QQ For Pad";
-            break;
-    }
-    purple_notify_user_info_add_pair(info, _("Client"), client);
+    snprintf(buf,sizeof(buf),"%d",buddy->level);
+    purple_notify_user_info_add_pair(info, _("Level"), buf);
+    purple_notify_user_info_add_pair(info, _("Client"), qq_client_to_str(buddy->client_type));
 }
 #if 0
 static void qq_visit_qun_air(PurpleBlistNode* node)
@@ -2579,7 +2582,7 @@ static void qq_level_popup(PurpleBuddy* buddy)
         return;
     }
 
-    LwqqAsyncEvent* ev = lwqq_info_qq_get_level(lc,b);
+    LwqqAsyncEvent* ev = lwqq_info_get_level(lc,b);
     lwqq_async_add_event_listener(ev,
             _C_(2p,display_qq_level_popup,ac->gc,b));
 }

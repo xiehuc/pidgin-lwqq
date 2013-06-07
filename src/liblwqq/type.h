@@ -127,6 +127,10 @@ typedef enum {
     LWQQ_EC_NO_MESSAGE = 102,
     LWQQ_EC_PTWEBQQ = 116
 } LwqqErrorCode;
+typedef enum {
+    LWQQ_OP_OK = 1,
+    LWQQ_OP_FAILED = 0,
+} LwqqOpCode;/* operate code */
 //**should depreciate **/
 typedef enum {
     LWQQ_CALLBACK_VALID = LWQQ_EC_OK,
@@ -155,6 +159,10 @@ typedef struct LwqqFriendCategory {
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
 
+//means the buddy need update by hand
+#define LWQQ_LAST_MODIFY_RESET 0
+//means the buddy is not in database
+#define LWQQ_LAST_MODIFY_UNKNOW -1
 /* QQ buddy */
 typedef struct LwqqBuddy {
     char *uin;                  /**< Uin. Change every login */
@@ -440,6 +448,7 @@ LwqqGroup *lwqq_group_new(int type);
  */
 LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
 LwqqGroup* lwqq_group_find_group_by_qqnumber(LwqqClient* lc,const char* qqnumber);
+#define lwqq_discu_find_discu_by_did(lc,did) lwqq_group_find_group_by_gid(lc,did);
 
 /** 
  * Find group member object by member's uin

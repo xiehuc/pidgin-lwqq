@@ -15,6 +15,8 @@
 #include "type.h"
 #include "swsqlite.h"
 
+#define LWDB_CACHE_LEN 15
+
 /************************************************************************/
 /* Initialization and final API */
 /** 
@@ -80,8 +82,13 @@ void lwdb_globaldb_free_user_entry(LwdbGlobalUserEntry *e);
 /************************************************************************/
 /* LwdbUserDB API */
 
+
 typedef struct LwdbUserDB {
     SwsDB *db;
+    struct{
+        SwsStmt* stmt;
+        char* sql;
+    }cache[LWDB_CACHE_LEN];
     LwqqBuddy * (*query_buddy_info)(struct LwdbUserDB *db, const char *qqnumber);
     LwqqErrorCode (*update_buddy_info)(struct LwdbUserDB *db, LwqqBuddy *buddy);
 } LwdbUserDB;
@@ -117,8 +124,8 @@ LwqqErrorCode lwdb_userdb_query_group(LwdbUserDB* db,LwqqGroup* group);
 
 void lwdb_userdb_write_to_client(LwdbUserDB* from,LwqqClient* to);
 void lwdb_userdb_read_from_client(LwqqClient* from,LwdbUserDB* to);
-void lwdb_userdb_begin(LwdbUserDB* db,const char* transaction);
-void lwdb_userdb_commit(LwdbUserDB* db,const char* transaction);
+void lwdb_userdb_begin(LwdbUserDB* db);
+void lwdb_userdb_commit(LwdbUserDB* db);
 void lwdb_userdb_query_qqnumbers(LwqqClient* lc,LwdbUserDB* db);
 void lwdb_userdb_flush_buddies(LwdbUserDB* db,int last,int day);
 void lwdb_userdb_flush_groups(LwdbUserDB* db,int last,int day);

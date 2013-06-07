@@ -16,20 +16,35 @@ TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_blood_to_str, const char*,LwqqBloodType , "")
-    TR(LWQQ_BLOOD_A,_("A"))      TR(LWQQ_BLOOD_B,_("B"))          TR(LWQQ_BLOOD_O,_("O"))
-    TR(LWQQ_BLOOD_AB,_("AB"))    TR(LWQQ_BLOOD_OTHER,_("Other"))
+    TR(LWQQ_BLOOD_A,_("A"))   TR(LWQQ_BLOOD_B,_("B"))         TR(LWQQ_BLOOD_O,_("O"))
+    TR(LWQQ_BLOOD_AB,_("AB")) TR(LWQQ_BLOOD_OTHER,_("Other"))
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_constel_to_str,const char*,LwqqConstel ,"")
-    TR(LWQQ_AQUARIUS,_("Aquarius"))  TR(LWQQ_PISCES,_("Pisces"))     TR(LWQQ_ARIES,_("Aries"))    TR(LWQQ_TAURUS,_("Taurus"))
-    TR(LWQQ_GEMINI,_("Gemini"))      TR(LWQQ_CANCER,_("Cancer"))     TR(LWQQ_LEO,_("Leo"))        TR(LWQQ_VIRGO,_("Virgo"))
-    TR(LWQQ_LIBRA,_("Libra"))        TR(LWQQ_SCORPIO,_("Scorpio"))   TR(LWQQ_SAGITTARIUS,_("Sagittarius"))   
+    TR(LWQQ_AQUARIUS,_("Aquarius"))      
+    TR(LWQQ_PISCES,_("Pisces"))  
+    TR(LWQQ_ARIES,_("Aries"))            
+    TR(LWQQ_TAURUS,_("Taurus"))
+    TR(LWQQ_GEMINI,_("Gemini"))          
+    TR(LWQQ_CANCER,_("Cancer"))  
+    TR(LWQQ_LEO,_("Leo"))                
+    TR(LWQQ_VIRGO,_("Virgo"))
+    TR(LWQQ_LIBRA,_("Libra"))            
+    TR(LWQQ_SCORPIO,_("Scorpio"))
+    TR(LWQQ_SAGITTARIUS,_("Sagittarius"))
     TR(LWQQ_CAPRICORNUS,_("Capricornus"))
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_gender_to_str,const char*,LwqqGender,"")
     TR(LWQQ_FEMALE,_("Female"))
     TR(LWQQ_MALE,_("Male"))
+TABLE_END()
+
+TABLE_BEGIN_LONG(qq_client_to_str,const char*,LwqqClientType,"")
+    TR(LWQQ_CLIENT_PC,_("Desktop"))
+    TR(LWQQ_CLIENT_MOBILE,_("Phone"))
+    TR(LWQQ_CLIENT_WEBQQ,_("WebQQ"))
+    TR(LWQQ_CLIENT_QQFORPAD,_("PadQQ"))
 TABLE_END()
 
 static int did_dispatch(void* param)
@@ -189,7 +204,7 @@ PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,q
 {
     PurpleAccount* account = ac->account;
     const char* local_id;
-    if(msg_type == LWQQ_MS_BUDDY_MSG){
+    if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG){
         if(ac->qq_use_qqnum){
             LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
             local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;

@@ -1944,11 +1944,11 @@ void lwqq_info_get_group_sig(LwqqClient* lc,LwqqGroup* group,const char* to_uin)
     snprintf(url,sizeof(url),WEBQQ_D_HOST"/channel/get_c2cmsg_sig2?"
             "id=%s&"
             "to_uin=%s&"
-            "service_type=0&"
+            "service_type=%d&"
             "clientid=%s&"
             "psessionid=%s&"
             "t=%ld",
-            group->gid,to_uin,lc->clientid,lc->psessionid,time(NULL));
+            group->gid,to_uin,(group->type == LWQQ_GROUP_DISCU),lc->clientid,lc->psessionid,time(NULL));
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url,NULL);
     if(req==NULL){
         goto done;
@@ -2412,7 +2412,7 @@ void lwqq_recent_list_free(LwqqRecentList* list)
 }
 
 
-LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc, LwqqBuddy* b)
+LwqqAsyncEvent* lwqq_info_get_level(LwqqClient* lc, LwqqBuddy* b)
 {
     if(!lc||!b) return NULL;
     char url[512];

@@ -217,7 +217,7 @@ LwqqAsyncEvent* lwqq_info_get_group_memo(LwqqClient* lc,LwqqGroup* g);
 LwqqAsyncEvent* lwqq_info_set_dicsu_topic(LwqqClient* lc,LwqqGroup* d,const char* topic);
 void lwqq_recent_list_free(LwqqRecentList* list);
 LwqqAsyncEvent* lwqq_info_recent_list(LwqqClient* lc,LwqqRecentList* list);
-LwqqAsyncEvent* lwqq_info_qq_get_level(LwqqClient* lc,LwqqBuddy* b);
+LwqqAsyncEvent* lwqq_info_get_level(LwqqClient* lc,LwqqBuddy* b);
 
 typedef struct LwqqDiscuMemChange LwqqDiscuMemChange;
 LwqqDiscuMemChange* lwqq_discu_mem_change_new();

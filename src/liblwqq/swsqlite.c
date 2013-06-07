@@ -163,6 +163,7 @@ int sws_query_bind(SwsStmt *stmt,int index,SwsBindType type,...)
 
 int sws_query_reset(SwsStmt* stmt)
 {
+    sqlite3_clear_bindings(stmt);
     sqlite3_reset(stmt);
     return 0;
 }

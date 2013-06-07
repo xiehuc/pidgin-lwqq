@@ -135,6 +135,7 @@ const char* qq_gender_to_str(LwqqGender gender);
 const char* qq_constel_to_str(LwqqConstel constel);
 const char* qq_blood_to_str(LwqqBloodType bt);
 const char* qq_shengxiao_to_str(LwqqShengxiao shengxiao);
+const char* qq_client_to_str(LwqqClientType client);
 
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* p);
 
