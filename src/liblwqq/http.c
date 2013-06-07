@@ -546,7 +546,7 @@ static void async_complete(D_ITEM* conn)
 {
     LwqqHttpRequest* request = conn->req;
     composite_trunks(request);
-    int res;
+    int res = 0;
     char** resp = &request->response;
 
     curl_easy_getinfo(request->req,CURLINFO_RESPONSE_CODE,&request->http_code);

@@ -1246,10 +1246,12 @@ LwqqAsyncEvent* lwqq_info_get_discu_name_list(LwqqClient* lc)
     if(!lc) return NULL;
 
     char url[512];
-    snprintf(url,sizeof(url),WEBQQ_D_HOST"/channel/get_discu_list_new2?clientid=%s&psessionid=%s&vfwebqq=%s&t=%ld",
-            lc->clientid,lc->psessionid,lc->vfwebqq,time(NULL));
+    /*snprintf(url,sizeof(url),WEBQQ_D_HOST"/channel/get_discu_list_new2?clientid=%s&psessionid=%s&vfwebqq=%s&t=%ld",
+            lc->clientid,lc->psessionid,lc->vfwebqq,time(NULL));*/
+    snprintf(url,sizeof(url),WEBQQ_S_HOST"/api/get_discus_list?clientid=%s&psessionid=%s&vfwebqq=%s&t=%lu",
+            lc->clientid,lc->psessionid,lc->vfwebqq,LTIME);
     LwqqHttpRequest* req = lwqq_http_create_default_request(lc,url, NULL);
-    req->set_header(req,"Referer",WEBQQ_D_REF_URL);
+    req->set_header(req,"Referer",WEBQQ_S_REF_URL);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
     
     return req->do_request_async(req,0,NULL,_C_(2p_i,get_discu_list_back,req,lc));
