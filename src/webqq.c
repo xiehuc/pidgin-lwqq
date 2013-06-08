@@ -1615,6 +1615,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
         if(!sb->group_sig)
             lwqq_info_get_group_sig(lc,group,sb->uin);
         mmsg->sess.group_sig = s_strdup(sb->group_sig);
+        mmsg->sess.service_type = group->type;
     } else {
         msg = lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
         mmsg = (LwqqMsgMessage*)msg;

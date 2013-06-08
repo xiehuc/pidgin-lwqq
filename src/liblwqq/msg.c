@@ -1992,7 +1992,8 @@ LwqqAsyncEvent* lwqq_msg_send(LwqqClient *lc, LwqqMsgMessage *msg)
         }
         apistr = "send_qun_msg2";
     }else if(msg->super.super.type == LWQQ_MS_SESS_MSG){
-        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->super.to,mmsg->sess.group_sig);
+        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",\"service_type\":%d,",
+                mmsg->super.to,mmsg->sess.group_sig,mmsg->sess.service_type);
         apistr = "send_sess_msg2";
     }else if(msg->super.super.type == LWQQ_MS_DISCU_MSG){
         format_append(data,"\"did\":\"%s\",",mmsg->discu.did);

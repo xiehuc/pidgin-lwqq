@@ -51,7 +51,13 @@ typedef enum LwqqMsgType {
     LWQQ_MT_SHAKE_MESSAGE = LWQQ_MF_SEQ|(12<<3),
     LWQQ_MT_UNKNOWN,
 } LwqqMsgType;
+
 #define lwqq_mt_bits(t) (t&~(-1<<8))
+
+typedef enum {
+    LWQQ_SERVICE_GROUP = 0,
+    LWQQ_SERVICE_DISCU = 1
+}LwqqServiceType;
 
 typedef struct LwqqMsg {
     LwqqMsgType type;
@@ -126,6 +132,7 @@ typedef struct LwqqMsgMessage {
         struct {
             char *id;   /* only sess msg use it.means gid */
             char *group_sig; /* you should fill it before send */
+            LwqqServiceType service_type;
         }sess;
         struct {
             char *send;
