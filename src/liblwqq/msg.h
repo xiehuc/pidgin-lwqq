@@ -109,9 +109,9 @@ typedef struct LwqqMsgContent {
 typedef TAILQ_HEAD(LwqqMsgContentHead, LwqqMsgContent) LwqqMsgContentHead;
 
 typedef enum {
-    LWQQ_FONT_BOLD=1<<1,
-    LWQQ_FONT_ITALIC=1<<2,
-    LWQQ_FONT_UNDERLINE=1<<3,
+    LWQQ_FONT_BOLD=1<<2,
+    LWQQ_FONT_ITALIC=1<<1,
+    LWQQ_FONT_UNDERLINE=1<<0,
 }LwqqFontStyle;
 
 #define lwqq_bit_set(var,bit,value) (var=value?var|bit:var&~bit)

@@ -22,6 +22,7 @@
 #include "translate.h"
 #include "remote.h"
 #include "cgroup.h"
+#include "lwdb.h"
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
 
@@ -1628,9 +1629,9 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
             mmsg->super.to = s_strdup(who);
         }
     }
-    mmsg->f_name = s_strdup("宋体");
-    mmsg->f_size = 11;
-    mmsg->f_style = 0;
+    mmsg->f_name = s_strdup(ac->font.family);
+    mmsg->f_size = ac->font.size;
+    mmsg->f_style = ac->font.style;
     strcpy(mmsg->f_color,"000000");
 
     translate_message_to_struct(lc, who, what, msg, 0);
@@ -1658,9 +1659,9 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
         msg->type = LWQQ_MS_DISCU_MSG;
         mmsg->discu.did = group->did;
     }
-    mmsg->f_name = s_strdup("宋体");
-    mmsg->f_size = 11;
-    mmsg->f_style = 0;
+    mmsg->f_name = s_strdup(ac->font.family);
+    mmsg->f_size = ac->font.size;
+    mmsg->f_style = ac->font.style;
     strcpy(mmsg->f_color,"000000");
     PurpleConversation* conv = purple_find_chat(gc,id);
 
@@ -2935,8 +2936,12 @@ static void qq_login(PurpleAccount *account)
     //for empathy
     ac->qq_use_qqnum = (ac->db != NULL);
     purple_buddy_icons_set_caching(ac->qq_use_qqnum);
-    if(ac->db)
+    if(ac->db){
         version_statics_dlg(ac);
+        lwqq_override(ac->font.family,s_strdup(lwdb_userdb_read(ac->db, "f_family")));
+        ac->font.size = s_atoi(lwdb_userdb_read(ac->db,"f_size"),ac->font.size);
+        ac->font.style = s_atoi(lwdb_userdb_read(ac->db,"f_style"),ac->font.style);
+    }
     
     if(!ac->qq_use_qqnum) 
         all_reset(ac,RESET_ALL);

@@ -28,6 +28,7 @@ void lwqq_ct_free(LwqqConfirmTable* table);
 
 #define lwqq_group_pretty_name(g) (g->markname?:g->name)
 #define lwqq_buddy_pretty_name(b) (b->markname?:b->nick)
+#define lwqq_override(k,v) {char* tmp_ = v;if(tmp_){s_free(k);k=tmp_;}}
 
 
 #define TABLE_BEGIN_LONG(name,rettp,paratp,init) \

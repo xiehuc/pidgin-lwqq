@@ -83,6 +83,11 @@ qq_account* qq_account_new(PurpleAccount* account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
+
+    ac->font.family = s_strdup("宋体");
+    ac->font.size = 12;
+    ac->font.style = 0;
+
     //lwqq_async_set(ac->qq,1);
 #if QQ_USE_FAST_INDEX
     ac->qq->find_buddy_by_uin = find_buddy_by_uin;
@@ -102,6 +107,7 @@ void qq_account_free(qq_account* ac)
     }
     g_ptr_array_free(ac->opend_chat,1);
     s_free(ac->recent_group_name);
+    s_free(ac->font.family);
 #if QQ_USE_FAST_INDEX
     g_hash_table_destroy(ac->fast_index.qqnum_index);
     g_hash_table_destroy(ac->fast_index.uin_index);
