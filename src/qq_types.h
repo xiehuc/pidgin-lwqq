@@ -70,14 +70,19 @@ typedef struct qq_account {
     GPtrArray* opend_chat;
     GList* rewrite_pic_list;
     char* recent_group_name;
+    struct {
+        char* family;
+        int size;
+        LwqqFontStyle style;
+    }font;
     struct{
-    gboolean qq_use_qqnum;
-    gboolean disable_custom_font_face;
-    gboolean disable_custom_font_size;
-    gboolean dark_theme_fix;
-    gboolean debug_file_send;
-    gboolean remove_duplicated_msg;
-    gboolean dont_expected_100_continue;
+        gboolean qq_use_qqnum;
+        gboolean disable_custom_font_face;
+        gboolean disable_custom_font_size;
+        gboolean dark_theme_fix;
+        gboolean debug_file_send;
+        gboolean remove_duplicated_msg;
+        gboolean dont_expected_100_continue;
     };
 #if QQ_USE_FAST_INDEX
     struct{

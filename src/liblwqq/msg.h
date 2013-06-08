@@ -107,11 +107,15 @@ typedef struct LwqqMsgContent {
 }LwqqMsgContent;
 
 typedef TAILQ_HEAD(LwqqMsgContentHead, LwqqMsgContent) LwqqMsgContentHead;
+
 typedef enum {
     LWQQ_FONT_BOLD=1<<1,
     LWQQ_FONT_ITALIC=1<<2,
     LWQQ_FONT_UNDERLINE=1<<3,
 }LwqqFontStyle;
+
+#define lwqq_bit_set(var,bit,value) (var=value?var|bit:var&~bit)
+#define lwqq_bit_get(var,bit) ((var&bit)>0)
 
 typedef struct LwqqMsgMessage {
     LwqqMsgSeq super;
@@ -143,9 +147,7 @@ typedef struct LwqqMsgMessage {
     /* For font  */
     char *f_name;
     int f_size;
-    struct {
-        int b, i, u; /* bold , italic , underline */
-    } f_style;
+    LwqqFontStyle f_style;
     char f_color[7];
 
     LwqqMsgContentHead content;

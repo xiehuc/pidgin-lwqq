@@ -1630,7 +1630,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     }
     mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 11;
-    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_style = 0;
     strcpy(mmsg->f_color,"000000");
 
     translate_message_to_struct(lc, who, what, msg, 0);
@@ -1660,7 +1660,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     }
     mmsg->f_name = s_strdup("宋体");
     mmsg->f_size = 11;
-    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_style = 0;
     strcpy(mmsg->f_color,"000000");
     PurpleConversation* conv = purple_find_chat(gc,id);
 

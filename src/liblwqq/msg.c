@@ -126,9 +126,9 @@ static int parse_content(json_t *json,const char* key, LwqqMsgMessage* opaque)
                     sb = 0;
                     sc = 0;
                 }
-                msg->f_style.b = sa;
-                msg->f_style.i = sb;
-                msg->f_style.u = sc;
+                lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,sa);
+                lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,sb);
+                lwqq_bit_set(msg->f_style,LWQQ_FONT_UNDERLINE,sc);
             } else if (!strcmp(buf, "face")) {
                 /* ["face", 107] */
                 /* FIXME: ensure NULL access */
@@ -1723,7 +1723,9 @@ static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cfac
             KEY("color")":"KEY("%s")
             "}]]\"",
             msg->f_name,msg->f_size,
-            msg->f_style.b,msg->f_style.i,msg->f_style.u,
+            lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD),
+            lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC),
+            lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE),
             msg->f_color);
     return buf;
 }
@@ -2076,7 +2078,7 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     mmsg->super.to = s_strdup(to);
     mmsg->f_name = "宋体";
     mmsg->f_size = 13;
-    mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_style = 0;
     strcpy(mmsg->f_color,"000000");
     LwqqMsgContent * c = s_malloc(sizeof(*c));
     c->type = LWQQ_CONTENT_STRING;

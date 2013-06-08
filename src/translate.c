@@ -223,9 +223,9 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
         }else if(begin[0]=='<'){
             if(begin[1]=='/'){
             }else{
-                if(begin[1]=='b')msg->f_style.b = 1;
-                else if(begin[1]=='i')msg->f_style.i = 1;
-                else if(begin[1]=='u')msg->f_style.u = 1;
+                if(begin[1]=='b')lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,1);
+                else if(begin[1]=='i')lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,1);
+                else if(begin[1]=='u')lwqq_bit_set(msg->f_style,LWQQ_FONT_UNDERLINE,1);
                 else if(strncmp(begin+1,"font",4)==0){
                     const char *key = begin+6;
                     const char *value = strchr(begin,'=')+2;
@@ -382,9 +382,9 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
 {
     LwqqMsgContent* c;
     char piece[24] = {0};
-    if(msg->f_style.b==1) strcat(buf,"<b>");
-    if(msg->f_style.i==1) strcat(buf,"<i>");
-    if(msg->f_style.u==1) strcat(buf,"<u>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) strcat(buf,"<b>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"<i>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"<u>");
     snprintf(buf+strlen(buf),300,"<font ");
     if(ac->dark_theme_fix ){
         int c = strtoul(msg->f_color, NULL, 16);
@@ -433,9 +433,9 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
         }
     }
     strcat(buf,"</font>");
-    if(msg->f_style.u==1) strcat(buf,"</u>");
-    if(msg->f_style.i==1) strcat(buf,"</i>");
-    if(msg->f_style.b==1) strcat(buf,"</b>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) strcat(buf,"</u>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"</i>");
+    if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"</b>");
 }
 void translate_global_init()
 {
