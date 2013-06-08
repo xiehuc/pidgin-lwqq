@@ -739,6 +739,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
 {
     char body[1024]={0};
     LwqqGroup* g = find_group_by_gid(lc, msg->group_uin);
+    if(!g) return ;
     format_append(body,_("Request QQ Group:%s\nRequest Reason:%s\n"),g->name,msg->msg);
     format_body_from_buddy(body,sizeof(body),buddy);
     LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
