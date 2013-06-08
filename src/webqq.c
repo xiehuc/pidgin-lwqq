@@ -1414,6 +1414,7 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
 
     code_pic = purple_request_field_image_new("code_pic", "code", code->data, code->size);
     purple_request_field_group_add_field(field_group, code_pic);
+    lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
 
     code_entry = purple_request_field_string_new("code_entry", "input", "", FALSE);
     purple_request_field_set_required(code_entry,TRUE);
@@ -1507,7 +1508,6 @@ static LwqqAsyncOption qq_async_opt = {
     .poll_lost = lost_connection,
     .upload_fail = upload_content_fail,
     .need_verify2 = show_verify_image,
-    //.need_confirm = show_confirm_table,
     .delete_group = delete_group_local,
     .group_members_chg = flush_group_members,
 };

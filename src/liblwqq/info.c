@@ -28,7 +28,6 @@
 #include "utility.h"
 #include "internal.h"
 
-#define LWQQ_CACHE_DIR "/tmp/lwqq/"
 
 static void create_post_data(LwqqClient *lc, char *buf, int buflen);
 static int get_avatar_back(LwqqHttpRequest* req,LwqqBuddy* buddy,LwqqGroup* group);
@@ -1012,8 +1011,8 @@ LwqqErrorCode lwqq_info_save_avatar(LwqqBuddy* b,LwqqGroup* g,const char* path)
     char* path_;
     char* avatar = b?b->avatar:g->avatar;
     size_t avatar_len = b?b->avatar_len:g->avatar_len;
-    int err = LWQQ_EC_OK;
     if(avatar_len==0||avatar==NULL) return LWQQ_EC_OK;
+
 
     if(path == NULL){
         char* qqnumber = b?b->qqnumber:g->account;
@@ -1023,23 +1022,9 @@ LwqqErrorCode lwqq_info_save_avatar(LwqqBuddy* b,LwqqGroup* g,const char* path)
         snprintf(path_,256,LWQQ_CACHE_DIR"/%s",key);
     }else
         path_ = s_strdup(path);
-    FILE* f = fopen(path_,"wb");
-    if(f==NULL&&errno==2){
-        //no such directory or file
-        mkdir(LWQQ_CACHE_DIR,0777);
-        f = fopen(path_,"wb");
-    }
-    if(f==NULL){
-        lwqq_log(LOG_ERROR,"%d:%s\n",errno,strerror(errno));
-        err = LWQQ_EC_ERROR;
-        goto done;
-    }
+    lwqq_util_save_img(avatar, avatar_len, path_, NULL);
 
-    fwrite(avatar, avatar_len, 1, f);
-    fclose(f);
-done:
-    s_free(path_);
-    return err;
+    return LWQQ_EC_OK;
 }
 
 /**

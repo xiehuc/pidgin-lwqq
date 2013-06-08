@@ -26,6 +26,7 @@
 #define LWQQ_DEFAULT_CATE "My Friends"
 #define LWQQ_PASSERBY_CATE "Passerby"
 #define LWQQ_RETRY_VALUE 3
+#define LWQQ_CACHE_DIR "/tmp/lwqq"
 
 
 typedef struct _LwqqAsyncEvent LwqqAsyncEvent;

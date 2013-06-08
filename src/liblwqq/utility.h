@@ -26,6 +26,8 @@ typedef struct LwqqString{
 
 void lwqq_ct_free(LwqqConfirmTable* table);
 
+LwqqOpCode lwqq_util_save_img(void* ptr,size_t len,char* path,char* dir);
+
 #define lwqq_group_pretty_name(g) (g->markname?:g->name)
 #define lwqq_buddy_pretty_name(b) (b->markname?:b->nick)
 #define lwqq_override(k,v) {char* tmp_ = v;if(tmp_){s_free(k);k=tmp_;}}
