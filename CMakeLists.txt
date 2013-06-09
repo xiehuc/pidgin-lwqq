@@ -14,6 +14,7 @@ pkg_check_modules(PURPLE REQUIRED  purple)
 pkg_check_modules(GLIB REQUIRED  glib-2.0)
 pkg_check_modules(CURL REQUIRED libcurl)
 pkg_check_modules(SQLITE REQUIRED sqlite3)
+pkg_check_modules(ZLIB REQUIRED zlib)
 #recommand libcurl>=7.22.0
 
 add_definitions(-Wall)
