@@ -1259,14 +1259,10 @@ static void login_stage_f(LwqqClient* lc)
             friend_come(lc, buddy);
         }
     }
-    int auto_load_group = purple_account_get_bool(ac->account, "auto_load_group", FALSE);
     LIST_FOREACH(group,&lc->groups,entries){
         if(group->last_modify == -1 || group->last_modify == 0){
             lwdb_userdb_insert_group_info(ac->db, group);
             group_come(lc,group);
-        }
-        if(auto_load_group){
-            lwqq_info_get_group_detail_info(lc, group, NULL);
         }
     }
     lwdb_userdb_commit(ac->db);
@@ -2543,52 +2539,6 @@ static void qq_merge_group_history(PurpleChat* chat)
     ct->cmd = _C_(3p,download_online_history_begin,g,ct,ac);
     show_confirm_table(lc, ct);
 }
-static void display_qq_level_popup(PurpleConnection* gc, LwqqBuddy* b)
-{
-    int level=b->level;
-    char level_str[10];
-    GString *level_output = g_string_new("");
-
-    sprintf(level_str, "%d", level);
-
-    while(level>0)
-        if(level>=64){
-            g_string_append(level_output,"♚");
-            level-=64;
-        }else if(level>=16){
-            g_string_append(level_output,"☀");
-            level-=16;
-        }else if(level>=4){
-            g_string_append(level_output,"☾");
-            level-=4;
-        }else{
-            g_string_append(level_output,"★");
-            level-=1;
-        }
-
-    g_string_append(level_output, " (");
-    g_string_append(level_output, level_str);
-    g_string_append(level_output, _("Level)"));
-
-    purple_notify_info(gc, _("QQ Level"), level_output->str, NULL);
-    g_string_free(level_output, TRUE);
-}
-static void qq_level_popup(PurpleBuddy* buddy)
-{
-    PurpleConnection* gc = buddy->account->gc;
-    qq_account* ac = gc->proto_data;
-    LwqqClient* lc = ac->qq;
-    LwqqBuddy* b = buddy->proto_data;
-    if(b == NULL){
-        if(strstr(buddy->name," ### "))
-            purple_notify_info(gc,_("Error"),_("Tempory Session not support this function"),NULL);
-        return;
-    }
-
-    LwqqAsyncEvent* ev = lwqq_info_get_level(lc,b);
-    lwqq_async_add_event_listener(ev,
-            _C_(2p,display_qq_level_popup,ac->gc,b));
-}
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
@@ -2603,8 +2553,6 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         action = purple_menu_action_new(_("Send Email"),(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
         action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
-        act = g_list_append(act,action);
-        action = purple_menu_action_new(_("Display QQ Level"),(PurpleCallback)qq_level_popup,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
@@ -2648,43 +2596,47 @@ static const char* qq_list_emblem(PurpleBuddy* b)
 static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 {
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
+    qq_account* ac = gc->proto_data;
     char buf[32]={0};
-#define ADD_STRING(k,v)   purple_notify_user_info_add_pair(info,k,v)
+#define ADD_INFO(k,v)   purple_notify_user_info_add_pair(info,k,v)
 #define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
     //ADD_HEADER("基本信息");
-    ADD_STRING(_("QQ"),b->qqnumber);
-    ADD_STRING(_("Nick"),b->nick);
-    ADD_STRING(_("Mark"),b->markname);
-    ADD_STRING(_("Longnick"),b->long_nick);
+    ADD_INFO(_("QQ"),b->qqnumber);
+    ADD_INFO(_("Nick"),b->nick);
+    ADD_INFO(_("Mark"),b->markname);
+    ADD_INFO(_("Longnick"),b->long_nick);
+    ADD_INFO(_("Level"),qq_level_to_str(b->level));
     ADD_HEADER(_("Self Information"));
-    ADD_STRING(_("Gender"), qq_gender_to_str(b->gender));
-    ADD_STRING(_("Shengxiao"),qq_shengxiao_to_str(b->shengxiao));
-    ADD_STRING(_("Constellation"),qq_constel_to_str(b->constel));
-    ADD_STRING(_("Blood Type"),qq_blood_to_str(b->blood));
+    ADD_INFO(_("Gender"), qq_gender_to_str(b->gender));
+    ADD_INFO(_("Shengxiao"),qq_shengxiao_to_str(b->shengxiao));
+    ADD_INFO(_("Constellation"),qq_constel_to_str(b->constel));
+    ADD_INFO(_("Blood Type"),qq_blood_to_str(b->blood));
     struct tm *tm_ = localtime(&b->birthday);
     strftime(buf,sizeof(buf),_("%Y-%m-%d"),tm_);
-    ADD_STRING(_("Birthday"),buf);
+    ADD_INFO(_("Birthday"),buf);
     ADD_HEADER(_("Place Information"));
-    ADD_STRING(_("Contry"),b->country);
-    ADD_STRING(_("Province"),b->province);
-    ADD_STRING(_("City"),b->city);
+    ADD_INFO(_("Contry"),b->country);
+    ADD_INFO(_("Province"),b->province);
+    ADD_INFO(_("City"),b->city);
     ADD_HEADER(_("Conmunicate Information"));
-    ADD_STRING(_("Phone"),b->phone);
-    ADD_STRING(_("Mobile"),b->mobile);
-    ADD_STRING(_("Email"),b->email);
-    ADD_STRING(_("Occupation"),b->occupation);
-    ADD_STRING(_("College"),b->college);
-    ADD_STRING(_("Homepage"),b->homepage);
-    //ADD_STRING("简介","");
+    ADD_INFO(_("Phone"),b->phone);
+    ADD_INFO(_("Mobile"),b->mobile);
+    ADD_INFO(_("Email"),b->email);
+    ADD_INFO(_("Occupation"),b->occupation);
+    ADD_INFO(_("College"),b->college);
+    ADD_INFO(_("Homepage"),b->homepage);
+    //ADD_INFO("简介","");
     purple_notify_userinfo(gc, who?who:try_get(b->qqnumber,b->uin), info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
     //if who is not NULL,this is a group member 
     //detail info display.we should free buddy.
     if(who) {
         lwqq_buddy_free(b);
         s_free(who);
+    }else{
+        lwdb_userdb_update_buddy_info(ac->db, b);
     }
-#undef ADD_STRING
+#undef ADD_INFO
 #undef ADD_HEADER
 }
 static void qq_get_user_info(PurpleConnection* gc,const char* who)

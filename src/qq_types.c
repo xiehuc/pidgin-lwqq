@@ -47,6 +47,26 @@ TABLE_BEGIN_LONG(qq_client_to_str,const char*,LwqqClientType,"")
     TR(LWQQ_CLIENT_QQFORPAD,_("PadQQ"))
 TABLE_END()
 
+const char* qq_level_to_str(int level)
+{
+    static const char* symbol[] = {"♔","⚙","☾","☆"};
+    static const int number[] = {64,16,4,1};
+    static char buf[128];
+    int l = level;
+    int repeat;
+    int i,j;
+    memset(buf,0,sizeof(buf));
+    for(i=0;i<4;i++){
+        repeat = l/number[i];
+        l=l%number[i];
+        for(j=0;j<repeat;j++){
+            strcat(buf,symbol[i]);
+        }
+    }
+    format_append(buf,"(%d)",level);
+    return buf;
+}
+
 static int did_dispatch(void* param)
 {
     struct dispatch_data *d = param;
