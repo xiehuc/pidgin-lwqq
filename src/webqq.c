@@ -714,7 +714,7 @@ static void format_body_from_buddy(char* body,size_t buf_len,LwqqBuddy* buddy)
     ADD_INFO(_("Shengxiao"), qq_shengxiao_to_str(buddy->shengxiao));
     ADD_INFO(_("Constellation"), qq_constel_to_str(buddy->constel));
     ADD_INFO(_("Blood Type"), qq_blood_to_str(buddy->blood));
-    //ADD_INFO("生日", buddy->birthday);
+    ADD_INFO(_("Birthday"),lwqq_date_to_str(buddy->birthday));
     ADD_INFO(_("Country"), buddy->country);
     ADD_INFO(_("Province"), buddy->province);
     ADD_INFO(_("City"), buddy->city);
@@ -1511,12 +1511,18 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
-    if(err==LWQQ_EC_LOGIN_ABNORMAL) {
-        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("Account Problem Occurs,Need lift the ban"));
-        return ;
-    } else if(err!=LWQQ_EC_OK) {
-        purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
-        return ;
+    switch(err){
+        case LWQQ_EC_OK:
+            break;
+        case LWQQ_EC_LOGIN_ABNORMAL:
+            purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("Account Problem Occurs,Need lift the ban"));
+            return ;
+        case LWQQ_EC_NETWORK_ERROR:
+            purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("Network Error"));
+            return;
+        default:
+            purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
+            return;
     }
 
     ac->state = CONNECTED;
@@ -2597,7 +2603,6 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 {
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
     qq_account* ac = gc->proto_data;
-    char buf[32]={0};
 #define ADD_INFO(k,v)   purple_notify_user_info_add_pair(info,k,v)
 #define ADD_HEADER(s)     purple_notify_user_info_add_section_break(info)
 //#define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
@@ -2612,9 +2617,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
     ADD_INFO(_("Shengxiao"),qq_shengxiao_to_str(b->shengxiao));
     ADD_INFO(_("Constellation"),qq_constel_to_str(b->constel));
     ADD_INFO(_("Blood Type"),qq_blood_to_str(b->blood));
-    struct tm *tm_ = localtime(&b->birthday);
-    strftime(buf,sizeof(buf),_("%Y-%m-%d"),tm_);
-    ADD_INFO(_("Birthday"),buf);
+    ADD_INFO(_("Birthday"),lwqq_date_to_str(b->birthday));
     ADD_HEADER(_("Place Information"));
     ADD_INFO(_("Contry"),b->country);
     ADD_INFO(_("Province"),b->province);

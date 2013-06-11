@@ -312,7 +312,7 @@ void lwqq_async_global_quit()
     if(ev_thread_status == THREAD_NOW_WAITING){
         pthread_cond_signal(&ev_thread_cond);
     }else if(ev_thread_status == THREAD_NOW_RUNNING){
-        ev_timer_init(&bomb,ev_bomb,0.002,0.002);
+        ev_timer_init(&bomb,ev_bomb,0.001,0.001);
         ev_timer_start(ev_default,&bomb);
     }
     ev_thread_status = THREAD_NOT_CREATED;

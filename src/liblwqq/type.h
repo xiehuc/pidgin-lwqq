@@ -470,6 +470,7 @@ snprintf(str+strlen(str),sizeof(str)-strlen(str),##format)
 
 const char* lwqq_status_to_str(LwqqStatus status);
 LwqqStatus lwqq_status_from_str(const char* str);
+const char* lwqq_date_to_str(time_t date);
 
 //long time
 #define LTIME lwqq_time()

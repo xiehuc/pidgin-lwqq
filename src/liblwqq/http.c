@@ -886,9 +886,6 @@ void lwqq_http_global_init()
 {
     if(global.multi==NULL){
         curl_global_init(CURL_GLOBAL_ALL);
-//#if LWQQ_ENABLE_SSL
-        //signal(SIGPIPE,SIG_IGN);
-//#endif
         global.multi = curl_multi_init();
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETFUNCTION,sock_cb);
         curl_multi_setopt(global.multi,CURLMOPT_SOCKETDATA,&global);
@@ -929,9 +926,8 @@ void lwqq_http_global_free()
     if(global.multi){
         if(!LIST_EMPTY(&global.conn_link)){
             lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,NULL);
-            struct timespec timeout = {2,0};
             pthread_mutex_lock(&async_lock);
-            pthread_cond_timedwait(&async_cond,&async_lock,&timeout);
+            pthread_cond_wait(&async_cond,&async_lock);
             pthread_mutex_unlock(&async_lock);
         }
 
@@ -944,6 +940,7 @@ void lwqq_http_global_free()
             lwqq_async_event_finish(item->event);
             s_free(item);
         }
+
         curl_multi_cleanup(global.multi);
         global.multi = NULL;
         lwqq_async_io_stop(&global.add_listener);
@@ -964,11 +961,14 @@ void lwqq_http_global_free()
 void lwqq_http_cleanup(LwqqClient*lc)
 {
     if(global.multi){
+        /**must dispatch safe_remove_link first
+         * then vp_do(item->cmd) because vp_do might release memory
+         */
         if(!LIST_EMPTY(&global.conn_link)){
             lwqq_async_dispatch(vp_func_p,(CALLBACK_FUNC)safe_remove_link,lc);
-            struct timespec timeout = {2,0};
             pthread_mutex_lock(&async_lock);
-            pthread_cond_timedwait(&async_cond,&async_lock,&timeout);
+            //must use cond wait because timedcond might not trigger dispatch
+            pthread_cond_wait(&async_cond,&async_lock);
             pthread_mutex_unlock(&async_lock);
         }
 
@@ -982,6 +982,7 @@ void lwqq_http_cleanup(LwqqClient*lc)
             lwqq_async_event_finish(item->event);
             s_free(item);
         }
+
     }
 }
 
@@ -1075,6 +1076,9 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
     switch(opt){
         case LWQQ_HTTP_TIMEOUT:
             curl_easy_setopt(req->req,CURLOPT_LOW_SPEED_TIME,va_arg(args,unsigned long));
+            break;
+        case LWQQ_HTTP_ALL_TIMEOUT:
+            curl_easy_setopt(req->req, CURLOPT_TIMEOUT,va_arg(args,unsigned long));
             break;
         case LWQQ_HTTP_NOT_FOLLOW:
             curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,long));

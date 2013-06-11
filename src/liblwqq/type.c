@@ -475,6 +475,15 @@ LwqqStatus lwqq_status_from_str(const char* str)
 {
     return lwqq__map_to_type_(status_type_map, str);
 }
+const char* lwqq_date_to_str(time_t date)
+{
+    static char buf[128];
+    memset(buf,0,sizeof(buf));
+    if(date == 0 || date == -1) return buf;
+    struct tm *tm_ = localtime(&date);
+    strftime(buf,sizeof(buf),"%Y-%m-%d",tm_);
+    return buf;
+}
 
 
 

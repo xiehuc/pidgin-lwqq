@@ -76,6 +76,8 @@ static LwqqAsyncEvent* get_verify_code(LwqqClient *lc,const char* appid)
     snprintf(url, sizeof(url), WEBQQ_CHECK_HOST"/check?uin=%s&appid=%s",
              lc->username, appid);
     req = lwqq_http_create_default_request(lc,url,NULL);
+    req->retry = 0;
+    lwqq_http_set_option(req, LWQQ_HTTP_ALL_TIMEOUT,5L);
     lwqq_verbose(3,"%s\n",url);
     
     snprintf(chkuin, sizeof(chkuin), "chkuin=%s", lc->username);
@@ -88,6 +90,11 @@ static int get_verify_code_back(LwqqHttpRequest* req)
     int err = LWQQ_EC_OK;
     char response[256];
     LwqqClient* lc = req->lc;
+    if(req->failcode != LWQQ_CALLBACK_VALID){
+        lc->async_opt->login_complete(lc,LWQQ_EC_NETWORK_ERROR);
+        err = LWQQ_EC_NETWORK_ERROR;
+        goto failed;
+    }
     if (req->http_code != 200) {
         err = LWQQ_EC_HTTP_ERROR;
         goto failed;
@@ -419,6 +426,7 @@ static LwqqAsyncEvent* get_version(LwqqClient *lc, LwqqErrorCode *err)
     LwqqHttpRequest *req;
 
     req = lwqq_http_create_default_request(lc,WEBQQ_VERSION_URL, err);
+    lwqq_http_set_option(req, LWQQ_HTTP_ALL_TIMEOUT,5L);
 
     /* Send request */
     lwqq_log(LOG_DEBUG, "Get webqq version from %s\n", WEBQQ_VERSION_URL);
@@ -609,7 +617,7 @@ void lwqq_login(LwqqClient *client, LwqqStatus status,LwqqErrorCode *err)
 
     lwqq_puts("[login stage 1:get webqq version]\n");
     /* optional: get webqq version */
-    get_version(client, err);
+    //get_version(client, err);
     login_stage_2(client);
 }
 
@@ -755,8 +763,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     /* Set http cookie */
     req->set_header(req, "Cookie", lwqq_get_cookies(client));
     
-    //lwqq_http_set_timeout(req,5);
-    lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,5L);
+    lwqq_http_set_option(req, LWQQ_HTTP_ALL_TIMEOUT,5L);
     req->retry = 0;
     ret = req->do_request(req, 0, NULL);
     if (ret) {

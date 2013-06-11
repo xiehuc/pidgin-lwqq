@@ -108,6 +108,7 @@ typedef struct {
         char* username;
         char* password;
     }proxy;
+    int quit;
 }LwqqHttpHandle;
 
 void lwqq_http_handle_remove(LwqqHttpHandle* http);
@@ -154,6 +155,7 @@ LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url
 
 typedef enum {
     LWQQ_HTTP_TIMEOUT,
+    LWQQ_HTTP_ALL_TIMEOUT,
     LWQQ_HTTP_NOT_FOLLOW,
     LWQQ_HTTP_SAVE_FILE,
     LWQQ_HTTP_RESET_URL,

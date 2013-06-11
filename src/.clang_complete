@@ -2,3 +2,4 @@
 -I ./
 -I ./liblwqq
 -I /usr/include/libpurple/
+-I /usr/include/curl/
