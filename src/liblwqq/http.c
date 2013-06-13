@@ -1106,6 +1106,7 @@ void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 }
 void lwqq_http_cancel(LwqqHttpRequest* req)
 {
+    if(!req) return;
     LwqqHttpRequest_* req_ = (LwqqHttpRequest_*)req;
     req_->retry_ = 0;
     req_->bits |= HTTP_FORCE_CANCEL;

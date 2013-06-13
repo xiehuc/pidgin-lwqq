@@ -867,5 +867,6 @@ LwqqAsyncEvent* lwqq_relink(LwqqClient* lc)
     req->set_header(req,"Referer",WEBQQ_D_REF_URL);
     lwqq_set_cookie(lc->cookies, "ptwebqq", lc->new_ptwebqq);
     req->set_header(req,"Cookie",lwqq_get_cookies(lc));
+    req->retry = 0;
     return req->do_request_async(req,1,post,_C_(p_i,process_login2,req));
 }

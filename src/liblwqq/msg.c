@@ -46,6 +46,7 @@ typedef struct LwqqRecvMsgList_{
     struct LwqqRecvMsgList parent;
     //LwqqAsyncTimer tip_loop;
     LwqqPollOption flags;
+    LwqqHttpRequest* req;
     int last_id2;
     pthread_t tid;
     int on_quit;
@@ -1533,9 +1534,9 @@ static void *start_poll_msg(void *msg_list)
     LwqqHttpRequest *req = NULL;  
     char *s;
     char msg[1024];
-    LwqqRecvMsgList *list;
+    LwqqRecvMsgList *list = (LwqqRecvMsgList *)msg_list;
+    LwqqRecvMsgList_* list_ = (LwqqRecvMsgList_*) list;
 
-    list = (LwqqRecvMsgList *)msg_list;
     lc = (LwqqClient *)(list->lc);
     if (!lc) {
         goto failed;
@@ -1550,22 +1551,20 @@ static void *start_poll_msg(void *msg_list)
     char url[512];
     snprintf(url, sizeof(url), WEBQQ_D_HOST"/channel/poll2");
     req = lwqq_http_create_default_request(lc,url, NULL);
-    if (!req) {
-        goto failed;
-    }
+    list_->req = req;
     req->set_header(req, "Referer", WEBQQ_D_REF_URL);
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     //long poll timeout is 90s.official value
     lwqq_http_set_option(req, LWQQ_HTTP_TIMEOUT,90);
+    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE,1L);
     req->retry = 5;
     //lwqq_http_set_option(req, LWQQ_HTTP_VERBOSE,1);
 
 #if USE_MSG_THREAD
     int retcode;
     int ret;
-    lwqq_http_on_progress(req, poll_progress, list);
     LwqqAsyncEvent* ev = NULL;
     while(1) {
         ret = req->do_request(req, 1, msg);
@@ -1606,6 +1605,7 @@ static void *start_poll_msg(void *msg_list)
     lwqq_puts("quit the msg_thread");
 failed:
     if(req) lwqq_http_request_free(req);
+    list_->req = NULL;
     return NULL;
 #else
     void ** data = s_malloc0(sizeof(void*)*2);
@@ -1633,12 +1633,13 @@ static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list,LwqqPollOption flags)
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list)
 {
     if(!list) return;
-    LwqqRecvMsgList_* internal = (LwqqRecvMsgList_*)list;
-    if(internal->tid == 0) return;
-    internal->on_quit = 1;
-    pthread_join(internal->tid,NULL);
-    internal->on_quit = 0;
-    internal->tid = 0;
+    LwqqRecvMsgList_* list_= (LwqqRecvMsgList_*)list;
+    if(list_->tid == 0) return;
+    list_->on_quit = 1;
+    lwqq_http_cancel(list_->req);
+    pthread_join(list_->tid,NULL);
+    list_->on_quit = 0;
+    list_->tid = 0;
 }
 
 ///low level special char mapping
