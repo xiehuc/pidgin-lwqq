@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-11 09:58+0800\n"
+"POT-Creation-Date: 2013-06-13 19:51+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,11 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2616
-msgid "%Y-%m-%d"
-msgstr "%Y-%m-%d"
-
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1058
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1059
 #, c-format
 msgid ""
 "%s\n"
@@ -33,7 +29,7 @@ msgstr ""
 "附加理由:%s\n"
 "\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:767
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:768
 #, c-format
 msgid ""
 "%s Added in QQ Group[%s]\n"
@@ -42,27 +38,27 @@ msgstr ""
 "%s加入了群[%s]\n"
 "管理员%s"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:779
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:780
 #, c-format
 msgid "%s Leave QQ Group[%s]"
 msgstr "%s离开了群[%s]"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1072
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1073
 #, c-format
 msgid "%s accept your request"
 msgstr "%s接受了您的请求"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1069
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1070
 #, c-format
 msgid "%s accept your request,and add back you as friend too"
 msgstr "%s接受了您的请求,并且加您为好友"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:316
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:317
 #, c-format
 msgid ":%s\n"
 msgstr ":%s\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1967
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1976
 msgid "???"
 msgstr "???"
 
@@ -74,61 +70,61 @@ msgstr "A"
 msgid "AB"
 msgstr "AB"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:451
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:452
 msgid "About pidgin-lwqq"
 msgstr "关于pidgin-lwqq"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:166
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:167
 #, c-format
 msgid "About pidgin-lwqq %s"
 msgstr "关于pidgin-lwqq %s"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1468
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1471
 msgid "Accept"
 msgstr "同意"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1515
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1521
 msgid "Account Problem Occurs,Need lift the ban"
 msgstr "帐号出现问题,需要手工解禁"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2103
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2112
 msgid "Account not exists or not main display account"
 msgstr "帐号不存在或者不是主显帐号"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1070
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1073
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1071
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1074
 msgid "Add Friend"
 msgstr "添加好友"
 
 #. act = purple_plugin_action_new("好友管理",visit_my_qq_center);
 #. m = g_list_append(m, act);
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:341
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:463
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:342
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:464
 msgid "Add QQ Group"
 msgstr "添加QQ群"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1967
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1976
 msgid "Add friend failed"
 msgstr "添加好友失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1965
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1974
 msgid "Add passerby as friend"
 msgstr "添加陌生人为好友"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:314
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:315
 msgid "Additional Reason"
 msgstr "附加理由"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:690
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2833
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:691
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2841
 msgid "Agree"
 msgstr "同意"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1061
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1062
 msgid "Agree and add back"
 msgstr "同意并添加好友"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:469
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:470
 msgid "All Reload(Debug)"
 msgstr "全部重载(调试)"
 
@@ -140,7 +136,7 @@ msgstr "水瓶座"
 msgid "Aries"
 msgstr "白羊座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:499
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:500
 msgid "Away"
 msgstr "离开"
 
@@ -148,37 +144,38 @@ msgstr "离开"
 msgid "B"
 msgstr "B"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2617
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:718
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2623
 msgid "Birthday"
 msgstr "生日"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2250
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2568
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2259
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2577
 msgid "Block"
 msgstr "屏蔽"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2247
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2256
 msgid "Block Setting"
 msgstr "屏蔽设置"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:716
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2614
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:717
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2622
 msgid "Blood Type"
 msgstr "血型"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:502
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:503
 msgid "Busy"
 msgstr "忙碌"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:496
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:497
 msgid "Callme"
 msgstr "Q我"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:342
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:376
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1422
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2300
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2352
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:343
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:377
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1425
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2309
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2361
 msgid "Cancel"
 msgstr "取消"
 
@@ -190,7 +187,7 @@ msgstr "巨蟹座"
 msgid "Capricornus"
 msgstr "摩羯座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1420
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1423
 msgid "Captcha"
 msgstr "验证码"
 
@@ -198,16 +195,16 @@ msgstr "验证码"
 msgid "Cattle"
 msgstr "牛"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2563
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2572
 msgid "Change Business Card"
 msgstr "更改群名片"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2570
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2579
 msgid "Change Mark"
 msgstr "更改备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1952
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1991
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1961
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2000
 msgid "Change friend category failed"
 msgstr "更改好友分组失败"
 
@@ -219,70 +216,69 @@ msgstr "聊天"
 msgid "Chook"
 msgstr "鸡"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:720
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2621
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:721
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2627
 msgid "City"
 msgstr "城市"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2201
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2210
 msgid "Client"
 msgstr "终端"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:725
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2627
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:726
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2633
 msgid "College"
 msgstr "学校"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1481
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1482
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1484
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1485
 msgid "Confirm"
 msgstr "确认"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:313
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:314
 msgid "Confirm QQ Group"
 msgstr "确认QQ群"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2622
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
 msgid "Conmunicate Information"
 msgstr "通讯信息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:715
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2613
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:716
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2621
 msgid "Constellation"
 msgstr "星座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2619
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2625
 msgid "Contry"
 msgstr "国家"
 
-#. ADD_INFO("生日", buddy->birthday);
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:718
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:719
 msgid "Country"
 msgstr "国家"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:376
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:377
 msgid "Create"
 msgstr "创建"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:376
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:377
 msgid "Create Discussion"
 msgstr "创建讨论组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:465
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:466
 msgid "Create Discussion Group"
 msgstr "创建讨论组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2783
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2791
 msgid "Debug File Transport"
 msgstr "调试文件传输"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1467
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1483
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2834
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1470
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1486
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2842
 msgid "Deny"
 msgstr "拒绝"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:749
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:750
 msgid "Deny Reason"
 msgstr "拒绝理由"
 
@@ -290,15 +286,15 @@ msgstr "拒绝理由"
 msgid "Desktop"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:616
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:617
 msgid "Discussion"
 msgstr "讨论组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:369
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:370
 msgid "Discussion Name"
 msgstr "讨论组名称"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2785
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2793
 msgid "Do not use Expected:100 Continue when send offline message"
 msgstr "发送离线文件时不使用Expected:100 Continue"
 
@@ -306,22 +302,26 @@ msgstr "发送离线文件时不使用Expected:100 Continue"
 msgid "Dog"
 msgstr "狗"
 
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2787
+msgid "Don't Download Group Pic(Reduce Network Transfer)"
+msgstr "不下载群聊天图片(省流量)"
+
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:14
 msgid "Dragon"
 msgstr "龙"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2537
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2546
 msgid "Each Page has 60 Entry"
 msgstr "每页有60条记录"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:723
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2293
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2625
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:724
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2302
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2631
 msgid "Email"
 msgstr "邮箱"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:283
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2075
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:284
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2084
 msgid ""
 "ErrCode:6\n"
 "Please try agagin later\n"
@@ -329,31 +329,31 @@ msgstr ""
 "错误号:6\n"
 "请求过于频繁,请过一段时间重试\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2382
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2489
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2518
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2678
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2391
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2498
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2527
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2684
 msgid "Error"
 msgstr "错误"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2381
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2390
 #, c-format
 msgid "Error Code:%d"
 msgstr "错误号:%d"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:283
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:308
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2075
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2103
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2107
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:284
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:309
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2084
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2112
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2116
 msgid "Error Message"
 msgstr "错误消息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:455
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:456
 msgid "FAQ"
 msgstr "FAQ"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:457
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:458
 msgid "Feedback"
 msgstr "问题反馈"
 
@@ -373,8 +373,8 @@ msgstr "文件传输超时"
 msgid "Friend"
 msgstr "好友"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1056
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2111
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1057
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2120
 msgid "Friend Confirm"
 msgstr "好友确认"
 
@@ -382,37 +382,37 @@ msgstr "好友确认"
 msgid "Gemini"
 msgstr "双子座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:713
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2611
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:714
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2619
 msgid "Gender"
 msgstr "性别"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1545
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1554
 msgid "Get Friend|Group List Failed"
 msgstr "获取群|好友列表失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2561
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2570
 msgid "Get Information"
 msgstr "获取信息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:308
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:309
 msgid "Get QQ Group Infomation Failed"
 msgstr "获取群信息失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2107
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2116
 msgid "Get friend infomation failed"
 msgstr "获取好友信息失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2299
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2308
 msgid "Group Business Card"
 msgstr "群名片"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:508
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:509
 msgid "Hidden"
 msgstr "隐身"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:726
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2628
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:727
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2634
 msgid "Homepage"
 msgstr "主页"
 
@@ -420,35 +420,35 @@ msgstr "主页"
 msgid "Horse"
 msgstr "马"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2536
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2545
 msgid "How many pages want to merge"
 msgstr "您想合并多少页"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1483
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1486
 msgid "Ignore"
 msgstr "忽略"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2787
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2795
 msgid "Ignore Group(Compatible with recent plugin)"
 msgstr "忽略的组(兼容recent插件)"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2773
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2779
 msgid "Ignore Received Message Font Family"
 msgstr "忽略接受消息字体"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2775
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2781
 msgid "Ignore Received Message Font Size"
 msgstr "忽略接受消息文字大小"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2489
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2498
 msgid "Input Invalid"
 msgstr "输入不合法"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2351
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2360
 msgid "Input Mark"
 msgstr "输入备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2353
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2362
 msgid "Input Topic"
 msgstr "输入主题"
 
@@ -456,21 +456,20 @@ msgstr "输入主题"
 msgid "Leo"
 msgstr "狮子座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2200
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2609
-#, fuzzy
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2209
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2617
 msgid "Level"
-msgstr "级)"
+msgstr "等级"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:32
 msgid "Libra"
 msgstr "天秤座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:425
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:712
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2198
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2368
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2608
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:426
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:713
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2207
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2377
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2616
 msgid "Longnick"
 msgstr "签名"
 
@@ -478,46 +477,46 @@ msgstr "签名"
 msgid "Male"
 msgstr "男"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2196
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2367
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2607
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2205
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2376
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2615
 msgid "Mark"
 msgstr "备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2443
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2452
 #, c-format
 msgid "Merge %d Entry"
 msgstr "合并%d条消息记录"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2454
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2463
 msgid "Merge 0 Entry"
 msgstr "合并0条消息记录"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2444
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2454
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2555
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2565
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2453
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2463
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2564
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2574
 msgid "Merge Online History"
 msgstr "合并漫游记录"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1573
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1582
 msgid "Message body too long"
 msgstr "消息内容过长"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:722
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2624
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:723
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2630
 msgid "Mobile"
 msgstr "手机"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2351
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2360
 msgid "Modify Mark"
 msgstr "修改备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:467
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:468
 msgid "Modify Self LongNick"
 msgstr "修改个性签名"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:424
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:425
 msgid "Modify Self Longnick"
 msgstr "修改个性签名"
 
@@ -529,26 +528,30 @@ msgstr "猴"
 msgid "Mouth"
 msgstr "鼠"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2289
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2366
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2298
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2375
 msgid "Name"
 msgstr "名称"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2822
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2830
 msgid "Need Your Attention"
 msgstr "需要您的注意"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:711
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2194
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2606
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1524
+msgid "Network Error"
+msgstr ""
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:712
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2203
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2614
 msgid "Nick"
 msgstr "昵称"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2248
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2257
 msgid "No Block"
 msgstr "不屏蔽"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2354
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2363
 msgid ""
 "Note:You are setting discussion topic on server.\n"
 "Which would affect all discussion member"
@@ -560,26 +563,26 @@ msgstr ""
 msgid "O"
 msgstr "O"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1421
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1424
 msgid "OK"
 msgstr "确定"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:724
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2626
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:725
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2632
 msgid "Occupation"
 msgstr "职业"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:511
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:512
 msgid "Offline"
 msgstr "离线"
 
 #. status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:493
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:514
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:494
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:515
 msgid "Online"
 msgstr "我在线上"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2678
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2684
 msgid "Only Discussion Can Add new member"
 msgstr "只有讨论组能够添加成员"
 
@@ -599,7 +602,7 @@ msgstr ""
 "对方可能使用webqq发送文件.\n"
 "请让他使用邮件或离线文件发送."
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1035
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1036
 msgid "Oups, You was kicked offline by somewhat"
 msgstr "您被不知道什么东西给踢下线了"
 
@@ -607,7 +610,7 @@ msgstr "您被不知道什么东西给踢下线了"
 msgid "PadQQ"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2538
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2547
 msgid "Pages"
 msgstr "页数"
 
@@ -615,18 +618,18 @@ msgstr "页数"
 msgid "Passerby"
 msgstr "陌生人"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2868
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2876
 msgid "Password is empty"
 msgstr "密码为空"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:691
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:692
 #, c-format
 msgid "Peer %s Accept receive Offline file(%s)\n"
 msgstr "对方%s同意接受离线文件(%s)\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:721
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2291
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2623
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:722
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2300
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2629
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:45
 msgid "Phone"
 msgstr "电话"
@@ -639,47 +642,47 @@ msgstr "猪"
 msgid "Pisces"
 msgstr "双鱼座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2618
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2624
 msgid "Place Information"
 msgstr "住宅信息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1466
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1469
 msgid "Please Select"
 msgstr "请选择"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:719
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2620
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:720
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2626
 msgid "Province"
 msgstr "省份"
 
 #. #define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info, s)
 #. ADD_HEADER("基本信息");
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:710
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1760
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2365
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2605
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:711
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1769
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2374
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2613
 msgid "QQ"
 msgstr "QQ"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:746
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:747
 msgid "QQ Group Request Confirm"
 msgstr "群申请确认"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:760
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:791
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:761
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:792
 msgid "QQ Group Sys Message"
 msgstr "群系统消息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:790
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:791
 #, c-format
 msgid "QQ Group [%s] refused your request"
 msgstr "群[%s]拒绝了您的申请"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:341
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:342
 msgid "QQ Number"
 msgstr "QQ号"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2572
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2581
 msgid "Quit Group"
 msgstr "退出群组"
 
@@ -691,23 +694,23 @@ msgstr "兔"
 msgid "Receive file failed"
 msgstr "接收文件失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:690
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:691
 msgid "Refuse"
 msgstr "拒绝"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1062
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1063
 msgid "Refuse reason"
 msgstr "拒绝理由"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2295
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2304
 msgid "Remark"
 msgstr "备注"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2779
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2785
 msgid "Remove Duplicated Message"
 msgstr "消息去重"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:743
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:744
 #, c-format
 msgid ""
 "Request QQ Group:%s\n"
@@ -724,44 +727,44 @@ msgstr "射手座"
 msgid "Scorpio"
 msgstr "天蝎座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:342
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:343
 msgid "Search"
 msgstr "查找"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:459
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:460
 msgid "Self Center"
 msgstr "访问个人中心"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2610
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2618
 msgid "Self Information"
 msgstr "个人信息"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2553
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2562
 msgid "Send Email"
 msgstr "发送邮件"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2551
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2560
 msgid "Send Offline File"
 msgstr "发送离线文件"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1376
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1379
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1382
 msgid "Send Pic Failed"
 msgstr "发送图片失败"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1379
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1382
 msgid "Send Pic over 1MB"
 msgstr "发送图片大小超过1MB"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2791
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2799
 msgid "Send Relink Time Interval(m)"
 msgstr "发送Relink间隔(m)"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1965
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1974
 msgid "Send add request successful"
 msgstr "发送添加请求成功"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1580
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1589
 #, c-format
 msgid ""
 "Send failed, err:%d:\n"
@@ -783,11 +786,11 @@ msgstr "发送离线文件失败,错误号:%d"
 msgid "Send offline file successful"
 msgstr "发送离线文件成功"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1952
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1961
 msgid "Server fault returns"
 msgstr "服务器返回错误"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2353
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2362
 msgid "Set Topic"
 msgstr "设置主题"
 
@@ -795,16 +798,16 @@ msgstr "设置主题"
 msgid "Sheep"
 msgstr "羊"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:714
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2612
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:715
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2620
 msgid "Shengxiao"
 msgstr "生肖"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:505
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:506
 msgid "Slience"
 msgstr "勿扰"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2249
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2258
 msgid "Slience Receive"
 msgstr "接收不提示"
 
@@ -812,8 +815,8 @@ msgstr "接收不提示"
 msgid "Snack"
 msgstr "蛇"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1070
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1073
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1071
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1074
 msgid "System Message"
 msgstr "系统消息"
 
@@ -821,11 +824,11 @@ msgstr "系统消息"
 msgid "Taurus"
 msgstr "金牛座"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2518
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2527
 msgid "Tempory Session not support this function"
-msgstr "临时绘画不支持此功能"
+msgstr "临时会话不支持此功能"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2777
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2783
 msgid "Text Lighter In Dark Theme"
 msgstr "暗色主题下文字加亮"
 
@@ -833,7 +836,7 @@ msgstr "暗色主题下文字加亮"
 msgid "Tiger"
 msgstr "虎"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2824
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2832
 #, c-format
 msgid ""
 "To Support the sustained development of pidgin-lwqq,\n"
@@ -858,32 +861,32 @@ msgstr ""
 msgid "Transport Failed,Error Code:%d\n"
 msgstr "文件传输失败,错误号:%d\n"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1762
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1771
 msgid "Type"
 msgstr "类型"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:369
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:370
 msgid "UnName Discussion"
 msgstr "未命名讨论组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2300
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2352
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2309
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2361
 msgid "Update"
 msgstr "更新"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1588
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1597
 msgid "Upload content retry over limit"
 msgstr "上传内容重试超过限制"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:453
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:454
 msgid "User Help"
 msgstr "使用帮助"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2789
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2797
 msgid "Verbose"
 msgstr "输出等级"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2781
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2789
 msgid "Version Statics"
 msgstr "版本统计"
 
@@ -892,7 +895,7 @@ msgid "Virgo"
 msgstr "处女座"
 
 #. LwqqBuddy* friend = buddy->proto_data;
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2549
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2558
 msgid "Visit QZone"
 msgstr "访问空间"
 
@@ -900,12 +903,12 @@ msgstr "访问空间"
 msgid "WebQQ"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:768
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:780
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:769
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:781
 msgid "You"
 msgstr "您"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:679
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:680
 #, c-format
 msgid ""
 "You Got a Offline File: %s\n"
@@ -915,45 +918,52 @@ msgstr ""
 "截止日期: %s\n"
 "<a href=\"%s\">点此下载</a>"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:760
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:761
 msgid "You create a new group"
 msgstr "您创建了一个新的群"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:253
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:254
 msgid "all reloaded,please relogin"
 msgstr "全部重载，请重新登录"
 
 #. the web page of feedback
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:198
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:199
 msgid "https://github.com/xiehuc/pidgin-lwqq/issues"
 msgstr ""
 
 #. the web page of faq
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:191
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:192
 msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/FAQ"
 msgstr ""
 
 #. the web page of user help;
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:184
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:185
 msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide"
 msgstr ""
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:372
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:373
 msgid "members(seperate by ;)"
 msgstr "成员(用;分隔)"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1991
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2000
 msgid "no such category exists"
 msgstr "不存在该分组"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1140
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:1141
 msgid "webqq lost connection,relogin now,please retry by hand later"
 msgstr "webqq掉线了,正在重新登录,请稍后再手工重试"
 
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:418
-#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:431
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:419
+msgid "【DISABLE PIC】"
+msgstr "【禁用的图片】"
+
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:419
+#: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/translate.c:432
 msgid "【PIC】"
 msgstr "【图片】"
+
+#~ msgid "%Y-%m-%d"
+#~ msgstr "%Y-%m-%d"
 
 #~ msgid "Display QQ Level"
 #~ msgstr "显示QQ等级"

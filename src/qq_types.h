@@ -53,7 +53,6 @@ typedef struct {
     enum {NODE_IS_BUDDY,NODE_IS_GROUP} type;
     const void* node;
 }index_node;
-
 typedef struct qq_account {
     LwqqClient* qq;
     PurpleAccount* account;
@@ -75,15 +74,16 @@ typedef struct qq_account {
         int size;
         LwqqFontStyle style;
     }font;
-    struct{
-        gboolean qq_use_qqnum;
-        gboolean disable_custom_font_face;
-        gboolean disable_custom_font_size;
-        gboolean dark_theme_fix;
-        gboolean debug_file_send;
-        gboolean remove_duplicated_msg;
-        gboolean dont_expected_100_continue;
-    };
+    enum {
+        QQ_USE_QQNUM = 1<<0,
+        IGNORE_FONT_FACE = 1<<1,
+        IGNORE_FONT_SIZE = 1<<2,
+        DARK_THEME_ADAPT = 1<<3,
+        DEBUG_FILE_SEND = 1<<4,
+        REMOVE_DUPLICATED_MSG = 1<<5,
+        QQ_DONT_EXPECT_100_CONTINUE = 1<<6,
+        NOT_DOWNLOAD_GROUP_PIC = 1<<7
+    }flag;
 #if QQ_USE_FAST_INDEX
     struct{
         GHashTable* qqnum_index;

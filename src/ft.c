@@ -127,7 +127,7 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     LwqqClient* lc = ac->qq;
 
     const char* serv_id;
-    if(ac->qq_use_qqnum){
+    if(ac->flag&QQ_USE_QQNUM){
         const char* qqnum = purple_xfer_get_remote_user(xfer);
         LwqqBuddy* b = find_buddy_by_qqnumber(ac->qq, qqnum);
         if(b == NULL) return;
@@ -141,7 +141,7 @@ static void upload_offline_file_init(PurpleXfer* xfer)
     xfer->start_time = time(NULL);
     xfer->data = file;
     int flags = 0;
-    if(ac->dont_expected_100_continue) flags |= DONT_EXPECTED_100_CONTINUE;
+    if(ac->flag&QQ_DONT_EXPECT_100_CONTINUE) flags |= DONT_EXPECTED_100_CONTINUE;
     LwqqAsyncEvent* ev = lwqq_msg_upload_offline_file(lc,file,flags);
     lwqq_async_add_event_listener(ev,_C_(2p,send_file,ev,xfer));
     LwqqHttpRequest* req = lwqq_async_event_get_conn(ev);
@@ -168,7 +168,7 @@ static void upload_file_init(PurpleXfer* xfer)
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    if(!ac->debug_file_send){
+    if(!(ac->flag&DEBUG_FILE_SEND)){
         //purple_notify_warning(gc,NULL,"难题尚未攻破,曙光遥遥无期","请先用离线文件传输");
         PurpleXfer* xfer = purple_xfer_new(ac->account,PURPLE_XFER_SEND,who);
         purple_xfer_set_init_fnc(xfer,upload_offline_file_init);

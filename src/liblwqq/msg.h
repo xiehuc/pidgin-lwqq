@@ -114,7 +114,7 @@ typedef enum {
     LWQQ_FONT_UNDERLINE=1<<0,
 }LwqqFontStyle;
 
-#define lwqq_bit_set(var,bit,value) (var=value?var|bit:var&~bit)
+#define lwqq_bit_set(var,bit,value) (var=(value)?var|bit:var&~bit)
 #define lwqq_bit_get(var,bit) ((var&bit)>0)
 
 typedef struct LwqqMsgMessage {
@@ -330,10 +330,11 @@ void lwqq_msg_free(LwqqMsg *msg);
 /************************************************************************/
 /* LwqqRecvMsg API */
 typedef enum {
-    POLL_AUTO_REQUEST_PIC = 1<<1,
-    POLL_AUTO_REQUEST_CFACE = 1<<2,
+    POLL_AUTO_DOWN_GROUP_PIC = 1<<0,
+    POLL_AUTO_DOWN_BUDDY_PIC = 1<<1,
+    POLL_AUTO_DOWN_DISCU_PIC = 1<<2,
     POLL_REMOVE_DUPLICATED_MSG = 1<<3,
-}LwqqPollFlag;
+}LwqqPollOption;
 /**
  * Lwqq Receive Message object, used by receiving message
  *
@@ -348,7 +349,7 @@ typedef struct LwqqRecvMsgList {
     pthread_mutex_t mutex;
     //int poll_flags;
     TAILQ_HEAD(RecvMsgListHead, LwqqRecvMsg) head;
-    void (*poll_msg)(struct LwqqRecvMsgList *list,int flags); /**< Poll to fetch msg */
+    void (*poll_msg)(struct LwqqRecvMsgList *list,LwqqPollOption flags); /**< Poll to fetch msg */
     void (*poll_close)(struct LwqqRecvMsgList* list);/**< Close Poll */
 } LwqqRecvMsgList;
 typedef struct LwqqHistoryMsgList {
@@ -436,9 +437,9 @@ LwqqMsgOffFile* lwqq_msg_fill_upload_offline_file(const char* filename,
 //if successed use send_offfile function do send the message.
 //or use offfile_free to clean memory.
 typedef enum {
-    DONT_EXPECTED_100_CONTINUE = 1<<1
+    DONT_EXPECTED_100_CONTINUE = 1<<0
 }LwqqUploadFlag;
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,int flags);
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,LwqqUploadFlag flags);
 //call this function when upload_offline_file finished.
 LwqqAsyncEvent* lwqq_msg_send_offfile(LwqqClient* lc,LwqqMsgOffFile* file);
 //not finished yet

@@ -97,7 +97,7 @@ qq_account* qq_account_new(PurpleAccount* account)
     qq_account* ac = g_malloc0(sizeof(qq_account));
     ac->account = account;
     ac->magic = QQ_MAGIC;
-    ac->qq_use_qqnum = 0;
+    ac->flag = 0;
     //this is auto increment sized array . so don't worry about it.
     ac->opend_chat = g_ptr_array_sized_new(10);
     const char* username = purple_account_get_username(account);
@@ -231,13 +231,13 @@ PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,q
     PurpleAccount* account = ac->account;
     const char* local_id;
     if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG){
-        if(ac->qq_use_qqnum){
+        if(ac->flag&QQ_USE_QQNUM){
             LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
             local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;
         }else local_id = serv_id;
         return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,local_id,account);
     } else if(msg_type == LWQQ_MS_GROUP_MSG || msg_type == LWQQ_MS_DISCU_MSG){
-        if(ac->qq_use_qqnum){
+        if(ac->flag&QQ_USE_QQNUM){
             LwqqGroup* group = find_group_by_gid(ac->qq,serv_id);
             local_id = (group&&group->account)?group->account:serv_id;
         }else local_id = serv_id;

@@ -31,10 +31,10 @@
 #define LWQQ_MT_BITS  (~((-1)<<8))
 
 static void *start_poll_msg(void *msg_list);
-static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list,int flags);
 static void lwqq_recvmsg_poll_close(LwqqRecvMsgList* list);
 static json_t *get_result_json_object(json_t *json);
 static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str);
+static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list,LwqqPollOption flags);
 
 static int msg_send_back(LwqqHttpRequest* req,void* data);
 static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const char* to);
@@ -45,7 +45,7 @@ static void insert_recv_msg_with_order(LwqqRecvMsgList* list,LwqqMsg* msg);
 typedef struct LwqqRecvMsgList_{
     struct LwqqRecvMsgList parent;
     //LwqqAsyncTimer tip_loop;
-    int flags;
+    LwqqPollOption flags;
     int last_id2;
     pthread_t tid;
     int on_quit;
@@ -74,6 +74,7 @@ static struct LwqqStrMapEntry_ msg_type_map[] = {
     {"unknow",                  LWQQ_MT_UNKNOWN,            },
     {NULL,                      LWQQ_MT_UNKNOWN,            }
 };
+
 
 
 static int parse_content(json_t *json,const char* key, LwqqMsgMessage* opaque)
@@ -403,7 +404,7 @@ LwqqRecvMsgList *lwqq_recvmsg_new(void *client)
 
     list = s_malloc0(sizeof(LwqqRecvMsgList_));
     list->parent.count = 0;
-    list->flags = POLL_AUTO_REQUEST_PIC&POLL_AUTO_REQUEST_CFACE;
+    list->flags = POLL_AUTO_DOWN_BUDDY_PIC&POLL_AUTO_DOWN_GROUP_PIC;
     list->last_id2 = 0;
     list->parent.lc = client;
     pthread_mutex_init(&list->parent.mutex, NULL);
@@ -1240,20 +1241,25 @@ done:
 }
 static void lwqq_msg_request_picture(LwqqClient* lc,LwqqMsgMessage* msg,LwqqAsyncEvset** ptr)
 {
+    LwqqRecvMsgList_* list = (LwqqRecvMsgList_*)lc->msg_list;
     LwqqMsgContent* c;
     LwqqAsyncEvset* set = *ptr;
     LwqqAsyncEvent* event;
     TAILQ_FOREACH(c,&msg->content,entries){
-        if(c->type == LWQQ_CONTENT_OFFPIC){
+        event = NULL;
+        if(c->type == LWQQ_CONTENT_OFFPIC && list->flags& POLL_AUTO_DOWN_BUDDY_PIC){
             if(set == NULL) set = lwqq_async_evset_new();
             event = request_content_offpic(lc,msg->super.from,c);
             lwqq_async_evset_add_event(set,event);
         }else if(c->type == LWQQ_CONTENT_CFACE){
-            if(set == NULL) set = lwqq_async_evset_new();
             if(msg->super.super.type == LWQQ_MS_BUDDY_MSG)
                 event = request_content_cface2(lc,msg->super.msg_id,msg->super.from,c);
-            else
-                event = request_content_cface(lc,msg->group.group_code,msg->group.send,msg->super.super.type,c);
+            else{
+                if((msg->super.super.type == LWQQ_MS_GROUP_MSG&&lwqq_bit_get(list->flags,POLL_AUTO_DOWN_GROUP_PIC))|
+                        (msg->super.super.type == LWQQ_MS_DISCU_MSG&&lwqq_bit_get(list->flags,POLL_AUTO_DOWN_DISCU_PIC)))
+                        event = request_content_cface(lc,msg->group.group_code,msg->group.send,msg->super.super.type,c);
+            }
+            if(set == NULL && event!=NULL) set = lwqq_async_evset_new();
             lwqq_async_evset_add_event(set,event);
         }
     }
@@ -1613,12 +1619,11 @@ failed:
 #endif
 }
 
-static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list,int flags)
+static void lwqq_recvmsg_poll_msg(LwqqRecvMsgList *list,LwqqPollOption flags)
 {
     LwqqRecvMsgList_* internal = (LwqqRecvMsgList_*)list;
     internal->flags = flags;
 #if USE_MSG_THREAD
-
     pthread_create(&internal->tid, NULL/*&list->attr*/, start_poll_msg, list);
 #else
     start_poll_msg(list);
@@ -2190,7 +2195,7 @@ LwqqAsyncEvent* lwqq_msg_refuse_file(LwqqClient* lc,LwqqMsgFileMessage* file)
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
 
-LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,int flags)
+LwqqAsyncEvent* lwqq_msg_upload_offline_file(LwqqClient* lc,LwqqMsgOffFile* file,LwqqUploadFlag flags)
 {
     char url[512];
     snprintf(url,sizeof(url),"http://weboffline.ftn.qq.com/ftn_access/upload_offline_file?time=%ld",LTIME);

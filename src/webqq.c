@@ -44,7 +44,8 @@ enum ResetOption{
     RESET_GROUP=0x2,
     RESET_DISCU=0x4,
     RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
-    RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU};
+    RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU
+};
     
 
 ///###  global data area ###///
@@ -53,7 +54,7 @@ int g_ref_count = 0;
 
 static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 {
-    if(ac->qq_use_qqnum){
+    if(ac->flag & QQ_USE_QQNUM){
         LwqqBuddy* buddy = find_buddy_by_uin(ac->qq,serv_id);
         return (buddy&&buddy->qqnumber) ?buddy->qqnumber:serv_id;
     }else
@@ -62,7 +63,7 @@ static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 
 static const char* local_id_to_serv(qq_account* ac,const char* local_id)
 {
-    if(ac->qq_use_qqnum){
+    if(ac->flag & QQ_USE_QQNUM){
         LwqqBuddy* buddy = find_buddy_by_qqnumber(ac->qq,local_id);
         return (buddy&&buddy->uin)?buddy->uin:local_id;
     }else return local_id;
@@ -666,7 +667,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     //clean buffer
     strcpy(buf,"");
     LwqqBuddy* buddy = msg->buddy.from;
-    const char* local_id = ac->qq_use_qqnum?buddy->qqnumber:buddy->uin;
+    const char* local_id = (ac->flag&QQ_USE_QQNUM)?buddy->qqnumber:buddy->uin;
 
     translate_struct_to_message(ac,msg,buf);
     serv_got_im(pc, local_id, buf, PURPLE_MESSAGE_RECV, msg->time);
@@ -1017,7 +1018,7 @@ static void status_change(LwqqClient* lc,LwqqMsgStatusChange* status)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleAccount* account = ac->account;
     const char* who;
-    if(ac->qq_use_qqnum){
+    if(ac->flag&QQ_USE_QQNUM){
         LwqqBuddy* buddy = find_buddy_by_uin(lc, status->who);
         if(buddy==NULL || buddy->qqnumber == NULL) return;
         who = buddy->qqnumber;
@@ -1286,7 +1287,7 @@ static void login_stage_3(LwqqClient* lc)
     lwdb_userdb_flush_buddies(ac->db, 5,5);
     lwdb_userdb_flush_groups(ac->db, 1,10);
 
-    if(ac->qq_use_qqnum){
+    if(ac->flag&QQ_USE_QQNUM){
         //lwdb_userdb_write_to_client(ac->db, lc);
         lwdb_userdb_query_qqnumbers(lc, ac->db);
         //lwdb_userdb_begin(ac->db,"insertion");
@@ -1314,7 +1315,7 @@ static void login_stage_3(LwqqClient* lc)
     LwqqBuddy* buddy;
     LIST_FOREACH(buddy,&lc->friends,entries) {
         lwdb_userdb_query_buddy(ac->db, buddy);
-        if(ac->qq_use_qqnum && ! buddy->qqnumber){
+        if((ac->flag& QQ_USE_QQNUM)&& ! buddy->qqnumber){
             ev = lwqq_info_get_friend_qqnumber(lc,buddy);
             lwqq_async_evset_add_event(set, ev);
         }
@@ -1337,7 +1338,7 @@ static void login_stage_3(LwqqClient* lc)
     LIST_FOREACH(group,&lc->groups,entries) {
         //LwqqAsyncEvset* set = NULL;
         lwdb_userdb_query_group(ac->db, group);
-        if(ac->qq_use_qqnum && ! group->account){
+        if((ac->flag && QQ_USE_QQNUM)&& ! group->account){
             ev = lwqq_info_get_group_qqnumber(lc,group);
             lwqq_async_evset_add_event(set, ev);
         }
@@ -1362,9 +1363,11 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     ac->state = LOAD_COMPLETED;
-    int flags = 0;
-    if(ac->remove_duplicated_msg)
+    LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
+    if(ac->flag& REMOVE_DUPLICATED_MSG)
         flags |= POLL_REMOVE_DUPLICATED_MSG;
+    if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
+        flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
 
     lc->msg_list->poll_msg(lc->msg_list,flags);
 }
@@ -1623,7 +1626,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     } else {
         msg = lwqq_msg_new(LWQQ_MS_BUDDY_MSG);
         mmsg = (LwqqMsgMessage*)msg;
-        if(ac->qq_use_qqnum){
+        if(ac->flag&QQ_USE_QQNUM){
             LwqqBuddy* buddy = find_buddy_by_qqnumber(lc,who);
             if(buddy)
                 mmsg->super.to = s_strdup(buddy->uin);
@@ -1811,7 +1814,7 @@ static void group_member_list_come(qq_account* ac,LwqqGroup* group)
 
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
             if((buddy = find_buddy_by_uin(lc,member->uin))) {
-                if(ac->qq_use_qqnum)
+                if(ac->flag&QQ_USE_QQNUM)
                     users = g_list_append(users,try_get(buddy->qqnumber,buddy->uin));
                 else
                     users = g_list_append(users,buddy->uin);
@@ -1852,7 +1855,7 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     //if above we found there is a group but type is NULL.
     //so we open the group
     if(group==NULL){
-        if(ac->qq_use_qqnum&&!strcmp(type,QQ_ROOM_TYPE_QUN))
+        if((ac->flag&QQ_USE_QQNUM)&&!strcmp(type,QQ_ROOM_TYPE_QUN))
             group = lwqq_group_find_group_by_qqnumber(lc,key);
         else
             group = lwqq_group_find_group_by_gid(lc,key);;
@@ -1930,7 +1933,7 @@ static void qq_change_markname(PurpleConnection* gc,const char* who,const char *
     qq_account* ac = purple_connection_get_protocol_data(gc);
     if(ac->disable_send_server) return;
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* buddy = ac->qq_use_qqnum?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
+    LwqqBuddy* buddy = (ac->flag&QQ_USE_QQNUM)?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
     if(buddy == NULL) return;
     lwqq_info_change_buddy_markname(lc,buddy,alias);
 }
@@ -1978,7 +1981,7 @@ static void qq_change_category(PurpleConnection* gc,const char* who,const char* 
     if(ac->disable_send_server) return;
     if(strcmp(new_group,ac->recent_group_name)==0||strcmp(old_group,ac->recent_group_name)==0) return;
     LwqqClient* lc = ac->qq;
-    LwqqBuddy* buddy = ac->qq_use_qqnum?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
+    LwqqBuddy* buddy = ac->flag&QQ_USE_QQNUM?find_buddy_by_qqnumber(lc,who):find_buddy_by_uin(lc,who);
     LwqqFriendCategory* cate = NULL;
     if(buddy==NULL) return;
 
@@ -2036,7 +2039,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     PurpleAccount* account = purple_buddy_get_account(buddy);
     qq_account* ac = purple_connection_get_protocol_data(
                          purple_account_get_connection(account));
-    if(ac->qq_use_qqnum){
+    if(ac->flag&QQ_USE_QQNUM){
         const char* qqnum = purple_buddy_get_name(buddy);
         char url[256]={0};
         snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",qqnum);
@@ -2223,7 +2226,7 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
     LwqqClient* lc = ac->qq;
     GHashTable* table = purple_chat_get_components(chat);
-    if(ac->qq_use_qqnum){
+    if(ac->flag&QQ_USE_QQNUM){
         const char* qqnum = g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
         return find_group_by_qqnumber(lc, qqnum);
     }else{
@@ -2647,7 +2650,7 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     LwqqBuddy* buddy;
-    if(ac->qq_use_qqnum)
+    if(ac->flag&QQ_USE_QQNUM)
         buddy = lc->find_buddy_by_qqnumber(lc,who);
     else 
         buddy = lc->find_buddy_by_uin(lc,who);
@@ -2682,7 +2685,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
         return;
     }
     LwqqBuddy* b = NULL;
-    if(ac->qq_use_qqnum)
+    if(ac->flag&QQ_USE_QQNUM)
         b = find_buddy_by_qqnumber(lc, local_id);
     else
         b = find_buddy_by_uin(lc, local_id);
@@ -2781,6 +2784,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
     options = g_list_append(options, option);
+    option = purple_account_option_bool_new(_("Don't Download Group Pic(Reduce Network Transfer)"), "no_download_group_pic", FALSE);
+    options = g_list_append(options,option);
     option = purple_account_option_bool_new(_("Version Statics"), "version_statics", TRUE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
@@ -2874,12 +2879,13 @@ static void qq_login(PurpleAccount *account)
     g_ref_count ++ ;
     ac->gc = pc;
     ac->qq->async_opt = &qq_async_opt;
-    ac->disable_custom_font_size=purple_account_get_bool(account, "disable_custom_font_size", FALSE);
-    ac->disable_custom_font_face=purple_account_get_bool(account, "disable_custom_font_face", FALSE);
-    ac->dark_theme_fix=purple_account_get_bool(account, "dark_theme_fix", FALSE);
-    ac->debug_file_send = purple_account_get_bool(account,"debug_file_send",FALSE);
-    ac->remove_duplicated_msg = purple_account_get_bool(account,"remove_duplicated_msg",FALSE);
-    ac->dont_expected_100_continue = purple_account_get_bool(account,"dont_expected_100_continue",FALSE);
+    lwqq_bit_set(ac->flag,IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
+    lwqq_bit_set(ac->flag, IGNORE_FONT_FACE, purple_account_get_bool(account, "disable_custom_font_face", FALSE));
+    lwqq_bit_set(ac->flag, DARK_THEME_ADAPT, purple_account_get_bool(account, "dark_theme_fix", FALSE));
+    lwqq_bit_set(ac->flag, DEBUG_FILE_SEND, purple_account_get_bool(account,"debug_file_send",FALSE));
+    lwqq_bit_set(ac->flag, REMOVE_DUPLICATED_MSG, purple_account_get_bool(account,"remove_duplicated_msg",FALSE));
+    lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
+    lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
     int relink_retry = 0;
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
@@ -2890,8 +2896,8 @@ static void qq_login(PurpleAccount *account)
     ac->db = lwdb_userdb_new(username,db_path,0);
     ac->qq->data = ac;
     //for empathy
-    ac->qq_use_qqnum = (ac->db != NULL);
-    purple_buddy_icons_set_caching(ac->qq_use_qqnum);
+    lwqq_bit_set(ac->flag,QQ_USE_QQNUM,ac->db!=NULL);
+    purple_buddy_icons_set_caching(lwqq_bit_get(ac->flag, QQ_USE_QQNUM));
     if(ac->db){
         version_statics_dlg(ac);
         lwqq_override(ac->font.family,s_strdup(lwdb_userdb_read(ac->db, "f_family")));
@@ -2899,7 +2905,7 @@ static void qq_login(PurpleAccount *account)
         ac->font.style = s_atoi(lwdb_userdb_read(ac->db,"f_style"),ac->font.style);
     }
     
-    if(!ac->qq_use_qqnum) 
+    if(!ac->flag&QQ_USE_QQNUM) 
         all_reset(ac,RESET_ALL);
 
     purple_connection_set_protocol_data(pc,ac);

@@ -386,15 +386,15 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
     if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"<i>");
     if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"<u>");
     snprintf(buf+strlen(buf),300,"<font ");
-    if(ac->dark_theme_fix ){
+    if(ac->flag&DARK_THEME_ADAPT){
         int c = strtoul(msg->f_color, NULL, 16);
         int t = (c==0)?0xffffff:(c%256)/2+128+((c/256%256)/2+128)*256+((c/256/256%256)/2+128)*256*256;
         snprintf(buf+strlen(buf),300,"color=\"#%x\" ",t);
     }else
         snprintf(buf+strlen(buf),300,"color=\"#%s\" ",msg->f_color);
-    if(!ac->disable_custom_font_face&&msg->f_name)
+    if(!(ac->flag&IGNORE_FONT_FACE)&&msg->f_name)
         snprintf(buf+strlen(buf),300,"face=\"%s\" ",msg->f_name);
-    if(!ac->disable_custom_font_size)
+    if(!(ac->flag&IGNORE_FONT_SIZE))
         snprintf(buf+strlen(buf),300,"size=\"%d\" ",sizeunmap(msg->f_size));
     strcat(buf,">");
     
@@ -427,8 +427,10 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                     strcat(buf,piece);
                 }else if(c->data.cface.direct_url){
                     format_append(buf,"<IMG SRC=\"%s\">",c->data.cface.direct_url);
-                }else
-                    strcat(buf,_("【PIC】"));
+                }else{
+                    strcat(buf,(msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)?
+                            _("【DISABLE PIC】"):_("【PIC】"));
+                }
                 break;
         }
     }

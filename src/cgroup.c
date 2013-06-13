@@ -61,7 +61,7 @@ static void set_user_list(qq_chat_group* cg)
 
             flags = g_list_append(flags,GINT_TO_POINTER(flag));
             if((buddy = find_buddy_by_uin(lc,member->uin))) {
-                if(ac->qq_use_qqnum)
+                if(ac->flag&QQ_USE_QQNUM)
                     users = g_list_append(users,try_get(buddy->qqnumber,buddy->uin));
                 else
                     users = g_list_append(users,buddy->uin);
