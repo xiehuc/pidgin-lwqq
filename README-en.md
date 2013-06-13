@@ -82,3 +82,9 @@ Known Issue
 * telepathy-haze itself doesn't support group or picture.
 * telepathy-haze store buddy list on /tmp/haze-XXX.
   every time startup recreate every thing.
+
+Donate
+------
+
+To support better develop (such as cross platform,other plugin compability,code refactoring),
+You can donate this open source project [link](https://me.alipay.com/xiehuc)
