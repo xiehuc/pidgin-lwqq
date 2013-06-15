@@ -52,12 +52,6 @@ endif(NLS AND GETTEXT_FOUND)
 
 find_package(EV REQUIRED)
 
-if(VERBOSE)
-    add_definitions(-DLWQQ_VERBOSE_LEVEL=${VERBOSE})
-else(VERBOSE)
-    add_definitions(-DLWQQ_VERBOSE_LEVEL=0)
-endif(VERBOSE)
-
 option(SSL "Enable SSL Support " On)
 
 set(package pidgin-lwqq)

@@ -650,8 +650,8 @@ static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
     GLOBAL* g = userp;
     //printf("timer_cb:%ld\n",timeout_ms);
     lwqq_async_timer_stop(&g->timer_event);
-#if USE_DEBUG && LWQQ_VERBOSE_LEVEL>=5
-   if(g->still_running>1){
+#if USE_DEBUG
+   if(LWQQ_VERBOSE_LEVEL>=5&&g->still_running>1){
         lwqq_gdb_whats_running();
     }
 #endif

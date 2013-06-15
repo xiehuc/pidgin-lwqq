@@ -80,3 +80,7 @@ void lwqq_log_set_level(int level)
 {
     LWQQ_VERBOSE_LEVEL_ = level;
 }
+int lwqq_log_get_level()
+{
+    return LWQQ_VERBOSE_LEVEL_;
+}

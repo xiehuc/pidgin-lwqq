@@ -57,6 +57,8 @@ void lwqq_verbose(int l,const char* str,...);
 #define lwqq_puts(str) lwqq_verbose(1,"%s\n",str)
 
 void lwqq_log_set_level(int level);
+int lwqq_log_get_level();
+#define LWQQ_VERBOSE_LEVEL lwqq_log_get_level()
 
 
 #endif  /* LWQQ_LOGGER_H */
