@@ -154,9 +154,11 @@ static void action_about_webqq(PurplePluginAction *action)
     g_return_if_fail(NULL != gc);
 
     info = g_string_new("<html><body>");
-    g_string_append(info, "<p><b>Author</b>:<br>\n");
-    g_string_append(info, "xiehuc\n");
-    g_string_append(info, "<br/>\n");
+    g_string_append(info, "<p>"
+            "<b>Author</b>:<br>xiehuc<br>"
+            "<b>GitCommit</b>:<br>"GIT_SHA1"<br>"
+            "</p>"
+            );
 
     g_string_append(info, "pidgin-lwqq mainly referenced: "
                             "1.openfetion for libpurple about<br/>"

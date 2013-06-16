@@ -54,6 +54,9 @@ find_package(EV REQUIRED)
 
 option(SSL "Enable SSL Support " On)
 
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
 set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
