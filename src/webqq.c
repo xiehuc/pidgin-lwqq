@@ -38,6 +38,7 @@ static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
 static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
+static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -2086,14 +2087,26 @@ static void add_friend_receipt(LwqqAsyncEvent* ev)
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("ErrCode:6\nPlease try agagin later\n"),NULL,NULL,NULL);
     }
 }
-
+static void add_friend_ask_message(LwqqClient* lc,LwqqConfirmTable* ask,LwqqBuddy* b)
+{
+    add_friend(lc,ask,b,s_strdup(ask->input));
+}
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message)
 {
     if(c->answer == LWQQ_NO){
         goto done;
     }
-    LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b,message);
-    lwqq_async_add_event_listener(ev, _C_(p,add_friend_receipt,ev));
+    if(message==NULL){
+        LwqqConfirmTable* ask = s_malloc0(sizeof(*ask));
+        ask->input_label = s_strdup(_("Invite Message"));
+        ask->cmd = _C_(3p,add_friend_ask_message,lc,ask,b);
+        show_confirm_table(lc, ask);
+        lwqq_ct_free(c);
+        return ;
+    }else{
+        LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b,message);
+        lwqq_async_add_event_listener(ev, _C_(p,add_friend_receipt,ev));
+    }
 done:
     lwqq_ct_free(c);
     lwqq_buddy_free(b);
@@ -2177,7 +2190,7 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
 #else
         const char* msg = message;
 #endif
-        lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),msg));
+        lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(msg)));
     }
 }
 //#endif

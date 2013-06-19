@@ -3,13 +3,13 @@
 #include "type.h"
 
 typedef enum {
-    LWQQ_CT_ENABLE_IGNORE = 1<<1,
-    LWQQ_CT_CHOICE_MODE = 1<<2
+    LWQQ_CT_ENABLE_IGNORE = 1<<0,
+    LWQQ_CT_CHOICE_MODE = 1<<1
 }LwqqCTFlags;
 
 typedef struct LwqqConfirmTable {
     LwqqAnswer answer;
-    int flags;
+    LwqqCTFlags flags;
     char* title;            //< read
     char* body;             //< read
     char* exans_label;      //< extra answer label, read
