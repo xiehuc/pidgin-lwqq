@@ -1,5 +1,13 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+0.1f Release Note:
+	多语言支持
+	讨论组发送接受图片
+	解析group_web_message
+	表情问题的一些修正
+	支持讨论组的临时会话
+	建立缓存和退出速度加快
+
 0.1e Release Note:
 	修正一个退出死锁的bug
 	完整支持讨论组
