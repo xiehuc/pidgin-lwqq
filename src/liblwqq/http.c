@@ -601,6 +601,8 @@ static void check_multi_info(GLOBAL *g)
                 if(ret == CURLE_ABORTED_BY_CALLBACK && req_->bits & HTTP_FORCE_CANCEL){
                     req_->retry_ = 0;
                 }
+                if(ret == CURLE_COULDNT_RESOLVE_HOST)
+                    req_->retry_ = 0;
                 req_->retry_ --;
                 if(req_->retry_ >= 0){
                     //re add it to libcurl
@@ -821,6 +823,7 @@ retry:
         if(ret == CURLE_ABORTED_BY_CALLBACK && req_->bits & HTTP_FORCE_CANCEL){
             req_->retry_ = 0;
         }
+        if(ret == CURLE_COULDNT_RESOLVE_HOST) req_->retry_ = 0;
         req_->retry_ -- ;
         if(req_->retry_ >= 0){
             goto retry;
