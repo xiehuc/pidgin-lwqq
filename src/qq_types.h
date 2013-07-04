@@ -3,6 +3,7 @@
 
 #include <type.h>
 #include <connection.h>
+#include "type.h"
 #include "msg.h"
 #include "info.h"
 #include "lwdb.h"
@@ -106,7 +107,7 @@ struct qq_extra_async_opt {
     void (*need_verify)(LwqqClient* lc,LwqqErrorCode err);
 };
 
-void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...);
+void qq_dispatch(LwqqCommand cmd);
 
 #define try_get(val,fail) (val?val:fail)
 

@@ -29,9 +29,10 @@
 #define LWQQ_CACHE_DIR "/tmp/lwqq"
 
 
-typedef struct _LwqqAsyncEvent LwqqAsyncEvent;
-typedef struct _LwqqAsyncEvset LwqqAsyncEvset;
-typedef struct _LwqqAsyncOption LwqqAsyncOption;
+typedef struct LwqqAsyncEvent LwqqAsyncEvent;
+typedef struct LwqqAsyncEvset LwqqAsyncEvset;
+typedef struct LwqqMsgContent LwqqMsgContent;
+typedef struct LwqqAction LwqqAction;
 typedef struct _LwqqHttpRequest LwqqHttpRequest;
 //typedef struct _LwqqClient LwqqClient;
 typedef LIST_HEAD(,LwqqAsyncEntry) LwqqAsyncQueue;
@@ -309,7 +310,7 @@ typedef struct LwqqClient {
     const char* last_err;
     char *gface_key;                  /**< use at cface */
     char *gface_sig;                  /**<use at cfage */
-    const LwqqAsyncOption* async_opt;
+    const LwqqAction* action;
     LwqqCookies *cookies;
 
     LwqqStatus stat;
@@ -331,12 +332,47 @@ typedef struct LwqqClient {
     /** non data area **/
 
     void* data;                     /**< user defined data*/
-    void (*dispatch)(DISPATCH_FUNC,CALLBACK_FUNC,...);
+    void (*dispatch)(LwqqCommand);
 
     int magic;          /**< 0x4153 **/
 } LwqqClient;
 #define lwqq_client_userdata(lc) (lc->data)
 
+/**
+ * this is used for some long http request actions chain. 
+ * because event tigger only once. while async option often calls repeatly.
+ * and most of async option require gui display some information.
+ *
+ */
+typedef struct LwqqAction {
+    /**
+     * this is login complete .whatever successed or failed
+     * except need verify code
+     */
+    void (*login_complete)(LwqqClient* lc,LwqqErrorCode ec);
+    /* this is very important when poll message come */
+    void (*poll_msg)(LwqqClient* lc);
+    /* this is poll lost after recv retcode 112 or 108 */
+    void (*poll_lost)(LwqqClient* lc);
+    /* this is upload content failed such as lwqq offline pic */
+    void (*upload_fail)(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c,int extra_reason);
+    /* this is you confirmed a friend request 
+     * you should add buddy to gui level.
+     */
+    void (*new_friend)(LwqqClient* lc,LwqqBuddy* buddy);
+    void (*new_group)(LwqqClient* lc,LwqqGroup* g);
+    void (*need_verify2)(LwqqClient* lc,LwqqVerifyCode* code);
+    /* this called when successfully delete group from server
+     * and the last chance to visit group
+     * do not delete group in this function
+     * it would deleted later.
+     */
+    void (*delete_group)(LwqqClient* lc,const LwqqGroup* g);
+    /** this called when group member changes
+     * you need flush displayed group member
+     */
+    void (*group_members_chg)(LwqqClient* lc,LwqqGroup* g);
+}LwqqAction;
 
 /* Struct defination end */
 

@@ -90,7 +90,7 @@ static int get_verify_code_back(LwqqHttpRequest* req)
     char response[256];
     LwqqClient* lc = req->lc;
     if(req->failcode != LWQQ_CALLBACK_VALID){
-        lc->async_opt->login_complete(lc,LWQQ_EC_NETWORK_ERROR);
+        lc->action->login_complete(lc,LWQQ_EC_NETWORK_ERROR);
         err = LWQQ_EC_NETWORK_ERROR;
         goto failed;
     }
@@ -184,7 +184,7 @@ static int request_captcha_back(LwqqHttpRequest* req,LwqqVerifyCode* code)
     code->data = req->response;
     code->size = req->resp_len;
     req->response = NULL;
-    lc->async_opt->need_verify2(lc,code);
+    lc->action->need_verify2(lc,code);
 done:
     lwqq_http_request_free(req);
     return err;
@@ -658,7 +658,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
         case LWQQ_EC_NETWORK_ERROR:
             lwqq_log(LOG_ERROR, "Network error\n");
             lc->stat = LWQQ_STATUS_LOGOUT;
-            lc->async_opt->login_complete(lc,err);
+            lc->action->login_complete(lc,err);
             return ;
 
         case LWQQ_EC_OK:
@@ -668,7 +668,7 @@ static void login_stage_3(LwqqAsyncEvent* ev)
         default:
             lwqq_log(LOG_ERROR, "Unknown error\n");
             lc->stat = LWQQ_STATUS_LOGOUT;
-            lc->async_opt->login_complete(lc,err);
+            lc->action->login_complete(lc,err);
             return ;
     }
 
@@ -698,7 +698,7 @@ static void login_stage_5(LwqqAsyncEvent* ev)
 
     if(err != LWQQ_EC_OK){
         lc->stat = LWQQ_STATUS_LOGOUT;
-        lc->async_opt->login_complete(lc,err);
+        lc->action->login_complete(lc,err);
         return;
     }
     LwqqAsyncEvent* event = set_online_status(lc, lwqq_status_to_str(lc->stat));
@@ -713,7 +713,7 @@ static void login_stage_f(LwqqAsyncEvent* ev)
     lwqq_vc_free(lc->vc);
     lc->vc = NULL;
     if(err) lc->stat = LWQQ_STATUS_LOGOUT;
-    lc->async_opt->login_complete(lc,err);
+    lc->action->login_complete(lc,err);
 }
 
 /** 
@@ -826,17 +826,17 @@ static int process_login2(LwqqHttpRequest* req)
             break;
         case 103:
             lwqq_puts("[Not Relogin]");
-            lc->async_opt->poll_lost(lc);
+            lc->action->poll_lost(lc);
             goto done;
         case 113:
         case 115:
         case 112:
             lwqq_puts("[RelinkFailure]");
-            lc->async_opt->poll_lost(lc);
+            lc->action->poll_lost(lc);
             goto done;
         default:
             lwqq_puts("[RelinkStop]");
-            lc->async_opt->poll_lost(lc);
+            lc->action->poll_lost(lc);
             goto done;
     }
     if(result){

@@ -26,6 +26,7 @@ typedef struct vp_command{VP_DISPATCH dsph;VP_CALLBACK func;vp_list data;struct 
 vp_command vp_make_command(VP_DISPATCH,VP_CALLBACK,...);
 void vp_do(vp_command,void* retval);
 void vp_link(vp_command* head,vp_command* elem);
+void vp_cancel(vp_command);
 
 vp_list* vp_make_params(VP_DISPATCH,...);
 /**

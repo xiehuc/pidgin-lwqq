@@ -234,13 +234,13 @@ static void insert_msg_delay_by_request_content(LwqqRecvMsgList* list,LwqqMsg* m
 {
     insert_recv_msg_with_order(list,msg);
     LwqqClient* lc = list->lc;
-    lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,list->lc);
+    lc->dispatch(_C_(p,lc->action->poll_msg,list->lc));
 }
 static void add_passerby(LwqqClient* lc,LwqqBuddy* buddy)
 {
     buddy->cate_index = LWQQ_FRIEND_CATE_IDX_PASSERBY;
     LIST_INSERT_HEAD(&lc->friends,buddy,entries);
-    lc->async_opt->new_friend(lc,buddy);
+    lc->action->new_friend(lc,buddy);
 }
 static int process_simple_response(LwqqHttpRequest* req)
 {
@@ -1519,7 +1519,7 @@ void check_connection_lost(LwqqAsyncEvent* ev)
         LwqqRecvMsgList_* msg_list = (LwqqRecvMsgList_*)lc->msg_list;
         lwqq_recvmsg_poll_msg(lc->msg_list, msg_list->flags);
     }else{
-        lc->async_opt->poll_lost(lc);
+        lc->action->poll_lost(lc);
     }
 }
 
@@ -1582,13 +1582,13 @@ static void *start_poll_msg(void *msg_list)
         if(!lwqq_client_logined(lc)) break;
         switch(retcode){
             case WEBQQ_OK:
-                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_msg,lc);
+                lc->dispatch(_C_(p,lc->action->poll_msg,lc));
                 break;
             case WEBQQ_NO_MESSAGE:
                 continue;
                 break;
             case 109:
-                lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+                lc->dispatch(_C_(p,lc->action->poll_lost,lc));
                 break;
             case 120:
             case 121:
@@ -1797,7 +1797,7 @@ static int upload_offline_pic_back(LwqqHttpRequest* req,LwqqMsgContent* c,const 
     c->data.img.file_path = s_strdup(json_parse_simple_value(json,"filepath"));
     if(!strcmp(c->data.img.file_path,"")){
         LwqqClient* lc = req->lc;
-        lc->async_opt->upload_fail(lc,to,c,LWQQ_EC_ERROR);
+        lc->action->upload_fail(lc,to,c,LWQQ_EC_ERROR);
     }
     s_free(c->data.img.name);
     c->data.img.name = s_strdup(json_parse_simple_value(json,"filename"));
@@ -1878,7 +1878,7 @@ static int upload_cface_back(LwqqHttpRequest *req,LwqqMsgContent* c,const char* 
 done:
     if(errno){
         LwqqClient* lc = req->lc;
-        lc->async_opt->upload_fail(lc,to,c,errno);
+        lc->action->upload_fail(lc,to,c,errno);
         s_free(c->data.cface.name);
     }
     s_free(c->data.cface.data);
@@ -2091,9 +2091,9 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     c->data.str = s_strdup(message);
     TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
-    LWQQ_SYNC_BEGIN();
+    LWQQ_SYNC_BEGIN(lc);
     lwqq_msg_send(lc,mmsg);
-    LWQQ_SYNC_END();
+    LWQQ_SYNC_END(lc);
 
     mmsg->f_name = NULL;
 

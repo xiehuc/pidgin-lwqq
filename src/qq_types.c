@@ -3,12 +3,6 @@
 #include "utility.h"
 
 
-struct dispatch_data{
-    DISPATCH_FUNC dsph;
-    CALLBACK_FUNC func;
-    vp_list data;
-};
-
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
     TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))     TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
     TR(LWQQ_DRAGON,_("Dragon"))   TR(LWQQ_SNACK,_("Snack"))       TR(LWQQ_HORSE,_("Horse"))    TR(LWQQ_SHEEP,_("Sheep"))
@@ -69,26 +63,16 @@ const char* qq_level_to_str(int level)
 
 static int did_dispatch(void* param)
 {
-    struct dispatch_data *d = param;
-    DISPATCH_FUNC dsph = d->dsph;
-    CALLBACK_FUNC func = d->func;
-    vp_start(d->data);
-    dsph(func,&d->data,NULL);
-    vp_end(d->data);
+    LwqqCommand *d = param;
+    vp_do(*d,NULL);
     s_free(d);
     return 0;
 }
 
-void qq_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func,...)
+void qq_dispatch(LwqqCommand cmd)
 {
-    struct dispatch_data* d = s_malloc0(sizeof(*d));
-    d->dsph = dsph;
-    d->func = func;
-
-    va_list args;
-    va_start(args,func);
-    dsph(NULL,&d->data,&args);
-    va_end(args);
+    LwqqCommand* d = s_malloc0(sizeof(*d));
+    *d = cmd;
 
     purple_timeout_add(10,did_dispatch,d);
 }

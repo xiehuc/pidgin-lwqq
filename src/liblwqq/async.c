@@ -1,4 +1,3 @@
-
 /**
  * @file   async.c
  * @author xiehuc<xiehuc@gmail.com>
@@ -11,58 +10,44 @@
 
 #include <stdlib.h>
 #include <string.h>
-//#include <plugin.h>
 #include "async.h"
 #include "smemory.h"
 #include "http.h"
 #include "logger.h"
 typedef struct async_dispatch_data {
-    DISPATCH_FUNC dsph;
-    CALLBACK_FUNC func;
-    vp_list data;//s:24
+    LwqqCommand cmd;
     LwqqAsyncTimer timer;
-} async_dispatch_data; //s:88
-typedef struct _LwqqAsyncEvsetInternal {
+} async_dispatch_data; 
+typedef struct LwqqAsyncEvset_ {
     LwqqAsyncEvset parent;
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int cond_waiting;
     int ref_count;
     LwqqCommand cmd;
-}_LwqqAsyncEvsetInternal;
-typedef struct _LwqqAsyncEventInternal {
+}LwqqAsyncEvset_;
+typedef struct LwqqAsyncEvent_{
     LwqqAsyncEvent parent;
     LwqqAsyncEvset* host_lock;
     LwqqCommand cmd;
     LwqqHttpRequest* req;
-}_LwqqAsyncEventInternal;
+}LwqqAsyncEvent_;
 
 
-int LWQQ_ASYNC_GLOBAL_SYNC_ENABLED = 0;
-
-static void timeout_come(LwqqAsyncTimerHandle timer,void* p)
+static void dispatch_wrap(LwqqAsyncTimerHandle timer,void* p)
 {
     async_dispatch_data* data = (async_dispatch_data*)p;
-    DISPATCH_FUNC dsph = data->dsph;
-    CALLBACK_FUNC func = data->func;
-    vp_start(data->data);
-    dsph(func,&data->data,NULL);
-    vp_end(data->data);
+    vp_do(data->cmd,NULL);
     lwqq_async_timer_stop(timer);
 
     //!!! should we stop first delete later?
     s_free(data);
 }
-void lwqq_async_dispatch(DISPATCH_FUNC dsph,CALLBACK_FUNC func , ...)
+void lwqq_async_dispatch(LwqqCommand cmd)
 {
     async_dispatch_data* data = s_malloc0(sizeof(*data));
-    data->dsph = dsph;
-    data->func = func;
-    va_list args;
-    va_start(args,func);
-    dsph(NULL,&data->data,&args);
-    va_end(args);
-    lwqq_async_timer_watch(&data->timer, 10, timeout_come, data);
+    data->cmd = cmd;
+    lwqq_async_timer_watch(&data->timer, 10, dispatch_wrap, data);
 }
 
 void lwqq_async_init(LwqqClient* lc)
@@ -72,8 +57,8 @@ void lwqq_async_init(LwqqClient* lc)
 
 LwqqAsyncEvent* lwqq_async_event_new(void* req)
 {
-    LwqqAsyncEvent* event = s_malloc0(sizeof(_LwqqAsyncEventInternal));
-    _LwqqAsyncEventInternal* internal = (_LwqqAsyncEventInternal*)event;
+    LwqqAsyncEvent* event = s_malloc0(sizeof(LwqqAsyncEvent_));
+    LwqqAsyncEvent_* internal = (LwqqAsyncEvent_*)event;
     internal->req = req;
     event->lc = req?internal->req->lc:NULL;
     event->failcode = LWQQ_CALLBACK_VALID;
@@ -83,64 +68,82 @@ LwqqAsyncEvent* lwqq_async_event_new(void* req)
 LwqqHttpRequest* lwqq_async_event_get_conn(LwqqAsyncEvent* ev)
 {
     if(!ev) return NULL;
-    _LwqqAsyncEventInternal* in = (_LwqqAsyncEventInternal*) ev;
+    LwqqAsyncEvent_* in = (LwqqAsyncEvent_*) ev;
     return in->req;
 }
 LwqqAsyncEvset* lwqq_async_evset_new()
 {
-    _LwqqAsyncEvsetInternal* l = s_malloc0(sizeof(_LwqqAsyncEvsetInternal));
+    LwqqAsyncEvset_* l = s_malloc0(sizeof(LwqqAsyncEvset_));
     pthread_mutex_init(&l->lock,NULL);
     pthread_cond_init(&l->cond,NULL);
     return (LwqqAsyncEvset*)l;
 }
+void lwqq_async_evset_free(LwqqAsyncEvset* set)
+{
+    if(!set) return;
+    LwqqAsyncEvset_* evset_ = (LwqqAsyncEvset_*) set;
+    pthread_mutex_destroy(&evset_->lock);
+    pthread_cond_destroy(&evset_->cond);
+    s_free(evset_);
+}
 void lwqq_async_event_finish(LwqqAsyncEvent* event)
 {
-    _LwqqAsyncEventInternal* internal = (_LwqqAsyncEventInternal*)event;
+    LwqqAsyncEvent_* internal = (LwqqAsyncEvent_*)event;
     vp_do(internal->cmd,NULL);
-    _LwqqAsyncEvsetInternal* evset = (_LwqqAsyncEvsetInternal*)internal->host_lock;
-    if(evset !=NULL){
-        pthread_mutex_lock(&evset->lock);
-        evset->ref_count--;
-        //this store evset result.
-        //it can only store one error number.
-        if(event->result != 0)
-            evset->parent.result ++;
-        if(((_LwqqAsyncEvsetInternal*) internal->host_lock)->ref_count==0){
-            vp_do(evset->cmd,NULL);
-            if(evset->cond_waiting)
-                pthread_cond_signal(&evset->cond);
+    LwqqAsyncEvset_* evset_ = (LwqqAsyncEvset_*)internal->host_lock;
+    if(evset_ !=NULL){
+        pthread_mutex_lock(&evset_->lock);
+        evset_->ref_count--;
+        //this store evset err count.
+        if(event->result != LWQQ_EC_OK)
+            evset_->parent.err_count ++;
+        if(evset_->ref_count==0){
+            vp_do(evset_->cmd,NULL);
+            if(evset_->cond_waiting)
+                pthread_cond_signal(&evset_->cond);
             else{
-                pthread_mutex_unlock(&evset->lock);
-                s_free(evset);
+                pthread_mutex_unlock(&evset_->lock);
+                lwqq_async_evset_free(internal->host_lock);
                 s_free(event);
                 return;
             }
         }
-        pthread_mutex_unlock(&evset->lock);
+        pthread_mutex_unlock(&evset_->lock);
     }
     s_free(event);
+}
+void lwqq_async_evset_wait(LwqqAsyncEvset* set)
+{
+    if(!set) return;
+    LwqqAsyncEvset_* evset_ = (LwqqAsyncEvset_*) set;
+    if(evset_->ref_count == 0) vp_do(evset_->cmd,NULL);
+    else{
+        evset_->cond_waiting = 1;
+        pthread_cond_wait(&evset_->cond, &evset_->lock);
+        vp_do(evset_->cmd,NULL);
+    }
+    lwqq_async_evset_free(set);
 }
 void lwqq_async_evset_add_event(LwqqAsyncEvset* host,LwqqAsyncEvent *handle)
 {
     if(!host || !handle) return;
-    _LwqqAsyncEvsetInternal* internal = (_LwqqAsyncEvsetInternal*) host;
+    LwqqAsyncEvset_* internal = (LwqqAsyncEvset_*) host;
     pthread_mutex_lock(&internal->lock);
-    ((_LwqqAsyncEventInternal*)handle)->host_lock = host;
+    ((LwqqAsyncEvent_*)handle)->host_lock = host;
     internal->ref_count++;
     pthread_mutex_unlock(&internal->lock);
 }
 
 void lwqq_async_add_event_listener(LwqqAsyncEvent* event,LwqqCommand cmd)
 {
-    _LwqqAsyncEventInternal* _event = (_LwqqAsyncEventInternal*) event;
+    LwqqAsyncEvent_* event_ = (LwqqAsyncEvent_*) event;
     if(event == NULL){
-        //event->failcode = LWQQ_CALLBACK_FAILED;
         vp_do(cmd,NULL);
         return ;
-    }else if(_event->cmd.func== NULL)
-        _event->cmd = cmd;
+    }else if(event_->cmd.func== NULL)
+        event_->cmd = cmd;
     else
-        vp_link(&_event->cmd,&cmd);
+        vp_link(&event_->cmd,&cmd);
 }
 static void on_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 {
@@ -157,19 +160,20 @@ void lwqq_async_add_event_chain(LwqqAsyncEvent* caller,LwqqAsyncEvent* called)
 }
 void lwqq_async_add_evset_listener(LwqqAsyncEvset* evset,LwqqCommand cmd)
 {
-    _LwqqAsyncEvsetInternal* _evset = (_LwqqAsyncEvsetInternal*)evset;
+    LwqqAsyncEvset_* _evset = (LwqqAsyncEvset_*)evset;
     if(evset == NULL){
-        //event->failcode = LWQQ_CALLBACK_FAILED;
+        vp_cancel(cmd);
         return ;
     }else if(_evset->cmd.func== NULL)
         _evset->cmd = cmd;
     else
         vp_link(&_evset->cmd,&cmd);
-    if(_evset->ref_count == 0) s_free(evset);
+    if(_evset->ref_count == 0) lwqq_async_evset_free(evset);
 }
 
 LwqqAsyncEvent* lwqq_async_queue_find(LwqqAsyncQueue* queue,void* func)
 {
+    if(!queue||!func) return NULL;
     LwqqAsyncEntry* entry;
     LIST_FOREACH(entry,queue,entries){
         if(entry->func == func) return entry->ev;
@@ -200,9 +204,6 @@ typedef struct {
     void* data;
 }LwqqAsyncIoWrap;
 
-
-
-#ifdef USE_LIBEV
 static enum{
     THREAD_NOT_CREATED,
     THREAD_NOW_WAITING,
@@ -322,60 +323,13 @@ void lwqq_async_global_quit()
     pid = 0;
     global_quit_lock = 0;
 }
-#if USE_DEBUG
-static int lwqq_gdb_still_waiting()
-{
-    return ev_pending_count(ev_default);
-}
-#endif
 void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer)
 {
     ev_timer_again(ev_default, &timer->h);
 }
-#endif
-#ifdef USE_LIBPURPLE
-static void event_cb_wrap(void* data,int fd,PurpleInputCondition action)
+#if USE_DEBUG
+static int lwqq_gdb_count_running()
 {
-    LwqqAsyncIoWrap* wrap = data;
-    if(wrap->callback)
-        wrap->callback(wrap->data,fd,action);
+    return ev_pending_count(ev_default);
 }
-void lwqq_async_io_watch(LwqqAsyncIoHandle io,int fd,int action,LwqqAsyncIoCallback fun,void* data)
-{
-    LwqqAsyncIoWrap* wrap = s_malloc0(sizeof(*wrap));
-    wrap->callback = fun;
-    wrap->data = data;
-    io->ev = purple_input_add(fd,action,event_cb_wrap,wrap);
-    io->wrap = wrap;
-}
-void lwqq_async_io_stop(LwqqAsyncIoHandle io)
-{
-    purple_input_remove(io->ev);
-    io->ev = 0;
-    s_free(io->wrap);
-}
-static int timer_wrapper(void* data)
-{
-    LwqqAsyncTimerHandle timer = data;
-    timer->ret = 0;
-    timer->func(timer,timer->data);
-    return timer->ret;
-}
-void lwqq_async_timer_watch(LwqqAsyncTimerHandle timer,unsigned int timeout_ms,LwqqAsyncTimerCallback fun,void* data)
-{
-    timer->func = fun;
-    timer->data = data;
-    timer->h = purple_timeout_add(timeout_ms,timer_wrapper,timer);
-}
-void lwqq_async_timer_stop(LwqqAsyncTimerHandle timer)
-{
-    purple_timeout_remove(timer->h);
-    timer->h = 0;
-    timer->ret = 0;
-}
-void lwqq_async_timer_repeat(LwqqAsyncTimerHandle timer)
-{
-    timer->ret = 1;
-}
-void lwqq_async_global_quit() {}
 #endif

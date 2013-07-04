@@ -154,7 +154,7 @@ static void do_change_status(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqStatus s)
 {
     if(ev->failcode == LWQQ_CALLBACK_FAILED) return;
     if(ev->result == WEBQQ_108)
-        lc->dispatch(vp_func_p,(CALLBACK_FUNC)lc->async_opt->poll_lost,lc);
+        lc->dispatch(_C_(p,lc->action->poll_lost,lc));
     if(ev->result != WEBQQ_OK) return;
     lc->stat = s;
 }
@@ -175,8 +175,8 @@ static void do_delete_group(LwqqAsyncEvent* ev,LwqqGroup* g)
     lwqq__return_if_ev_fail(ev);
     LwqqClient* lc = ev->lc;
     LIST_REMOVE(g,entries);
-    if(lc->async_opt && lc->async_opt->delete_group)
-        lc->async_opt->delete_group(lc,g);
+    if(lc->action && lc->action->delete_group)
+        lc->action->delete_group(lc,g);
     lwqq_group_free(g);
 }
 
@@ -223,7 +223,7 @@ static void do_change_discu_mem(LwqqAsyncEvent* ev,LwqqGroup* discu,LwqqDiscuMem
 done:
     if(err)
         lwqq_puts("[change discu member failed]");
-    lc->async_opt->group_members_chg(lc,discu);
+    lc->action->group_members_chg(lc,discu);
     lwqq_discu_mem_change_free(chg);
 }
 
@@ -233,7 +233,7 @@ static void do_create_discu(LwqqAsyncEvent* ev,LwqqGroup* discu)
     lwqq__jump_if_ev_fail(ev,err);
     LwqqClient* lc = ev->lc;
     LIST_INSERT_HEAD(&lc->discus,discu,entries);
-    lc->async_opt->new_group(lc,discu);
+    lc->action->new_group(lc,discu);
 done:
     if(err){
         lwqq_group_free(discu);
@@ -258,7 +258,7 @@ static void do_add_new_friend(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqBuddy* b)
     int err=0;
     lwqq__jump_if_ev_fail(ev,err);
     LIST_INSERT_HEAD(&lc->friends,b,entries);
-    lc->async_opt->new_friend(lc,b);
+    lc->action->new_friend(lc,b);
     b = NULL;
 done:
     if(err)

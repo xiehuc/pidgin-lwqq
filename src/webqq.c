@@ -1502,7 +1502,7 @@ static void flush_group_members(LwqqClient* lc,LwqqGroup* g)
     qq_chat_group* cg = g->data;
     qq_cgroup_flush_members(cg);
 }
-static LwqqAsyncOption qq_async_opt = {
+static LwqqAction qq_async_opt = {
     .login_complete = login_stage_1,
     .new_friend = friend_come,
     .new_group = group_come,
@@ -1551,7 +1551,7 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 }
 static void login_stage_2(LwqqAsyncEvset* evset,LwqqClient* lc)
 {
-    int errnum = lwqq_async_evset_get_result(evset);
+    int errnum = evset->err_count;
     if(errnum > 0){
         qq_account* ac = lc->data;
         purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Get Friend|Group List Failed"));
@@ -1593,7 +1593,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
         if(err == WEBQQ_LOST_CONN){
-            ac->qq->async_opt->poll_lost(ac->qq);
+            ac->qq->action->poll_lost(ac->qq);
         }
     }
     if(mmsg->upload_retry <0)
@@ -2181,7 +2181,7 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
         ev = lwqq_info_get_friend_qqnumber(lc,friend);
         lwqq_async_evset_add_event(set,ev);
         lwqq_async_add_evset_listener(set, _C_(3p,lwqq_info_add_group_member_as_friend,lc,friend,NULL));
-        lc->dispatch(vp_func_2p,(CALLBACK_FUNC)delete_back_broken_buddy,pc,s_strdup(buddy->name));
+        lc->dispatch(_C_(2p,delete_back_broken_buddy,pc,s_strdup(buddy->name)));
     }else{
         //friend->qqnumber = s_strdup(qqnum);
         LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
@@ -2893,7 +2893,7 @@ static void qq_login(PurpleAccount *account)
     }
     g_ref_count ++ ;
     ac->gc = pc;
-    ac->qq->async_opt = &qq_async_opt;
+    ac->qq->action= &qq_async_opt;
     lwqq_bit_set(ac->flag,IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
     lwqq_bit_set(ac->flag, IGNORE_FONT_FACE, purple_account_get_bool(account, "disable_custom_font_face", FALSE));
     lwqq_bit_set(ac->flag, DARK_THEME_ADAPT, purple_account_get_bool(account, "dark_theme_fix", FALSE));

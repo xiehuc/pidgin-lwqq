@@ -33,7 +33,7 @@ static void null_action(LwqqClient* lc)
 {
 }
 
-static LwqqAsyncOption default_async_opt = {
+static LwqqAction default_async_opt = {
     .poll_msg = null_action,
     .poll_lost = null_action,
 };
@@ -79,7 +79,7 @@ LwqqClient *lwqq_client_new(const char *username, const char *password)
 
     lc->msg_list = lwqq_recvmsg_new(lc);
 
-    lc->async_opt = &default_async_opt;
+    lc->action = &default_async_opt;
 
     lc->find_buddy_by_uin = lwqq_buddy_find_buddy_by_uin;
     lc->find_buddy_by_qqnumber = lwqq_buddy_find_buddy_by_qqnumber;

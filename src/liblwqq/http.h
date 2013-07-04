@@ -109,6 +109,7 @@ typedef struct {
         char* password;
     }proxy;
     int quit;
+    int synced;
 }LwqqHttpHandle;
 
 void lwqq_http_handle_remove(LwqqHttpHandle* http);
