@@ -360,12 +360,12 @@ typedef struct LwqqRecvMsgList {
 typedef struct LwqqHistoryMsgList {
     int row;
     union{
-    short page;
-    short begin;
+    int page; //< used for im
+    int begin; //< used for chat
     };
     union{
-    short total;
-    short end;
+    int total; //< used for im
+    int end;  //<used for chat
     };
     long reserve;       //<can store other data or a pointer.
     TAILQ_HEAD(,LwqqRecvMsg) msg_list;
