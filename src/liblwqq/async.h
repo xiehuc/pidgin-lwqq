@@ -14,17 +14,6 @@
 #include <assert.h>
 #include <ev.h>
 
-typedef struct LwqqAsyncEntry {
-    void* func;
-    LwqqAsyncEvent* ev;
-    LIST_ENTRY(LwqqAsyncEntry) entries;
-}LwqqAsyncEntry;
-
-/** 
- * call this function when you quit your program.
- * NOTE!! you must call lwqq_http_global_free first !!
- * */
-void lwqq_async_global_quit();
 /**======================EVSET API=====================================**/
 /** 
  * function:: this api provide easy used asynced event callback ability
@@ -159,6 +148,11 @@ void lwqq_async_queue_rm(LwqqAsyncQueue* queue,void* func);
 void lwqq_async_dispatch(LwqqCommand cmd);
 //initialize lwqq client with default dispatch function
 void lwqq_async_init(LwqqClient* lc);
+/** 
+ * call this function when you quit your program.
+ * NOTE!! you must call lwqq_http_global_free first !!
+ * */
+void lwqq_async_global_quit();
 
 
 //=========================LOW LEVEL EVENT LOOP API====================//

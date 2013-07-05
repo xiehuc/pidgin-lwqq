@@ -30,6 +30,7 @@
 #include "url.h"
 #include "json.h"
 #include "async.h"
+#include "utility.h"
 #include "internal.h"
 
 /* URL for webqq login */
@@ -574,13 +575,13 @@ static int set_online_status_back(LwqqHttpRequest* req)
      * but from the response we got like above, we dont need
      * 
      */
-    lwqq__override(lc->seskey,lwqq__json_get_value(json,"seskey"));
-    lwqq__override(lc->cip,lwqq__json_get_value(json,"cip"));
-    lwqq__override(lc->myself->uin,lwqq__json_get_value(json,"uin"));
-    lwqq__override(lc->index,lwqq__json_get_value(json,"index"));
-    lwqq__override(lc->port,lwqq__json_get_value(json,"port"));
-    lwqq__override(lc->vfwebqq,lwqq__json_get_value(json,"vfwebqq"));
-    lwqq__override(lc->psessionid,lwqq__json_get_value(json,"psessionid"));
+    lwqq_override(lc->seskey,lwqq__json_get_value(json,"seskey"));
+    lwqq_override(lc->cip,lwqq__json_get_value(json,"cip"));
+    lwqq_override(lc->myself->uin,lwqq__json_get_value(json,"uin"));
+    lwqq_override(lc->index,lwqq__json_get_value(json,"index"));
+    lwqq_override(lc->port,lwqq__json_get_value(json,"port"));
+    lwqq_override(lc->vfwebqq,lwqq__json_get_value(json,"vfwebqq"));
+    lwqq_override(lc->psessionid,lwqq__json_get_value(json,"psessionid"));
     lc->stat = lwqq_status_from_str(
             json_parse_simple_value(json, "status"));
 
@@ -840,12 +841,12 @@ static int process_login2(LwqqHttpRequest* req)
             goto done;
     }
     if(result){
-        lwqq__override(lc->cip,lwqq__json_get_value(result,"cip"));
-        lwqq__override(lc->index,lwqq__json_get_value(result,"index"));
-        lwqq__override(lc->port,lwqq__json_get_value(result,"port"));
-        lwqq__override(lc->psessionid,lwqq__json_get_value(result,"psessionid"));
+        lwqq_override(lc->cip,lwqq__json_get_value(result,"cip"));
+        lwqq_override(lc->index,lwqq__json_get_value(result,"index"));
+        lwqq_override(lc->port,lwqq__json_get_value(result,"port"));
+        lwqq_override(lc->psessionid,lwqq__json_get_value(result,"psessionid"));
+        lwqq_override(lc->vfwebqq,lwqq__json_get_value(result,"vfwebqq"));
         lc->stat = lwqq_status_from_str(json_parse_simple_value(result, "status"));
-        lwqq__override(lc->vfwebqq,lwqq__json_get_value(result,"vfwebqq"));
     }
 done:
     lwqq__clean_json_and_req(root,req);

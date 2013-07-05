@@ -58,6 +58,11 @@ typedef enum {
     LWQQ_SERVICE_GROUP = 0,
     LWQQ_SERVICE_DISCU = 1
 }LwqqServiceType;
+typedef enum {
+    LWQQ_MSG_IS_BUDDY = LWQQ_MS_BUDDY_MSG,
+    LWQQ_MSG_IS_GROUP = LWQQ_MS_GROUP_MSG,
+    LWQQ_MSG_IS_DISCU = LWQQ_MS_DISCU_MSG,
+}LwqqMessageType;
 
 typedef struct LwqqMsg {
     LwqqMsgType type;

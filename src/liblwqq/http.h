@@ -14,19 +14,24 @@
 #include "type.h"
 #include <stdio.h>
 
-typedef int (*LwqqAsyncCallback)(LwqqHttpRequest* request, void* data);
+struct cookie_list;
 
-struct cookie_list {
-    char name[32];
-    char value[256];
-    struct cookie_list* next;
-};
 typedef enum {
     LWQQ_FORM_FILE,// use add_file_content instead
     LWQQ_FORM_CONTENT
 } LWQQ_FORM;
+typedef enum {
+    LWQQ_HTTP_TIMEOUT,
+    LWQQ_HTTP_ALL_TIMEOUT,
+    LWQQ_HTTP_NOT_FOLLOW,
+    LWQQ_HTTP_SAVE_FILE,
+    LWQQ_HTTP_RESET_URL,
+    LWQQ_HTTP_VERBOSE,
+    LWQQ_HTTP_CANCELABLE,
+    LWQQ_HTTP_NOT_SET_COOKIE = 1<<7
+}LwqqHttpOption;
 /**
- * Lwqq Http request struct, this http object worked donw for lwqq,
+ * Lwqq Http request struct, this http object worked done for lwqq,
  * But for other app, it may work bad.
  *
  */
@@ -71,13 +76,7 @@ struct _LwqqHttpRequest {
     void (*set_header)(LwqqHttpRequest *request, const char *name,
                        const char *value);
 
-    /* Set default http header */
-    //void (*set_default_header)(struct LwqqHttpRequest *request);
-
-    /**
-     * Get header, return a alloca memory, so caller has responsibility
-     * free the memory
-     */
+    /** Get header */
     const char * (*get_header)(LwqqHttpRequest *request, const char *name);
 
     /**
@@ -86,12 +85,14 @@ struct _LwqqHttpRequest {
      */
     char * (*get_cookie)(LwqqHttpRequest *request, const char *name);
 
+    //add http form
     void (*add_form)(LwqqHttpRequest* request,LWQQ_FORM form,const char* name,const char* content);
+    //add http form file type
     void (*add_file_content)(LwqqHttpRequest* request,const char* name,const char* filename,const void* data,size_t size,const char* extension);
+    //progressing function callback
     int (*progress_func)(void* data,size_t now,size_t total);
     void* prog_data;
     time_t last_prog;
-
 } ;
 
 typedef struct {
@@ -154,23 +155,18 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri);
 LwqqHttpRequest *lwqq_http_create_default_request(LwqqClient* lc,const char *url,
         LwqqErrorCode *err);
 
-typedef enum {
-    LWQQ_HTTP_TIMEOUT,
-    LWQQ_HTTP_ALL_TIMEOUT,
-    LWQQ_HTTP_NOT_FOLLOW,
-    LWQQ_HTTP_SAVE_FILE,
-    LWQQ_HTTP_RESET_URL,
-    LWQQ_HTTP_VERBOSE,
-    LWQQ_HTTP_CANCELABLE,
-    LWQQ_HTTP_NOT_SET_COOKIE = 1<<7
-}LwqqHttpOption;
 void lwqq_http_global_init();
 void lwqq_http_global_free();
+/** stop a client all http progressing request */
 void lwqq_http_cleanup(LwqqClient*lc);
+/** set the other option of request, like curl_easy_setopt */
 void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...);
+/** regist http progressing callback */
 void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* prog_data);
+/** 
+ * force stop a request 
+ * require set LWQQ_HTTP_CANCELABLE option first
+ */
 void lwqq_http_cancel(LwqqHttpRequest* req);
-char* lwqq_http_escape(LwqqHttpRequest* req,const char* url);
-
 
 #endif  /* LWQQ_HTTP_H */

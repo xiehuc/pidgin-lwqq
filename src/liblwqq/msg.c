@@ -23,7 +23,7 @@
 #include "async.h"
 #include "info.h"
 #include "internal.h"
-#include "util.h"
+#include "utility.h"
 #include "json.h"
 #include "login.h"
 #include "info.h"
@@ -1022,7 +1022,7 @@ static int parse_sys_g_msg(json_t *json,void* opaque,LwqqClient* lc)
         g->gid = s_strdup(msg->group_uin);
         msg->group = g;
         LIST_INSERT_HEAD(&lc->groups,g,entries);
-        LwqqAsyncEvent* ev = lwqq_info_get_group_public(lc,g);
+        LwqqAsyncEvent* ev = lwqq_info_get_group_public_info(lc,g);
         lwqq_async_add_event_listener(ev, _C_(2p,insert_msg_delay_by_request_content,lc->msg_list,msg));
         return RET_DELAYINS_MSG;
     }
@@ -1331,7 +1331,7 @@ static int parse_recvmsg_from_json(LwqqRecvMsgList *list, const char *str)
 
     if(retcode == WEBQQ_NEW_PTVALUE){
         LwqqClient* lc = list->lc;
-        lwqq__override(lc->new_ptwebqq,lwqq__json_get_value(json,"p"));
+        lwqq_override(lc->new_ptwebqq,lwqq__json_get_value(json,"p"));
         lwqq_verbose(3,"[new ptwebqq:%s]\n",lc->new_ptwebqq);
     }
     if(retcode != WEBQQ_OK) goto done;

@@ -14,6 +14,11 @@
 #include "smemory.h"
 #include "http.h"
 #include "logger.h"
+typedef struct LwqqAsyncEntry {
+    void* func;
+    LwqqAsyncEvent* ev;
+    LIST_ENTRY(LwqqAsyncEntry) entries;
+}LwqqAsyncEntry;
 typedef struct async_dispatch_data {
     LwqqCommand cmd;
     LwqqAsyncTimer timer;

@@ -13,17 +13,6 @@
 #include "internal.h"
 
 #define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
-//#define LWQQ_HTTP_USER_AGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.91 Safari/537.11"
-
-/**HTTP RETRY POLICY **/
-/** if http request is canceled by lwqq_http_cancel. we should immediately stop http.
- * or we just try req->retry times.
- * the common operate http has:
- *
- * overtime
- *
- */
-
 
 static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body);
 static void lwqq_http_set_header(LwqqHttpRequest *request, const char *name,
@@ -37,6 +26,11 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
 static LwqqAsyncEvent* lwqq_http_do_request_async(LwqqHttpRequest *request, int method,
         char *body,LwqqCommand);
 
+struct cookie_list {
+    char name[32];
+    char value[256];
+    struct cookie_list* next;
+};
 typedef struct GLOBAL {
     CURLM* multi;
     CURLSH* share;

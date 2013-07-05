@@ -27,10 +27,6 @@
 #define __LOG_ERROR		3
 #define LOG_ERROR		__LOG_ERROR, _A_
 
-/*#ifndef LWQQ_VERBOSE_LEVEL
-#define LWQQ_VERBOSE_LEVEL 0
-#endif*/
-
 /** 
  * This is standard logger function
  * 

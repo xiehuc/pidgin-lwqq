@@ -245,44 +245,10 @@ static void do_modify_longnick(LwqqAsyncEvent* ev,char* longnick)
     int err=0;
     lwqq__jump_if_ev_fail(ev,err);
     LwqqClient* lc = ev->lc;
-    lwqq__override(lc->myself->long_nick,longnick);
+    lwqq_override(lc->myself->long_nick,longnick);
 done:
     if(err)
         s_free(longnick);
-}
-
-#if 0
-//most of the case webqq server would send blist_change message to add buddy
-static void do_add_new_friend(LwqqAsyncEvent* ev,LwqqClient* lc,LwqqBuddy* b)
-{
-    int err=0;
-    lwqq__jump_if_ev_fail(ev,err);
-    LIST_INSERT_HEAD(&lc->friends,b,entries);
-    lc->action->new_friend(lc,b);
-    b = NULL;
-done:
-    if(err)
-        lwqq_buddy_free(b);
-}
-#endif
-
-#define parse_key_value(k,v) {\
-    char* s=json_parse_simple_value(json,v);\
-    if(s){\
-        s_free(k);\
-        k=s_strdup(s);\
-    }\
-}
-#define parse_key_string(k,v) {\
-    char* s = json_parse_simple_value(json,v);\
-    if(s){\
-        s_free((k));\
-        (k) = json_unescape(s);\
-    }\
-}
-#define parse_key_int(k,v,d) {\
-    char* s = json_parse_simple_value(json,v);\
-    if(s) k = s_atoi(s,d);\
 }
 
 /**
@@ -305,7 +271,7 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
     //{"face":567,"birthday":{"month":6,"year":1991,"day":14},"occupation":"","phone":"","allow":1,"college":"","uin":289056851,"constel":5,"blood":0,"homepage":"","stat":10,"vip_info":0,"country":"中国","city":"威海","personal":"","nick":"d3dd","shengxiao":8,"email":"","client_type":41,"province":"山东","gender":"male","mobile":""}}
     //
     //
-#define  SET_BUDDY_INFO(key, name) parse_key_value(buddy->key,name)
+#define  SET_BUDDY_INFO(key, name) lwqq_override(buddy->key, lwqq__json_get_value(json, name))
         SET_BUDDY_INFO(uin, "uin");
         SET_BUDDY_INFO(face, "face");
         json_t* birth_tmp = json_find_first_label(json, "birthday");
@@ -332,7 +298,7 @@ static void parse_friend_detail(json_t* json,LwqqBuddy* buddy)
         SET_BUDDY_INFO(city, "city");
         SET_BUDDY_INFO(personal, "personal");
         //SET_BUDDY_INFO(nick, "nick");
-        lwqq__override(buddy->nick,ibmpc_ascii_character_convert(lwqq__json_get_string(json,"nick")));
+        lwqq_override(buddy->nick,ibmpc_ascii_character_convert(lwqq__json_get_string(json,"nick")));
         buddy->shengxiao = s_atoi(json_parse_simple_value(json,"shengxiao"),LWQQ_UNKNOW);
         SET_BUDDY_INFO(email, "email");
         buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"),LWQQ_CLIENT_PC);
@@ -368,28 +334,28 @@ static void parse_group_info(json_t* json,LwqqGroup* g)
 {
     //{"face":0,"memo":"","member_cnt":2,"class":10011,"fingermemo":"","code":492623520,"createtime":1344433413,"flag":16842753,"name":"group\u0026test","gid":4072534964,"owner":586389001,"maxmember":100,"option":2}
     if(!json) return;
-    parse_key_value(g->class,"class");
-    parse_key_value(g->code,"code");
-    parse_key_int(g->createtime,"createtime",0);
-    parse_key_value(g->face,"face");
-    parse_key_value(g->flag,"flag");
-    parse_key_value(g->gid,"gid");
-    parse_key_string(g->name,"name");
-    parse_key_value(g->option,"option");
-    parse_key_value(g->owner,"owner");
+    lwqq_override(g->class,lwqq__json_get_value(json, "class"));
+    lwqq_override(g->code, lwqq__json_get_value(json, "code"));
+    g->createtime = lwqq__json_get_int(json, "createtime", g->createtime);
+    lwqq_override(g->face, lwqq__json_get_value(json,"face"));
+    lwqq_override(g->flag, lwqq__json_get_value(json,"flag"));
+    lwqq_override(g->gid,  lwqq__json_get_value(json,"gid"));
+    lwqq_override(g->name, lwqq__json_get_string(json,"name"));
+    lwqq_override(g->option, lwqq__json_get_value(json,"option"));
+    lwqq_override(g->owner,lwqq__json_get_value(json,"owner"));
 }
 
 static void parse_business_card(json_t* json,LwqqBusinessCard* c)
 {
     //{"phone":"","muin":xxxxxxxxx,"email":"","remark":"","gcode":409088807,"name":"xiehuc","gender":2}
     if(!json) return;
-    parse_key_value(c->phone,"phone");
-    parse_key_value(c->uin,"muin");
-    parse_key_value(c->email,"email");
-    parse_key_string(c->remark,"remark");
-    parse_key_value(c->gcode,"gcode");
-    parse_key_string(c->name,"name");
-    parse_key_int(c->gender,"gender",LWQQ_MALE);
+    lwqq_override(c->phone,lwqq__json_get_value(json,"phone"));
+    lwqq_override(c->uin,lwqq__json_get_value(json,"uin"));
+    lwqq_override(c->email,lwqq__json_get_value(json,"email"));
+    lwqq_override(c->remark,lwqq__json_get_string(json,"remark"));
+    lwqq_override(c->gcode,lwqq__json_get_value(json,"gcode"));
+    lwqq_override(c->name,lwqq__json_get_string(json,"name"));
+    c->gender = lwqq__json_get_int(json, "gender", LWQQ_MALE);
 }
 /**
  * this process simple result;
@@ -519,9 +485,7 @@ static int process_simple_string(LwqqHttpRequest* req,const char* key,char ** pt
     result = lwqq__parse_retcode_result(json, &err);
     lwqq__jump_if_retcode_fail(err);
     if(result){
-        lwqq__override(*ptr,lwqq__json_get_string(result,key));
-        /*char* str = parse_string(result, key);
-        if(str){ s_free(*ptr); *ptr = str;}*/
+        lwqq_override(*ptr,lwqq__json_get_string(result,key));
     }
 done:
     lwqq__clean_json_and_req(json,req);
@@ -938,27 +902,12 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
 {
     static int serv_id = 0;
     if(!(lc&&(group||buddy))) return NULL;
-    //there have avatar already do not repeat work;
     LwqqErrorCode error;
     int isgroup = group>0;
-    //const char* qqnumber = (isgroup)?group->account:buddy->qqnumber;
     const char* uin = (isgroup)?group->code:buddy->uin;
 
     //to avoid chinese character
     //setlocale(LC_TIME,"en_US.utf8");
-    //first we try to read from disk
-    /*
-    char path[32];
-    time_t modify=0;
-    if(qqnumber || uin) {
-        snprintf(path,sizeof(path),LWQQ_CACHE_DIR"%s",qqnumber?qqnumber:uin);
-        struct stat st = {0};
-        //we read it last modify date
-        stat(path,&st);
-        modify = st.st_mtime;
-    }*/
-    //we send request if possible with modify time
-    //to reduce download rate
     LwqqHttpRequest* req;
     char url[512];
     char host[32];
@@ -974,13 +923,6 @@ LwqqAsyncEvent* lwqq_info_get_avatar(LwqqClient* lc,LwqqBuddy* buddy,LwqqGroup* 
     req->set_header(req, "Referer", "http://web2.qq.com/");
     req->set_header(req,"Host",host);
 
-    //we ask server if it indeed need to update
-    /*if(modify) {
-        struct tm modify_tm;
-        char buf[32];
-        strftime(buf,sizeof(buf),"%a, %d %b %Y %H:%M:%S GMT",localtime_r(&modify,&modify_tm) );
-        req->set_header(req,"If-Modified-Since",buf);
-    }*/
     req->set_header(req, "Cookie", lwqq_get_cookies(lc));
     return req->do_request_async(req, 0, NULL,_C_(3p_i,get_avatar_back,req,buddy,group));
 }
@@ -1518,9 +1460,6 @@ LwqqAsyncEvent* lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group
         snprintf(url, sizeof(url),
                 WEBQQ_S_HOST"/api/get_group_info_ext2?gcode=%s&vfwebqq=%s&t=%ld",
                 group->code, lc->vfwebqq,time(NULL));
-        /*snprintf(url, sizeof(url),
-                "%s/api/get_group_info?gcode=%%5B%s%%5D&retainKey=minfo&vfwebqq=%s&t=%ld",
-                "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));*/
         req = lwqq_http_create_default_request(lc,url, err);
         req->set_header(req, "Referer", WEBQQ_S_REF_URL);
         lwqq_verbose(3,"%s\n",url);
@@ -2006,9 +1945,6 @@ LwqqAsyncEvent* lwqq_info_search_friend(LwqqClient* lc,const char* qq_email,Lwqq
 {
     if(!lc||!qq_email||!out) return NULL;
 
-    /*char* qq_ = s_strdup(qq);
-    s_free(out->qqnumber);
-    out->qqnumber = qq_;*/
     LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
     ev->lc = lc;
     LwqqVerifyCode* c = s_malloc0(sizeof(*c));
@@ -2140,33 +2076,28 @@ LwqqAsyncEvent* lwqq_info_mask_group(LwqqClient* lc,LwqqGroup* group,LwqqMask ma
 {
     if(!lc||!group) return NULL;
     char url[512];
-    //char post[2048];
+    //use dynamic string to avoid buffer length not enough
     struct ds post = ds_initializer;
     snprintf(url,sizeof(url),"http://cgi.web2.qq.com/keycgi/qqweb/uac/messagefilter.do");
     const char* mask_type;
 
     mask_type = (group->type == LWQQ_GROUP_QUN)? "groupmask":"discumask";
 
-    //snprintf(post,sizeof(post),"retype=1&app=EQQ&itemlist={\"%s\":{",mask_type);
     ds_cat(post,"retype=1&app=EQQ&itemlist={\"",mask_type,"\":{",NULL);
     LwqqMask mask_ori = group->mask;
     group->mask = mask;
     if(group->type == LWQQ_GROUP_QUN){
         LwqqGroup* g;
         LIST_FOREACH(g,&lc->groups,entries){
-            //format_append(post,"\"%s\":\"%d\",",g->gid,g->mask);
             ds_cat(post,"\"",g->gid,"\":\"",ds_itos(g->mask),"\",",NULL);
         }
     }else{
         LwqqGroup* d;
         LIST_FOREACH(d,&lc->discus,entries){
-            //format_append(post,"\"%s\":\"%d\",",d->did,d->mask);
             ds_cat(post,"\"",d->did,"\":\"",ds_itos(d->mask),"\",",NULL);
         }
     }
     group->mask = mask_ori;
-    //format_append(post,"\"cAll\":0,\"idx\":%s,\"port\":%s}}&vfwebqq=%s",
-    //        lc->index,lc->port,lc->vfwebqq);
     ds_cat(post,"\"cAll\":0,\"idx\":",lc->index,",\"port\":",lc->port,"}}&vfwebqq=",lc->vfwebqq,NULL);
     lwqq_verbose(3,"%s\n",url);
     lwqq_verbose(3,"%s\n",ds_c_str(post));
@@ -2218,7 +2149,7 @@ LwqqAsyncEvent* lwqq_info_answer_request_join_group(LwqqClient* lc,LwqqMsgSysGMs
     lwqq_verbose(3,"%s\n",url);
     return req->do_request_async(req,0,NULL,_C_(p_i,process_simple_response,req));
 }
-LwqqAsyncEvent* lwqq_info_get_group_public(LwqqClient* lc,LwqqGroup* g)
+LwqqAsyncEvent* lwqq_info_get_group_public_info(LwqqClient* lc,LwqqGroup* g)
 {
     if(!lc||!g) return NULL;
     if(!g->code) return NULL;
