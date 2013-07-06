@@ -8,37 +8,37 @@ set(SRC_LIST
   )
 
 set(LWQQ_LIST
-  liblwqq/url.c
-  liblwqq/md5.c
-  liblwqq/unicode.c
-  liblwqq/logger.c
-  liblwqq/login.c
-  liblwqq/json.c
-  liblwqq/msg.c
-  liblwqq/type.c
-  liblwqq/smemory.c
-  liblwqq/info.c
-  liblwqq/lwdb.c
-  liblwqq/swsqlite.c
-  liblwqq/vplist.c
-  liblwqq/utility.c
-  liblwqq/internal.c
-  liblwqq/async.c
-  liblwqq/http.c
+  ../liblwqq/lib/url.c
+  ../liblwqq/lib/md5.c
+  ../liblwqq/lib/unicode.c
+  ../liblwqq/lib/logger.c
+  ../liblwqq/lib/login.c
+  ../liblwqq/lib/json.c
+  ../liblwqq/lib/msg.c
+  ../liblwqq/lib/type.c
+  ../liblwqq/lib/smemory.c
+  ../liblwqq/lib/info.c
+  ../liblwqq/lib/lwdb.c
+  ../liblwqq/lib/swsqlite.c
+  ../liblwqq/lib/vplist.c
+  ../liblwqq/lib/utility.c
+  ../liblwqq/lib/internal.c
+  ../liblwqq/lib/async.c
+  ../liblwqq/lib/http.c
   )
 
 add_definitions(-Wall)
 
 ADD_LIBRARY(webqq MODULE
-    ${LWQQ_LIST}
     ${SRC_LIST}
+    ${LWQQ_LIST}
     )
 include_directories(
   ${PURPLE_INCLUDE_DIRS}
   ${GLIB_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
-  liblwqq
   ${CMAKE_CURRENT_BINARY_DIR}
+  ../liblwqq/lib
   )
 
 #if(WITH_LIBEV)

@@ -1,0 +1,3 @@
+[submodule "liblwqq"]
+	path = liblwqq
+	url = git@github.com:xiehuc/lwqq.git
