@@ -594,14 +594,18 @@ static void qq_set_group_name(qq_chat_group* cg)
 {
     PurpleChat * chat = cg->chat;
     char gname[256] = {0};
-    int hide = cg->group->mask > 0;
-    if(hide) strcat(gname,"(");
+    int hide = cg->group->mask;
+    const char* left = cg->group->mask==2? "((":"(";
+    const char* right = cg->group->mask==2?"))":")";
+    if(hide) strcat(gname,left);
     strcat(gname,cg->group->markname?:cg->group->name);
     if(hide){
-        strcat(gname,")");
-        unsigned int unread = CGROUP_UNREAD(cg);
-        unsigned int split = unread<10?unread:unread<100?unread/10*10:unread/100*100;
-        if(unread>0)sprintf(gname+strlen(gname), "(%u%s)",split,unread>10?"+":"");
+        strcat(gname,right);
+        if(hide==1){
+            unsigned int unread = CGROUP_UNREAD(cg);
+            unsigned int split = unread<10?unread:unread<100?unread/10*10:unread/100*100;
+            if(unread>0)sprintf(gname+strlen(gname), "(%u%s)",split,unread>10?"+":"");
+        }
     }
     purple_blist_alias_chat(chat, gname);
 }
@@ -680,7 +684,7 @@ static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* pc = ac->gc;
     char buf[4096]={0};
-    snprintf(buf,sizeof(buf),_("You Got a Offline File: %s\n"
+    snprintf(buf,sizeof(buf),_("You Got an Offline File: %s\n"
              "End timeline: %s"
              "<a href=\"%s\">Click to download</a>"),
              msg->name,ctime(&msg->expire_time),lwqq_msg_offfile_get_url(msg));
