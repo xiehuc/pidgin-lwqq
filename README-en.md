@@ -21,7 +21,11 @@ Quick Install
 -------------
 
 ### Building From Source
-    cmake .. 
+
+    git submodule init
+    git submodule update
+    mkdir build;cd build
+    cmake ..
     make
     sudo make install
 

@@ -20,6 +20,9 @@ lwqq 即是 linux webqq 之意
 
 ### 从源代码编译
 
+    git submodule init
+    git submodule update
+    mkdir build;cd build
     cmake ..
     make
     sudo make install
