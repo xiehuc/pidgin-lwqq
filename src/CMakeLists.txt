@@ -29,40 +29,50 @@ set(LWQQ_LIST
 
 add_definitions(-Wall)
 
+if(WIN32)
+  set(LWQQ_LIST ${LWQQ_LIST} ../liblwqq/lib/win32.c 
+      ../liblwqq/libev/ev.c 
+      ../liblwqq/libev/event.c
+      )
+  set(LWQQ_OTHER_LIBS ${LWQQ_OTHER_LIBS} ws2_32)
+  add_definitions(-DEV_STANDALONE)
+  include_directories(../liblwqq/libev)
+endif(WIN32)
+
 ADD_LIBRARY(webqq MODULE
     ${SRC_LIST}
     ${LWQQ_LIST}
     )
 include_directories(
-  ${PURPLE_INCLUDE_DIRS}
-  ${GLIB_INCLUDE_DIRS}
+  ${SQLITE3_INCLUDE_DIRS}
+  ${LIBPURPLE_INCLUDE_DIRS}
+  ${GLIB2_INCLUDE_DIRS}
+  ${CURL_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ../liblwqq/lib
   )
 
-#if(WITH_LIBEV)
-add_definitions(-DUSE_LIBEV)
-include_directories(${EV_INCLUDE_DIRS})
-target_link_libraries(webqq ${EV_LIBRARIES})
-#else(WITH_LIBEV)
-#add_definitions(-DUSE_LIBPURPLE)
-#endif(WITH_LIBEV)
-
 if(SSL)
     add_definitions(-DLWQQ_ENABLE_SSL=1)
 endif(SSL)
+if(WITHOUT_LIBEV)
+    add_definitions(-DWITHOUT_LIBEV=1)
+endif(WITHOUT_LIBEV)
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-strict-aliasing")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1 -Wno-unused-function")
 
 target_link_libraries(webqq
-  ${SQLITE_LIBRARIES}
-  ${PURPLE_LIBRARIES}
-  ${GLIB_LIBRARIES}
+  ${SQLITE3_LIBRARIES}
+  ${LIBPURPLE_LIBRARIES}
+  ${GLIB2_LIBRARIES}
   ${CURL_LIBRARIES}
   ${ZLIB_LIBRARIES}
+  ${LWQQ_OTHER_LIBS}
+  pthread
   )
 
-
+if(UNIX)
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
+endif(UNIX)

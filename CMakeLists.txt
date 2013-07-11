@@ -9,22 +9,37 @@ if(NOT CMAKE_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX "/usr")
 endif(NOT CMAKE_INSTALL_PREFIX)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(PURPLE REQUIRED  purple)
-pkg_check_modules(GLIB REQUIRED  glib-2.0)
-pkg_check_modules(CURL REQUIRED libcurl)
-pkg_check_modules(SQLITE REQUIRED sqlite3)
-pkg_check_modules(ZLIB REQUIRED zlib)
-#recommand libcurl>=7.22.0
+if(UNIX)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(PURPLE REQUIRED  purple)
+    pkg_check_modules(GLIB REQUIRED  glib-2.0)
+    pkg_check_modules(CURL REQUIRED libcurl)
+    pkg_check_modules(SQLITE REQUIRED sqlite3)
+    pkg_check_modules(ZLIB REQUIRED zlib)
+    #recommand libcurl>=7.22.0
+    find_package(EV REQUIRED)
+    exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
+        OUTPUT_VARIABLE LIB_INSTALL_DIR)
+    exec_program("pkg-config --variable=datadir purple 2>/dev/null"
+        OUTPUT_VARIABLE PURPLE_DATADIR)
+    exec_program("pkg-config --modversion purple 2>/dev/null"
+        OUTPUT_VARIABLE PURPLE_VERSION)
+endif(UNIX)
+
+if(WIN32)
+	set(CMAKE_PREFIX_PATH "../win32-dev/libcurl-7.18.0-win32-msvc")
+	find_package(CURL REQUIRED)
+	set(CMAKE_PREFIX_PATH "../win32-dev/sqlite3")
+	find_package(Sqlite3 REQUIRED)
+	set(CMAKE_PREFIX_PATH "../win32-dev/zlib-1.28/include" "../win32-dev/zlib-1.28/lib")
+	find_package(ZLIB REQUIRED)
+    set(CMAKE_PREFIX_PATH "../win32-dev/pidgin-2.10.7/libpurple" )
+    find_package(LibPurple REQUIRED)
+    set(CMAKE_PREFIX_PATH "../win32-dev/glib_2.28.8-1_win32/include" "../win32-dev/glib_2.28.8-1_win32/lib")
+    find_package(GLIB2 REQUIRED)
+endif(WIN32)
 
 add_definitions(-Wall)
-
-EXEC_PROGRAM("pkg-config --variable=plugindir purple 2>/dev/null"
-    OUTPUT_VARIABLE LIB_INSTALL_DIR)
-EXEC_PROGRAM("pkg-config --variable=datadir purple 2>/dev/null"
-    OUTPUT_VARIABLE PURPLE_DATADIR)
-exec_program("pkg-config --modversion purple 2>/dev/null"
-    OUTPUT_VARIABLE PURPLE_VERSION)
 
 message("libpurple version:${PURPLE_VERSION}")
 message("would install to: ${LIB_INSTALL_DIR}")
@@ -50,12 +65,9 @@ else(NLS AND GETTEXT_FOUND)
     message(STATUS "Native Language Support: No")
 endif(NLS AND GETTEXT_FOUND)
 
-find_package(EV REQUIRED)
-
 option(SSL "Enable SSL Support " On)
 
-#include(GetGitRevisionDescription)
-#get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+option(WITHOUT_LIBEV "Disable Async " Off)
 
 set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)

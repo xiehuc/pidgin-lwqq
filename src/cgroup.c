@@ -96,10 +96,12 @@ static void force_delete_log(PurpleLog* log)
     if(fd<0) return;
 
     snprintf(procpath, sizeof(procpath), "/proc/self/fd/%d",fd);
+    #ifndef WIN32
     if(readlink(procpath,filepath,sizeof(filepath))<0) return;
 
     if(unlink(filepath)<0)
         lwqq_puts(strerror(errno));
+    #endif
 }
 
 qq_chat_group* qq_cgroup_new(struct qq_chat_group_opt* opt)

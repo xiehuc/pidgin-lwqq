@@ -84,15 +84,15 @@ static void recv_file_cancel(PurpleXfer* xfer)
 
 static void send_offline_file_receipt(LwqqAsyncEvent* ev,PurpleXfer* xfer)
 {
-    int errno = lwqq_async_event_get_result(ev);
+    int err = lwqq_async_event_get_result(ev);
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqMsgOffFile* file = xfer->data;
 
-    if(errno == 0){
+    if(err == 0){
         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, _("Send offline file successful"), PURPLE_MESSAGE_SYSTEM, time(NULL));
     }else{
         char buf[512];
-        snprintf(buf,sizeof(buf),_("Send offline file failed,Error Code:%d"),errno);
+        snprintf(buf,sizeof(buf),_("Send offline file failed,Error Code:%d"),err);
         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to, buf, PURPLE_MESSAGE_ERROR, time(NULL));
     }
     lwqq_msg_free((LwqqMsg*)file);
@@ -105,14 +105,14 @@ static void send_file(LwqqAsyncEvent* event,PurpleXfer *xfer)
     if(event->failcode != LWQQ_CALLBACK_VALID) return;
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(xfer->account));
     LwqqClient* lc = ac->qq;
-    long errno = 0;
+    long err = 0;
     if(event->failcode==LWQQ_CALLBACK_FAILED){
         lwqq_msg_free((LwqqMsg*)xfer->data);
         return;
     }
-    errno = lwqq_async_event_get_result(event);
+    err = lwqq_async_event_get_result(event);
     LwqqMsgOffFile* file = xfer->data;
-    if(errno) {
+    if(err) {
         qq_sys_msg_write(ac,LWQQ_MS_BUDDY_MSG, file->super.to,_("Send offline file failed"),PURPLE_MESSAGE_ERROR,time(NULL));
         lwqq_msg_free((LwqqMsg*)file);
         purple_xfer_set_completed(xfer,1);
