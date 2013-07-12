@@ -1930,7 +1930,7 @@ static void qq_close(PurpleConnection *gc)
     g_ref_count -- ;
     if(g_ref_count == 0){
         lwqq_http_global_free();
-        //lwqq_async_global_quit();
+        lwqq_async_global_quit();
         lwdb_global_free();
     }
 }
