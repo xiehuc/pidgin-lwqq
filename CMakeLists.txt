@@ -77,6 +77,8 @@ set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
+add_subdirectory(liblwqq)
+set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
 add_subdirectory(src)
 add_subdirectory(res)
 add_subdirectory(po)
