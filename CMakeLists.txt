@@ -17,11 +17,7 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
-    pkg_check_modules(CURL REQUIRED libcurl)
-    pkg_check_modules(SQLITE REQUIRED sqlite3)
-    pkg_check_modules(ZLIB REQUIRED zlib)
     #recommand libcurl>=7.22.0
-    find_package(EV REQUIRED)
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
     exec_program("pkg-config --variable=datadir purple 2>/dev/null"
@@ -31,15 +27,12 @@ if(UNIX)
 endif(UNIX)
 
 if(WIN32)
-    set(CMAKE_PREFIX_PATH "../win32-dev/libcurl-7.18.0-win32-msvc")
-    find_package(CURL REQUIRED)
-    set(CMAKE_PREFIX_PATH "../win32-dev/sqlite3")
-    find_package(Sqlite3 REQUIRED)
-    set(CMAKE_PREFIX_PATH "../win32-dev/zlib-1.28/include" "../win32-dev/zlib-1.28/lib")
-    find_package(ZLIB REQUIRED)
-    set(CMAKE_PREFIX_PATH "../win32-dev/pidgin-2.10.7/libpurple" )
+    set(CMAKE_PREFIX_PATH 
+        "${WIN32_LIBS_DIR}/win32-dev/pidgin-2.10.7/libpurple" )
     find_package(LibPurple REQUIRED)
-    set(CMAKE_PREFIX_PATH "../win32-dev/glib_2.28.8-1_win32/include" "../win32-dev/glib_2.28.8-1_win32/lib")
+    set(CMAKE_PREFIX_PATH 
+        "${WIN32_LIBS_DIR}/win32-dev/glib_2.28.8-1_win32/include" 
+        "${WIN32_LIBS_DIR}/win32-dev/glib_2.28.8-1_win32/lib")
     find_package(GLIB2 REQUIRED)
 endif(WIN32)
 
@@ -68,10 +61,6 @@ else(NLS AND GETTEXT_FOUND)
     set(ENABLE_NLS false)
     message(STATUS "Native Language Support: No")
 endif(NLS AND GETTEXT_FOUND)
-
-option(SSL "Enable SSL Support " On)
-
-option(WITHOUT_LIBEV "Disable Async " Off)
 
 set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
