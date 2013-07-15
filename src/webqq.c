@@ -23,6 +23,7 @@
 #include "remote.h"
 #include "cgroup.h"
 #include "lwdb.h"
+#include "async_purple.c"
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
 
@@ -2818,6 +2819,7 @@ init_plugin(PurplePlugin *plugin)
     option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 0);
     options = g_list_append(options, option);
 
+    LWQQ_ASYNC_IMPLEMENT(impl_purple);
     webqq_prpl_info.protocol_options = options;
 
 }
