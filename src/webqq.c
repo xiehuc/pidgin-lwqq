@@ -8,6 +8,7 @@
 #include <accountopt.h>
 #include <ft.h>
 #include <imgstore.h>
+#include <debug.h>
 
 #include <type.h>
 #include <async.h>
@@ -2783,7 +2784,10 @@ static PurplePluginInfo info = {
     .extra_info=    &webqq_prpl_info, /* extra_info */
     .actions=       plugin_actions_menu,
 };
-
+static void qq_debug(int l,const char* msg)
+{
+    purple_debug(l,DBGID,"%s",msg);
+}
 static void
 init_plugin(PurplePlugin *plugin)
 {
@@ -2820,7 +2824,10 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
 
     LWQQ_ASYNC_IMPLEMENT(impl_purple);
+    lwqq_log_redirect(qq_debug);
     webqq_prpl_info.protocol_options = options;
+
+
 
 }
 
@@ -2890,6 +2897,7 @@ static int relink_keepalive(void* data)
 
 static void qq_login(PurpleAccount *account)
 {
+
     PurpleConnection* pc= purple_account_get_connection(account);
     qq_account* ac = qq_account_new(account);
     const char* username = purple_account_get_username(account);
@@ -2901,6 +2909,7 @@ static void qq_login(PurpleAccount *account)
     g_ref_count ++ ;
     ac->gc = pc;
     ac->qq->action= &qq_async_opt;
+    
     lwqq_bit_set(ac->flag,IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
     lwqq_bit_set(ac->flag, IGNORE_FONT_FACE, purple_account_get_bool(account, "disable_custom_font_face", FALSE));
     lwqq_bit_set(ac->flag, DARK_THEME_ADAPT, purple_account_get_bool(account, "dark_theme_fix", FALSE));
@@ -2910,6 +2919,7 @@ static void qq_login(PurpleAccount *account)
     lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
     int relink_retry = 0;
+    
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
         ac->relink_timer = purple_timeout_add_seconds(relink_retry*60, relink_keepalive, ac);
     lwqq_log_set_level(purple_account_get_int(account,"verbose",0));
@@ -2917,6 +2927,7 @@ static void qq_login(PurpleAccount *account)
     snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
     ac->db = lwdb_userdb_new(username,db_path,0);
     ac->qq->data = ac;
+    
     //for empathy
     lwqq_bit_set(ac->flag,QQ_USE_QQNUM,ac->db!=NULL);
     purple_buddy_icons_set_caching(lwqq_bit_get(ac->flag, QQ_USE_QQNUM));
@@ -2926,6 +2937,7 @@ static void qq_login(PurpleAccount *account)
         ac->font.size = s_atoi(lwdb_userdb_read(ac->db,"f_size"),ac->font.size);
         ac->font.style = s_atoi(lwdb_userdb_read(ac->db,"f_style"),ac->font.style);
     }
+    
     
     if(!ac->flag&QQ_USE_QQNUM) 
         all_reset(ac,RESET_ALL);
@@ -2938,6 +2950,7 @@ static void qq_login(PurpleAccount *account)
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
     lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
+
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)
