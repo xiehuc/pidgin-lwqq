@@ -474,7 +474,7 @@ void translate_global_init()
             entry++;
         }
         smily_hash = t;
-
+/*
         purple_smiley_new_from_file("[FACE_14]",FACE_DIR"0.gif");
         purple_smiley_new_from_file("[FACE_1]",FACE_DIR"1.gif");
         purple_smiley_new_from_file("[FACE_2]",FACE_DIR"2.gif");
@@ -580,6 +580,7 @@ void translate_global_init()
         purple_smiley_new_from_file("[FACE_132]",FACE_DIR"102.gif");
         purple_smiley_new_from_file("[FACE_133]",FACE_DIR"103.gif");
         purple_smiley_new_from_file("[FACE_134]",FACE_DIR"104.gif");
+        */
     }
 }
 void remove_all_smiley(void* data,void* userdata)
