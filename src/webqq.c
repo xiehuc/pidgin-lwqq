@@ -2923,9 +2923,7 @@ static void qq_login(PurpleAccount *account)
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
         ac->relink_timer = purple_timeout_add_seconds(relink_retry*60, relink_keepalive, ac);
     lwqq_log_set_level(purple_account_get_int(account,"verbose",0));
-    char db_path[64]={0};
-    snprintf(db_path,sizeof(db_path),"%s/.config/lwqq",getenv("HOME"));
-    ac->db = lwdb_userdb_new(username,db_path,0);
+    ac->db = lwdb_userdb_new(username,NULL,0);
     ac->qq->data = ac;
     
     //for empathy
