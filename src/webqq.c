@@ -2786,7 +2786,10 @@ static PurplePluginInfo info = {
 };
 static void qq_debug(int l,const char* msg)
 {
-    purple_debug(l,DBGID,"%s",msg);
+    /**purple debug would use gtk text,
+    so must let it done in thread #1
+    */
+    qq_dispatch(_C_(4p,purple_debug,(long)l,DBGID,"%s",msg));
 }
 static void
 init_plugin(PurplePlugin *plugin)
@@ -2824,7 +2827,9 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
 
     LWQQ_ASYNC_IMPLEMENT(impl_purple);
+    #ifdef WIN32
     lwqq_log_redirect(qq_debug);
+    #endif
     webqq_prpl_info.protocol_options = options;
 
 
