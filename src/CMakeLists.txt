@@ -28,6 +28,7 @@ target_link_libraries(webqq
     ${GLIB2_LIBRARIES}
     pthread
 	lwqq
+    intl
     )
 
 if(UNIX)

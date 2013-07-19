@@ -28,7 +28,7 @@ endif(UNIX)
 
 if(WIN32)
     set(CMAKE_PREFIX_PATH 
-        "${WIN32_LIBS_DIR}/pidgin-2.10.7/libpurple" )
+        "${WIN32_LIBS_DIR}/../pidgin-2.10.7/libpurple" )
     find_package(LibPurple REQUIRED)
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/include" 
