@@ -31,6 +31,11 @@ target_link_libraries(webqq
     intl
     )
 
-if(UNIX)
-    INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
-endif(UNIX)
+INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
+if(WIN32)
+install(FILES 
+    ${SQLITE_LIBRARIES} 
+    ${CURL_LIBRARIES} 
+    ${WIN32_LIBS_DIR}/zlib/zlib1.dll
+    DESTINATION "${LIB_INSTALL_DIR}/../")
+endif()

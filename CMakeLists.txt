@@ -22,6 +22,7 @@ if(UNIX)
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
     exec_program("pkg-config --variable=datadir purple 2>/dev/null"
         OUTPUT_VARIABLE PURPLE_DATADIR)
+    set(PURPLE_DATADIR "${PURPLE_DATADIR}/")
     exec_program("pkg-config --modversion purple 2>/dev/null"
         OUTPUT_VARIABLE PURPLE_VERSION)
 endif(UNIX)
@@ -34,6 +35,25 @@ if(WIN32)
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/include" 
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/lib")
     find_package(GLIB2 REQUIRED)
+    set(LIB_INSTALL_DIR "plugins")
+    set(PURPLE_DATADIR  "")
+    set(CMAKE_PREFIX_PATH 
+    "${WIN32_LIBS_DIR}/libcurl" 
+        "${WIN32_LIBS_DIR}/libcurl/include" 
+        "${WIN32_LIBS_DIR}/libcurl/lib"
+        )
+    find_package(CURL REQUIRED)
+    set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
+    find_package(Sqlite3 REQUIRED)
+    set(CMAKE_PREFIX_PATH 
+        "${WIN32_LIBS_DIR}/zlib/lib"
+        "${WIN32_LIBS_DIR}/zlib/include" 
+        "${WIN32_LIBS_DIR}/zlib/lib"
+        )
+    find_library(ZLIB NAMES zlib1 zlib PATHS
+  "$ENV{LIB_DIR}/lib" CMAKE_PREFIX_PATH
+  NO_DEFAULT_PATH)
+    MESSAGE("${ZLIB}")
 endif(WIN32)
 
 add_definitions(-Wall)
@@ -51,7 +71,8 @@ add_definitions(-DINST_PREFIX="${CMAKE_INSTALL_PREFIX}")
 
 option(NLS "Native language support" On)
 if(NLS)
-    find_package(Gettext)
+    #find_package(Gettext)
+    include(cmake/Gettext.cmake)
 endif(NLS)
 
 if(NLS AND GETTEXT_FOUND)
@@ -66,14 +87,11 @@ set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
-if(UNIX)
-    set(WITH_LIBEV Off CACHE BOOL "Use Libev To Provide Async ")
-    set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
-elseif(WIN32)
-    set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
-    set(WITH_LIBEV Off CACHE BOOL "Use Libev To Provide Async ")
-endif()
+set(WITH_LIBEV Off CACHE BOOL "Use Libev To Provide Async ")
+set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
 set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
+set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
+
 add_subdirectory(liblwqq)
 add_subdirectory(src)
 add_subdirectory(res)
@@ -93,3 +111,12 @@ if(UOA)
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     add_subdirectory(ubuntu-online-account)
 endif(UOA)
+
+if(WIN32)
+option(INST_ZIP "Make Zip Archive" Off)
+if(INST_ZIP)
+    set(CPACK_GENERATOR "ZIP")
+    set(CPACK_PACKAGE_NAME "pidgin-lwqq")
+    include(CPACK)
+endif(INST_ZIP)
+endif()

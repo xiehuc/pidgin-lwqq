@@ -18,7 +18,10 @@ if (ENABLE_NLS)
 		COMMAND INTLTOOL_EXTRACT=${INTLTOOL_EXTRACT} srcdir=${CMAKE_CURRENT_BINARY_DIR} ${INTLTOOL_UPDATE} --gettext-package pidgin-lwqq --pot
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		)
-
-	gettext_create_translations(${POT_FILE} ALL ${PO_FILES})
+	if(WIN32)
+		gettext(${CMAKE_CURRENT_SOURCE_DIR} pidgin-lwqq locale)
+	else()
+		gettext(${CMAKE_CURRENT_SOURCE_DIR} pidgin-lwqq share/locale)
+	endif()
 endif(ENABLE_NLS)
 
