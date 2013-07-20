@@ -37,23 +37,8 @@ if(WIN32)
     find_package(GLIB2 REQUIRED)
     set(LIB_INSTALL_DIR "plugins")
     set(PURPLE_DATADIR  "")
-    set(CMAKE_PREFIX_PATH 
-    "${WIN32_LIBS_DIR}/libcurl" 
-        "${WIN32_LIBS_DIR}/libcurl/include" 
-        "${WIN32_LIBS_DIR}/libcurl/lib"
-        )
-    find_package(CURL REQUIRED)
     set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
     find_package(Sqlite3 REQUIRED)
-    set(CMAKE_PREFIX_PATH 
-        "${WIN32_LIBS_DIR}/zlib/lib"
-        "${WIN32_LIBS_DIR}/zlib/include" 
-        "${WIN32_LIBS_DIR}/zlib/lib"
-        )
-    find_library(ZLIB NAMES zlib1 zlib PATHS
-  "$ENV{LIB_DIR}/lib" CMAKE_PREFIX_PATH
-  NO_DEFAULT_PATH)
-    MESSAGE("${ZLIB}")
 endif(WIN32)
 
 add_definitions(-Wall)

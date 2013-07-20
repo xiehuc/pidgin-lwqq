@@ -35,7 +35,8 @@ INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 if(WIN32)
 install(FILES 
     ${SQLITE_LIBRARIES} 
-    ${CURL_LIBRARIES} 
+    ${WIN32_LIBS_DIR}/libcurl/bin/libcurl.dll
+    ${WIN32_LIBS_DIR}/libcurl/bin/libidn-11.dll
     ${WIN32_LIBS_DIR}/zlib/zlib1.dll
     DESTINATION "${LIB_INSTALL_DIR}/../")
 endif()
