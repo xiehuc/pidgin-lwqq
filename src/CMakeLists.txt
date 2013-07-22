@@ -28,8 +28,10 @@ target_link_libraries(webqq
     ${GLIB2_LIBRARIES}
     pthread
 	lwqq
-    intl
     )
+if(NLS AND WIN32)
+    target_link_libraries(webqq intl)
+endif()
 
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 if(WIN32)
