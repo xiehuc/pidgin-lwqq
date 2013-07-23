@@ -39,5 +39,6 @@ install(FILES
     ${WIN32_LIBS_DIR}/libcurl/bin/libcurl.dll
     ${WIN32_LIBS_DIR}/libcurl/bin/libidn-11.dll
     ${WIN32_LIBS_DIR}/zlib/zlib1.dll
+    ### NEED pthread
     DESTINATION "${LIB_INSTALL_DIR}/../")
 endif()
