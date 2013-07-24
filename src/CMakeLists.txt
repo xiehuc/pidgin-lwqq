@@ -5,6 +5,7 @@ set(SRC_LIST
     qq_types.c
     ft.c
     cgroup.c
+    win.c
     )
 
 add_definitions(-Wall)
@@ -22,11 +23,9 @@ include_directories(
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-strict-aliasing")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1 -Wno-unused-function")
-
 target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
-    pthread
 	lwqq
     )
 if(NLS AND WIN32)
@@ -40,5 +39,6 @@ install(FILES
     ${WIN32_LIBS_DIR}/libcurl/bin/libcurl.dll
     ${WIN32_LIBS_DIR}/libcurl/bin/libidn-11.dll
     ${WIN32_LIBS_DIR}/zlib/zlib1.dll
+    ### NEED pthread
     DESTINATION "${LIB_INSTALL_DIR}/../")
 endif()

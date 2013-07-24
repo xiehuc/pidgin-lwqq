@@ -27,8 +27,7 @@
 #include "async_purple.c"
 
 #ifdef WIN32
-#undef  LOCALEDIR
-#define LOCALEDIR wpurple_locale_dir()
+#include "win.h"
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
