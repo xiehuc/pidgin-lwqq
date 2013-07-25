@@ -2,6 +2,7 @@
 #define __CONFIG_H__
 
 #cmakedefine ENABLE_NLS
+#cmakedefine WITH_LIBEV
 
 #define PACKAGE "@package@"
 #define LOCALEDIR "@localedir@"

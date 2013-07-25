@@ -17,6 +17,7 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
+    find_package(EV)
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
@@ -39,13 +40,12 @@ if(WIN32)
     set(PURPLE_DATADIR  "")
     set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
     find_package(Sqlite3 REQUIRED)
+    set(EV_FOUND Off)
 endif(WIN32)
 
 add_definitions(-Wall)
 
 message("libpurple version:${PURPLE_VERSION}")
-message("would install to: ${LIB_INSTALL_DIR}")
-message("")
 
 if(PURPLE_VERSION VERSION_LESS "2.8")
     message("libpurple version outdate")
@@ -62,25 +62,30 @@ endif(NLS)
 
 if(NLS AND GETTEXT_FOUND)
     set(ENABLE_NLS true)
-    message(STATUS "Native Language Support: Yes")
-else(NLS AND GETTEXT_FOUND)
+else()
     set(ENABLE_NLS false)
-    message(STATUS "Native Language Support: No")
-endif(NLS AND GETTEXT_FOUND)
+endif()
+
+set(WITH_LIBEV ${EV_FOUND})
+set(WITH_LIBEV ${EV_FOUND} CACHE BOOL "Use Libev To Provide Async ")
+set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
+set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
+set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 
 set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
-set(WITH_LIBEV Off CACHE BOOL "Use Libev To Provide Async ")
-set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
-set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
-set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
-
 add_subdirectory(liblwqq)
 add_subdirectory(src)
 add_subdirectory(res)
 add_subdirectory(po)
+
+message( "===============================================")
+message(STATUS "With Libev (Option)     : ${EV_FOUND}")
+message(STATUS "Native Language Support : ${ENABLE_NLS}")
+message(STATUS "Install Path            : ${LIB_INSTALL_DIR}")
+message( "===============================================")
 
 option(UOA "ubuntu online account support" Off)
 if(UOA)

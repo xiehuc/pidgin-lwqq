@@ -24,7 +24,10 @@
 #include "remote.h"
 #include "cgroup.h"
 #include "lwdb.h"
+
+#ifndef WITH_LIBEV
 #include "async_purple.c"
+#endif
 
 #ifdef WIN32
 #include "win.h"
@@ -2859,10 +2862,12 @@ init_plugin(PurplePlugin *plugin)
     option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 0);
     options = g_list_append(options, option);
 
+#ifndef WITH_LIBEV
     LWQQ_ASYNC_IMPLEMENT(impl_purple);
-    #ifdef WIN32
+#endif
+#ifdef WIN32
     lwqq_log_redirect(qq_debug);
-    #endif
+#endif
     webqq_prpl_info.protocol_options = options;
 
 
