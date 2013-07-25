@@ -40,7 +40,7 @@ static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* 
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
-static void login_stage_2(LwqqAsyncEvset* set,LwqqClient* lc);
+static void login_stage_2(LwqqAsyncEvent* ev,LwqqClient* lc);
 static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
@@ -58,6 +58,16 @@ enum ResetOption{
 ///###  global data area ###///
 int g_ref_count = 0;
 ///###  global data area ###///
+
+#ifdef WIN32
+static void qq_debug(int l,const char* msg)
+{
+    /**purple debug would use gtk text,
+    so must let it done in thread #1
+    */
+    qq_dispatch(_C_(4p,purple_debug,(long)l,DBGID,"%s",msg));
+}
+#endif
 
 static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 {
@@ -126,6 +136,7 @@ static LwqqSimpleBuddy* find_group_member_by_nick_or_card(LwqqGroup* group,const
     }
     return NULL;
 }
+#if 0
 static LwqqSimpleBuddy* find_discu_member_by_nick(LwqqGroup* group,const char* who)
 {
     LwqqSimpleBuddy* sb;
@@ -135,6 +146,7 @@ static LwqqSimpleBuddy* find_discu_member_by_nick(LwqqGroup* group,const char* w
     }
     return NULL;
 }
+#endif
 
 static int find_group_and_member_by_card(LwqqClient* lc,const char* card,LwqqGroup** p_g,LwqqSimpleBuddy** p_sb)
 {
@@ -1523,6 +1535,39 @@ static LwqqAction qq_async_opt = {
     .delete_group = delete_group_local,
     .group_members_chg = flush_group_members,
 };
+static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
+{
+    LwqqClient* lc = ev->lc;
+    qq_account* ac = lc->data;
+    if(ev->result == LWQQ_EC_HASH_WRONG){
+        //trying next hash
+        //...
+        //no remain hash
+        purple_connection_error_reason(ac->gc, 
+                PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
+                _("Hash Function Wrong, WebQQ Protocol update"));
+        return;
+    }
+    if(ev->result != LWQQ_EC_OK){
+        purple_connection_error_reason(ac->gc, 
+                PURPLE_CONNECTION_ERROR_NETWORK_ERROR, 
+                _("Get Friend List Failed"));
+        return;
+    }
+    LwqqAsyncEvent* event;
+    event = lwqq_info_get_group_name_list(lc,NULL);
+    lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
+    //ev = lwqq_info_get_single_long_nick(lc, lc->myself);
+    //lwqq_async_evset_add_event(set,ev);
+    //ev = lwqq_info_recent_list(lc, &ac->recent_list);
+    //lwqq_async_evset_add_event(set, ev);
+}
+static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
+{
+    LwqqAsyncEvent* ev;
+    ev = lwqq_info_get_friends_info(lc,NULL,NULL);
+    lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
+}
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
     qq_account* ac = lwqq_client_userdata(lc);
@@ -1545,26 +1590,17 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    LwqqAsyncEvset* set = lwqq_async_evset_new();
-    LwqqAsyncEvent* ev;
-    ev = lwqq_info_get_friends_info(lc,NULL);
-    lwqq_async_evset_add_event(set,ev);
-    ev = lwqq_info_get_group_name_list(lc,NULL);
-    lwqq_async_evset_add_event(set,ev);
-    //ev = lwqq_info_get_single_long_nick(lc, lc->myself);
-    //lwqq_async_evset_add_event(set,ev);
-    //ev = lwqq_info_recent_list(lc, &ac->recent_list);
-    //lwqq_async_evset_add_event(set, ev);
-    lwqq_async_add_evset_listener(set,_C_(2p,login_stage_2,set,lc));
+    get_friends_info_retry(lc, NULL);
 
     return ;
 }
-static void login_stage_2(LwqqAsyncEvset* evset,LwqqClient* lc)
+static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
 {
-    int errnum = evset->err_count;
-    if(errnum > 0){
+    if(event->result != LWQQ_EC_OK){
         qq_account* ac = lc->data;
-        purple_connection_error_reason(ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Get Friend|Group List Failed"));
+        purple_connection_error_reason(ac->gc, 
+                PURPLE_CONNECTION_ERROR_NETWORK_ERROR, 
+                _("Get Group List Failed"));
         return;
     }
     LwqqAsyncEvset* set = lwqq_async_evset_new();
@@ -2788,13 +2824,6 @@ static PurplePluginInfo info = {
     .extra_info=    &webqq_prpl_info, /* extra_info */
     .actions=       plugin_actions_menu,
 };
-static void qq_debug(int l,const char* msg)
-{
-    /**purple debug would use gtk text,
-    so must let it done in thread #1
-    */
-    qq_dispatch(_C_(4p,purple_debug,(long)l,DBGID,"%s",msg));
-}
 static void
 init_plugin(PurplePlugin *plugin)
 {
