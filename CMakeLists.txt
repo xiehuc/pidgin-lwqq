@@ -1,8 +1,8 @@
 project(libwebqq)
 cmake_minimum_required(VERSION 2.6)
 set(VERSION_MAJOR "0")
-set(VERSION_MINOR "1")
-set(VERSION_PATCH "f")
+set(VERSION_MINOR "2")
+set(VERSION_PATCH "a")
 
 set(CMAKE_MODULE_PATH 
     ${CMAKE_SOURCE_DIR}/cmake 
@@ -106,6 +106,9 @@ if(WIN32)
 option(INST_ZIP "Make Zip Archive" Off)
 if(INST_ZIP)
     set(CPACK_GENERATOR "ZIP")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
     set(CPACK_PACKAGE_NAME "pidgin-lwqq")
     include(CPACK)
 endif(INST_ZIP)
