@@ -70,6 +70,7 @@ typedef struct qq_account {
     GPtrArray* opend_chat;
     GList* rewrite_pic_list;
     char* recent_group_name;
+    PurpleLog* sys_log;
     struct {
         char* family;
         int size;

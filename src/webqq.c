@@ -779,6 +779,9 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
     ct->cmd = _C_(3p,request_join_confirm,lc,msg,ct);
     show_confirm_table(lc,ct);
     lwqq_buddy_free(buddy);
+
+    qq_account* ac = lc->data;
+    purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), body);
 }
 static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
 {
@@ -786,7 +789,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
     char body[1024]={0};
     switch(msg->type){
         case GROUP_CREATE:
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"), _("You create a new group"), NULL, NULL, NULL);
+            strcpy(body,_("You create a new group"));
             break;
         case GROUP_JOIN:
         case GROUP_REQUEST_JOIN_AGREE:
@@ -811,13 +814,11 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                 PurpleChat* chat = purple_blist_find_chat(ac->account, try_get(msg->group->account,msg->group->gid));
                 if(chat&&msg->is_myself){
                     purple_blist_remove_chat(chat);
-                    //purple_chat_destroy(chat);
                 }
             }
             break;
         case GROUP_REQUEST_JOIN_DENY:
             snprintf(body,sizeof(body),_("QQ Group [%s] refused your request"),msg->account);
-            purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"),body, NULL, NULL, NULL);
             break;
         case GROUP_REQUEST_JOIN:
             {
@@ -832,7 +833,8 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             return;
             break;
     }
-    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, ("QQ Group Sys Message"), body,NULL, NULL, NULL);
+    purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"), body,NULL, NULL, NULL);
+    purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), body);
 }
 struct rewrite_pic_entry {
     LwqqGroup* owner;
@@ -1094,12 +1096,18 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system,LwqqBuddy* buddy
         show_confirm_table(lc, ct);
         lwqq_buddy_free(buddy);
         lwqq_msg_free((LwqqMsg*)system);
+
+        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf2);
     } else if(system->type == VERIFY_PASS_ADD) {
         snprintf(buf1,sizeof(buf1),_("%s accept your request,and add back you as friend too"),system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
+
+        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf1);
     } else if(system->type == VERIFY_PASS) {
         snprintf(buf1,sizeof(buf1),_("%s accept your request"),system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
+
+        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf1);
     }
 }
 

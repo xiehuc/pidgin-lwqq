@@ -4,14 +4,18 @@
 
 
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
-    TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))     TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
-    TR(LWQQ_DRAGON,_("Dragon"))   TR(LWQQ_SNACK,_("Snack"))       TR(LWQQ_HORSE,_("Horse"))    TR(LWQQ_SHEEP,_("Sheep"))
-    TR(LWQQ_MONKEY,_("Monkey"))   TR(LWQQ_CHOOK,_("Chook"))       TR(LWQQ_DOG,_("Dog"))        TR(LWQQ_PIG,_("Pig"))
+    TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))
+    TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
+    TR(LWQQ_DRAGON,_("Dragon"))   TR(LWQQ_SNACK,_("Snack"))
+    TR(LWQQ_HORSE,_("Horse"))    TR(LWQQ_SHEEP,_("Sheep"))
+    TR(LWQQ_MONKEY,_("Monkey"))   TR(LWQQ_CHOOK,_("Chook"))
+    TR(LWQQ_DOG,_("Dog"))        TR(LWQQ_PIG,_("Pig"))
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_blood_to_str, const char*,LwqqBloodType , "")
-    TR(LWQQ_BLOOD_A,_("A"))   TR(LWQQ_BLOOD_B,_("B"))         TR(LWQQ_BLOOD_O,_("O"))
-    TR(LWQQ_BLOOD_AB,_("AB")) TR(LWQQ_BLOOD_OTHER,_("Other"))
+    TR(LWQQ_BLOOD_A,_("A"))   TR(LWQQ_BLOOD_B,_("B"))
+    TR(LWQQ_BLOOD_O,_("O")) TR(LWQQ_BLOOD_AB,_("AB"))
+    TR(LWQQ_BLOOD_OTHER,_("Other"))
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_constel_to_str,const char*,LwqqConstel ,"")
@@ -87,6 +91,7 @@ qq_account* qq_account_new(PurpleAccount* account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
+    ac->sys_log = purple_log_new(PURPLE_LOG_SYSTEM, "system", account, NULL, time(NULL), NULL);
 
     ac->font.family = s_strdup("宋体");
     ac->font.size = 12;
@@ -109,6 +114,7 @@ void qq_account_free(qq_account* ac)
     for(i=0;i<ac->opend_chat->len;i++){
         purple_conversation_destroy(purple_find_chat(gc, i));
     }
+    purple_log_free(ac->sys_log);
     g_ptr_array_free(ac->opend_chat,1);
     s_free(ac->recent_group_name);
     s_free(ac->font.family);
