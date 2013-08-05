@@ -66,6 +66,7 @@ static void set_user_list(qq_chat_group* cg)
                 else
                     users = g_list_append(users,buddy->uin);
             } else {
+                //note nick may be NULL in special situation
                 users = g_list_append(users,member->card?:member->nick);
             }
         }
