@@ -1289,7 +1289,7 @@ static void login_stage_3(LwqqClient* lc)
 
     if(ac->flag&QQ_USE_QQNUM){
         //lwdb_userdb_write_to_client(ac->db, lc);
-        lwdb_userdb_query_qqnumbers(lc, ac->db);
+        lwdb_userdb_query_qqnumbers(ac->db,lc);
         //lwdb_userdb_begin(ac->db,"insertion");
     }
 
