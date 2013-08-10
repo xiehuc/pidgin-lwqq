@@ -95,7 +95,7 @@
 }
 
 - (NSUInteger) allowedLengthForUIDs {
-    return 11;
+    return 12;
 }
 
 - (BOOL) canCreateGroupChats {

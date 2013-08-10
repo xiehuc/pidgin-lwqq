@@ -32,19 +32,19 @@ extern gboolean purple_init_webqq_plugin(void);
 }
 
 - (NSString*) pluginAuthor {
-    return @"William Orr";
+    return @"xiehuc";
 }
 
 - (NSString*) pluginVersion {
-    return @"0.7";
+    return @"0.2b";
 }
 
 - (NSString*) pluginDescription {
-    return @"Allows Adium to connect to QQ accounts";
+    return @"the port for pidgin-lwqq to adium";
 }
 
 - (NSString*) pluginWebsite {
-    return @"www.worrbase.com";
+    return @"www.github.com/xiehuc/pidgin-lwqq";
 }
 
 @end
