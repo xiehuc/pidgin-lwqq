@@ -1,0 +1,486 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C01CC0AC17A959DB00574486 /* libpurple.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C01CC0AB17A959DB00574486 /* libpurple.framework */; };
+		C01CC0AE17A95AB900574486 /* libglib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C01CC0AD17A95AB900574486 /* libglib.framework */; };
+		C01F2C5017B643B100096303 /* QQAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C4817B643B100096303 /* QQAccount.m */; };
+		C01F2C5117B643B100096303 /* QQAccountView.xib in Resources */ = {isa = PBXBuildFile; fileRef = C01F2C4917B643B100096303 /* QQAccountView.xib */; };
+		C01F2C5217B643B100096303 /* QQAccountViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C4B17B643B100096303 /* QQAccountViewController.m */; };
+		C01F2C5317B643B100096303 /* QQPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C4D17B643B100096303 /* QQPlugin.m */; };
+		C01F2C5417B643B100096303 /* QQService.m in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C4F17B643B100096303 /* QQService.m */; };
+		C01F2C6117B6446300096303 /* cgroup.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5617B6446300096303 /* cgroup.c */; };
+		C01F2C6217B6446300096303 /* ft.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5817B6446300096303 /* ft.c */; };
+		C01F2C6317B6446300096303 /* qq_types.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5917B6446300096303 /* qq_types.c */; };
+		C01F2C6417B6446300096303 /* translate.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5B17B6446300096303 /* translate.c */; };
+		C01F2C6517B6446300096303 /* trex.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5D17B6446300096303 /* trex.c */; };
+		C01F2C6617B6446300096303 /* webqq.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5F17B6446300096303 /* webqq.c */; };
+		C01F2C8F17B644EC00096303 /* async.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6A17B644EC00096303 /* async.c */; };
+		C01F2C9117B644EC00096303 /* http.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6D17B644EC00096303 /* http.c */; };
+		C01F2C9217B644EC00096303 /* info.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6F17B644EC00096303 /* info.c */; };
+		C01F2C9317B644EC00096303 /* internal.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7117B644EC00096303 /* internal.c */; };
+		C01F2C9417B644EC00096303 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7317B644EC00096303 /* json.c */; };
+		C01F2C9517B644EC00096303 /* logger.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7517B644EC00096303 /* logger.c */; };
+		C01F2C9617B644EC00096303 /* login.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7717B644EC00096303 /* login.c */; };
+		C01F2C9717B644EC00096303 /* lwdb.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7917B644EC00096303 /* lwdb.c */; };
+		C01F2C9817B644EC00096303 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7C17B644EC00096303 /* md5.c */; };
+		C01F2C9917B644EC00096303 /* msg.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7E17B644EC00096303 /* msg.c */; };
+		C01F2C9A17B644EC00096303 /* smemory.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8117B644EC00096303 /* smemory.c */; };
+		C01F2C9B17B644EC00096303 /* swsqlite.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8317B644EC00096303 /* swsqlite.c */; };
+		C01F2C9C17B644EC00096303 /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8517B644EC00096303 /* type.c */; };
+		C01F2C9D17B644EC00096303 /* url.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8717B644EC00096303 /* url.c */; };
+		C01F2C9E17B644EC00096303 /* utility.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8917B644EC00096303 /* utility.c */; };
+		C01F2C9F17B644EC00096303 /* vplist.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8B17B644EC00096303 /* vplist.c */; };
+		C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0BE62A21763EE4100826A49 /* Cocoa.framework */; };
+		C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E5A5521769333E005C6362 /* AIUtilities.framework */; };
+		C0E9D3921763F2DB0006EAA0 /* Adium.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E9D3911763F2DB0006EAA0 /* Adium.framework */; };
+		C0E9D3951763F2F10006EAA0 /* AdiumLibpurple.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E9D3941763F2F10006EAA0 /* AdiumLibpurple.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C01CC0AB17A959DB00574486 /* libpurple.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libpurple.framework; path = ../../adium/Frameworks/libpurple.framework; sourceTree = "<group>"; };
+		C01CC0AD17A95AB900574486 /* libglib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libglib.framework; path = ../../adium/Frameworks/libglib.framework; sourceTree = "<group>"; };
+		C01F2C4617B643B100096303 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = SOURCE_ROOT; };
+		C01F2C4717B643B100096303 /* QQAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QQAccount.h; sourceTree = SOURCE_ROOT; };
+		C01F2C4817B643B100096303 /* QQAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QQAccount.m; sourceTree = SOURCE_ROOT; };
+		C01F2C4917B643B100096303 /* QQAccountView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = QQAccountView.xib; sourceTree = SOURCE_ROOT; };
+		C01F2C4A17B643B100096303 /* QQAccountViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QQAccountViewController.h; sourceTree = SOURCE_ROOT; };
+		C01F2C4B17B643B100096303 /* QQAccountViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QQAccountViewController.m; sourceTree = SOURCE_ROOT; };
+		C01F2C4C17B643B100096303 /* QQPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QQPlugin.h; sourceTree = SOURCE_ROOT; };
+		C01F2C4D17B643B100096303 /* QQPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QQPlugin.m; sourceTree = SOURCE_ROOT; };
+		C01F2C4E17B643B100096303 /* QQService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QQService.h; sourceTree = SOURCE_ROOT; };
+		C01F2C4F17B643B100096303 /* QQService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QQService.m; sourceTree = SOURCE_ROOT; };
+		C01F2C5617B6446300096303 /* cgroup.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cgroup.c; path = ../src/cgroup.c; sourceTree = "<group>"; };
+		C01F2C5717B6446300096303 /* cgroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cgroup.h; path = ../src/cgroup.h; sourceTree = "<group>"; };
+		C01F2C5817B6446300096303 /* ft.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ft.c; path = ../src/ft.c; sourceTree = "<group>"; };
+		C01F2C5917B6446300096303 /* qq_types.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = qq_types.c; path = ../src/qq_types.c; sourceTree = "<group>"; };
+		C01F2C5A17B6446300096303 /* qq_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qq_types.h; path = ../src/qq_types.h; sourceTree = "<group>"; };
+		C01F2C5B17B6446300096303 /* translate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = translate.c; path = ../src/translate.c; sourceTree = "<group>"; };
+		C01F2C5C17B6446300096303 /* translate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = translate.h; path = ../src/translate.h; sourceTree = "<group>"; };
+		C01F2C5D17B6446300096303 /* trex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trex.c; path = ../src/trex.c; sourceTree = "<group>"; };
+		C01F2C5E17B6446300096303 /* trex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = trex.h; path = ../src/trex.h; sourceTree = "<group>"; };
+		C01F2C5F17B6446300096303 /* webqq.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = webqq.c; path = ../src/webqq.c; sourceTree = "<group>"; };
+		C01F2C6717B644EC00096303 /* async_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_impl.h; path = ../liblwqq/lib/async_impl.h; sourceTree = "<group>"; };
+		C01F2C6A17B644EC00096303 /* async.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = async.c; path = ../liblwqq/lib/async.c; sourceTree = "<group>"; };
+		C01F2C6B17B644EC00096303 /* async.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async.h; path = ../liblwqq/lib/async.h; sourceTree = "<group>"; };
+		C01F2C6D17B644EC00096303 /* http.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http.c; path = ../liblwqq/lib/http.c; sourceTree = "<group>"; };
+		C01F2C6E17B644EC00096303 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = ../liblwqq/lib/http.h; sourceTree = "<group>"; };
+		C01F2C6F17B644EC00096303 /* info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = info.c; path = ../liblwqq/lib/info.c; sourceTree = "<group>"; };
+		C01F2C7017B644EC00096303 /* info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = info.h; path = ../liblwqq/lib/info.h; sourceTree = "<group>"; };
+		C01F2C7117B644EC00096303 /* internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = internal.c; path = ../liblwqq/lib/internal.c; sourceTree = "<group>"; };
+		C01F2C7217B644EC00096303 /* internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = internal.h; path = ../liblwqq/lib/internal.h; sourceTree = "<group>"; };
+		C01F2C7317B644EC00096303 /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json.c; path = ../liblwqq/lib/json.c; sourceTree = "<group>"; };
+		C01F2C7417B644EC00096303 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = json.h; path = ../liblwqq/lib/json.h; sourceTree = "<group>"; };
+		C01F2C7517B644EC00096303 /* logger.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = logger.c; path = ../liblwqq/lib/logger.c; sourceTree = "<group>"; };
+		C01F2C7617B644EC00096303 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = logger.h; path = ../liblwqq/lib/logger.h; sourceTree = "<group>"; };
+		C01F2C7717B644EC00096303 /* login.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = login.c; path = ../liblwqq/lib/login.c; sourceTree = "<group>"; };
+		C01F2C7817B644EC00096303 /* login.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = login.h; path = ../liblwqq/lib/login.h; sourceTree = "<group>"; };
+		C01F2C7917B644EC00096303 /* lwdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lwdb.c; path = ../liblwqq/lib/lwdb.c; sourceTree = "<group>"; };
+		C01F2C7A17B644EC00096303 /* lwdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwdb.h; path = ../liblwqq/lib/lwdb.h; sourceTree = "<group>"; };
+		C01F2C7B17B644EC00096303 /* lwqq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwqq.h; path = ../liblwqq/lib/lwqq.h; sourceTree = "<group>"; };
+		C01F2C7C17B644EC00096303 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = ../liblwqq/lib/md5.c; sourceTree = "<group>"; };
+		C01F2C7D17B644EC00096303 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = md5.h; path = ../liblwqq/lib/md5.h; sourceTree = "<group>"; };
+		C01F2C7E17B644EC00096303 /* msg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = msg.c; path = ../liblwqq/lib/msg.c; sourceTree = "<group>"; };
+		C01F2C7F17B644EC00096303 /* msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = msg.h; path = ../liblwqq/lib/msg.h; sourceTree = "<group>"; };
+		C01F2C8017B644EC00096303 /* queue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = queue.h; path = ../liblwqq/lib/queue.h; sourceTree = "<group>"; };
+		C01F2C8117B644EC00096303 /* smemory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = smemory.c; path = ../liblwqq/lib/smemory.c; sourceTree = "<group>"; };
+		C01F2C8217B644EC00096303 /* smemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = smemory.h; path = ../liblwqq/lib/smemory.h; sourceTree = "<group>"; };
+		C01F2C8317B644EC00096303 /* swsqlite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = swsqlite.c; path = ../liblwqq/lib/swsqlite.c; sourceTree = "<group>"; };
+		C01F2C8417B644EC00096303 /* swsqlite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swsqlite.h; path = ../liblwqq/lib/swsqlite.h; sourceTree = "<group>"; };
+		C01F2C8517B644EC00096303 /* type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = type.c; path = ../liblwqq/lib/type.c; sourceTree = "<group>"; };
+		C01F2C8617B644EC00096303 /* type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = type.h; path = ../liblwqq/lib/type.h; sourceTree = "<group>"; };
+		C01F2C8717B644EC00096303 /* url.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = url.c; path = ../liblwqq/lib/url.c; sourceTree = "<group>"; };
+		C01F2C8817B644EC00096303 /* url.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = url.h; path = ../liblwqq/lib/url.h; sourceTree = "<group>"; };
+		C01F2C8917B644EC00096303 /* utility.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = utility.c; path = ../liblwqq/lib/utility.c; sourceTree = "<group>"; };
+		C01F2C8A17B644EC00096303 /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utility.h; path = ../liblwqq/lib/utility.h; sourceTree = "<group>"; };
+		C01F2C8B17B644EC00096303 /* vplist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vplist.c; path = ../liblwqq/lib/vplist.c; sourceTree = "<group>"; };
+		C01F2C8C17B644EC00096303 /* vplist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vplist.h; path = ../liblwqq/lib/vplist.h; sourceTree = "<group>"; };
+		C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "adium-lwqq.AdiumLibpurplePlugin"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0BE62A21763EE4100826A49 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		C0BE62A51763EE4100826A49 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		C0BE62A61763EE4100826A49 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		C0BE62A71763EE4100826A49 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		C0E5A5521769333E005C6362 /* AIUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AIUtilities.framework; path = ../../adium/build/Debug/AIUtilities.framework; sourceTree = "<group>"; };
+		C0E9D3911763F2DB0006EAA0 /* Adium.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Adium.framework; path = ../../adium/build/Debug/Adium.framework; sourceTree = "<group>"; };
+		C0E9D3941763F2F10006EAA0 /* AdiumLibpurple.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdiumLibpurple.framework; path = ../../adium/build/Debug/AdiumLibpurple.framework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C0BE629C1763EE4100826A49 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */,
+				C0E9D3921763F2DB0006EAA0 /* Adium.framework in Frameworks */,
+				C0E9D3951763F2F10006EAA0 /* AdiumLibpurple.framework in Frameworks */,
+				C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */,
+				C01CC0AC17A959DB00574486 /* libpurple.framework in Frameworks */,
+				C01CC0AE17A95AB900574486 /* libglib.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C01CC05717A9533700574486 /* liblwqq */ = {
+			isa = PBXGroup;
+			children = (
+				C01F2C6717B644EC00096303 /* async_impl.h */,
+				C01F2C6A17B644EC00096303 /* async.c */,
+				C01F2C6B17B644EC00096303 /* async.h */,
+				C01F2C6D17B644EC00096303 /* http.c */,
+				C01F2C6E17B644EC00096303 /* http.h */,
+				C01F2C6F17B644EC00096303 /* info.c */,
+				C01F2C7017B644EC00096303 /* info.h */,
+				C01F2C7117B644EC00096303 /* internal.c */,
+				C01F2C7217B644EC00096303 /* internal.h */,
+				C01F2C7317B644EC00096303 /* json.c */,
+				C01F2C7417B644EC00096303 /* json.h */,
+				C01F2C7517B644EC00096303 /* logger.c */,
+				C01F2C7617B644EC00096303 /* logger.h */,
+				C01F2C7717B644EC00096303 /* login.c */,
+				C01F2C7817B644EC00096303 /* login.h */,
+				C01F2C7917B644EC00096303 /* lwdb.c */,
+				C01F2C7A17B644EC00096303 /* lwdb.h */,
+				C01F2C7B17B644EC00096303 /* lwqq.h */,
+				C01F2C7C17B644EC00096303 /* md5.c */,
+				C01F2C7D17B644EC00096303 /* md5.h */,
+				C01F2C7E17B644EC00096303 /* msg.c */,
+				C01F2C7F17B644EC00096303 /* msg.h */,
+				C01F2C8017B644EC00096303 /* queue.h */,
+				C01F2C8117B644EC00096303 /* smemory.c */,
+				C01F2C8217B644EC00096303 /* smemory.h */,
+				C01F2C8317B644EC00096303 /* swsqlite.c */,
+				C01F2C8417B644EC00096303 /* swsqlite.h */,
+				C01F2C8517B644EC00096303 /* type.c */,
+				C01F2C8617B644EC00096303 /* type.h */,
+				C01F2C8717B644EC00096303 /* url.c */,
+				C01F2C8817B644EC00096303 /* url.h */,
+				C01F2C8917B644EC00096303 /* utility.c */,
+				C01F2C8A17B644EC00096303 /* utility.h */,
+				C01F2C8B17B644EC00096303 /* vplist.c */,
+				C01F2C8C17B644EC00096303 /* vplist.h */,
+			);
+			name = liblwqq;
+			sourceTree = "<group>";
+		};
+		C01CC09717A9537600574486 /* pidgin-lwqq */ = {
+			isa = PBXGroup;
+			children = (
+				C01F2C5617B6446300096303 /* cgroup.c */,
+				C01F2C5717B6446300096303 /* cgroup.h */,
+				C01F2C5817B6446300096303 /* ft.c */,
+				C01F2C5917B6446300096303 /* qq_types.c */,
+				C01F2C5A17B6446300096303 /* qq_types.h */,
+				C01F2C5B17B6446300096303 /* translate.c */,
+				C01F2C5C17B6446300096303 /* translate.h */,
+				C01F2C5D17B6446300096303 /* trex.c */,
+				C01F2C5E17B6446300096303 /* trex.h */,
+				C01F2C5F17B6446300096303 /* webqq.c */,
+			);
+			name = "pidgin-lwqq";
+			sourceTree = "<group>";
+		};
+		C035E83717887EB30013EB07 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				C01F2C4617B643B100096303 /* config.h */,
+				C01F2C4717B643B100096303 /* QQAccount.h */,
+				C01F2C4817B643B100096303 /* QQAccount.m */,
+				C01F2C4917B643B100096303 /* QQAccountView.xib */,
+				C01F2C4A17B643B100096303 /* QQAccountViewController.h */,
+				C01F2C4B17B643B100096303 /* QQAccountViewController.m */,
+				C01F2C4C17B643B100096303 /* QQPlugin.h */,
+				C01F2C4D17B643B100096303 /* QQPlugin.m */,
+				C01F2C4E17B643B100096303 /* QQService.h */,
+				C01F2C4F17B643B100096303 /* QQService.m */,
+			);
+			name = src;
+			path = ../src;
+			sourceTree = "<group>";
+		};
+		C0BE62941763EE4100826A49 = {
+			isa = PBXGroup;
+			children = (
+				C01CC09717A9537600574486 /* pidgin-lwqq */,
+				C01CC05717A9533700574486 /* liblwqq */,
+				C035E83717887EB30013EB07 /* src */,
+				C0BE62A11763EE4100826A49 /* Frameworks */,
+				C0BE62A01763EE4100826A49 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C0BE62A01763EE4100826A49 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C0BE62A11763EE4100826A49 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C0BE62A51763EE4100826A49 /* AppKit.framework */,
+				C0BE62A61763EE4100826A49 /* CoreData.framework */,
+				C0BE62A71763EE4100826A49 /* Foundation.framework */,
+				C0BE62A21763EE4100826A49 /* Cocoa.framework */,
+				C0BE62A41763EE4100826A49 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C0BE62A41763EE4100826A49 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C01CC0AD17A95AB900574486 /* libglib.framework */,
+				C01CC0AB17A959DB00574486 /* libpurple.framework */,
+				C0E5A5521769333E005C6362 /* AIUtilities.framework */,
+				C0E9D3941763F2F10006EAA0 /* AdiumLibpurple.framework */,
+				C0E9D3911763F2DB0006EAA0 /* Adium.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C0BE629E1763EE4100826A49 /* adium-lwqq */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0BE62B11763EE4100826A49 /* Build configuration list for PBXNativeTarget "adium-lwqq" */;
+			buildPhases = (
+				C0BE629B1763EE4100826A49 /* Sources */,
+				C0BE629C1763EE4100826A49 /* Frameworks */,
+				C0BE629D1763EE4100826A49 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "adium-lwqq";
+			productName = LwqqWrapperPlugin;
+			productReference = C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C0BE62961763EE4100826A49 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+			};
+			buildConfigurationList = C0BE62991763EE4100826A49 /* Build configuration list for PBXProject "adium-lwqq" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C0BE62941763EE4100826A49;
+			productRefGroup = C0BE62A01763EE4100826A49 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C0BE629E1763EE4100826A49 /* adium-lwqq */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C0BE629D1763EE4100826A49 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C01F2C5117B643B100096303 /* QQAccountView.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C0BE629B1763EE4100826A49 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C01F2C5017B643B100096303 /* QQAccount.m in Sources */,
+				C01F2C5217B643B100096303 /* QQAccountViewController.m in Sources */,
+				C01F2C5317B643B100096303 /* QQPlugin.m in Sources */,
+				C01F2C5417B643B100096303 /* QQService.m in Sources */,
+				C01F2C6117B6446300096303 /* cgroup.c in Sources */,
+				C01F2C6217B6446300096303 /* ft.c in Sources */,
+				C01F2C6317B6446300096303 /* qq_types.c in Sources */,
+				C01F2C6417B6446300096303 /* translate.c in Sources */,
+				C01F2C6517B6446300096303 /* trex.c in Sources */,
+				C01F2C6617B6446300096303 /* webqq.c in Sources */,
+				C01F2C8F17B644EC00096303 /* async.c in Sources */,
+				C01F2C9117B644EC00096303 /* http.c in Sources */,
+				C01F2C9217B644EC00096303 /* info.c in Sources */,
+				C01F2C9317B644EC00096303 /* internal.c in Sources */,
+				C01F2C9417B644EC00096303 /* json.c in Sources */,
+				C01F2C9517B644EC00096303 /* logger.c in Sources */,
+				C01F2C9617B644EC00096303 /* login.c in Sources */,
+				C01F2C9717B644EC00096303 /* lwdb.c in Sources */,
+				C01F2C9817B644EC00096303 /* md5.c in Sources */,
+				C01F2C9917B644EC00096303 /* msg.c in Sources */,
+				C01F2C9A17B644EC00096303 /* smemory.c in Sources */,
+				C01F2C9B17B644EC00096303 /* swsqlite.c in Sources */,
+				C01F2C9C17B644EC00096303 /* type.c in Sources */,
+				C01F2C9D17B644EC00096303 /* url.c in Sources */,
+				C01F2C9E17B644EC00096303 /* utility.c in Sources */,
+				C01F2C9F17B644EC00096303 /* vplist.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C0BE62AF1763EE4100826A49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		C0BE62B01763EE4100826A49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C0BE62B21763EE4100826A49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"../../adium/build/Release-Debug",
+					../../adium/Frameworks,
+					../../adium/build/Debug,
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "adium-lwqq.pch";
+				HEADER_SEARCH_PATHS = (
+					../liblwqq/lib,
+					../../adium/Frameworks/libpurple.framework/Headers,
+					../../adium/Frameworks/libglib.framework/Headers,
+					../build/src,
+				);
+				INFOPLIST_FILE = "adium-lwqq.plist";
+				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				OTHER_CFLAGS = (
+					"-DPURPLE_STATIC_PRPL",
+					"-DAPPLE",
+				);
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-lz",
+					"-lsqlite3",
+				);
+				PRODUCT_NAME = "adium-lwqq";
+				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
+			};
+			name = Debug;
+		};
+		C0BE62B31763EE4100826A49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"../../adium/build/Release-Debug",
+					../../adium/Frameworks,
+					../../adium/build/Debug,
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "adium-lwqq.pch";
+				HEADER_SEARCH_PATHS = (
+					../liblwqq/lib,
+					../../adium/Frameworks/libpurple.framework/Headers,
+					../../adium/Frameworks/libglib.framework/Headers,
+					../build/src,
+				);
+				INFOPLIST_FILE = "adium-lwqq.plist";
+				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				OTHER_CFLAGS = (
+					"-DPURPLE_STATIC_PRPL",
+					"-DAPPLE",
+				);
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-lz",
+					"-lsqlite3",
+				);
+				PRODUCT_NAME = "adium-lwqq";
+				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C0BE62991763EE4100826A49 /* Build configuration list for PBXProject "adium-lwqq" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0BE62AF1763EE4100826A49 /* Debug */,
+				C0BE62B01763EE4100826A49 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C0BE62B11763EE4100826A49 /* Build configuration list for PBXNativeTarget "adium-lwqq" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0BE62B21763EE4100826A49 /* Debug */,
+				C0BE62B31763EE4100826A49 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C0BE62961763EE4100826A49 /* Project object */;
+}

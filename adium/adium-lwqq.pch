@@ -1,0 +1,9 @@
+//
+// Prefix header for all source files of the 'LwqqWrapperPlugin' target in the 'LwqqWrapperPlugin' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+    #import <Adium/AISharedAdium.h>
+    #import <AIUtilities/AIStringUtilities.h>
+#endif

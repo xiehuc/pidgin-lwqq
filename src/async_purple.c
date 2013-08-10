@@ -2,6 +2,8 @@
 #include "async_impl.h"
 #include "smemory.h"
 #include <glib.h>
+//never add file to build
+//it would be included in webqq.c directly
 #undef LWQQ__ASYNC_IMPL
 #define LWQQ__ASYNC_IMPL(x) x
 
