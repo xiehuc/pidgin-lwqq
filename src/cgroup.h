@@ -1,4 +1,4 @@
-#include <type.h>
+#include "lwqq.h"
 
 #include "qq_types.h"
 

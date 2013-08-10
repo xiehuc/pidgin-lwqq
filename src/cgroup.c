@@ -1,7 +1,5 @@
 #include "cgroup.h"
 #include <unistd.h>
-#include <smemory.h>
-#include <async.h>
 #include <errno.h>
 
 typedef enum {

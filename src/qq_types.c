@@ -45,6 +45,17 @@ TABLE_BEGIN_LONG(qq_client_to_str,const char*,LwqqClientType,"")
     TR(LWQQ_CLIENT_QQFORPAD,_("PadQQ"))
 TABLE_END()
 
+const char* qq_status_to_str(LwqqStatus status)
+{
+    return lwqq_status_to_str(status);
+}
+LwqqStatus qq_status_from_str(const char* str)
+{
+    if(str==NULL) return LWQQ_STATUS_LOGOUT;
+    if(strcmp(str,"available")==0) return LWQQ_STATUS_ONLINE;
+    return lwqq_status_from_str(str);
+}
+
 const char* qq_level_to_str(int level)
 {
     static const char* symbol[] = {"♔","⚙","☾","☆"};

@@ -2,7 +2,7 @@
 
 #include <plugin.h>
 #include <version.h>
-#include <smemory.h>
+
 #include <request.h>
 #include <signal.h>
 #include <accountopt.h>
@@ -10,20 +10,13 @@
 #include <imgstore.h>
 #include <debug.h>
 
-#include <type.h>
-#include <async.h>
-#include <msg.h>
-#include <info.h>
-#include <http.h>
-#include <login.h>
-#include <lwdb.h>
-#include <utility.h>
-
 #include "qq_types.h"
 #include "translate.h"
 #include "remote.h"
 #include "cgroup.h"
+#include "lwqq.h"
 #include "lwdb.h"
+#include "smemory.h"
 
 #ifndef WITH_LIBEV
 #include "async_purple.c"
@@ -510,10 +503,9 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
     "nick","nick",purple_value_new(PURPLE_TYPE_STRING),\
     "mark","mark",purple_value_new(PURPLE_TYPE_STRING),NULL
 
-
+    //adium require available status
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
-    //status = purple_status_type_new_with_attrs(PURPLE_STATUS_MOBILE,
-             "online", _("Online"), WEBQQ_STATUS_TYPE_ATTR);
+             "available", _("Available"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
              "callme",_("Callme"),WEBQQ_STATUS_TYPE_ATTR);
@@ -2922,7 +2914,7 @@ static void qq_login(PurpleAccount *account)
     lwqq_http_proxy_set(lwqq_get_http_handle(ac->qq),proxy_map(proxy->type),proxy->host,proxy->port,proxy->username,proxy->password);
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
-    lwqq_login(ac->qq, lwqq_status_from_str(status), NULL);
+    lwqq_login(ac->qq, qq_status_from_str(status), NULL);
 
 }
 

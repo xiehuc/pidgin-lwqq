@@ -1,13 +1,10 @@
 #include <imgstore.h>
 #include <string.h>
-#include <smemory.h>
-#include <type.h>
 #include <assert.h>
 #include <smiley.h>
 #include <accountopt.h>
 #include "translate.h"
 #include "trex.h"
-#include "async.h"
 #include "qq_types.h"
 
 #ifndef INST_PREFIX

@@ -1,13 +1,10 @@
 #ifndef QQ_TYPES_H_H
 #define QQ_TYPES_H_H
 
-#include <type.h>
+
 #include <connection.h>
-#include "type.h"
-#include "msg.h"
-#include "info.h"
+#include "lwqq.h"
 #include "lwdb.h"
-#include "logger.h"
 #include "config.h"
 
 #ifdef ENABLE_NLS
@@ -144,6 +141,8 @@ const char* qq_blood_to_str(LwqqBloodType bt);
 const char* qq_shengxiao_to_str(LwqqShengxiao shengxiao);
 const char* qq_client_to_str(LwqqClientType client);
 const char* qq_level_to_str(int level);
+const char* qq_status_to_str(LwqqStatus status);
+LwqqStatus qq_status_from_str(const char* str);
 
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* p);
 
