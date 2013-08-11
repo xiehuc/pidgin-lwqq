@@ -8,12 +8,18 @@ pidgin-lwqq
 lwqq库是一个非常严谨有效的webqq协议的库.  
 lwqq 即是 linux webqq 之意
 
-效  果
+截  图
 ------
+
+### linux ###
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
 想实现上面的效果? 猛击:[gnome3集成聊天](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
+
+## mac osx ###
+
+![adium](http://i.imgur.com/y4vweAL.png)
 
 快速安装
 --------

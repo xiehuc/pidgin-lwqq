@@ -10,12 +10,18 @@ Intro
 
 License: GPLv3
 
-Effect
-------
+ScreenShot
+----------
+
+### linux ###
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
 want above effect? see:[gnome3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
+
+### mac osx ###
+
+![adium](http://i.imgur.com/y4vweAL.png)
 
 Quick Install
 -------------
