@@ -25,7 +25,7 @@ lwqq 即是 linux webqq 之意
 
 ### windows ###
 
-![win](https://i.minus.com/i0Hl0cbLCiEg1.png)
+![win](http://ww2.sinaimg.cn/mw1024/70b249d6gw1e7m3pd9f0cj20lx0cktac.jpg)
 
 快速安装
 --------
