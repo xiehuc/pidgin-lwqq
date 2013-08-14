@@ -19,9 +19,13 @@ lwqq 即是 linux webqq 之意
 
 想实现上面的效果? 猛击:[gnome3集成聊天](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
 
-## mac osx ###
+### mac osx ###
 
 ![adium](http://i.imgur.com/y4vweAL.png)
+
+### windows ###
+
+![win](https://i.minus.com/i0Hl0cbLCiEg1.png)
 
 快速安装
 --------
