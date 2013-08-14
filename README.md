@@ -13,6 +13,8 @@ lwqq 即是 linux webqq 之意
 
 ### linux ###
 
+![pidgin](http://i.minus.com/ibxbiczTsJ0DFQ.png)
+
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
 想实现上面的效果? 猛击:[gnome3集成聊天](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
