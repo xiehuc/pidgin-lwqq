@@ -1363,7 +1363,7 @@ static void login_stage_3(LwqqClient* lc)
     if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
         flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
 
-    lc->msg_list->poll_msg(lc->msg_list,flags);
+    lwqq_msglist_poll(lc->msg_list, flags);
 }
 
 static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c,int err)
@@ -1888,7 +1888,7 @@ static void qq_close(PurpleConnection *gc)
     if(ac->relink_timer>0) purple_timeout_remove(ac->relink_timer);
     if(lwqq_client_logined(ac->qq))
         lwqq_logout(ac->qq,&err);
-    ac->qq->msg_list->poll_close(ac->qq->msg_list);
+    lwqq_msglist_close(ac->qq->msg_list);
     LwqqGroup* g;
     LIST_FOREACH(g,&ac->qq->groups,entries){
         qq_cgroup_free((qq_chat_group*)g->data);
