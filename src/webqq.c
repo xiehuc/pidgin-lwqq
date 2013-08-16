@@ -790,8 +790,10 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                         msg->is_myself?_("You"):msg->member,
                         msg->group->name,
                         msg->admin);
-                if(msg->is_myself)
-                    group_come(lc, msg->group);
+                if(msg->is_myself){
+                    LwqqAsyncEvent* ev = lwqq_info_get_group_public_info(lc, msg->group);
+                    lwqq_async_add_event_listener(ev, _C_(2p,group_come,lc,msg->group));
+                }
             }
             break;
         case GROUP_LEAVE:
