@@ -17,6 +17,7 @@
 #include "lwqq.h"
 #include "lwdb.h"
 #include "smemory.h"
+#include "js.h"
 
 #ifndef WITH_LIBEV
 #include "async_purple.c"
@@ -39,6 +40,7 @@ static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
+static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry);
 
 enum ResetOption{
     RESET_BUDDY=0x1,
@@ -169,7 +171,6 @@ static void action_about_webqq(PurplePluginAction *action)
     info = g_string_new("<html><body>");
     g_string_append(info, "<p>"
             "<b>Author</b>:<br>xiehuc<br>"
-            "<b>GitCommit</b>:<br>"GIT_SHA1"<br>"
             "</p>"
             );
 
@@ -1509,12 +1510,16 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(ev->result == LWQQ_EC_HASH_WRONG){
-        //trying next hash
-        //...
-        //no remain hash
-        purple_connection_error_reason(ac->gc, 
-                PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
-                _("Hash Function Wrong, WebQQ Protocol update"));
+        if(last_hash == NULL){
+            qq_js_init();
+            qq_js_load(SHARE_DATA_DIR"/hash.js");
+            get_friends_info_retry(lc, qq_js_hash);
+            qq_js_close();
+        }else{
+            purple_connection_error_reason(ac->gc, 
+                    PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
+                    _("Hash Function Wrong, WebQQ Protocol update"));
+        }
         return;
     }
     if(ev->result != LWQQ_EC_OK){
@@ -1526,15 +1531,11 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
     LwqqAsyncEvent* event;
     event = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
-    //ev = lwqq_info_get_single_long_nick(lc, lc->myself);
-    //lwqq_async_evset_add_event(set,ev);
-    //ev = lwqq_info_recent_list(lc, &ac->recent_list);
-    //lwqq_async_evset_add_event(set, ev);
 }
 static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
 {
     LwqqAsyncEvent* ev;
-    ev = lwqq_info_get_friends_info(lc,NULL,NULL);
+    ev = lwqq_info_get_friends_info(lc,hashtry,NULL);
     lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)

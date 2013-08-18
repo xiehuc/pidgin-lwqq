@@ -17,6 +17,7 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
+    pkg_check_modules(LIBJS REQUIRED mozjs185)
     find_package(EV)
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
@@ -74,6 +75,7 @@ set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 
 set(package pidgin-lwqq)
 set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
+set(sharedir ${CMAKE_INSTALL_PREFIX}/share/lwqq)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
 add_subdirectory(liblwqq)

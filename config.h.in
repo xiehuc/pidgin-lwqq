@@ -7,7 +7,7 @@
 #define PACKAGE "@package@"
 #define LOCALEDIR "@localedir@"
 #define GETTEXT_PACKAGE "@package@"
-#define GIT_SHA1 "@GIT_SHA1@"
+#define SHARE_DATA_DIR "@sharedir@"
 
 #endif /* __CONFIG_H__ */
 

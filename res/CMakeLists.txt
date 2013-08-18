@@ -1,3 +1,4 @@
+install(FILES "hash.js" DESTINATION "${sharedir}/")
 install(DIRECTORY "qqfaces/"
     DESTINATION "${PURPLE_DATADIR}pixmaps/pidgin/emotes/webqq"
     )
