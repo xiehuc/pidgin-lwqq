@@ -316,7 +316,7 @@ static void search_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
-    if(err == WEBQQ_FATAL){
+    if(err == 10000){
         LwqqAsyncEvent* event = lwqq_info_search_group_by_qq(lc,g->qq,g);
         lwqq_async_add_event_listener(event, _C_(2p,search_group_receipt,ev,g));
         return;
@@ -1608,7 +1608,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
             snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
-        if(err == WEBQQ_LOST_CONN){
+        if(err == LWQQ_EC_LOST_CONN){
             ac->qq->action->poll_lost(ac->qq);
         }
     }
@@ -2118,7 +2118,7 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* uni_i
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     //captcha wrong
-    if(err == WEBQQ_FATAL){
+    if(err == 10000){
         LwqqAsyncEvent* event = lwqq_info_search_friend(lc,uni_id,buddy);
         lwqq_async_add_event_listener(event, _C_(4p,search_buddy_receipt,event,buddy,uni_id,message));
         return;
