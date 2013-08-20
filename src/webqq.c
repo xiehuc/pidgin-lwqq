@@ -2041,16 +2041,40 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     }
 }
 
+static void qq_send_member_mail(LwqqSimpleBuddy* sb)
+{
+    char buf[128] = {0};
+    if(sb->qq){
+        snprintf(buf, sizeof(buf), "xdg-open mailto:%s@qq.com",sb->qq);
+        system(buf);
+    }
+}
+
 static void qq_send_mail(PurpleBlistNode* n)
 {
     PurpleBuddy* b = PURPLE_BUDDY(n);
-    LwqqBuddy* buddy = b->proto_data;
     char buf[128]={0};
-    if(buddy->email) snprintf(buf,sizeof(buf),
-            "xdg-open mailto:%s",buddy->email);
-    else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
-            "xdg-open mailto:%s@qq.com",buddy->qqnumber);
-    else return;
+    LwqqGroup* g;
+    LwqqSimpleBuddy* sb;
+    LwqqBuddy* buddy;
+    LwqqClient* lc = ((qq_account*)b->account->gc->proto_data)->qq;
+
+    if(find_group_and_member_by_card(lc, purple_buddy_get_name(b), &g, &sb)){
+        if(sb->qq){ 
+            qq_send_member_mail(sb);
+        }else{
+            LwqqAsyncEvent* ev = lwqq_info_get_member_qqnumber(lc, sb);
+            lwqq_async_add_event_listener(ev, _C_(p,qq_send_member_mail,sb));
+            return;
+        }
+    }else{
+        buddy = b->proto_data;
+        if(buddy->email) snprintf(buf,sizeof(buf),
+                "xdg-open mailto:%s",buddy->email);
+        else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
+                "xdg-open mailto:%s@qq.com",buddy->qqnumber);
+        else return;
+    }
     system(buf);
 }
 
