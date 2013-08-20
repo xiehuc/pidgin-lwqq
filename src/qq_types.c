@@ -47,6 +47,7 @@ TABLE_END()
 
 const char* qq_status_to_str(LwqqStatus status)
 {
+    if(status == LWQQ_STATUS_ONLINE) return "available";
     return lwqq_status_to_str(status);
 }
 LwqqStatus qq_status_from_str(const char* str)

@@ -502,11 +502,14 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 #define WEBQQ_STATUS_TYPE_ATTR \
     TRUE,TRUE,FALSE,\
     "nick","nick",purple_value_new(PURPLE_TYPE_STRING),\
-    "mark","mark",purple_value_new(PURPLE_TYPE_STRING),NULL
+    NULL
 
     //adium require available status
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
              "available", _("Available"), WEBQQ_STATUS_TYPE_ATTR);
+    types = g_list_append(types, status);
+    status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
+             "online", _("Online"), WEBQQ_STATUS_TYPE_ATTR);
     types = g_list_append(types, status);
     status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE,
              "callme",_("Callme"),WEBQQ_STATUS_TYPE_ATTR);
@@ -536,7 +539,7 @@ static GList *qq_status_types(PurpleAccount *UNUSED(account))
 static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
 {
     qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
-    lwqq_info_change_status(ac->qq,lwqq_status_from_str(purple_status_get_id(status)));
+    lwqq_info_change_status(ac->qq,qq_status_from_str(purple_status_get_id(status)));
 }
 
 #define buddy_status(bu) ((bu->stat == LWQQ_STATUS_ONLINE && bu->client_type == LWQQ_CLIENT_MOBILE) \
@@ -581,10 +584,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
     if(!bu->alias || strcmp(bu->alias,disp)!=0 )
         purple_blist_alias_buddy(bu,disp);
     if(buddy->stat){
-        if(buddy->long_nick)
-            purple_prpl_got_user_status(account, key, buddy_status(buddy), "long_nick",buddy->long_nick,NULL);
-        else
-            purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
+        purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
     }
     //this is avaliable when reload avatar in
     //login_stage_f
