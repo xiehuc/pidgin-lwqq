@@ -2378,12 +2378,9 @@ static void qq_set_group_alias(PurpleBlistNode* node)
             _("Note:You are setting discussion topic on server.\nWhich would affect all discussion member"),NULL,FALSE,FALSE,NULL,
             "设置",G_CALLBACK(set_group_alias),"取消",G_CALLBACK(do_no_thing),ac->account,NULL,NULL,node);
 }
-static void qq_get_group_info(PurpleBlistNode* node)
+
+static void display_group_info(qq_account* ac,LwqqGroup* g)
 {
-    PurpleChat* chat = PURPLE_CHAT(node);
-    PurpleAccount* account = purple_chat_get_account(chat);
-    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
-    LwqqGroup* g = find_group_by_chat(chat);
     PurpleNotifyUserInfo* info = purple_notify_user_info_new();
 #define ADD_STRING(k,v) purple_notify_user_info_add_pair(info,k,v)
     ADD_STRING(_("QQ"),g->account);
@@ -2394,6 +2391,25 @@ static void qq_get_group_info(PurpleBlistNode* node)
     //ADD_STRING("创建时间",ctime(&g->createtime));
     purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
 #undef ADD_STRING
+    lwdb_userdb_update_group_info(ac->db, g);
+}
+
+static void qq_get_group_info(PurpleBlistNode* node)
+{
+    PurpleChat* chat = PURPLE_CHAT(node);
+    PurpleAccount* account = purple_chat_get_account(chat);
+    qq_account* ac = purple_connection_get_protocol_data(purple_account_get_connection(account));
+    LwqqGroup* g = find_group_by_chat(chat);
+    LwqqClient* lc = ac->qq;
+
+    if(!g) return;
+    LwqqAsyncEvent* ev = NULL;
+    LwqqAsyncEvset* set = lwqq_async_evset_new();
+    ev = lwqq_info_get_group_public_info(lc, g);
+    lwqq_async_evset_add_event(set, ev);
+    ev = lwqq_info_get_group_memo(lc, g);
+    lwqq_async_evset_add_event(set, ev);
+    lwqq_async_add_evset_listener(set, _C_(2p,display_group_info,ac,g));
 }
 
 static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,LwqqHistoryMsgList* history)
