@@ -109,6 +109,7 @@ struct qq_extra_async_opt {
 
 void qq_dispatch(LwqqCommand cmd);
 
+LwqqErrorCode qq_download(const char* url,const char* file,const char* dir);
 #define try_get(val,fail) (val?val:fail)
 
 qq_account* qq_account_new(PurpleAccount* account);

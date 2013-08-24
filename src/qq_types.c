@@ -2,6 +2,8 @@
 #include "smemory.h"
 #include "utility.h"
 
+#include <sys/stat.h>
+
 
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
     TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))
@@ -334,4 +336,25 @@ struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin)
     //return &node->info;
     return NULL;
 #endif
+}
+
+
+LwqqErrorCode qq_download(const char* url,const char* file,const char* dir)
+{
+    LwqqHttpRequest* req = lwqq_http_request_new(url);
+    req->do_request(req,0,NULL);
+    if(req->http_code != 200) return LWQQ_EC_ERROR;
+    if(!req->response) return LWQQ_EC_ERROR;
+
+    char path[2048];
+    snprintf(path,sizeof(path),"%s/%s",dir,file);
+    char* content = req->response;
+    FILE* f;
+    f = fopen(path, "w");
+    if(!f) mkdir(dir,0755);
+    if(!f) return LWQQ_EC_ERROR;
+    fwrite(content, 1, strlen(content), f);
+    fclose(f);
+    lwqq_http_request_free(req);
+    return LWQQ_EC_OK;
 }

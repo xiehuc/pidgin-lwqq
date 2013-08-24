@@ -9,6 +9,7 @@
 #include <ft.h>
 #include <imgstore.h>
 #include <debug.h>
+#include <unistd.h>
 
 #include "qq_types.h"
 #include "translate.h"
@@ -28,6 +29,9 @@
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
+#define GLOBAL_HASH_JS() SHARE_DATA_DIR"/hash.js"
+#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s/hash.js",\
+            lwdb_get_config_dir()),buf)
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
@@ -1505,29 +1509,28 @@ static LwqqAction qq_async_opt = {
     .delete_group = delete_group_local,
     .group_members_chg = flush_group_members,
 };
-static char* hash_with_global_file(const char* uin,const char* ptwebqq,void* js)
-{
-    qq_jso_t* obj = qq_js_load(js,SHARE_DATA_DIR"/hash.js");
-    char* res = qq_js_hash(uin, ptwebqq, js);
-    qq_js_unload(js,obj);
-    return res;
-}
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
 {
     char path[512];
-    snprintf(path,sizeof(path),"%s/hash.js",lwdb_get_config_dir());
-    qq_jso_t* obj = qq_js_load(js,path);
+    qq_jso_t* obj = qq_js_load(js,LOCAL_HASH_JS(path));
     char* res = qq_js_hash(uin, ptwebqq, js);
     qq_js_unload(js, obj);
     return res;
+}
+static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)
+{
+    //github.com is too slow
+    qq_download("http://pidginlwqq.sinaapp.com/hash.js", 
+            "hash.js", lwdb_get_config_dir());
+    return hash_with_local_file(uin, ptwebqq, js);
 }
 static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 {
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(ev->result == LWQQ_EC_HASH_WRONG){
-        if(last_hash == NULL){
-            get_friends_info_retry(lc, hash_with_global_file);
+        if(last_hash == hash_with_local_file){
+            get_friends_info_retry(lc, hash_with_remote_file);
         }else{
             purple_connection_error_reason(ac->gc, 
                     PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
@@ -1574,7 +1577,12 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    get_friends_info_retry(lc, NULL);
+    char path[512];
+
+    if(access(LOCAL_HASH_JS(path),F_OK)==0)
+        get_friends_info_retry(lc, hash_with_local_file);
+    else
+        get_friends_info_retry(lc, hash_with_remote_file);
 
     return ;
 }
