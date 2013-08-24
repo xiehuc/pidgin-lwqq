@@ -1,6 +1,8 @@
 pidgin-lwqq
 ===========
 
+![蚊香企鹅](res/48.png)
+
 简  介
 -----
 为linux的pidgin提供qq协议,基于webqq服务.
