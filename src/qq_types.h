@@ -6,6 +6,7 @@
 #include "lwqq.h"
 #include "lwdb.h"
 #include "config.h"
+#include "js.h"
 
 #ifdef ENABLE_NLS
 #include <glib/gi18n.h>
@@ -56,6 +57,7 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     LwdbUserDB* db;
+    qq_js_t* js;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
     enum {
         DISCONNECT,

@@ -1505,16 +1505,29 @@ static LwqqAction qq_async_opt = {
     .delete_group = delete_group_local,
     .group_members_chg = flush_group_members,
 };
+static char* hash_with_global_file(const char* uin,const char* ptwebqq,void* js)
+{
+    qq_jso_t* obj = qq_js_load(js,SHARE_DATA_DIR"/hash.js");
+    char* res = qq_js_hash(uin, ptwebqq, js);
+    qq_js_unload(js,obj);
+    return res;
+}
+static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
+{
+    char path[512];
+    snprintf(path,sizeof(path),"%s/hash.js",lwdb_get_config_dir());
+    qq_jso_t* obj = qq_js_load(js,path);
+    char* res = qq_js_hash(uin, ptwebqq, js);
+    qq_js_unload(js, obj);
+    return res;
+}
 static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 {
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(ev->result == LWQQ_EC_HASH_WRONG){
         if(last_hash == NULL){
-            qq_js_init();
-            qq_js_load(SHARE_DATA_DIR"/hash.js");
-            get_friends_info_retry(lc, qq_js_hash);
-            qq_js_close();
+            get_friends_info_retry(lc, hash_with_global_file);
         }else{
             purple_connection_error_reason(ac->gc, 
                     PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
@@ -1535,7 +1548,8 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
 {
     LwqqAsyncEvent* ev;
-    ev = lwqq_info_get_friends_info(lc,hashtry,NULL);
+    qq_account* ac = lc->data;
+    ev = lwqq_info_get_friends_info(lc,hashtry,ac->js);
     lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
