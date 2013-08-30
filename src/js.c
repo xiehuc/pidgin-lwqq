@@ -1,6 +1,7 @@
 #include "js.h"
 
 #include <lwqq.h>
+#include <stdint.h>
 #include <jsapi.h>
 
 struct qq_js_t {

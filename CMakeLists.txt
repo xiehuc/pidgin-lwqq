@@ -17,7 +17,7 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
-    pkg_check_modules(LIBJS REQUIRED mozjs185)
+    pkg_check_modules(MOZJS REQUIRED mozjs185)
     find_package(EV)
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
@@ -35,13 +35,21 @@ if(WIN32)
     find_package(LibPurple REQUIRED)
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/include" 
-        "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/lib")
+        "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/lib"
+        "${WIN32_LIBS_DIR}/gtk_2_0-2.14/include/glib-2.0"
+        "${WIN32_LIBS_DIR}/gtk_2_0-2.14/lib"
+        )
     find_package(GLIB2 REQUIRED)
     set(LIB_INSTALL_DIR "plugins")
     set(PURPLE_DATADIR  "")
     set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
     find_package(Sqlite3 REQUIRED)
     set(EV_FOUND Off)
+    set(CMAKE_PREFIX_PATH 
+        "${WIN32_LIBS_DIR}/js-1.8.5/dist/include" 
+        "${WIN32_LIBS_DIR}/js-1.8.5/dist/lib"
+        )
+    find_package(MozJS REQUIRED)
 endif(WIN32)
 
 add_definitions(-Wall)
