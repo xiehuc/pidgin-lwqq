@@ -29,8 +29,8 @@
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
-#define GLOBAL_HASH_JS() SHARE_DATA_DIR"/hash.js"
-#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s/hash.js",\
+#define GLOBAL_HASH_JS() SHARE_DATA_DIR LWQQ_PATH_SEP"hash.js"
+#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
             lwdb_get_config_dir()),buf)
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
@@ -1511,10 +1511,14 @@ static LwqqAction qq_async_opt = {
 };
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
 {
-    char path[512];
-    qq_jso_t* obj = qq_js_load(js,LOCAL_HASH_JS(path));
-    char* res = qq_js_hash(uin, ptwebqq, js);
-    qq_js_unload(js, obj);
+    char path[512] = {0};
+    qq_js_t* qjs = qq_js_init();
+    qq_jso_t* obj = qq_js_load(qjs,LOCAL_HASH_JS(path));
+    char* res = NULL;
+    
+    res = qq_js_hash(uin, ptwebqq, qjs);
+    qq_js_unload(qjs, obj);
+    qq_js_close(qjs);
     return res;
 }
 static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)

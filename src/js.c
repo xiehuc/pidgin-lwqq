@@ -48,7 +48,8 @@ qq_jso_t* qq_js_load(qq_js_t* js,const char* file)
 {
     JSObject* global = JS_GetGlobalObject(js->context);
     JSObject* script = JS_CompileFile(js->context, global, file);
-    JS_ExecuteScript(js->context, global, script, NULL);
+    if(JS_ExecuteScript(js->context, global, script, NULL)==JS_FALSE)
+        assert(0);
     return (qq_jso_t*)script;
 }
 void qq_js_unload(qq_js_t* js,qq_jso_t* obj)
@@ -66,11 +67,12 @@ char* qq_js_hash(const char* uin,const char* ptwebqq,qq_js_t* js)
     JSString* ptwebqq_ = JS_NewStringCopyZ(js->context, ptwebqq);
     argv[0] = STRING_TO_JSVAL(uin_);
     argv[1] = STRING_TO_JSVAL(ptwebqq_);
-    JS_CallFunctionName(js->context, global, "P", 2, argv, &res);
+    if(JS_CallFunctionName(js->context, global, "P", 2, argv, &res)==JS_FALSE)
+        assert(0);
 
     JSString* res_ = JS_ValueToString(js->context, res);
 
-    return JS_EncodeString(js->context, res_);
+    return s_strdup(JS_EncodeString(js->context, res_));
 }
 
 void qq_js_close(qq_js_t* js)
