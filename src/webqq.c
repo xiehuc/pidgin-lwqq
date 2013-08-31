@@ -1512,13 +1512,12 @@ static LwqqAction qq_async_opt = {
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
 {
     char path[512] = {0};
-    qq_js_t* qjs = qq_js_init();
-    qq_jso_t* obj = qq_js_load(qjs,LOCAL_HASH_JS(path));
+    qq_jso_t* obj = qq_js_load(js,LOCAL_HASH_JS(path));
     char* res = NULL;
     
-    res = qq_js_hash(uin, ptwebqq, qjs);
-    qq_js_unload(qjs, obj);
-    qq_js_close(qjs);
+    res = qq_js_hash(uin, ptwebqq, js);
+    qq_js_unload(js, obj);
+
     return res;
 }
 static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)

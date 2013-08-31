@@ -46,8 +46,8 @@ if(WIN32)
     find_package(Sqlite3 REQUIRED)
     set(EV_FOUND Off)
     set(CMAKE_PREFIX_PATH 
-        "${WIN32_LIBS_DIR}/js-1.8.5/dist/include" 
-        "${WIN32_LIBS_DIR}/js-1.8.5/dist/lib"
+        "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/include/js" 
+        "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/lib"
         )
     find_package(MozJS REQUIRED)
 endif(WIN32)
