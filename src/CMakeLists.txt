@@ -38,10 +38,16 @@ endif()
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 if(WIN32)
 install(FILES 
-    ${SQLITE_LIBRARIES} 
+    ### ${SQLITE_LIBRARIES} ### pidgin has sqlite already
     ${WIN32_LIBS_DIR}/libcurl/bin/libcurl.dll
     ${WIN32_LIBS_DIR}/libcurl/bin/libidn-11.dll
     ${WIN32_LIBS_DIR}/zlib/bin/zlib1.dll
-    ### NEED pthread
+    ${WIN32_LIBS_DIR}/js-1.8.5-mingw32/bin/libnspr4.dll
+    ${WIN32_LIBS_DIR}/js-1.8.5-mingw32/bin/libplc4.dll
+    ${WIN32_LIBS_DIR}/js-1.8.5-mingw32/bin/libplds4.dll
+    ${WIN32_LIBS_DIR}/single-dlls/libstdc++-6.dll
+    ${WIN32_LIBS_DIR}/single-dlls/pthreadGC2.dll
+    ${WIN32_LIBS_DIR}/single-dlls/libgcc_s_dw2-1.dll
+    
     DESTINATION "${LIB_INSTALL_DIR}/../")
 endif()

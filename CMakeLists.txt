@@ -30,9 +30,15 @@ if(UNIX)
 endif(UNIX)
 
 if(WIN32)
+    set(LIB_INSTALL_DIR "plugins")
+    set(PURPLE_DATADIR  "")
+    set(EV_FOUND Off)
+    set(CMAKE_INSTALL_PREFIX "")
+
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/../pidgin-2.10.7/libpurple" )
     find_package(LibPurple REQUIRED)
+
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/include" 
         "${WIN32_LIBS_DIR}/glib_2.28.8-1_win32/lib"
@@ -40,11 +46,10 @@ if(WIN32)
         "${WIN32_LIBS_DIR}/gtk_2_0-2.14/lib"
         )
     find_package(GLIB2 REQUIRED)
-    set(LIB_INSTALL_DIR "plugins")
-    set(PURPLE_DATADIR  "")
+    
     set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
     find_package(Sqlite3 REQUIRED)
-    set(EV_FOUND Off)
+
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/include/js" 
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/lib"
