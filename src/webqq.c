@@ -1509,9 +1509,10 @@ static LwqqAction qq_async_opt = {
     .delete_group = delete_group_local,
     .group_members_chg = flush_group_members,
 };
-static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
+static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     char path[512] = {0};
+    qq_js_t* js = ((qq_account*)ac_)->js;
     qq_jso_t* obj = qq_js_load(js,LOCAL_HASH_JS(path));
     char* res = NULL;
     
@@ -1520,12 +1521,20 @@ static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* js)
 
     return res;
 }
-static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)
+static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     //github.com is too slow
     qq_download("http://pidginlwqq.sinaapp.com/hash.js", 
             "hash.js", lwdb_get_config_dir());
-    return hash_with_local_file(uin, ptwebqq, js);
+    return hash_with_local_file(uin, ptwebqq, ac_);
+}
+static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
+{
+    qq_account* ac = ac_;
+    const char* url = lwdb_userdb_read(ac->db, "hash.js");
+    if(url == NULL) return NULL;
+    if(qq_download(url,"hash.js",lwdb_get_config_dir())==LWQQ_EC_ERROR) return NULL;
+    return hash_with_local_file(uin, ptwebqq, ac_);
 }
 static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 {
@@ -1534,6 +1543,8 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
     if(ev->result == LWQQ_EC_HASH_WRONG){
         if(last_hash == hash_with_local_file){
             get_friends_info_retry(lc, hash_with_remote_file);
+        }else if(last_hash == hash_with_remote_file){
+            get_friends_info_retry(lc, hash_with_db_url);
         }else{
             purple_connection_error_reason(ac->gc, 
                     PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
@@ -1555,7 +1566,7 @@ static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
 {
     LwqqAsyncEvent* ev;
     qq_account* ac = lc->data;
-    ev = lwqq_info_get_friends_info(lc,hashtry,ac->js);
+    ev = lwqq_info_get_friends_info(lc,hashtry,ac);
     lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
