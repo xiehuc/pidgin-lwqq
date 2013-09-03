@@ -48,6 +48,8 @@ install(FILES
     ${WIN32_LIBS_DIR}/single-dlls/libstdc++-6.dll
     ${WIN32_LIBS_DIR}/single-dlls/pthreadGC2.dll
     ${WIN32_LIBS_DIR}/single-dlls/libgcc_s_dw2-1.dll
+    ${WIN32_LIBS_DIR}/single-dlls/libeay32.dll
+    ${WIN32_LIBS_DIR}/single-dlls/ssleay32.dll
     
     DESTINATION "${LIB_INSTALL_DIR}/../")
 endif()
