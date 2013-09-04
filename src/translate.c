@@ -412,7 +412,11 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
                 }else{
-                    strcat(buf,_("【PIC】"));
+                    format_append(buf, "<a href=\"%s\">%s</a>",
+                            c->data.img.url,
+                            (msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)?
+                            _("【DISABLE PIC】"):_("【PIC】")
+                            );
                 }
                 break;
             case LWQQ_CONTENT_CFACE:
@@ -422,11 +426,12 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                     c->data.cface.data = NULL;
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
-                }else if(c->data.cface.direct_url){
-                    format_append(buf,"<IMG SRC=\"%s\">",c->data.cface.direct_url);
                 }else{
-                    strcat(buf,(msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)?
-                            _("【DISABLE PIC】"):_("【PIC】"));
+                    format_append(buf, "<a href=\"%s\">%s</a>",
+                            c->data.cface.url,
+                            (msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)?
+                            _("【DISABLE PIC】"):_("【PIC】")
+                            );
                 }
                 break;
         }
