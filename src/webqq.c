@@ -1670,12 +1670,20 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     LwqqGroup* group = NULL;
     LwqqSimpleBuddy* sb = NULL;
     if(find_group_and_member_by_card(lc, who, &group, &sb)){
+        if(!sb->group_sig){
+            LwqqAsyncEvent* ev = lwqq_info_get_group_sig(lc,group,sb->uin);
+            char* who_ = s_strdup(who);
+            char* what_ = s_strdup(what);
+            lwqq_async_add_event_listener(ev, _C_(3pi,qq_send_im,gc,who_,what_,0));
+            lwqq_async_add_event_listener(ev, _C_(p,free,who_));
+            lwqq_async_add_event_listener(ev, _C_(p,free,what_));
+            return 1;
+        }
+
         msg = lwqq_msg_new(LWQQ_MS_SESS_MSG);
         mmsg = (LwqqMsgMessage*)msg;
 
         mmsg->super.to = s_strdup(sb->uin);
-        if(!sb->group_sig)
-            lwqq_info_get_group_sig(lc,group,sb->uin);
         mmsg->sess.group_sig = s_strdup(sb->group_sig);
         mmsg->sess.service_type = group->type;
     } else {
