@@ -1703,7 +1703,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     mmsg->f_style = ac->font.style;
     strcpy(mmsg->f_color,"000000");
 
-    translate_message_to_struct(lc, who, what, msg, 0);
+    translate_message_to_struct(lc, who, what, msg, 1);
 
     LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
     lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
