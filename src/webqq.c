@@ -1378,7 +1378,11 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
             qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
             break;
         case LWQQ_CONTENT_CFACE:
-            qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, err==LWQQ_EC_UPLOAD_OVERSIZE?_("Send Pic over 1MB"):_("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
+            if(find_group_by_gid(lc, serv_id)){
+                qq_sys_msg_write(lc->data, LWQQ_MS_GROUP_MSG, serv_id, err==LWQQ_EC_UPLOAD_OVERSIZE?_("Send Pic over 1MB"):_("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
+            }else if(find_buddy_by_uin(lc, serv_id)){
+                qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, err==LWQQ_EC_UPLOAD_OVERSIZE?_("Send Custom Face over 250KB"):_("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
+            }
             break;
         default:break;
     }
