@@ -1575,6 +1575,8 @@ static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
+    //add a valid check
+    if(!lwqq_client_valid(lc)) return;
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
     switch(err){

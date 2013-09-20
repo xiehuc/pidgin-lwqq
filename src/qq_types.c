@@ -236,6 +236,9 @@ void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const c
 PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)
 {
     PurpleAccount* account = ac->account;
+    LwqqClient* lc = ac->qq;
+    //add a valid check
+    if(!lwqq_client_valid(lc)) return NULL;
     const char* local_id;
     if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG){
         if(ac->flag&QQ_USE_QQNUM){
