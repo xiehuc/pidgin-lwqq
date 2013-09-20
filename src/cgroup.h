@@ -30,8 +30,7 @@ struct qq_chat_group_opt
 #define CGROUP_SET_PROP(cg,prop,val) (val?(cg->properties|=prop):(cg->properties&=~prop))
 #define CGROUP_GET_PROP(cg,prop) ((cg->properties&prop)>0)
 
-#define CGROUP_GET_CONV(cg) purple_find_chat(cg->chat->account->gc,\
-        opend_chat_search(cg->chat->account->gc->proto_data,cg->group))
+#define CGROUP_GET_CONV(cg) purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, try_get(cg->group->account,cg->group->gid), cg->chat->account)
 
 qq_chat_group* qq_cgroup_new(struct qq_chat_group_opt* opt);
 

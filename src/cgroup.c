@@ -3,9 +3,10 @@
 #include <errno.h>
 
 typedef enum {
-    CGROUP_CLOSED,
-    CGROUP_OPEND
-}qq_chat_group_state;
+    CG_OPEN_FORCE_DIALOG,//open dialog every time
+    CG_OPEN_FIRST_DIALOG,//open dialog when establish conversation
+    CG_OPEN_SLIENT,//establish conversation without dialog
+}CGroupOpenOption;
 
 typedef struct qq_chat_group_
 {
@@ -17,20 +18,37 @@ typedef struct qq_chat_group_
 } qq_chat_group_;
 
 
+static void open_conversation(qq_chat_group* cg,CGroupOpenOption opt)
+{
+    g_return_if_fail(cg);
+    LwqqGroup* g = cg->group;
+    PurpleChat* chat = cg->chat;
+    PurpleConnection* gc = chat->account->gc;
+    const char* key = try_get(g->account, g->gid);
+    static int index=0;
+    PurpleConversation* conv = CGROUP_GET_CONV(cg);
+
+    if(conv==NULL){
+        if(opt != CG_OPEN_SLIENT)
+            serv_got_joined_chat(gc,index++,key);
+    }else if(opt == CG_OPEN_FORCE_DIALOG)
+        purple_conversation_present(conv);
+}
+
 static void force_open_dialog(qq_chat_group* cg)
 {
     g_return_if_fail(cg);
     LwqqGroup* g = cg->group;
     PurpleChat* chat = cg->chat;
     PurpleConnection* gc = chat->account->gc;
-    qq_account* ac = gc->proto_data;
-    const char* key = try_get(g->account,g->gid);
+    const char* key = try_get(g->account, g->gid);
+    static int index=0;
+    PurpleConversation* conv = CGROUP_GET_CONV(cg);
 
-    g_return_if_fail(key);
-    PurpleConversation *conv = purple_find_chat(gc,opend_chat_search(ac,g));
-    if(conv == NULL&&key) {
-        serv_got_joined_chat(gc,open_new_chat(ac,g),key);
-    }
+    if(conv==NULL)
+        serv_got_joined_chat(gc,index++,key);
+    else
+        purple_conversation_present(conv);
 }
 
 static void set_user_list(qq_chat_group* cg)
@@ -152,16 +170,17 @@ void qq_cgroup_got_msg(qq_chat_group* cg,const char* serv_id,PurpleMessageFlags 
         cg_->unread_num ++;
         cg->opt->new_msg_notice(cg);
     }else{
-        force_open_dialog(cg);
+        open_conversation(cg, CG_OPEN_FIRST_DIALOG);
         set_user_list(cg);
         name = b?(b->qqnumber?:b->nick):(sb?(sb->card?:sb->nick):serv_id);
-        serv_got_chat_in(gc, opend_chat_search(ac,cg->group), name, flags, message, t);
+        PurpleConversation* conv = CGROUP_GET_CONV(cg);
+        serv_got_chat_in(gc, purple_conv_chat_get_id(PURPLE_CONV_CHAT(conv)), name, flags, message, t);
     }
 }
 
 void qq_cgroup_open(qq_chat_group* cg)
 {
-    force_open_dialog(cg);
+    open_conversation(cg, CG_OPEN_FORCE_DIALOG);
     LwqqGroup* group = cg->group;
     qq_account* ac = cg->chat->account->gc->proto_data;
     PurpleConversation* conv = CGROUP_GET_CONV(cg);
