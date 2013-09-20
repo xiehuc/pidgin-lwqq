@@ -2636,8 +2636,9 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         //LwqqBuddy* friend = buddy->proto_data;
         action = purple_menu_action_new(_("Visit QZone"),(PurpleCallback)qq_visit_qzone,node,NULL);
         act = g_list_append(act,action);
-        action = purple_menu_action_new(_("Send Offline File"),(PurpleCallback)qq_send_offline_file,node,NULL);
-        act = g_list_append(act,action);
+        //webqq doesn't support send offline file anymore
+        //action = purple_menu_action_new(_("Send Offline File"),(PurpleCallback)qq_send_offline_file,node,NULL);
+        //act = g_list_append(act,action);
         action = purple_menu_action_new(_("Send Email"),(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
         action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
