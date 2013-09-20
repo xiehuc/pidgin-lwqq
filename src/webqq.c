@@ -1942,10 +1942,9 @@ static void qq_close(PurpleConnection *gc)
     LIST_FOREACH(g,&ac->qq->groups,entries){
         qq_cgroup_free((qq_chat_group*)g->data);
     }
-    lwqq_client_free(ac->qq);
+    purple_connection_set_protocol_data(gc,NULL);
     lwdb_userdb_free(ac->db);
     qq_account_free(ac);
-    purple_connection_set_protocol_data(gc,NULL);
     translate_global_free();
     g_ref_count -- ;
     if(g_ref_count == 0){
@@ -2253,7 +2252,7 @@ static char* qq_status_text(PurpleBuddy* pb)
 {
     LwqqBuddy* buddy = pb->proto_data;
     if(!buddy||!buddy->long_nick) return NULL;
-    return translate_to_html_symbol(buddy->long_nick);
+    return purple_markup_escape_text(buddy->long_nick, strlen(buddy->long_nick));
 }
 static void qq_tooltip_text(PurpleBuddy* pb,PurpleNotifyUserInfo* info,gboolean full)
 {

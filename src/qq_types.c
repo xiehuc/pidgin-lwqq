@@ -138,6 +138,7 @@ void qq_account_free(qq_account* ac)
     g_hash_table_destroy(ac->fast_index.qqnum_index);
     g_hash_table_destroy(ac->fast_index.uin_index);
 #endif
+    lwqq_client_free(ac->qq);
     g_free(ac);
 }
 
