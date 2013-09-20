@@ -844,8 +844,7 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
     qq_chat_group* cg = group->data;
     qq_cgroup_flush_members(cg);
 
-    PurpleConnection* pc = ac->gc;
-    PurpleConversation* conv = purple_find_chat(pc, opend_chat_search(ac,group));
+    PurpleConversation* conv = CGROUP_GET_CONV(cg);
     if(conv == NULL){
         //only do free work.
         GList* item = ac->rewrite_pic_list,*safe;
@@ -1272,6 +1271,16 @@ static void login_stage_3(LwqqClient* lc)
 {
     qq_account* ac = lwqq_client_userdata(lc);
 
+    lwdb_userdb_flush_buddies(ac->db, 5,5);
+    lwdb_userdb_flush_groups(ac->db, 1,10);
+
+    if(ac->flag&QQ_USE_QQNUM){
+        //lwdb_userdb_write_to_client(ac->db, lc);
+        lwdb_userdb_query_qqnumbers(ac->db,lc);
+        //lwdb_userdb_begin(ac->db,"insertion");
+    }
+
+    //make sure all qqnumber is setup,then make state connected
     purple_connection_set_state(purple_account_get_connection(ac->account),PURPLE_CONNECTED);
 
     if(!purple_account_get_alias(ac->account))
@@ -1282,15 +1291,6 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     LwqqAsyncEvent* ev = NULL;
-
-    lwdb_userdb_flush_buddies(ac->db, 5,5);
-    lwdb_userdb_flush_groups(ac->db, 1,10);
-
-    if(ac->flag&QQ_USE_QQNUM){
-        //lwdb_userdb_write_to_client(ac->db, lc);
-        lwdb_userdb_query_qqnumbers(ac->db,lc);
-        //lwdb_userdb_begin(ac->db,"insertion");
-    }
 
     //we must put buddy and group clean before any add operation.
     GSList* ptr = purple_blist_get_buddies();
@@ -1362,6 +1362,7 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     ac->state = LOAD_COMPLETED;
+
     LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
     if(ac->flag& REMOVE_DUPLICATED_MSG)
         flags |= POLL_REMOVE_DUPLICATED_MSG;
@@ -1720,7 +1721,8 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    LwqqGroup* group = opend_chat_index(ac,id);
+    PurpleConversation* conv = purple_find_chat(gc, id);
+    LwqqGroup* group = find_group_by_qqnumber(ac->qq,conv->name);
     LwqqMsg* msg;
 
     
@@ -1738,7 +1740,6 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     mmsg->f_size = ac->font.size;
     mmsg->f_style = ac->font.style;
     strcpy(mmsg->f_color,"000000");
-    PurpleConversation* conv = purple_find_chat(gc,id);
 
     translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
 
@@ -1891,6 +1892,14 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
         if(group == NULL) return;
     }
 
+    //this is a reconnected conversation
+    if(group->data == NULL){
+        group_come(lc,group);
+        qq_chat_group* cg = group->data;
+        PurpleConversation* conv = CGROUP_GET_CONV(cg);
+        serv_got_joined_chat(gc, purple_conv_chat_get_id(PURPLE_CONV_CHAT(conv)), try_get(group->account,group->gid));
+    }
+
     qq_cgroup_open(group->data);
 }
 static gboolean qq_offline_message(const PurpleBuddy *buddy)
@@ -1914,7 +1923,8 @@ char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
     if(purple_find_buddy(ac->account,who)!=NULL)
         return NULL;
     else {
-        LwqqGroup* group = opend_chat_index(ac,id);
+        PurpleConversation* conv = purple_find_chat(gc, id);
+        LwqqGroup* group = find_group_by_qqnumber(ac->qq, conv->name);
         LwqqSimpleBuddy* sb = find_group_member_by_nick_or_card(group,who);
         //if(sb==NULL) sb = lwqq_group_find_group_member_by_uin(group, who);
         snprintf(conv_name,sizeof(conv_name),"%s ### %s",(sb->card)?sb->card:sb->nick,group->name);
@@ -2760,7 +2770,8 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
 {
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
-    LwqqGroup* discu = opend_chat_index(ac,id);
+    PurpleConversation* conv = purple_find_chat(gc, id);
+    LwqqGroup* discu = find_group_by_gid(lc, conv->name);
     if(discu->type != LWQQ_GROUP_DISCU){
         purple_notify_info(gc,_("Error"),_("Only Discussion Can Add new member"),NULL);
         return;

@@ -101,7 +101,6 @@ qq_account* qq_account_new(PurpleAccount* account)
     ac->magic = QQ_MAGIC;
     ac->flag = 0;
     //this is auto increment sized array . so don't worry about it.
-    ac->opend_chat = g_ptr_array_sized_new(10);
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
@@ -124,14 +123,14 @@ qq_account* qq_account_new(PurpleAccount* account)
 }
 void qq_account_free(qq_account* ac)
 {
-    int i;
-    PurpleConnection* gc = purple_account_get_connection(ac->account);
-    for(i=0;i<ac->opend_chat->len;i++){
+    //int i;
+    //PurpleConnection* gc = purple_account_get_connection(ac->account);
+    /*for(i=0;i<ac->opend_chat->len;i++){
         purple_conversation_destroy(purple_find_chat(gc, i));
-    }
+    }*/
     purple_log_free(ac->sys_log);
     qq_js_close(ac->js);
-    g_ptr_array_free(ac->opend_chat,1);
+    //g_ptr_array_free(ac->opend_chat,1);
     s_free(ac->recent_group_name);
     s_free(ac->font.family);
 #if QQ_USE_FAST_INDEX
@@ -181,48 +180,6 @@ void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGr
 #endif
 }
 
-int open_new_chat(qq_account* ac,LwqqGroup* group)
-{
-    GPtrArray* opend_chat = ac->opend_chat;
-    int index;
-    for(index = 0;index<opend_chat->len;index++){
-        if(g_ptr_array_index(opend_chat,index)==group)
-            return index;
-    }
-    g_ptr_array_add(opend_chat,group);
-    return index;
-}
-#if 0
-/**m_t == 0 buddy_message m_t == 1 chat_message*/
-static system_msg* system_msg_new(LwqqMsgType m_t,const char* who,qq_account* ac,const char* msg,int type,time_t t)
-{
-    system_msg* ret = s_malloc0(sizeof(*ret));
-    ret->msg_type = m_t;
-    ret->who = s_strdup(who);
-    ret->ac = ac;
-    ret->msg = s_strdup(msg);
-    ret->type = type;
-    ret->t = t;
-    return ret;
-}
-static void system_msg_free(system_msg* m)
-{
-    if(m){
-        s_free(m->who);
-        s_free(m->msg);
-    }
-    s_free(m);
-}
-static int sys_msg_write(LwqqClient* lc,void* data)
-{
-    system_msg* msg = data;
-    PurpleConversation* conv = find_conversation(msg->msg_type,msg->who,msg->ac);
-    if(conv)
-        purple_conversation_write(conv,NULL,msg->msg,msg->type,msg->t);
-    system_msg_free(msg);
-    return 0;
-}
-#endif
 
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t)
 {

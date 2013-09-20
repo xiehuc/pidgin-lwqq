@@ -14,7 +14,6 @@ typedef struct qq_chat_group_
     PurpleLog* log;
     GList* msg_list;
     unsigned int unread_num;
-    int state;
 } qq_chat_group_;
 
 
@@ -32,22 +31,6 @@ static void open_conversation(qq_chat_group* cg,CGroupOpenOption opt)
         if(opt != CG_OPEN_SLIENT)
             serv_got_joined_chat(gc,index++,key);
     }else if(opt == CG_OPEN_FORCE_DIALOG)
-        purple_conversation_present(conv);
-}
-
-static void force_open_dialog(qq_chat_group* cg)
-{
-    g_return_if_fail(cg);
-    LwqqGroup* g = cg->group;
-    PurpleChat* chat = cg->chat;
-    PurpleConnection* gc = chat->account->gc;
-    const char* key = try_get(g->account, g->gid);
-    static int index=0;
-    PurpleConversation* conv = CGROUP_GET_CONV(cg);
-
-    if(conv==NULL)
-        serv_got_joined_chat(gc,index++,key);
-    else
         purple_conversation_present(conv);
 }
 
@@ -185,10 +168,10 @@ void qq_cgroup_open(qq_chat_group* cg)
     qq_account* ac = cg->chat->account->gc->proto_data;
     PurpleConversation* conv = CGROUP_GET_CONV(cg);
     purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), NULL, cg->group->memo);
+    qq_cgroup_flush_members(cg);
     if(LIST_EMPTY(&group->members)) {
-        LwqqCommand cmd = _C_(p,set_user_list,cg);
         LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(ac->qq,group,NULL);
-        lwqq_async_add_event_listener(ev,cmd);
+        lwqq_async_add_event_listener(ev,_C_(p,set_user_list,cg));
     } else {
         set_user_list(cg);
         //note only have got user_list, there may be unread msg;

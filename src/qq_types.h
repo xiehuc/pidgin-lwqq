@@ -66,7 +66,6 @@ typedef struct qq_account {
     }state;
     int msg_poll_handle;
     int relink_timer;
-    GPtrArray* opend_chat;
     GList* rewrite_pic_list;
     char* recent_group_name;
     PurpleLog* sys_log;
@@ -118,10 +117,6 @@ void qq_account_free(qq_account* ac);
 
 void qq_account_insert_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g);
 void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGroup* g);
-
-int open_new_chat(qq_account* ac,LwqqGroup* group);
-#define opend_chat_search(ac,group) open_new_chat(ac,group)
-#define opend_chat_index(ac,id) g_ptr_array_index(ac->opend_chat,id)
 
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t);
 
