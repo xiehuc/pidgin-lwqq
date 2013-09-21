@@ -47,10 +47,11 @@ static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* mes
 static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry);
 
 enum ResetOption{
-    RESET_BUDDY=0x1,
-    RESET_GROUP=0x2,
-    RESET_DISCU=0x4,
-    RESET_GROUP_SOFT=0x8,///<this only delete duplicated chat
+    RESET_BUDDY=1<<0,
+    RESET_GROUP=1<<1,
+    RESET_DISCU=1<<2,
+    RESET_GROUP_SOFT=1<<3,///<this only delete duplicated chat
+    RESET_DISCU_SOFT=1<<4,
     RESET_ALL=RESET_BUDDY|RESET_GROUP|RESET_DISCU
 };
     
@@ -86,11 +87,13 @@ static const char* local_id_to_serv(qq_account* ac,const char* local_id)
     }else return local_id;
 }
 
+/*
 static const char* qq_get_type_from_chat(PurpleChat* chat)
 {
     GHashTable* table = purple_chat_get_components(chat);
     return g_hash_table_lookup(table,QQ_ROOM_TYPE);
 }
+*/
 static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
 {
     PurpleAccount* account = purple_chat_get_account(chat);
@@ -235,7 +238,7 @@ static void all_reset(qq_account* ac,int opt)
         g_slist_foreach(buddies,buddies_all_remove,ac);
     }
 
-    if(opt & (RESET_GROUP | RESET_DISCU |RESET_GROUP_SOFT)){
+    if(opt & (RESET_GROUP | RESET_DISCU |RESET_GROUP_SOFT|RESET_DISCU_SOFT)){
         //PurpleGroup* group = purple_find_group("QQ群");
         PurpleBlistNode *group,*node;
         for(group = purple_get_blist()->root;group!=NULL;group=group->next){
@@ -245,16 +248,11 @@ static void all_reset(qq_account* ac,int opt)
                     PurpleChat* chat = PURPLE_CHAT(node);
                     if(purple_chat_get_account(chat)==ac->account) {
                         node = purple_blist_node_next(node,1);
-                        const char* type = qq_get_type_from_chat(chat);
-                        if(type==NULL||!strcmp(type,QQ_ROOM_TYPE_QUN)){
-                            if(opt & RESET_GROUP) purple_blist_remove_chat(chat);
-                            if(opt & RESET_GROUP_SOFT ){
-                                const char* name = get_name_from_chat(chat);
-                                if(lwqq_group_find_group_by_qqnumber(ac->qq,name)==NULL)
-                                    purple_blist_remove_chat(chat);
-                            }
-                        }else{
-                            if(opt & RESET_DISCU) purple_blist_remove_chat(chat);
+                        if(opt & (RESET_GROUP|RESET_DISCU)) purple_blist_remove_chat(chat);
+                        if(opt & (RESET_GROUP_SOFT|RESET_DISCU_SOFT)){
+                            const char* name = get_name_from_chat(chat);
+                            if(lwqq_group_find_group_by_qqnumber(ac->qq,name)==NULL)
+                                purple_blist_remove_chat(chat);
                         }
                         continue;
                     }
@@ -1249,7 +1247,7 @@ void qq_msg_check(LwqqClient* lc)
 static void login_stage_f(LwqqClient* lc)
 {
     LwqqBuddy* buddy;
-    LwqqGroup* group;
+    LwqqGroup* group,*discu;
     qq_account* ac = lc->data;
     lwdb_userdb_begin(ac->db);
     LIST_FOREACH(buddy,&lc->friends,entries) {
@@ -1264,6 +1262,12 @@ static void login_stage_f(LwqqClient* lc)
             group_come(lc,group);
         }
     }
+    LIST_FOREACH(discu,&lc->discus,entries){
+        if(discu->last_modify==-1){
+            lwdb_userdb_insert_discu_info(ac->db, discu);
+            discu_come(lc,discu);
+        }
+    }
     lwdb_userdb_commit(ac->db);
 }
 
@@ -1275,9 +1279,7 @@ static void login_stage_3(LwqqClient* lc)
     lwdb_userdb_flush_groups(ac->db, 1,10);
 
     if(ac->flag&QQ_USE_QQNUM){
-        //lwdb_userdb_write_to_client(ac->db, lc);
         lwdb_userdb_query_qqnumbers(ac->db,lc);
-        //lwdb_userdb_begin(ac->db,"insertion");
     }
 
     //make sure all qqnumber is setup,then make state connected
@@ -1307,7 +1309,7 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     //clean extra duplicated node
-    all_reset(ac,RESET_GROUP_SOFT|RESET_DISCU);
+    all_reset(ac,RESET_GROUP_SOFT|RESET_DISCU_SOFT);
 
     LwqqAsyncEvset* set = lwqq_async_evset_new();
     
@@ -1333,6 +1335,7 @@ static void login_stage_3(LwqqClient* lc)
         if(buddy->last_modify != -1 && buddy->last_modify != 0)
             friend_come(lc,buddy);
     }
+    
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
         //LwqqAsyncEvset* set = NULL;
@@ -1350,16 +1353,26 @@ static void login_stage_3(LwqqClient* lc)
         if(group->last_modify != -1 && group->last_modify != 0)
             group_come(lc,group);
     }
+
+    LwqqGroup* discu;
+    LIST_FOREACH(discu,&lc->discus,entries){
+        if(!discu->account||discu->last_modify==-1){
+            ev = lwqq_info_get_discu_detail_info(lc, discu);
+            lwqq_async_evset_add_event(set, ev);
+        }
+        if(discu->last_modify!=-1)
+            discu_come(lc,discu);
+    }
     lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
     //after this we finished the qqnumber fast index.
     
 
     //we should always put discu after group deletion.
     //to avoid delete discu list.
-    LwqqGroup* discu;
+    /*LwqqGroup* discu;
     LIST_FOREACH(discu,&lc->discus,entries) {
         discu_come(lc,discu);
-    }
+    }*/
 
     ac->state = LOAD_COMPLETED;
 
@@ -1885,17 +1898,14 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     //if above we found there is a group but type is NULL.
     //so we open the group
     if(group==NULL){
-        if((ac->flag&QQ_USE_QQNUM)&&!strcmp(type,QQ_ROOM_TYPE_QUN))
-            group = lwqq_group_find_group_by_qqnumber(lc,key);
-        else
-            group = lwqq_group_find_group_by_gid(lc,key);;
+        group = lwqq_group_find_group_by_account(lc,key);
         if(group == NULL) return;
     }
 
     //this is a reconnected conversation
     if(group->data == NULL){
         //ignore discu group
-        if(group->type == LWQQ_GROUP_DISCU) return;
+        //if(group->type == LWQQ_GROUP_DISCU) return;
         group_come(lc,group);
         qq_chat_group* cg = group->data;
         PurpleConversation* conv = CGROUP_GET_CONV(cg);
