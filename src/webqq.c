@@ -1894,6 +1894,8 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
 
     //this is a reconnected conversation
     if(group->data == NULL){
+        //ignore discu group
+        if(group->type == LWQQ_GROUP_DISCU) return;
         group_come(lc,group);
         qq_chat_group* cg = group->data;
         PurpleConversation* conv = CGROUP_GET_CONV(cg);
@@ -2887,7 +2889,7 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_int_new(_("Verbose"), "verbose", 0);
     options = g_list_append(options, option);
-    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 0);
+    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"), "relink_retry", 20);
     options = g_list_append(options, option);
 
 #ifndef WITH_LIBEV
