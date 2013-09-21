@@ -1511,10 +1511,11 @@ static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
     qq_account_remove_index_node(ac, NULL, g);
     purple_blist_remove_chat(cg->chat);
 }
-static void flush_group_members(LwqqClient* lc,LwqqGroup* g)
+static void flush_group_members(LwqqClient* lc,LwqqGroup* d)
 {
-    qq_chat_group* cg = g->data;
+    qq_chat_group* cg = d->data;
     qq_cgroup_flush_members(cg);
+
 }
 static LwqqAction qq_async_opt = {
     .login_complete = login_stage_1,
@@ -1525,6 +1526,7 @@ static LwqqAction qq_async_opt = {
     .upload_fail = upload_content_fail,
     .need_verify2 = show_verify_image,
     .delete_group = delete_group_local,
+    //.discu_account_chg = discu_account_chg,
     .group_members_chg = flush_group_members,
 };
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
@@ -2432,8 +2434,9 @@ static void set_group_alias(PurpleBlistNode* node,const char* mark)
     if(group->type == LWQQ_GROUP_QUN)
         ev = lwqq_info_change_group_markname(lc, group, mark);
     else
-        ev = lwqq_info_set_dicsu_topic(lc, group, mark);
+        ev = lwqq_info_change_discu_topic(lc, group, mark);
     lwqq_async_add_event_listener(ev, _C_(2p,set_group_alias_local,node,s_strdup(mark)));
+    lwqq_async_add_event_listener(ev, _C_(2p,lwdb_userdb_update_group_info,ac->db, group));
 }
 static void qq_set_group_alias(PurpleBlistNode* node)
 {
