@@ -774,7 +774,7 @@ static void sys_g_request_join(LwqqClient* lc,LwqqBuddy* buddy,LwqqMsgSysGMsg* m
     lwqq_buddy_free(buddy);
 
     qq_account* ac = lc->data;
-    purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), body);
+    qq_system_log(ac, body);
 }
 static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
 {
@@ -829,7 +829,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
             break;
     }
     purple_notify_message(ac->gc, PURPLE_NOTIFY_MSG_INFO, _("QQ Group Sys Message"), body,NULL, NULL, NULL);
-    purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), body);
+    qq_system_log(ac,body);
 }
 struct rewrite_pic_entry {
     LwqqGroup* owner;
@@ -1057,17 +1057,17 @@ static void system_message(LwqqClient* lc,LwqqMsgSystem* system,LwqqBuddy* buddy
         lwqq_buddy_free(buddy);
         lwqq_msg_free((LwqqMsg*)system);
 
-        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf2);
+        qq_system_log(ac, buf2);
     } else if(system->type == VERIFY_PASS_ADD) {
         snprintf(buf1,sizeof(buf1),_("%s accept your request,and add back you as friend too"),system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
 
-        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf1);
+        qq_system_log(ac, buf1);
     } else if(system->type == VERIFY_PASS) {
         snprintf(buf1,sizeof(buf1),_("%s accept your request"),system->account);
         purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("System Message"),_("Add Friend"),buf1,NULL,NULL);
 
-        purple_log_write(ac->sys_log, PURPLE_MESSAGE_SYSTEM, "system", time(NULL), buf1);
+        qq_system_log(ac, buf1);
     }
 }
 
@@ -1270,6 +1270,24 @@ static void login_stage_f(LwqqClient* lc)
     }
     lwdb_userdb_commit(ac->db);
 }
+/*
+static LwqqBuddy* create_system_buddy(LwqqClient* lc)
+{
+    LwqqBuddy* self = lc->myself;
+    LwqqBuddy* sys = lwqq_buddy_new();
+    sys->uin = s_strdup(self->uin);
+    sys->qqnumber = s_strdup("system");
+    sys->nick = s_strdup(_("system"));
+    sys->markname = s_strdup(_("system"));
+    sys->level = 100;
+    sys->stat = LWQQ_STATUS_ONLINE;
+    sys->avatar = malloc(self->avatar_len);
+    sys->avatar_len = self->avatar_len;
+    memcpy(sys->avatar,self->avatar,self->avatar_len);
+    LIST_INSERT_HEAD(&lc->friends,sys, entries);
+    return sys;
+}
+*/
 
 static void login_stage_3(LwqqClient* lc)
 {
@@ -1335,6 +1353,7 @@ static void login_stage_3(LwqqClient* lc)
         if(buddy->last_modify != -1 && buddy->last_modify != 0)
             friend_come(lc,buddy);
     }
+    //friend_come(lc,create_system_buddy(lc));
     
     LwqqGroup* group;
     LIST_FOREACH(group,&lc->groups,entries) {
@@ -1364,15 +1383,7 @@ static void login_stage_3(LwqqClient* lc)
             discu_come(lc,discu);
     }
     lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
-    //after this we finished the qqnumber fast index.
-    
 
-    //we should always put discu after group deletion.
-    //to avoid delete discu list.
-    /*LwqqGroup* discu;
-    LIST_FOREACH(discu,&lc->discus,entries) {
-        discu_come(lc,discu);
-    }*/
 
     ac->state = LOAD_COMPLETED;
 

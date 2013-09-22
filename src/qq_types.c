@@ -319,3 +319,11 @@ LwqqErrorCode qq_download(const char* url,const char* file,const char* dir)
     lwqq_http_request_free(req);
     return LWQQ_EC_OK;
 }
+
+
+void qq_system_log(qq_account* ac,const char* log)
+{
+    char buf[8192];
+    snprintf(buf,sizeof(buf),"[帐号 %s]:<br>%s",ac->account->username,log);
+    purple_log_write(ac->sys_log, PURPLE_LOG_SYSTEM, "system", time(NULL), buf);
+}
