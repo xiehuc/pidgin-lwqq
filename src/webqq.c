@@ -1097,7 +1097,10 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
         }else{
             friend_come(lc, buddy);
         }
-
+    }
+    LIST_FOREACH(buddy,&blist->removed_friends,entries){
+        PurpleBuddy* b = buddy->data;
+        purple_blist_remove_buddy(b);
     }
 }
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
@@ -2088,6 +2091,24 @@ static void qq_remove_buddy(PurpleConnection* gc,PurpleBuddy* buddy,PurpleGroup*
     if(friend==NULL) return;
     lwqq_info_delete_friend(lc,friend,LWQQ_DEL_FROM_OTHER);
 }
+static void qq_remove_buddy_oneside_confirm(LwqqConfirmTable* ct,LwqqClient* lc,LwqqBuddy* bu)
+{
+    if(ct->answer == LWQQ_YES){
+        lwqq_info_delete_friend(lc, bu, LWQQ_DEL_KEEP_OTHER);
+    }
+    lwqq_ct_free(ct);
+}
+static void qq_remove_buddy_oneside(PurpleBuddy* buddy)
+{
+    qq_account* ac = buddy->account->gc->proto_data;
+    LwqqClient* lc = ac->qq;
+    LwqqBuddy* friend = buddy->proto_data;
+    LwqqConfirmTable* ct = s_malloc0(sizeof(*ct));
+    ct->title = s_strdup(_("Delete Friend Oneside"));
+    ct->body = s_strdup(_("This would delete your friends,but keep yourself in friend's buddy list\nAre you sure?"));
+    ct->cmd = _C_(3p,qq_remove_buddy_oneside_confirm,ct,lc,friend);
+    show_confirm_table(lc, ct);
+}
 
 static void visit_qqzone(LwqqBuddy* buddy)
 {
@@ -2679,6 +2700,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         action = purple_menu_action_new(_("Send Email"),(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
         action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        act = g_list_append(act,action);
+        action = purple_menu_action_new(_("Delete Oneside"),(PurpleCallback)qq_remove_buddy_oneside,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
         PurpleChat* chat = PURPLE_CHAT(node);
