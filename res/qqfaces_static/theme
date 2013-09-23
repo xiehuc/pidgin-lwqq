@@ -28,7 +28,7 @@ Author=xiehuc@gmail.com
 #adjust according to issue 154 
 
 [WebQQ]
-toggleface.png [TOGGLEFACE]
+toggleface.png :-face:
 0.png          :face14:    
 1.png          :face1:     
 2.png          :face2:     

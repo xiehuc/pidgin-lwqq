@@ -135,10 +135,10 @@ const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
 static char* build_smiley_exp()
 {
     char* exp = s_malloc0(2048);
-    char* spec_char = "()[]*$\\|+";
-    //<IMG ID=''> is belongs to <.*?>
+    //this charactor would esacpe to '\?'
+    char* spec_char = "()[]*$\\|+.";
     //first html label .then smiley
-    strcpy(exp,"<[^>]+>|:face\\d+:|\\[TOGGLEFACE\\]|:[^ :]+:");
+    strcpy(exp,"<[^>]+>");
     struct smile_entry* entry = &smile_tables[0];
     const char *smiley,*beg,*end;
     const char** ptr;
@@ -172,6 +172,10 @@ static char* build_smiley_exp()
         }
         entry++;
     }
+    //<IMG ID=''> is belongs to <.*?>
+    //put :[ ]: behind :[ ] to match correctly
+    strcat(exp,"|:face\\d+:|:-face:|:[^ :]+:");
+    lwqq_puts(exp);
     return exp;
 }
 static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
@@ -306,6 +310,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             break;
         }
         if(begin>ptr){
+            //this is used to build string before match
             //note you can not pass c directly. 
             //because insert_tail is a macro.
             c = build_string_content(ptr,begin,mmsg);
@@ -332,7 +337,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
             //processing face
             sscanf(begin,":face%d:",&img_id);
             c = build_face_direct(img_id);
-        }else if(strstr(begin,"[TOGGLEFACE]")==begin){
+        }else if(strstr(begin,":-face:")==begin){
             translate_face=!translate_face;
         }else if(begin[0]=='&'){
         }else if(begin[0]==':'){
