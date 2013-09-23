@@ -29,108 +29,108 @@ Author=xiehuc@gmail.com
 
 [WebQQ]
 toggleface.png [TOGGLEFACE]
-0.gif          [FACE_14]     :)           :-)      /微笑         /wx
-1.gif          [FACE_1]      :~                    /撇嘴         /pz
-2.gif          [FACE_2]      :B                    /色           /se
-3.gif          [FACE_3]      :|                    /发呆         /fd
-4.gif          [FACE_4]      8-)                   /得意         /dy
-5.gif          [FACE_5]      T_T                   /流泪         /ll
-6.gif          [FACE_6]      :$                    /含羞         /hx
-7.gif          [FACE_7]      :X                    /闭嘴         /bz
-8.gif          [FACE_8]      :Z                    /睡           /shui
-9.gif          [FACE_9]      :'(           :'-(    /大哭         /dk
-10.gif         [FACE_10]     :-|                   /尴尬         /gg
-11.gif         [FACE_11]     :@                    /发怒         /fn
-12.gif         [FACE_12]     ;-)         ;)   :P   /调皮         /tp
-13.gif         [FACE_13]     :D                    /呲牙         /cy
-14.gif         [FACE_0]      :O                    /惊讶         /jy
-15.gif         [FACE_50]     :-(           :(      /难过         /ng
-16.gif         [FACE_51]     8-)           :+      /酷           /kuk
-17.gif         [FACE_96]     --b                   /冷汗         /lengh
-18.gif         [FACE_53]     :Q                    /抓狂         /zk
-19.gif         [FACE_54]     :T                    /吐           /tuu
-20.gif         [FACE_73]     :p                    /偷笑         /tx
-21.gif         [FACE_74]     :-D                   /可爱         /ka
-22.gif         [FACE_75]     :d                    /白眼         /baiy
-23.gif         [FACE_76]     :o                    /傲慢         /am
-24.gif         [FACE_77]     :g                    /饥饿         /jie
-25.gif         [FACE_78]     |-)                   /困           /kun
-26.gif         [FACE_55]     :!                    /惊恐         /jk
-27.gif         [FACE_56]     :L                    /流汗         /lh
-28.gif         [FACE_57]     :}                    /憨笑         /hx
-29.gif         [FACE_58]     :;                    /大兵         /dab
-30.gif         [FACE_79]     :f                    /奋斗         /fendou
-31.gif         [FACE_80]     :-S                   /咒骂         /zhm
-33.gif         [FACE_82]     ;X                    /嘘           /xu
-34.gif         [FACE_83]     ;@                    /晕           /yun
-35.gif         [FACE_84]     :8                    /折磨         /zhem
-36.gif         [FACE_85]     :b                    /哀           /shuai
-43.gif         [FACE_100]    &-(                   /糗大了       /qd
-44.gif         [FACE_101]    B-)                   /坏笑         /huaix
-45.gif         [FACE_102]    [@                    /左哼哼       /zhh
-46.gif         [FACE_103]    @]                    /右哼哼       /yhh
-47.gif         [FACE_104]    :-O                   /哈欠         /hq
-48.gif         [FACE_105]    ]-|                   /鄙视         /bs
-49.gif         [FACE_106]    P-(                   /委屈         /wq
-50.gif         [FACE_107]    :'|                   /快哭了       /kk
-51.gif         [FACE_108]    X-)                   /阴险         /yx
-52.gif         [FACE_109]    :*                    /亲亲         /qq
-53.gif         [FACE_110]    @x                    /吓           /xia
-65.gif         [FACE_116]    :-*                   /示爱         /sa
-83.gif         [FACE_118]    @)                    /抱拳         /bq
-85.gif         [FACE_120]    @@                    /拳头         /qt
-100.gif        [FACE_130]    #-O                   /激动         /jd
-32.gif         [FACE_81]     ???                   /yiw          /yiw
-37.gif         [FACE_86]     /骷髅         /kl
-38.gif         [FACE_87]     /xx                   /敲打         /qiao
-39.gif         [FACE_88]     /bye                  /再见         /zj
-40.gif         [FACE_97]     /wipe                 /擦汗         /ch
-41.gif         [FACE_98]     /dig                  /抠鼻         /kb
-42.gif         [FACE_99]     /handclap             /鼓掌         /gz
-54.gif         [FACE_111]    /8*                   /可怜         /kel
-55.gif         [FACE_112]    /pd                   /菜刀         /cd
-56.gif         [FACE_32]     /[w]                  /西瓜         /xig
-57.gif         [FACE_113]    /beer                 /啤酒         /pj
-58.gif         [FACE_114]    /basketb              /篮球         /lq
-59.gif         [FACE_115]    /oo                   /乒乓         /pp
-60.gif         [FACE_63]     /coffee               /咖啡         /kf
-61.gif         [FACE_64]     /eat                  /饭           /fan
-62.gif         [FACE_59]     /pig                  /猪头         /zt
-63.gif         [FACE_33]     /rose                 /玫瑰         /mg
-64.gif         [FACE_34]     /fade                 /凋谢         /dx
-66.gif         [FACE_36]     /heart                /爱心         /xin
-67.gif         [FACE_37]     /break                /心碎         /xs
-68.gif         [FACE_38]     /cake                 /蛋糕         /dg
-69.gif         [FACE_91]     /li                   /闪电         /shd
-70.gif         [FACE_92]     /bomb                 /炸弹         /zhd
-71.gif         [FACE_93]     /kn                   /刀           /dao
-72.gif         [FACE_29]     /footb                /足球         /zq
-74.gif         [FACE_72]     /ww                   /便便         /bb
-75.gif         [FACE_45]     /moon                 /月亮         /yl
-76.gif         [FACE_42]     /sun                  /太阳         /ty
-77.gif         [FACE_39]     /gift                 /礼物         /lw
-78.gif         [FACE_62]     /hug                  /拥抱         /yb
-80.gif         [FACE_47]     /weak                 /弱           /ruo
-81.gif         [FACE_71]     /share                /握手         /ws
-82.gif         [FACE_95]     /v                    /胜利         /shl
-84.gif         [FACE_119]    /jj                   /勾引         /gy
-86.gif         [FACE_121]    /bad                  /差劲         /cj
-87.gif         [FACE_122]    /loveu                /爱你         /aini
-88.gif         [FACE_123]    /NO                   /no           /bm
-89.gif         [FACE_124]    /OK                   /ok           /hd
-90.gif         [FACE_27]     /love                 /爱情         /aiq
-91.gif         [FACE_21]     /[L]                  /飞吻         /fw
-92.gif         [FACE_23]     /jump                 /跳跳         /tiao
-93.gif         [FACE_25]     /shake                /发抖         /fad
-94.gif         [FACE_26]     /[o]                  /怄火         /oh
-99.gif         [FACE_129]    /oY                   /挥手         /hsh
-102.gif        [FACE_132]    /kiss                 /献吻         /xw
-103.gif        [FACE_133]    /<&                   /左太极       /ztj
-104.gif        [FACE_134]    /&>                   /右太极       /ytj
-101.gif        [FACE_131]    /街舞                 /jw
-95.gif         [FACE_125]    /转圈                 /zhq
-96.gif         [FACE_126]    /磕头                 /kt
-97.gif         [FACE_127]    /回头                 /ht
-98.gif         [FACE_128]    /跳绳                 /tsh
-79.gif         [FACE_46]     /强                   /qiang
-73.gif         [FACE_117]    /瓢虫                 /pch
+0.gif          :face14:    
+1.gif          :face1:     
+2.gif          :face2:     
+3.gif          :face3:     
+4.gif          :face4:     
+5.gif          :face5:     
+6.gif          :face6:     
+7.gif          :face7:     
+8.gif          :face8:     
+9.gif          :face9:     
+10.gif         :face10:    
+11.gif         :face11:    
+12.gif         :face12:    
+13.gif         :face13:    
+14.gif         :face0:     
+15.gif         :face50:    
+16.gif         :face51:    
+17.gif         :face96:    
+18.gif         :face53:    
+19.gif         :face54:    
+20.gif         :face73:    
+21.gif         :face74:    
+22.gif         :face75:    
+23.gif         :face76:    
+24.gif         :face77:    
+25.gif         :face78:    
+26.gif         :face55:    
+27.gif         :face56:    
+28.gif         :face57:    
+29.gif         :face58:    
+30.gif         :face79:    
+31.gif         :face80:     
+33.gif         :face82:     
+34.gif         :face83:     
+35.gif         :face84:    
+36.gif         :face85:    
+43.gif         :face100:   
+44.gif         :face101:   
+45.gif         :face102:   
+46.gif         :face103:    
+47.gif         :face104:    
+48.gif         :face105:    
+49.gif         :face106:    
+50.gif         :face107:    
+51.gif         :face108:    
+52.gif         :face109:    
+53.gif         :face110:    
+65.gif         :face116:    
+83.gif         :face118:    
+85.gif         :face120:    
+100.gif        :face130:    
+32.gif         :face81:     
+37.gif         :face86:     
+38.gif         :face87:     
+39.gif         :face88:     
+40.gif         :face97:     
+41.gif         :face98:     
+42.gif         :face99:     
+54.gif         :face111:    
+55.gif         :face112:    
+56.gif         :face32:     
+57.gif         :face113:    
+58.gif         :face114:    
+59.gif         :face115:    
+60.gif         :face63:     
+61.gif         :face64:     
+62.gif         :face59:     
+63.gif         :face33:     
+64.gif         :face34:     
+66.gif         :face36:     
+67.gif         :face37:     
+68.gif         :face38:     
+69.gif         :face91:     
+70.gif         :face92:     
+71.gif         :face93:     
+72.gif         :face29:     
+74.gif         :face72:     
+75.gif         :face45:     
+76.gif         :face42:     
+77.gif         :face39:     
+78.gif         :face62:     
+80.gif         :face47:     
+81.gif         :face71:     
+82.gif         :face95:     
+84.gif         :face119:    
+86.gif         :face121:    
+87.gif         :face122:    
+88.gif         :face123:    
+89.gif         :face124:    
+90.gif         :face27:     
+91.gif         :face21:     
+92.gif         :face23:     
+93.gif         :face25:     
+94.gif         :face26:     
+99.gif         :face129:    
+102.gif        :face132:    
+103.gif        :face133:    
+104.gif        :face134:    
+101.gif        :face131:    
+95.gif         :face125:    
+96.gif         :face126:    
+97.gif         :face127:    
+98.gif         :face128:    
+79.gif         :face46:     
+73.gif         :face117:    
