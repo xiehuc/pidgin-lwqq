@@ -88,6 +88,7 @@ set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)
 set(datadir ${SHARE_DIR}/lwqq)
+set(version "${VERSION_MAJOR}.${VERSION_MINOR}${VERSION_PATCH}")
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
 add_subdirectory(liblwqq)

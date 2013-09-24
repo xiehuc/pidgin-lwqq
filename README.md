@@ -1,7 +1,7 @@
 pidgin-lwqq
 ===========
 
-![蚊香企鹅](res/48.png)
+![蚊香企鹅](http://i.imgur.com/NKpB4En.png)
 
 简  介
 -----
@@ -43,14 +43,6 @@ lwqq 即是 linux webqq 之意
 
 第一次使用? 猛击:[简易使用教程](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
 
-### 编译选项
-
-- VERBOSE[=0]
-> 设置输出等级 .0表示没有输出,3表示最大输出.
-
-- SSL=[On]
-> 开启SSL的支持
-
 功能列表
 --------
 
@@ -69,7 +61,7 @@ lwqq 即是 linux webqq 之意
 * 支持访问QQ空间
 * 支持更改在线状态|群名片
 * 支持多账户登录
-* 支持发送接受离线文件
+* <del>支持发送接受离线文件</del>
 * 支持文本样式
 * 支持群消息屏蔽
 * 支持接受文件传输

@@ -186,7 +186,7 @@ static void action_about_webqq(PurplePluginAction *action)
                             "so it remaind a easy job<br/>"
                             "thanks riegamaths@gmail.com's great guide");
     g_string_append(info, "<br/><br/></body></html>");
-    title = g_strdup_printf(_("About pidgin-lwqq %s"), DISPLAY_VERSION);
+    title = g_strdup_printf(_("About pidgin-lwqq %s"), VERSION);
     purple_notify_formatted(gc, title, title, NULL, info->str, NULL, NULL);
 
     g_free(title);
@@ -1699,7 +1699,7 @@ failed:
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags flags)
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    char whatsnew[1024*10];
+    char whatsnew[1024*10] = {0};
     LwqqClient* lc = ac->qq;
     LwqqMsg* msg;
     LwqqMsgMessage *mmsg;
@@ -2899,7 +2899,7 @@ static PurplePluginInfo info = {
     .priority=      PURPLE_PRIORITY_DEFAULT, /* priority */
     .id=            "prpl-webqq", /* id */
     .name=          "WebQQ", /* name */
-    .version=       "0.2a", /* version */
+    .version=       VERSION, /* version */
     .summary=       "WebQQ Protocol Plugin", /* summary */
     .description=   "a webqq plugin based on lwqq", /* description */
     .author=        "xiehuc<xiehuc@gmail.com>", /* author */

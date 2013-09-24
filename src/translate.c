@@ -7,11 +7,6 @@
 #include "trex.h"
 #include "qq_types.h"
 
-#ifndef INST_PREFIX
-#define INST_PREFIX "/usr"
-#endif
-
-#define FACE_DIR INST_PREFIX"/share/pixmaps/pidgin/emotes/webqq/"
 #define LOCAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",lwdb_get_config_dir()),path)
 #define GLOBAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",GLOBAL_DATADIR),path)
 

@@ -8,6 +8,7 @@
 #define LOCALEDIR "@localedir@"
 #define GETTEXT_PACKAGE "@package@"
 #define GLOBAL_DATADIR "@datadir@"
+#define VERSION "@version@"
 
 #endif /* __CONFIG_H__ */
 
