@@ -1696,9 +1696,10 @@ failed:
 
 //send a message to a friend.
 //called by purple
-static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags UNUSED(flags))
+static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags flags)
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
+    char whatsnew[1024*10];
     LwqqClient* lc = ac->qq;
     LwqqMsg* msg;
     LwqqMsgMessage *mmsg;
@@ -1739,11 +1740,14 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     strcpy(mmsg->f_color,"000000");
 
     translate_message_to_struct(lc, who, what, msg, 1);
+    translate_struct_to_message(ac, mmsg, whatsnew);
+    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, ac->account);
+    purple_conversation_write(conv, NULL, whatsnew, flags, time(NULL));
 
     LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
     lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
 
-    return 1;
+    return 0;
 }
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)

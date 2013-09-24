@@ -179,10 +179,11 @@ static void build_smiley_exp(char* exp)
 static void build_smiley_exp_from_file(char* exp,const char* path)
 {
     char smiley[256];
-    FILE* f =fopen(path,"r");
     long id,num;
     char *beg,*end;
     const char* spec_char = "()[]*$\\|+.";
+    FILE* f =fopen(path,"r");
+    if(f==NULL) return;
     while(fscanf(f,"%s",smiley)!=EOF){
         num = strtoul(smiley, &end, 10);
         if(end-smiley == strlen(smiley)){
@@ -546,7 +547,8 @@ void translate_global_free()
 const char* translate_smile(int face)
 {
     static char buf[64];
-    struct smile_entry* entry = &smile_tables[0];
+    snprintf(buf, sizeof(buf), ":face%d:",face);
+    /*struct smile_entry* entry = &smile_tables[0];
     while(entry->id != face&&entry->id!=-1){
         entry++;
     }
@@ -555,6 +557,7 @@ const char* translate_smile(int face)
         strncpy(buf,entry->smile[0],sizeof(buf));
         if(buf[0]=='/') strcat(buf," ");
     }
+    */
     return buf;
 }
 
