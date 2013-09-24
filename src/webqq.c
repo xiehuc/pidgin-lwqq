@@ -29,7 +29,6 @@
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
-#define GLOBAL_HASH_JS() SHARE_DATA_DIR LWQQ_PATH_SEP"hash.js"
 #define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
             lwdb_get_config_dir()),buf)
 

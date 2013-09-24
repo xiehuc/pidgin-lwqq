@@ -12,7 +12,8 @@
 #endif
 
 #define FACE_DIR INST_PREFIX"/share/pixmaps/pidgin/emotes/webqq/"
-static GHashTable* smily_hash;
+#define LOCAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",lwdb_get_config_dir()),path)
+static GHashTable* smiley_hash;
 static TRex* _regex;
 static TRex* hs_regex;
 struct smile_entry{
@@ -127,25 +128,27 @@ static struct smile_entry smile_tables[] = {
     {-1,    {   0   }}
 };
 const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
+const char* REGEXP_HEAD = "<[^>]+>";
+const char* REGEXP_TAIL = "|:face\\d+:|:-face:|:[^ :]+:";
 //font size map space : pidgin:[1,7] to webqq[8:20]
 #define sizemap(num) (6+2*num)
 //font size map space : webqq[8:22] to pidgin [1:8]
 #define sizeunmap(px) ((px-6)/2)
 //this is used for build smiley regex expression
-static char* build_smiley_exp()
+static void build_smiley_exp(char* exp)
 {
-    char* exp = s_malloc0(2048);
     //this charactor would esacpe to '\?'
     char* spec_char = "()[]*$\\|+.";
     //first html label .then smiley
-    strcpy(exp,"<[^>]+>");
     struct smile_entry* entry = &smile_tables[0];
     const char *smiley,*beg,*end;
     const char** ptr;
     while(entry->id !=-1){
         ptr = entry->smile;
+        long id = entry->id+1;
         while(*ptr){
             smiley = *ptr;
+            g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
             if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
                 //move to next smiley
                 ptr++;
@@ -172,11 +175,41 @@ static char* build_smiley_exp()
         }
         entry++;
     }
-    //<IMG ID=''> is belongs to <.*?>
-    //put :[ ]: behind :[ ] to match correctly
-    strcat(exp,"|:face\\d+:|:-face:|:[^ :]+:");
-    lwqq_puts(exp);
-    return exp;
+}
+static void build_smiley_exp_from_file(char* exp,const char* path)
+{
+    char smiley[256];
+    FILE* f =fopen(path,"r");
+    long id,num;
+    char *beg,*end;
+    const char* spec_char = "()[]*$\\|+.";
+    while(fscanf(f,"%s",smiley)!=EOF){
+        num = strtoul(smiley, &end, 10);
+        if(end-smiley == strlen(smiley)){
+            id=num+1;//remap 0->1
+            continue;
+        }
+
+        //insert hash table
+        g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
+        if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
+            //move to next smiley
+            continue;
+        }
+        strcat(exp,"|");
+        beg = smiley;
+        do{
+            end=strpbrk(beg,spec_char);
+            if(end==NULL) strcat(exp,beg);
+            else {
+                strncat(exp, beg, end-beg);
+                strcat(exp,"\\");
+                strncat(exp,end,1);
+                beg = end+1;
+            }
+        }while(end);
+    }
+    fclose(f);
 }
 static LwqqMsgContent* build_string_content(const char* from,const char* to,LwqqMsgMessage* msg)
 {
@@ -268,8 +301,8 @@ static LwqqMsgContent* build_face_content(const char* face,int len)
     memcpy(ptr,face,len);
     ptr[len]= '\0';
     LwqqMsgContent* c;
-    if(smily_hash==NULL) translate_global_init();
-    int num = (long)g_hash_table_lookup(smily_hash,ptr);
+    if(smiley_hash==NULL) translate_global_init();
+    int num = (long)g_hash_table_lookup(smiley_hash,ptr);
     if(num==0) return NULL;
     //unshift face because when build it we shift it.
     num--;
@@ -466,9 +499,16 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
 }
 void translate_global_init()
 {
+    
     if(_regex==NULL){
         const char* err = NULL;
-        char* smiley_exp = build_smiley_exp();
+        char *smiley_exp = s_malloc0(2048);
+        smiley_hash = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
+        char path[1024];
+        strcat(smiley_exp,REGEXP_HEAD);
+        //build_smiley_exp(smiley_exp);
+        build_smiley_exp_from_file(smiley_exp, LOCAL_SMILEY_PATH(path));
+        strcat(smiley_exp,REGEXP_TAIL);
         _regex = trex_compile(_TREXC(smiley_exp),&err);
         if(err) {lwqq_puts(err);assert(0);}
         free(smiley_exp);
@@ -479,26 +519,6 @@ void translate_global_init()
         hs_regex = trex_compile(_TREXC(HTML_SYMBOL),&err);
         if(err){lwqq_puts(err);assert(0);}
         assert(_regex!=NULL);
-    }
-    if(smily_hash ==NULL){
-        GHashTable *t = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
-        struct smile_entry* entry = &smile_tables[0];
-        long id;
-        const char** ptr;
-        char* smiley;
-        
-        while(entry->id!=-1){
-            //shift id let 0 means failed
-            id = entry->id+1;
-            ptr = entry->smile;
-            while(*ptr){
-                smiley = (char*)(*ptr);
-                g_hash_table_insert(t,smiley,(gpointer)id);
-                ptr++;
-            }
-            entry++;
-        }
-        smily_hash = t;
     }
 }
 void remove_all_smiley(void* data,void* userdata)
@@ -515,9 +535,9 @@ void translate_global_free()
         trex_free(hs_regex);
         hs_regex = NULL;
     }
-    if(smily_hash) {
-        g_hash_table_remove_all(smily_hash);
-        smily_hash = NULL;
+    if(smiley_hash) {
+        g_hash_table_remove_all(smiley_hash);
+        smiley_hash = NULL;
         GList* list = purple_smileys_get_all();
         g_list_foreach(list,remove_all_smiley,NULL);
         g_list_free(list);
@@ -555,3 +575,4 @@ void translate_add_smiley_to_conversation(PurpleConversation* conv)
     g_list_foreach(list,add_smiley,conv);
     g_list_free(list);
 }
+
