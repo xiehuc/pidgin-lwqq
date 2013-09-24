@@ -1,6 +1,9 @@
 #ifdef WIN32
 #include <stdio.h>
 #include <stdlib.h>
+#include "lwqq.h"
+
+const char *wpurple_install_dir(void);
 
 char *
 strsep(char **stringp, const char* delim)
@@ -27,6 +30,13 @@ strsep(char **stringp, const char* delim)
         } while (sc != 0);
     }
     /* NOTREACHED */
+}
+
+const char* global_data_dir()
+{
+    static char dir[512];
+    snprintf(dir,sizeof(dir),"%s"LWQQ_PATH_SEP"share",(char*)wpurple_install_dir());
+    return dir;
 }
 
 #endif

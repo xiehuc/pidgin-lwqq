@@ -9,11 +9,10 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/liblwqq/cmake
     ${CMAKE_MODULE_PATH}
     )
-if(NOT CMAKE_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX "/usr")
-endif(NOT CMAKE_INSTALL_PREFIX)
 
 if(UNIX)
+    set(SHARE_DIR "${CMAKE_INSTALL_PREFIX}/share")
+
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
@@ -33,7 +32,7 @@ if(WIN32)
     set(LIB_INSTALL_DIR "plugins")
     set(PURPLE_DATADIR  "")
     set(EV_FOUND Off)
-    set(CMAKE_INSTALL_PREFIX "")
+    set(SHARE_DIR "share")
 
     set(CMAKE_PREFIX_PATH 
         "${WIN32_LIBS_DIR}/../pidgin-2.10.7/libpurple" )
@@ -87,8 +86,8 @@ set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
 set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 
 set(package pidgin-lwqq)
-set(localedir ${CMAKE_INSTALL_PREFIX}/share/locale)
-set(sharedir ${CMAKE_INSTALL_PREFIX}/share/lwqq)
+set(localedir ${SHARE_DIR}/locale)
+set(datadir ${SHARE_DIR}/lwqq)
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
 add_subdirectory(liblwqq)
