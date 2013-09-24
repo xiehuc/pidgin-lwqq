@@ -1,13 +1,14 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-/* #undef ENABLE_NLS */
-
+#define ENABLE_NLS
+#define WITH_LIBEV
 
 #define PACKAGE "pidgin-lwqq"
 #define LOCALEDIR "/usr/local/share/locale"
 #define GETTEXT_PACKAGE "pidgin-lwqq"
-#define GIT_SHA1 ""
+#define GLOBAL_DATADIR "/usr/local/share/lwqq"
+#define VERSION "0.2a"
 
 #endif /* __CONFIG_H__ */
 
