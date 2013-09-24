@@ -14,6 +14,7 @@
 #define FACE_DIR INST_PREFIX"/share/pixmaps/pidgin/emotes/webqq/"
 #define LOCAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",lwdb_get_config_dir()),path)
 #define GLOBAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",GLOBAL_DATADIR),path)
+
 static GHashTable* smiley_hash;
 static TRex* _regex;
 static TRex* hs_regex;
@@ -139,7 +140,7 @@ const char* REGEXP_TAIL = "|:face\\d+:|:-face:|:[^ :]+:";
 static void build_smiley_exp(char* exp)
 {
     //this charactor would esacpe to '\?'
-    char* spec_char = "()[]*$\\|+.";
+    char* spec_char = "?()[]*$\\|+.";
     //first html label .then smiley
     struct smile_entry* entry = &smile_tables[0];
     const char *smiley,*beg,*end;
@@ -182,7 +183,7 @@ static void build_smiley_exp_from_file(char* exp,const char* path)
     char smiley[256];
     long id,num;
     char *beg,*end;
-    const char* spec_char = "()[]*$\\|+.";
+    const char* spec_char = "?()[]*$\\|+.";
     FILE* f =fopen(path,"r");
     if(f==NULL) return;
     while(fscanf(f,"%s",smiley)!=EOF){
@@ -509,6 +510,7 @@ void translate_global_init()
         char path[1024];
         strcat(smiley_exp,REGEXP_HEAD);
         //build_smiley_exp(smiley_exp);
+        build_smiley_exp_from_file(smiley_exp, GLOBAL_SMILEY_PATH(path));
         build_smiley_exp_from_file(smiley_exp, LOCAL_SMILEY_PATH(path));
         strcat(smiley_exp,REGEXP_TAIL);
         _regex = trex_compile(_TREXC(smiley_exp),&err);
