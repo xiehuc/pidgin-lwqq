@@ -125,8 +125,8 @@ static struct smile_entry smile_tables[] = {
     {-1,    {   0   }}
 };
 const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
-const char* REGEXP_HEAD = "<[^>]+>";
-const char* REGEXP_TAIL = "|:face\\d+:|:-face:|:[^ :]+:";
+const char* REGEXP_HEAD = "<[^>]+>|:face\\d+:|:-face:";
+const char* REGEXP_TAIL = "|:[^ :]+:";
 //font size map space : pidgin:[1,7] to webqq[8:20]
 #define sizemap(num) (6+2*num)
 //font size map space : webqq[8:22] to pidgin [1:8]
@@ -364,17 +364,22 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
                         purple_imgstore_get_data(simg), 
                         purple_imgstore_get_size(simg));
             }
-        }else if(strstr(begin,":face")==begin){
-            //processing face
-            sscanf(begin,":face%d:",&img_id);
-            c = build_face_direct(img_id);
-        }else if(strstr(begin,":-face:")==begin){
-            translate_face=!translate_face;
-        }else if(begin[0]=='&'){
+        }else if(*begin==':'&&*(end-1)==':'){
+            if(strstr(begin,":face")==begin){
+                sscanf(begin,":face%d:",&img_id);
+                c = build_face_direct(img_id);
+            }else if(strstr(begin,":-face:")==begin){
+                translate_face=!translate_face;
+            }else{
+                //other :faces:
+                c = translate_face?build_face_content(m.begin, m.len):NULL;
+                if(c==NULL) c = build_string_content(begin, end, mmsg);
+            }
         }else if(begin[0]==':'){
-            //other :faces:
+            //other :)
             c = translate_face?build_face_content(m.begin, m.len):NULL;
             if(c==NULL) c = build_string_content(begin, end, mmsg);
+        }else if(begin[0]=='&'){
         }else{
             //other face with no fix style
             c = translate_face?build_face_content(m.begin,m.len):NULL;
