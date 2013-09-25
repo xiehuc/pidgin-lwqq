@@ -2153,7 +2153,8 @@ static void qq_send_member_mail(LwqqSimpleBuddy* sb)
 {
     char buf[128] = {0};
     if(sb->qq){
-        snprintf(buf, sizeof(buf), "xdg-open mailto:%s@qq.com",sb->qq);
+        snprintf(buf, sizeof(buf), "xdg-open 'mailto: %s<%s@qq.com>'",
+                sb->card?:sb->nick,sb->qq);
         system(buf);
     }
 }
@@ -2178,9 +2179,11 @@ static void qq_send_mail(PurpleBlistNode* n)
     }else{
         buddy = b->proto_data;
         if(buddy->email) snprintf(buf,sizeof(buf),
-                "xdg-open mailto:%s",buddy->email);
+                "xdg-open 'mailto: %s<%s>'",buddy->markname?:buddy->nick,
+                buddy->email);
         else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
-                "xdg-open mailto:%s@qq.com",buddy->qqnumber);
+                "xdg-open 'mailto: %s<%s@qq.com>'",buddy->markname?:
+                buddy->nick,buddy->qqnumber);
         else return;
     }
     system(buf);

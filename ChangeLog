@@ -1,5 +1,21 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
+
+0.2c Release Note:
+	完全跨平台（linux，macosx，windows）
+	使用libcurl的cookie管理
+	使用动态hash.js计算
+	记录系统日志
+	使用自定义表情发送图片
+	讨论组可以保存聊天记录
+	群组断线重连
+	单项删除好友
+	替换表情格式，切换表情更加直观。
+	表情自定义文件
+
+0.2a Release Note:
+	支持Windows
+
 0.1f Release Note:
 	多语言支持
 	讨论组发送接受图片
