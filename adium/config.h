@@ -1,8 +1,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define ENABLE_NLS
-#define WITH_LIBEV
+#undef ENABLE_NLS
+#undef WITH_LIBEV
 
 #define PACKAGE "pidgin-lwqq"
 #define LOCALEDIR "/usr/local/share/locale"

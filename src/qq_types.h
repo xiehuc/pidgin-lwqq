@@ -15,6 +15,10 @@
 #define _(s) s
 #endif
 
+#ifdef WIN32
+#include "win.h"
+#endif
+
 #define QQ_MAGIC 0x4153
 #define QQ_USE_FAST_INDEX 1
 #define SUCCESS 0
@@ -99,11 +103,6 @@ typedef struct system_msg {
     int type;
     time_t t;
 }system_msg;
-
-struct qq_extra_async_opt {
-    void (*login_complete)(LwqqClient* lc,LwqqErrorCode err);
-    void (*need_verify)(LwqqClient* lc,LwqqErrorCode err);
-};
 
 void qq_dispatch(LwqqCommand cmd);
 

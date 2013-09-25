@@ -38,6 +38,7 @@
 		C01F2C9F17B644EC00096303 /* vplist.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8B17B644EC00096303 /* vplist.c */; };
 		C09E3EC017D4067E000EAD78 /* js.c in Sources */ = {isa = PBXBuildFile; fileRef = C09E3EBE17D4067E000EAD78 /* js.c */; };
 		C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0BE62A21763EE4100826A49 /* Cocoa.framework */; };
+		C0C2851617F2FBB40056627E /* smiley.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0C2851517F2FBB40056627E /* smiley.txt */; };
 		C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E5A5521769333E005C6362 /* AIUtilities.framework */; };
 		C0E9D3921763F2DB0006EAA0 /* Adium.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E9D3911763F2DB0006EAA0 /* Adium.framework */; };
 		C0E9D3951763F2F10006EAA0 /* AdiumLibpurple.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E9D3941763F2F10006EAA0 /* AdiumLibpurple.framework */; };
@@ -108,6 +109,7 @@
 		C0BE62A51763EE4100826A49 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		C0BE62A61763EE4100826A49 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		C0BE62A71763EE4100826A49 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		C0C2851517F2FBB40056627E /* smiley.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = smiley.txt; path = ../res/smiley.txt; sourceTree = "<group>"; };
 		C0E5A5521769333E005C6362 /* AIUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AIUtilities.framework; path = ../../adium/build/Debug/AIUtilities.framework; sourceTree = "<group>"; };
 		C0E9D3911763F2DB0006EAA0 /* Adium.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Adium.framework; path = ../../adium/build/Debug/Adium.framework; sourceTree = "<group>"; };
 		C0E9D3941763F2F10006EAA0 /* AdiumLibpurple.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdiumLibpurple.framework; path = ../../adium/build/Debug/AdiumLibpurple.framework; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				C01CC09717A9537600574486 /* pidgin-lwqq */,
 				C01CC05717A9533700574486 /* liblwqq */,
 				C035E83717887EB30013EB07 /* src */,
+				C0C2851817F2FBBB0056627E /* resource */,
 				C0BE62A11763EE4100826A49 /* Frameworks */,
 				C0BE62A01763EE4100826A49 /* Products */,
 			);
@@ -250,6 +253,14 @@
 				C0E9D3911763F2DB0006EAA0 /* Adium.framework */,
 			);
 			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		C0C2851817F2FBBB0056627E /* resource */ = {
+			isa = PBXGroup;
+			children = (
+				C0C2851517F2FBB40056627E /* smiley.txt */,
+			);
+			name = resource;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -303,6 +314,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C01F2C5117B643B100096303 /* QQAccountView.xib in Resources */,
+				C0C2851617F2FBB40056627E /* smiley.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
