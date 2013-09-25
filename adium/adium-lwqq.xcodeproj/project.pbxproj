@@ -36,6 +36,7 @@
 		C01F2C9D17B644EC00096303 /* url.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8717B644EC00096303 /* url.c */; };
 		C01F2C9E17B644EC00096303 /* utility.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8917B644EC00096303 /* utility.c */; };
 		C01F2C9F17B644EC00096303 /* vplist.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8B17B644EC00096303 /* vplist.c */; };
+		C09E3EC017D4067E000EAD78 /* js.c in Sources */ = {isa = PBXBuildFile; fileRef = C09E3EBE17D4067E000EAD78 /* js.c */; };
 		C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0BE62A21763EE4100826A49 /* Cocoa.framework */; };
 		C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E5A5521769333E005C6362 /* AIUtilities.framework */; };
 		C0E9D3921763F2DB0006EAA0 /* Adium.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E9D3911763F2DB0006EAA0 /* Adium.framework */; };
@@ -100,6 +101,8 @@
 		C01F2C8A17B644EC00096303 /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utility.h; path = ../liblwqq/lib/utility.h; sourceTree = "<group>"; };
 		C01F2C8B17B644EC00096303 /* vplist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vplist.c; path = ../liblwqq/lib/vplist.c; sourceTree = "<group>"; };
 		C01F2C8C17B644EC00096303 /* vplist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vplist.h; path = ../liblwqq/lib/vplist.h; sourceTree = "<group>"; };
+		C09E3EBE17D4067E000EAD78 /* js.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = js.c; path = ../src/js.c; sourceTree = "<group>"; };
+		C09E3EBF17D4067E000EAD78 /* js.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js.h; path = ../src/js.h; sourceTree = "<group>"; };
 		C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "adium-lwqq.AdiumLibpurplePlugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0BE62A21763EE4100826A49 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		C0BE62A51763EE4100826A49 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -172,6 +175,8 @@
 		C01CC09717A9537600574486 /* pidgin-lwqq */ = {
 			isa = PBXGroup;
 			children = (
+				C09E3EBE17D4067E000EAD78 /* js.c */,
+				C09E3EBF17D4067E000EAD78 /* js.h */,
 				C01F2C5617B6446300096303 /* cgroup.c */,
 				C01F2C5717B6446300096303 /* cgroup.h */,
 				C01F2C5817B6446300096303 /* ft.c */,
@@ -334,6 +339,7 @@
 				C01F2C9D17B644EC00096303 /* url.c in Sources */,
 				C01F2C9E17B644EC00096303 /* utility.c in Sources */,
 				C01F2C9F17B644EC00096303 /* vplist.c in Sources */,
+				C09E3EC017D4067E000EAD78 /* js.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,6 +411,7 @@
 					../../adium/Frameworks/libpurple.framework/Headers,
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
+					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
@@ -417,6 +424,7 @@
 					"-lcurl",
 					"-lz",
 					"-lsqlite3",
+					"-lmozjs185",
 				);
 				PRODUCT_NAME = "adium-lwqq";
 				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
@@ -441,6 +449,7 @@
 					../../adium/Frameworks/libpurple.framework/Headers,
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
+					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
@@ -453,6 +462,7 @@
 					"-lcurl",
 					"-lz",
 					"-lsqlite3",
+					"-lmozjs185",
 				);
 				PRODUCT_NAME = "adium-lwqq";
 				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
