@@ -1713,7 +1713,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
             lwqq_async_add_event_listener(ev, _C_(3pi,qq_send_im,gc,who_,what_,0));
             lwqq_async_add_event_listener(ev, _C_(p,free,who_));
             lwqq_async_add_event_listener(ev, _C_(p,free,what_));
-            return 1;
+            return 0;
         }
 
         msg = lwqq_msg_new(LWQQ_MS_SESS_MSG);
