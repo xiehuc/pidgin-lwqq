@@ -13,95 +13,9 @@
 static GHashTable* smiley_hash;
 static TRex* _regex;
 static TRex* hs_regex;
-struct smile_entry{
-    int id;
-    const char* smile[6];
-};
 
-static 
-const char *smiley_tables[] = {
-    "😲"/*0*/   , "😖"/*1*/  , "😍"/*2*/   , ""          , "😎"/*4*/   ,
-    "T_T"/*5*/ , ""        , "😷"/*7*/   , "😴"/*8*/    , ":'("/*9*/ ,
-    "😰"/*10*/  , "😡"/*11*/ , ":p"/*12*/ , ":D"/*13*/  , ":)"/*14*/ ,
-    ":("/*50*/ , "😠"/*51*/ , 
-    "😭"/*53*/  , ":吐:"/*54*/,
-    "😨"/*55*/  , ":汗:"/*56*/, "😄"/*57*/, ":屌:"/*58*/,
-    ":偷笑:"/*73*/, "😊"/*74*/, "😮"/*75*/,
-    ":\\"/*76*/, "😛"/*77*/, ":困:"/*78*/, ":奋斗:"/*79*/, ":fuck:"/*80*/,
-    "😓"/*96*/,
-    "???"/*81*/, ":嘘:"/*82*/, "@@@"/*83*/, "😱"/*84*/,
-    "😢"/*85*/, ":die:"/*86*/, ":ding:"/*87*/, ":bye:"/*88*/,
-    ":雷:"/*97*/,
-    ":抠鼻:"/*98*/,
-    ":咻咻:"/*99*/,
-    ":糗:"/*100*/,
-    ":坏笑:"/*101*/,
-    ":左哼:"/*102*/,
-    ":右哼:"/*103*/
-};
-/*static struct smile_entry smile_tables[] = {
-    {101,   {	"B-)",	":坏笑:",	"",   0}},
-    {102,   {	"[@",	":左哼哼:",	"",     0}},
-    {103,   {	"@]",	":右哼哼:",	"",     0}},
-    {104,   {	":-O",	":哈欠:",	"",      0}},
-    {105,   {	"]-|",	":鄙视:",	"",      0}},
-    {106,   {	"P-(",	":委屈:",	"",      0}},
-    {107,   {	":'|",	":快哭了:",	"",      0}},
-    {108,   {	"X-)",	":阴险:",	"",      0}},
-    {109,   {	":*",	":亲亲:",	":chu:",      0}},
-    {110,   {	"@x",	":吓:",		"",     0}},
-    {111,   {	"",	":可怜:",	"",     0}},
-    {112,   {	"",	":菜刀:",	"",      0}},
-    {32,    {	"",	":西瓜:",	"",     0}},
-    {113,   {	":beer:",":啤酒:",	"",      0}},
-    {114,   {	":basketb:",		    ":篮球:",    "",      0}},
-    {115,   {	"",	":乒乓:",	"",      0}},
-    {63,    {	":coffee:",			":咖啡:",	"",      0}},
-    {59,    {	":pig:",	":猪:",	"",      0}},
-    {33,    {	":rose:",":玫瑰:",	"",      0}},
-    {34,    {	"",":凋谢:",	"",      0}},
-    {116,   {	":-*",	":示爱:",	"",      0}},
-    {36,    {	":heart:",           ":爱:", 	"",     0}},
-    {37,    {	":break:",           ":心碎:", 	"",      0}},
-    {38,    {	":cake:",":蛋糕:",	"",      0}},
-    {91,    {	"",	":闪电:",	":shd:",     0}},
-    {92,    {	":bomb:",":炸弹:",	"",     0}},
-    {93,    {	"",	":刀:",		"",     0}},
-    {29,    {	":soccer:",	        ":足球:",	"",      0}},
-    {117,   {	":瓢虫:",            "",     0}},
-    {72,    {	"",	":大便:",	":shit:",      0}},
-    {45,    {	":moon:",":月亮:",	"",      0}},
-    {42,    {	":sun:",	":太阳:",	"",      0}},
-    {39,    {	":gift:",":礼物:",	"",      0}},
-    {62,    {	":hug:",	":拥抱:",	"",      0}},
-    {46,    {	":强:",	":strong:",   0}},
-    {47,    {	":weak:",":弱:",		"",     0}},
-    {71,    {	":share:",	        ":握手:",	"",      0}},
-    {95,    {	"",	":胜利:",	":V:",     0}},
-    {118,   {	"@)",	":抱拳:",	"",      0}},
-    {119,   {	"",	":勾引:",	"",      0}},
-    {120,   {	"@@",	":拳头:",	"",      0}},
-    {121,   {	":bad:",	":差劲:",	"",      0}},
-    {122,   {	":loveu:",	        ":爱你:",	"",    0}},
-    {123,   {	":NO:",	":no:",		"",      0}},
-    {124,   {	":OK:",	":ok:",		"",      0}},
-    {27,    {	":love:",":爱:",	"",     0}},
-    {21,    {	"",	":飞吻:",	"",      0}},
-    {23,    {	":jump:", ":跳:",	"",    0}},
-    {25,    {	":shake:",           ":发抖:",	"",     0}},
-    {26,    {	"",	":怄火:",	"",      0}},
-    {125,   {	":转圈:","",     0}},
-    {126,   {	":磕头:", "",      0}},
-    {127,   {	":回头:","",      0}},
-    {128,   {	":跳绳:","",     0}},
-    {129,   {	"",	":挥手:",	"",     0}},
-    {130,   {	"#-O",	":激动:",	"",      0}},
-    {131,   {	":街舞:","",	    0}},
-    {132,   {	":kiss:","",	"",      0}},
-    {133,   {	"",	":左太极:",	"",     0}},
-    {134,   {	"",	":右太极:",	"",     0}},
-    {-1,    {   0   }}
-};*/
+//we dont free this, let it leak a small memory.
+static char *smiley_tables[150]={0};
 const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
 const char* REGEXP_HEAD = "<[^>]+>|:face\\d+:|:-face:";
 const char* REGEXP_TAIL = "|:[^ :]+:";
@@ -110,49 +24,6 @@ const char* REGEXP_TAIL = "|:[^ :]+:";
 //font size map space : webqq[8:22] to pidgin [1:8]
 #define sizeunmap(px) ((px-6)/2)
 //this is used for build smiley regex expression
-/*
-static void build_smiley_exp(char* exp)
-{
-    //this charactor would esacpe to '\?'
-    char* spec_char = "?()[]*$\\|+.";
-    //first html label .then smiley
-    struct smile_entry* entry = &smile_tables[0];
-    const char *smiley,*beg,*end;
-    const char** ptr;
-    while(entry->id !=-1){
-        ptr = entry->smile;
-        long id = entry->id+1;
-        while(*ptr){
-            smiley = *ptr;
-            g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
-            if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
-                //move to next smiley
-                ptr++;
-                continue;
-            }
-            if(smiley[0]==0){
-                //ignore empty smiley
-                ptr++;
-                continue;
-            }
-            strcat(exp,"|");
-            beg = smiley;
-            do{
-                end=strpbrk(beg,spec_char);
-                if(end==NULL) strcat(exp,beg);
-                else {
-                    strncat(exp, beg, end-beg);
-                    strcat(exp,"\\");
-                    strncat(exp,end,1);
-                    beg = end+1;
-                }
-            }while(end);
-            ptr++;
-        }
-        entry++;
-    }
-}
-*/
 static void build_smiley_exp_from_file(char* exp,const char* path)
 {
     char smiley[256];
@@ -168,6 +39,9 @@ static void build_smiley_exp_from_file(char* exp,const char* path)
             continue;
         }
 
+        //insert id->table map only once
+        if(smiley_tables[id-1]==NULL)
+            smiley_tables[id-1]=s_strdup(smiley);
         //insert hash table
         g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
         if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
@@ -530,20 +404,10 @@ void translate_global_free()
 const char* translate_smile(int face)
 {
     static char buf[64];
-    snprintf(buf, sizeof(buf), ":face%d:",face);
-    if(face<2){
+    if(smiley_tables[face]!=NULL)
         strcpy(buf,smiley_tables[face]);
-    }
-    /*struct smile_entry* entry = &smile_tables[0];
-    while(entry->id != face&&entry->id!=-1){
-        entry++;
-    }
-    buf[0]=0;
-    if(entry->id!=-1){
-        strncpy(buf,entry->smile[0],sizeof(buf));
-        if(buf[0]=='/') strcat(buf," ");
-    }
-    */
+    else
+        snprintf(buf, sizeof(buf), ":face%d:",face);
     return buf;
 }
 
