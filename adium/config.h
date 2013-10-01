@@ -8,7 +8,7 @@
 #define LOCALEDIR "/usr/local/share/locale"
 #define GETTEXT_PACKAGE "pidgin-lwqq"
 #define GLOBAL_DATADIR "/usr/local/share/lwqq"
-#define VERSION "0.2a"
+#define VERSION "0.2c"
 
 #endif /* __CONFIG_H__ */
 
