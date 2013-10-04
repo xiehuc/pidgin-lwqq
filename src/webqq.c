@@ -150,6 +150,10 @@ static LwqqSimpleBuddy* find_discu_member_by_nick(LwqqGroup* group,const char* w
 }
 #endif
 
+/** @return 1:found and get
+ *          0:not found
+ *         -1:member list is empty
+ */
 static int find_group_and_member_by_card(LwqqClient* lc,const char* card,LwqqGroup** p_g,LwqqSimpleBuddy** p_sb)
 {
     if(!card) return 0;
@@ -161,6 +165,9 @@ static int find_group_and_member_by_card(LwqqClient* lc,const char* card,LwqqGro
         strncpy(nick,card,pos-card);
         nick[pos-card] = '\0';
         *p_g = find_group_by_name(lc,gname);
+        if(LIST_EMPTY(&(*p_g)->members)){
+            return -1;
+        }
         *p_sb = find_group_member_by_nick_or_card(*p_g,nick);
         return 1;
     }
@@ -1705,12 +1712,17 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     LwqqMsgMessage *mmsg;
     LwqqGroup* group = NULL;
     LwqqSimpleBuddy* sb = NULL;
-    if(find_group_and_member_by_card(lc, who, &group, &sb)){
-        if(!sb->group_sig){
-            LwqqAsyncEvent* ev = lwqq_info_get_group_sig(lc,group,sb->uin);
+    int ret = 0;
+    if((ret = find_group_and_member_by_card(lc, who, &group, &sb))){
+        if(ret==-1||!sb->group_sig){
+            LwqqAsyncEvent* ev = NULL;
+            if(ret==-1)//member list is empty
+                ev = lwqq_info_get_group_detail_info(lc, group, NULL);
+            else if(!sb->group_sig)
+                ev = lwqq_info_get_group_sig(lc,group,sb->uin);
             char* who_ = s_strdup(who);
             char* what_ = s_strdup(what);
-            lwqq_async_add_event_listener(ev, _C_(3pi,qq_send_im,gc,who_,what_,0));
+            lwqq_async_add_event_listener(ev, _C_(3pi,qq_send_im,gc,who_,what_,flags));
             lwqq_async_add_event_listener(ev, _C_(p,free,who_));
             lwqq_async_add_event_listener(ev, _C_(p,free,what_));
             return 0;
