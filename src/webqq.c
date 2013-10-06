@@ -31,6 +31,8 @@
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
 #define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
             lwdb_get_config_dir()),buf)
+#define GLOBAL_HASH_JS(buf) (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
+            GLOBAL_DATADIR),buf)
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
@@ -1553,7 +1555,10 @@ static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     char path[512] = {0};
     qq_js_t* js = ((qq_account*)ac_)->js;
-    qq_jso_t* obj = qq_js_load(js,LOCAL_HASH_JS(path));
+    if(access(LOCAL_HASH_JS(path), F_OK)!=0)
+        if(access(GLOBAL_HASH_JS(path),F_OK)!=0)
+            return NULL;
+    qq_jso_t* obj = qq_js_load(js,path);
     char* res = NULL;
     
     res = qq_js_hash(uin, ptwebqq, js);
@@ -1564,8 +1569,11 @@ static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     //github.com is too slow
-    qq_download("http://pidginlwqq.sinaapp.com/hash.js", 
-            "hash.js", lwdb_get_config_dir());
+    const char* url = "http://pidginlwqq.sinaapp.com/hash.js";
+    LwqqErrorCode ec = qq_download(url, "hash.js", lwdb_get_config_dir());
+    if(ec){
+        lwqq_log(LOG_ERROR,"Could not download JS From %s",url);
+    }
     return hash_with_local_file(uin, ptwebqq, ac_);
 }
 static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
