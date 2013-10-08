@@ -2897,7 +2897,8 @@ PurplePluginProtocolInfo webqq_prpl_info = {
     .chat_send=         qq_send_chat,
     .send_attention=    qq_send_attention,
     //.chat_leave=        qq_leave_chat,
-    .send_file=         qq_send_file,
+    /*webqq disabled send file function*/
+    //.send_file=         qq_send_file,
     //.chat_whisper=      qq_send_whisper,
     .offline_message=   qq_offline_message,
     .alias_buddy=       qq_change_markname, /* change buddy alias on server */
