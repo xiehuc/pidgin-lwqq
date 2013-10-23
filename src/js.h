@@ -1,5 +1,6 @@
 #ifndef QQ_JS_H_H
 #define QQ_JS_H_H
+#include "config.h"
 
 typedef struct qq_js_t qq_js_t;
 typedef void   qq_jso_t;

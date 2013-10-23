@@ -1,7 +1,6 @@
 install(FILES "hash.js" DESTINATION "${datadir}")
 install(FILES "smiley.txt" DESTINATION "${datadir}")
-message("${sharedir}" )
-message("${PURPLE_DATADIR}")
+
 install(DIRECTORY "qqfaces/"
     DESTINATION "${PURPLE_DATADIR}pixmaps/pidgin/emotes/webqq"
     )

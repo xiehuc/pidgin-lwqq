@@ -45,7 +45,7 @@ static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
-//static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry);
+static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash);
 
 enum ResetOption{
     RESET_BUDDY=1<<0,
