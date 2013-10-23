@@ -6,11 +6,8 @@ set(SRC_LIST
     ft.c
     cgroup.c
     win.c
+	js.c
     )
-
-if(WITH_MOZJS)
-	set(SRC_LIST ${SRC_LIST} js.c)
-endif()
 
 add_definitions(-Wall)
 

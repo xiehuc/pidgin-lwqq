@@ -60,7 +60,6 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     LwdbUserDB* db;
-    qq_js_t* js;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
     enum {
         DISCONNECT,
@@ -93,6 +92,7 @@ typedef struct qq_account {
         GHashTable* uin_index;          ///< key:char*,value:struct index_node
     }fast_index;
 #endif
+    qq_js_t* js;
     int magic;//0x4153
 } qq_account;
 typedef struct system_msg {

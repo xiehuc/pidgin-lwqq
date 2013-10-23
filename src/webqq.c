@@ -45,7 +45,7 @@ static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
-static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry);
+//static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry);
 
 enum ResetOption{
     RESET_BUDDY=1<<0,
@@ -1551,6 +1551,7 @@ static LwqqAction qq_async_opt = {
     //.discu_account_chg = discu_account_chg,
     .group_members_chg = flush_group_members,
 };
+#ifdef WITH_MOZJS
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     char path[512] = {0};
@@ -1584,21 +1585,32 @@ static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
     if(qq_download(url,"hash.js",lwdb_get_config_dir())==LWQQ_EC_ERROR) return NULL;
     return hash_with_local_file(uin, ptwebqq, ac_);
 }
+static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
+{
+    LwqqAsyncEvent* ev;
+    qq_account* ac = lc->data;
+    ev = lwqq_info_get_friends_info(lc,hashtry,ac);
+    lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
+}
+#endif
 static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 {
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
     if(ev->result == LWQQ_EC_HASH_WRONG){
+#ifdef WITH_MOZJS
         if(last_hash == hash_with_local_file){
             get_friends_info_retry(lc, hash_with_remote_file);
+			return;
         }else if(last_hash == hash_with_remote_file){
             get_friends_info_retry(lc, hash_with_db_url);
-        }else{
-            purple_connection_error_reason(ac->gc, 
-                    PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
-                    _("Hash Function Wrong, WebQQ Protocol update"));
-        }
-        return;
+			return;
+		}
+#endif
+		purple_connection_error_reason(ac->gc, 
+				PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
+				_("Hash Function Wrong, WebQQ Protocol update"));
+		return;
     }
     if(ev->result != LWQQ_EC_OK){
         purple_connection_error_reason(ac->gc, 
@@ -1609,13 +1621,6 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
     LwqqAsyncEvent* event;
     event = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
-}
-static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
-{
-    LwqqAsyncEvent* ev;
-    qq_account* ac = lc->data;
-    ev = lwqq_info_get_friends_info(lc,hashtry,ac);
-    lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 {
@@ -1643,10 +1648,15 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     char path[512];
 
+#ifdef WITH_MOZJS
     if(access(LOCAL_HASH_JS(path),F_OK)==0)
         get_friends_info_retry(lc, hash_with_local_file);
     else
         get_friends_info_retry(lc, hash_with_remote_file);
+#else
+	LwqqAsyncEvent* ev = lwqq_info_get_friends_info(lc, lwqq_util_hashQ,NULL);
+	lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,lwqq_util_hashQ));
+#endif
 
     return ;
 }

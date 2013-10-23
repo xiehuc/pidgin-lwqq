@@ -2,6 +2,9 @@
 
 #include <lwqq.h>
 #include <stdint.h>
+
+#ifdef WITH_MOZJS
+
 #include <jsapi.h>
 
 struct qq_js_t {
@@ -82,3 +85,15 @@ void qq_js_close(qq_js_t* js)
     JS_ShutDown();
     s_free(js);
 }
+#else
+
+struct qq_js_t{
+};
+qq_js_t* qq_js_init()
+{
+	return NULL;
+}
+void qq_js_close(qq_js_t* js)
+{
+}
+#endif
