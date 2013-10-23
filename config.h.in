@@ -2,7 +2,7 @@
 #define __CONFIG_H__
 
 #cmakedefine ENABLE_NLS
-#cmakedefine WITH_LIBEV
+#cmakedefine WITH_MOZJS
 
 #define PACKAGE "@package@"
 #define LOCALEDIR "@localedir@"

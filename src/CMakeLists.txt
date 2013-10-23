@@ -5,9 +5,12 @@ set(SRC_LIST
     qq_types.c
     ft.c
     cgroup.c
-    js.c
     win.c
     )
+
+if(WITH_MOZJS)
+	set(SRC_LIST ${SRC_LIST} js.c)
+endif()
 
 add_definitions(-Wall)
 
