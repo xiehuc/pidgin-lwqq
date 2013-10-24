@@ -278,7 +278,7 @@ char* translate_to_html_symbol(const char* s)
     paste_content_string(s, buf);
     return s_strdup(buf);
 }
-void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
+void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,PurpleMessageFlags flags)
 {
     LwqqMsgContent* c;
     char piece[24] = {0};
@@ -304,7 +304,10 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf)
                 paste_content_string(c->data.str,buf+strlen(buf));
                 break;
             case LWQQ_CONTENT_FACE:
-                strcat(buf,translate_smile(c->data.face));
+				if(flags & PURPLE_MESSAGE_SEND)
+					format_append(buf, ":face%d:",c->data.face);
+				else
+					strcat(buf,translate_smile(c->data.face));
                 break;
             case LWQQ_CONTENT_OFFPIC:
                 if(c->data.img.size>0){

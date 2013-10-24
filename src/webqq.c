@@ -698,7 +698,7 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
     LwqqBuddy* buddy = msg->buddy.from;
     const char* local_id = (ac->flag&QQ_USE_QQNUM)?buddy->qqnumber:buddy->uin;
 
-    translate_struct_to_message(ac,msg,buf);
+    translate_struct_to_message(ac,msg,buf,PURPLE_MESSAGE_RECV);
     serv_got_im(pc, local_id, buf, PURPLE_MESSAGE_RECV, msg->time);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
@@ -936,7 +936,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     static char buf[BUFLEN] ;
     strcpy(buf,"");
 
-    translate_struct_to_message(ac,msg,buf);
+    translate_struct_to_message(ac,msg,buf,PURPLE_MESSAGE_RECV);
 
     if(LIST_EMPTY(&group->members)) {
         const char* pic = buf;
@@ -979,7 +979,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
     static char buf[BUFLEN]={0};
     strcpy(buf,"");
 
-    translate_struct_to_message(ac,mmsg,buf);
+    translate_struct_to_message(ac,mmsg,buf,PURPLE_MESSAGE_RECV);
 
     LwqqGroup* group = find_group_by_gid(lc,gid);
     if(group == NULL) {
@@ -1724,12 +1724,12 @@ failed:
 static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what, PurpleMessageFlags flags)
 {
     qq_account* ac = (qq_account*)purple_connection_get_protocol_data(gc);
-    char whatsnew[1024*10] = {0};
     LwqqClient* lc = ac->qq;
     LwqqMsg* msg;
     LwqqMsgMessage *mmsg;
     LwqqGroup* group = NULL;
     LwqqSimpleBuddy* sb = NULL;
+	int send_visual = (ac->flag & SEND_VISUALBILITY)>0;
     int ret = 0;
     if((ret = find_group_and_member_by_card(lc, who, &group, &sb))){
         if(ret==-1||!sb->group_sig){
@@ -1743,7 +1743,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
             lwqq_async_add_event_listener(ev, _C_(3pi,qq_send_im,gc,who_,what_,flags));
             lwqq_async_add_event_listener(ev, _C_(p,free,who_));
             lwqq_async_add_event_listener(ev, _C_(p,free,what_));
-            return 0;
+            return !send_visual;
         }
 
         msg = lwqq_msg_new(LWQQ_MS_SESS_MSG);
@@ -1770,14 +1770,17 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
     strcpy(mmsg->f_color,"000000");
 
     translate_message_to_struct(lc, who, what, msg, 1);
-    translate_struct_to_message(ac, mmsg, whatsnew);
-    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, ac->account);
-    purple_conversation_write(conv, NULL, whatsnew, flags, time(NULL));
+	if(send_visual){
+		char whatsnew[1024*10] = {0};
+		translate_struct_to_message(ac, mmsg, whatsnew,PURPLE_MESSAGE_SEND);
+		PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, ac->account);
+		purple_conversation_write(conv, NULL, whatsnew, flags, time(NULL));
+	}
 
     LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
     lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
 
-    return 0;
+    return !send_visual;
 }
 
 static int qq_send_chat(PurpleConnection *gc, int id, const char *message, PurpleMessageFlags flags)
@@ -2609,7 +2612,7 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
             purple_log_write(log,PURPLE_MESSAGE_SYSTEM,"system",log_time,buf);
             buf[0]='\0';
         }
-        translate_struct_to_message(ac, msg, buf);
+        translate_struct_to_message(ac, msg, buf,PURPLE_MESSAGE_RECV);
         if(b){
             if(strcmp(msg->super.from,b->uin)==0){
                 purple_log_write(log,PURPLE_MESSAGE_RECV,another,msg->time,buf);
@@ -2967,6 +2970,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
     options = g_list_append(options, option);
+	option = purple_account_option_bool_new(_("What you seen Is What you send"), "send_visualbility", TRUE);
+    options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_string_new(_("Ignore Group(Compatible with recent plugin)"), "recent_group_name", "Recent Contacts");
@@ -3074,6 +3079,7 @@ static void qq_login(PurpleAccount *account)
     lwqq_bit_set(ac->flag, REMOVE_DUPLICATED_MSG, purple_account_get_bool(account,"remove_duplicated_msg",FALSE));
     lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
     lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
+	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", TRUE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
     int relink_retry = 0;
     
