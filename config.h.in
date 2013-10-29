@@ -3,6 +3,8 @@
 
 #cmakedefine ENABLE_NLS
 #cmakedefine WITH_MOZJS
+#cmakedefine MOZJS_185
+#cmakedefine MOZJS_17
 
 #define PACKAGE "@package@"
 #define LOCALEDIR "@localedir@"

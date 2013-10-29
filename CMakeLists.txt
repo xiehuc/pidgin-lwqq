@@ -17,6 +17,9 @@ if(UNIX)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
     pkg_check_modules(MOZJS mozjs185)
+    if(NOT MOZJS_FOUND)
+        pkg_check_modules(MOZJS mozjs-17.0)
+    endif()
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
@@ -80,12 +83,17 @@ endif()
 
 option(WITH_MOZJS "Use Mozjs To Provide hash.js support" ${MOZJS_FOUND})
 if(WITH_MOZJS AND NOT MOZJS_FOUND)
-	message(FATAL_ERROR "Reuired mozjs185 package not found")
+	message(FATAL_ERROR "Reuired mozjs185 or mozjs-17.0 package not found")
 endif()
 
 set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
 set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
 set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
+if(MOZJS_VERSION VERSION_EQUAL "1.8.5")
+    set(MOZJS_185 1)
+elseif(MOZJS_VERSION MATCHES "17[.].*")
+    set(MOZJS_17 1)
+endif()
 
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)

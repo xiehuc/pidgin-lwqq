@@ -43,7 +43,11 @@ qq_js_t* qq_js_init()
     JS_SetOptions(h->context, 
 	JSOPTION_VAROBJFIX|JSOPTION_COMPILE_N_GO|JSOPTION_NO_SCRIPT_RVAL);
     JS_SetErrorReporter(h->context, report_error);
+#ifdef MOZJS_185
     h->global = JS_NewCompartmentAndGlobalObject(h->context, &global_class, NULL);
+#else
+    h->global = JS_NewGlobalObject(h->context,&global_class,NULL);
+#endif
     JS_InitStandardClasses(h->context, h->global);
     return h;
 }
@@ -51,7 +55,11 @@ qq_js_t* qq_js_init()
 qq_jso_t* qq_js_load(qq_js_t* js,const char* file)
 {
     JSObject* global = JS_GetGlobalObject(js->context);
+#ifdef MOZJS_185
     JSObject* script = JS_CompileFile(js->context, global, file);
+#else
+    JSScript* script = JS_CompileUTF8File(js->context,global,file);
+#endif
     JS_ExecuteScript(js->context, global, script, NULL);
     return (qq_jso_t*)script;
 }
