@@ -17,8 +17,10 @@ if(UNIX)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
     pkg_check_modules(MOZJS mozjs185)
+    set(MOZJS_185 ${MOZJS_FOUND})
     if(NOT MOZJS_FOUND)
         pkg_check_modules(MOZJS mozjs-17.0)
+        set(MOZJS_17 ${MOZJS_FOUND})
     endif()
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
@@ -88,11 +90,6 @@ endif()
 
 set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
 set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
-if(MOZJS_VERSION VERSION_EQUAL "1.8.5")
-    set(MOZJS_185 1)
-elseif(MOZJS_VERSION MATCHES "17[.].*")
-    set(MOZJS_17 1)
-endif()
 
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)
