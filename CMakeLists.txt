@@ -87,7 +87,6 @@ if(WITH_MOZJS AND NOT MOZJS_FOUND)
 endif()
 
 set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
-set(STATIC_LIBRARY On CACHE BOOL "Compile Static Library")
 set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 if(MOZJS_VERSION VERSION_EQUAL "1.8.5")
     set(MOZJS_185 1)

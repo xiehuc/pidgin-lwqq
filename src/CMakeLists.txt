@@ -34,7 +34,7 @@ target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
     ${MOZJS_LIBRARIES}
-	lwqq
+	lwqq-static
     )
 if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)
