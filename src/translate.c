@@ -212,6 +212,10 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
                         purple_imgstore_get_filename(simg),
                         purple_imgstore_get_data(simg),
                         purple_imgstore_get_size(simg));
+                char buf[12];
+                snprintf(buf,sizeof(buf),"%d",img_id);
+                //record extra information to file_id
+                c->data.cface.file_id = s_strdup(buf);
             }else{
                 c = lwqq_msg_fill_upload_offline_pic(
                         purple_imgstore_get_filename(simg), 
@@ -331,22 +335,28 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
                 }
                 break;
             case LWQQ_CONTENT_CFACE:
-                if(c->data.cface.size>0){
-                    int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
-                    //let it freed by purple
-                    c->data.cface.data = NULL;
+                if(flags & PURPLE_MESSAGE_SEND){
+                    int img_id =  s_atoi(c->data.cface.file_id,0);
                     snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
                     strcat(buf,piece);
                 }else{
-                    if((msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)){
-                        strcat(buf,_("【DISABLE PIC】"));
-                    }else if(c->data.cface.url){
-                        format_append(buf, "<a href=\"%s\">%s</a>",
-                                c->data.cface.url,
-                                _("【PIC】")
-                                );
+                    if(c->data.cface.size>0){
+                        int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+                        //let it freed by purple
+                        c->data.cface.data = NULL;
+                        snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
+                        strcat(buf,piece);
                     }else{
-                        strcat(buf,_("【PIC NOT FOUND】"));
+                        if((msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)){
+                            strcat(buf,_("【DISABLE PIC】"));
+                        }else if(c->data.cface.url){
+                            format_append(buf, "<a href=\"%s\">%s</a>",
+                                    c->data.cface.url,
+                                    _("【PIC】")
+                                    );
+                        }else{
+                            strcat(buf,_("【PIC NOT FOUND】"));
+                        }
                     }
                 }
                 break;
