@@ -25,13 +25,6 @@
 #define FAILED -1
 #define BUFLEN 15000
 
-#ifdef UNUSED
-#elif defined(__GNUC__)
-# 	define UNUSED(x) UNUSED_ ## x __attribute__((unused))
-#else
-#	define UNUSED(x) x
-#endif
-
 #ifdef USE_LIBEV
 //the ev dispatch macro
 //ld:long dispatch,d:lc->dispatch,sd:short dispatch
