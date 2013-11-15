@@ -1426,6 +1426,10 @@ static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgConten
 
 static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
 {
+    //valid client make sure it doesn't be freed
+    LwqqClient* lc = code->lc;
+    if(!lwqq_client_valid(lc)) return;
+
     const gchar *value;
     value = purple_request_fields_get_string(fields, "code_entry");
     code->str = s_strdup(value);
@@ -1435,6 +1439,9 @@ static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
 
 static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
 {
+    //valid client make sure it doesn't be freed
+    LwqqClient* lc = code->lc;
+    if(!lwqq_client_valid(lc)) return;
     vp_do(code->cmd,NULL);
 }
 
