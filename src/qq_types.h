@@ -6,7 +6,7 @@
 #include "lwqq.h"
 #include "lwdb.h"
 #include "config.h"
-#include "js.h"
+#include "lwjs.h"
 
 #ifdef ENABLE_NLS
 #include <glib/gi18n.h>

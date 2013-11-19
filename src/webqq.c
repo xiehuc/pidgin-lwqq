@@ -17,8 +17,7 @@
 #include "cgroup.h"
 #include "lwqq.h"
 #include "lwdb.h"
-#include "smemory.h"
-#include "js.h"
+#include "lwjs.h"
 
 #ifndef WITH_LIBEV
 #include "async_purple.c"
