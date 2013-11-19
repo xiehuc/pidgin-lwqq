@@ -86,7 +86,7 @@ typedef struct qq_account {
         GHashTable* uin_index;          ///< key:char*,value:struct index_node
     }fast_index;
 #endif
-    qq_js_t* js;
+    lwqq_js_t* js;
     int magic;//0x4153
 } qq_account;
 typedef struct system_msg {

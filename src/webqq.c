@@ -1562,15 +1562,15 @@ static LwqqAction qq_async_opt = {
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 {
     char path[512] = {0};
-    qq_js_t* js = ((qq_account*)ac_)->js;
+    lwqq_js_t* js = ((qq_account*)ac_)->js;
     if(access(LOCAL_HASH_JS(path), F_OK)!=0)
         if(access(GLOBAL_HASH_JS(path),F_OK)!=0)
             return NULL;
-    qq_jso_t* obj = qq_js_load(js,path);
+    lwqq_jso_t* obj = lwqq_js_load(js,path);
     char* res = NULL;
     
-    res = qq_js_hash(uin, ptwebqq, js);
-    qq_js_unload(js, obj);
+    res = lwqq_js_hash(uin, ptwebqq, js);
+    lwqq_js_unload(js, obj);
 
     return res;
 }
@@ -1653,9 +1653,9 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
 
     gc->flags |= PURPLE_CONNECTION_HTML;
 
-    char path[512];
 
 #ifdef WITH_MOZJS
+    char path[512];
     if(access(LOCAL_HASH_JS(path),F_OK)==0)
         get_friends_info_retry(lc, hash_with_local_file);
     else

@@ -104,7 +104,7 @@ qq_account* qq_account_new(PurpleAccount* account)
     const char* username = purple_account_get_username(account);
     const char* password = purple_account_get_password(account);
     ac->qq = lwqq_client_new(username,password);
-    ac->js = qq_js_init();
+    ac->js = lwqq_js_init();
     ac->sys_log = purple_log_new(PURPLE_LOG_SYSTEM, "system", account, NULL, time(NULL), NULL);
 
     ac->font.family = s_strdup("宋体");
@@ -129,7 +129,7 @@ void qq_account_free(qq_account* ac)
         purple_conversation_destroy(purple_find_chat(gc, i));
     }*/
     purple_log_free(ac->sys_log);
-    qq_js_close(ac->js);
+    lwqq_js_close(ac->js);
     //g_ptr_array_free(ac->opend_chat,1);
     s_free(ac->recent_group_name);
     s_free(ac->font.family);

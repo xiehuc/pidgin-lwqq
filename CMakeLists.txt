@@ -16,12 +16,6 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
-    pkg_check_modules(MOZJS mozjs185)
-    set(MOZJS_185 ${MOZJS_FOUND})
-    if(NOT MOZJS_FOUND)
-        pkg_check_modules(MOZJS mozjs-17.0)
-        set(MOZJS_17 ${MOZJS_FOUND})
-    endif()
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
@@ -57,7 +51,6 @@ if(WIN32)
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/include/js" 
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/lib"
         )
-    find_package(MozJS REQUIRED)
 endif(WIN32)
 
 add_definitions(-Wall)
@@ -83,11 +76,6 @@ else()
     set(ENABLE_NLS false)
 endif()
 
-option(WITH_MOZJS "Use Mozjs To Provide hash.js support" ${MOZJS_FOUND})
-if(WITH_MOZJS AND NOT MOZJS_FOUND)
-	message(FATAL_ERROR "Reuired mozjs185 or mozjs-17.0 package not found")
-endif()
-
 set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
 set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
 
@@ -103,7 +91,6 @@ add_subdirectory(res)
 add_subdirectory(po)
 
 message( "===============pidgin-lwqq flags===============")
-message(STATUS "With Mozjs (Option)     : ${WITH_MOZJS}")
 message(STATUS "Native Language Support : ${ENABLE_NLS}")
 message(STATUS "Install Path            : ${LIB_INSTALL_DIR}")
 message( "===============================================")

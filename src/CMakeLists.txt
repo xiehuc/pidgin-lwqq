@@ -6,7 +6,6 @@ set(SRC_LIST
     ft.c
     cgroup.c
     win.c
-	js.c
     )
 
 add_definitions(-Wall)
@@ -18,8 +17,8 @@ add_library(webqq MODULE
 include_directories(
     ${LIBPURPLE_INCLUDE_DIRS}
     ${GLIB2_INCLUDE_DIRS}
-    ${MOZJS_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/liblwqq
     ../liblwqq/lib
     )
 
@@ -33,7 +32,6 @@ endif()
 target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
-    ${MOZJS_LIBRARIES}
 	lwqq-static
     )
 if(NLS AND WIN32)
