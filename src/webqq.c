@@ -114,6 +114,11 @@ static const char* get_name_from_chat(PurpleChat* chat)
     GHashTable* table = purple_chat_get_components(chat);
     return g_hash_table_lookup(table,QQ_ROOM_KEY_GID);
 }
+static const char* get_type_from_chat(PurpleChat* chat)
+{
+    GHashTable* table = purple_chat_get_components(chat);
+    return g_hash_table_lookup(table,QQ_ROOM_TYPE);
+}
 static LwqqGroup* find_group_by_name(LwqqClient* lc,const char* name)
 {
     LwqqGroup* group = NULL;
@@ -255,10 +260,15 @@ static void all_reset(qq_account* ac,int opt)
                     PurpleChat* chat = PURPLE_CHAT(node);
                     if(purple_chat_get_account(chat)==ac->account) {
                         node = purple_blist_node_next(node,1);
-                        if(opt & (RESET_GROUP|RESET_DISCU)) purple_blist_remove_chat(chat);
-                        if(opt & (RESET_GROUP_SOFT|RESET_DISCU_SOFT)){
-                            const char* name = get_name_from_chat(chat);
-                            if(lwqq_group_find_group_by_qqnumber(ac->qq,name)==NULL)
+                        const char* type = get_type_from_chat(chat);
+                        if(type == NULL) purple_blist_remove_chat(chat);
+                        else{
+                            if((strcmp(type,QQ_ROOM_TYPE_DISCU)==0 && opt & RESET_DISCU_SOFT ) || 
+                                    (strcmp(type,QQ_ROOM_TYPE_QUN)==0 && opt & RESET_GROUP_SOFT)){
+                                const char* name = get_name_from_chat(chat);
+                                if(lwqq_group_find_group_by_qqnumber(ac->qq,name)==NULL)
+                                    purple_blist_remove_chat(chat);
+                            }else
                                 purple_blist_remove_chat(chat);
                         }
                         continue;
@@ -1272,10 +1282,13 @@ static void login_stage_f(LwqqClient* lc)
             group_come(lc,group);
         }
     }
-    LIST_FOREACH(discu,&lc->discus,entries){
-        if(discu->last_modify==-1){
-            lwdb_userdb_insert_discu_info(ac->db, discu);
-            discu_come(lc,discu);
+    if(ac->flag & CACHE_TALKGROUP){
+        LIST_FOREACH(discu,&lc->discus,entries){
+            if(discu->last_modify==-1){
+                lwqq_override(discu->account, s_strdup(discu->info_seq));
+                lwdb_userdb_insert_discu_info(ac->db, discu);
+                discu_come(lc,discu);
+            }
         }
     }
     lwdb_userdb_commit(ac->db);
@@ -1337,7 +1350,7 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     //clean extra duplicated node
-    all_reset(ac,RESET_GROUP_SOFT|RESET_DISCU_SOFT);
+    all_reset(ac,RESET_GROUP_SOFT|(ac->flag&CACHE_TALKGROUP?RESET_DISCU_SOFT:RESET_DISCU));
 
     LwqqAsyncEvset* set = lwqq_async_evset_new();
     
@@ -1384,14 +1397,23 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     LwqqGroup* discu;
-    LIST_FOREACH(discu,&lc->discus,entries){
-        if(!discu->account||discu->last_modify==-1){
-            ev = lwqq_info_get_discu_detail_info(lc, discu);
-            lwqq_async_evset_add_event(set, ev);
+    if(ac->flag&CACHE_TALKGROUP){
+        LIST_FOREACH(discu,&lc->discus,entries){
+            if(!discu->account||discu->last_modify==-1){
+                ev = lwqq_info_get_discu_detail_info(lc, discu);
+                lwqq_async_evset_add_event(set, ev);
+            }
+            if(discu->last_modify!=-1){
+                discu_come(lc,discu);
+            }
         }
-        if(discu->last_modify!=-1)
-            discu_come(lc,discu);
+    }else{
+        LIST_FOREACH(discu,&lc->discus,entries){
+            lwqq_override(discu->account, s_strdup(discu->did));
+            discu_come(lc, discu);
+        }
     }
+
     lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
 
 
@@ -2974,12 +2996,16 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options,option);
     option = purple_account_option_bool_new(_("Version Statics"), "version_statics", TRUE);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
-    options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("What you seen Is What you send"), "send_visualbility", TRUE);
     options = g_list_append(options, option);
+    option = purple_account_option_bool_new(_("Cache Talk Group(Experimental)"),"cache_talk", FALSE);
+    options = g_list_append(options, option);
+#if 0 | DISABLED_AREA
     option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
     options = g_list_append(options, option);
+    option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
+    options = g_list_append(options, option);
+#endif
     option = purple_account_option_string_new(_("Ignore Group(Compatible with recent plugin)"), "recent_group_name", "Recent Contacts");
     options = g_list_append(options, option);
     option = purple_account_option_int_new(_("Verbose"), "verbose", 0);
@@ -3078,7 +3104,7 @@ static void qq_login(PurpleAccount *account)
     ac->gc = pc;
     ac->qq->action= &qq_async_opt;
     
-    lwqq_bit_set(ac->flag,IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
+    lwqq_bit_set(ac->flag, IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
     lwqq_bit_set(ac->flag, IGNORE_FONT_FACE, purple_account_get_bool(account, "disable_custom_font_face", FALSE));
     lwqq_bit_set(ac->flag, DARK_THEME_ADAPT, purple_account_get_bool(account, "dark_theme_fix", FALSE));
     lwqq_bit_set(ac->flag, DEBUG_FILE_SEND, purple_account_get_bool(account,"debug_file_send",FALSE));
@@ -3086,6 +3112,7 @@ static void qq_login(PurpleAccount *account)
     lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
     lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
 	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", TRUE));
+    lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
     int relink_retry = 0;
     

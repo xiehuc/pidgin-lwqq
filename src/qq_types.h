@@ -78,7 +78,8 @@ typedef struct qq_account {
         REMOVE_DUPLICATED_MSG = 1<<5,
         QQ_DONT_EXPECT_100_CONTINUE = 1<<6,
         NOT_DOWNLOAD_GROUP_PIC = 1<<7,
-		SEND_VISUALBILITY = 1<<8
+		SEND_VISUALBILITY = 1<<8,
+        CACHE_TALKGROUP = 1<<9,
     }flag;
 #if QQ_USE_FAST_INDEX
     struct{
