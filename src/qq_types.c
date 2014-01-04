@@ -87,12 +87,12 @@ static int did_dispatch(void* param)
     return 0;
 }
 
-void qq_dispatch(LwqqCommand cmd)
+void qq_dispatch(LwqqCommand cmd,unsigned long timeout)
 {
     LwqqCommand* d = s_malloc0(sizeof(*d));
     *d = cmd;
 
-    purple_timeout_add(10,did_dispatch,d);
+    purple_timeout_add(timeout,did_dispatch,d);
 }
 qq_account* qq_account_new(PurpleAccount* account)
 {

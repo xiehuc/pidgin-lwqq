@@ -2353,7 +2353,7 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
         ev = lwqq_info_get_friend_qqnumber(lc,friend);
         lwqq_async_evset_add_event(set,ev);
         lwqq_async_add_evset_listener(set, _C_(3p,lwqq_info_add_group_member_as_friend,lc,friend,NULL));
-        lc->dispatch(_C_(2p,delete_back_broken_buddy,pc,s_strdup(buddy->name)));
+        lwqq_client_dispatch(lc,_C_(2p,delete_back_broken_buddy,pc,s_strdup(buddy->name)));
     }else{
         //friend->qqnumber = s_strdup(qqnum);
         LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);

@@ -99,7 +99,7 @@ typedef struct system_msg {
     time_t t;
 }system_msg;
 
-void qq_dispatch(LwqqCommand cmd);
+void qq_dispatch(LwqqCommand cmd,unsigned long timeout);
 
 LwqqErrorCode qq_download(const char* url,const char* file,const char* dir);
 #define try_get(val,fail) (val?val:fail)
