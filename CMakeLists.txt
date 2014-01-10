@@ -51,6 +51,7 @@ if(WIN32)
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/include/js" 
         "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/lib"
         )
+    get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
 endif(WIN32)
 
 add_definitions(-Wall)
@@ -119,5 +120,6 @@ if(INST_ZIP)
     set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
     set(CPACK_PACKAGE_NAME "pidgin-lwqq")
     include(CPACK)
+    include(InstallRequiredSystemLibraries)
 endif(INST_ZIP)
 endif()

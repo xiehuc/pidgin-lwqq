@@ -4,6 +4,7 @@
 
 char *  strsep(char **stringp, const char* delim);
 const char *wpurple_locale_dir(void);
+const char* global_data_dir();
 
 
 #undef  LOCALEDIR

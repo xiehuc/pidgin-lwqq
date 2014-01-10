@@ -66,7 +66,7 @@ static void qq_debug(int l,const char* msg)
     /**purple debug would use gtk text,
     so must let it done in thread #1
     */
-    qq_dispatch(_C_(4p,purple_debug,(long)l,DBGID,"%s",msg));
+    qq_dispatch(_C_(4p,purple_debug,(long)l,DBGID,"%s",msg),10);
 }
 #endif
 
