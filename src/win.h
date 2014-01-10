@@ -7,6 +7,7 @@ const char *wpurple_locale_dir(void);
 const char* global_data_dir();
 
 
+
 #undef  LOCALEDIR
 #define LOCALEDIR wpurple_locale_dir()
 

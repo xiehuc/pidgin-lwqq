@@ -3,6 +3,10 @@
 #include "utility.h"
 
 #include <sys/stat.h>
+#ifdef WIN32
+#include <direct.h>
+#define mkdir(a,b) _mkdir(a)
+#endif
 
 
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
