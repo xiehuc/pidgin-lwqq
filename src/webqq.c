@@ -2006,7 +2006,7 @@ static gboolean qq_can_receive_file(PurpleConnection* gc,const char* who)
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who)
 {
     qq_account* ac = purple_connection_get_protocol_data(gc);
-    char conv_name[70]={0};
+    char conv_name[512]={0};
     if(purple_find_buddy(ac->account,who)!=NULL)
         return NULL;
     else {

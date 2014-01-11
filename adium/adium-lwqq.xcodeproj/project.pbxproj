@@ -47,7 +47,6 @@
 /* Begin PBXFileReference section */
 		C01CC0AB17A959DB00574486 /* libpurple.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libpurple.framework; path = ../../adium/Frameworks/libpurple.framework; sourceTree = "<group>"; };
 		C01CC0AD17A95AB900574486 /* libglib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libglib.framework; path = ../../adium/Frameworks/libglib.framework; sourceTree = "<group>"; };
-		C01F2C4617B643B100096303 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = SOURCE_ROOT; };
 		C01F2C4717B643B100096303 /* QQAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QQAccount.h; sourceTree = SOURCE_ROOT; };
 		C01F2C4817B643B100096303 /* QQAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QQAccount.m; sourceTree = SOURCE_ROOT; };
 		C01F2C4917B643B100096303 /* QQAccountView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = QQAccountView.xib; sourceTree = SOURCE_ROOT; };
@@ -198,7 +197,6 @@
 		C035E83717887EB30013EB07 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				C01F2C4617B643B100096303 /* config.h */,
 				C01F2C4717B643B100096303 /* QQAccount.h */,
 				C01F2C4817B643B100096303 /* QQAccount.m */,
 				C01F2C4917B643B100096303 /* QQAccountView.xib */,
