@@ -996,12 +996,7 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
         serv_got_im(pc,name,buf,PURPLE_MESSAGE_RECV,mmsg->time);
         return;
     }
-    void** data = s_malloc0(sizeof(void*)*5);
-    data[0] = pc;
-    data[1] = group;
-    data[2] = s_strdup(from);
-    data[3] = s_strdup(buf);
-    data[4] = (void*)mmsg->time;
+
     LwqqCommand cmd = _C_(4pl,whisper_message_delay_display,ac,group,s_strdup(from),s_strdup(buf),mmsg->time);
     if(LIST_EMPTY(&group->members)) {
         lwqq_async_add_event_listener(lwqq_info_get_group_detail_info(lc,group,NULL),cmd);

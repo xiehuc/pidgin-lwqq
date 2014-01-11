@@ -88,15 +88,15 @@ static void msg_free(PurpleConvMessage* msg)
 
 static void force_delete_log(PurpleLog* log)
 {
+    #ifndef WIN32
     char procpath[128];
     char filepath[256]={0};
-
     PurpleLogCommonLoggerData* data = log->logger_data;
     int fd = fileno(data->file);
     if(fd<0) return;
 
     snprintf(procpath, sizeof(procpath), "/proc/self/fd/%d",fd);
-    #ifndef WIN32
+
     if(readlink(procpath,filepath,sizeof(filepath))<0) return;
 
     if(unlink(filepath)<0)
