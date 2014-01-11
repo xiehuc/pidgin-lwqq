@@ -9,8 +9,11 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/liblwqq/cmake
     ${CMAKE_MODULE_PATH}
     )
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	set(LINUX 1)
+endif()
 
-if(UNIX)
+if(Linux)
     set(SHARE_DIR "${CMAKE_INSTALL_PREFIX}/share")
 
     find_package(PkgConfig REQUIRED)
@@ -24,7 +27,14 @@ if(UNIX)
     set(PURPLE_DATADIR "${PURPLE_DATADIR}/")
     exec_program("pkg-config --modversion purple 2>/dev/null"
         OUTPUT_VARIABLE PURPLE_VERSION)
-endif(UNIX)
+endif()
+
+if(APPLE)
+    set(CMAKE_PREFIX_PATH 
+		"${PROJECT_SOURCE_DIR}/../adium/Frameworks/" )
+	find_library(LIBPURPLE NAMES "libpurple" PATHS "${CMAKE_PERFIX_PATH}")
+	find_library(GLIB NAMES "libglib" PATHS "${CMAKE_PERFIX_PATH}")
+endif()
 
 if(WIN32)
     set(LIB_INSTALL_DIR "plugins")
@@ -44,13 +54,6 @@ if(WIN32)
         )
     find_package(GLIB2 REQUIRED)
     
-    set(CMAKE_PREFIX_PATH "${WIN32_LIBS_DIR}/sqlite3")
-    find_package(Sqlite3 REQUIRED)
-
-    set(CMAKE_PREFIX_PATH 
-        "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/include/js" 
-        "${WIN32_LIBS_DIR}/js-1.8.5-mingw32/lib"
-        )
     get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
 endif(WIN32)
 

@@ -20,15 +20,15 @@ if (LIBPURPLE_LIBRARIES AND LIBPURPLE_INCLUDE_DIRS)
 else (LIBPURPLE_LIBRARIES AND LIBPURPLE_INCLUDE_DIRS)
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
-    include(UsePkgConfig)
+  #  include(UsePkgConfig)
 
-    pkgconfig(libpurple _LIBPURPLEIncDir _LIBPURPLELinkDir _LIBPURPLELinkFlags _LIBPURPLECflags)
+  #  pkgconfig(libpurple _LIBPURPLEIncDir _LIBPURPLELinkDir _LIBPURPLELinkFlags _LIBPURPLECflags)
 
     set(LIBPURPLE_DEFINITIONS ${_LIBPURPLECflags})
 
     find_path(LIBPURPLE_INCLUDE_DIR
         NAMES
-            libpurple/purple.h
+            purple.h
             account.h
         PATHS
             ${_LIBPURPLEIncDir}

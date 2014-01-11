@@ -36,7 +36,7 @@
 		C01F2C9D17B644EC00096303 /* url.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8717B644EC00096303 /* url.c */; };
 		C01F2C9E17B644EC00096303 /* utility.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8917B644EC00096303 /* utility.c */; };
 		C01F2C9F17B644EC00096303 /* vplist.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8B17B644EC00096303 /* vplist.c */; };
-		C09E3EC017D4067E000EAD78 /* js.c in Sources */ = {isa = PBXBuildFile; fileRef = C09E3EBE17D4067E000EAD78 /* js.c */; };
+		C057AA361881A2EF000DD97A /* lwjs.c in Sources */ = {isa = PBXBuildFile; fileRef = C057AA341881A2EF000DD97A /* lwjs.c */; };
 		C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0BE62A21763EE4100826A49 /* Cocoa.framework */; };
 		C0C2851617F2FBB40056627E /* smiley.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0C2851517F2FBB40056627E /* smiley.txt */; };
 		C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E5A5521769333E005C6362 /* AIUtilities.framework */; };
@@ -102,8 +102,10 @@
 		C01F2C8A17B644EC00096303 /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utility.h; path = ../liblwqq/lib/utility.h; sourceTree = "<group>"; };
 		C01F2C8B17B644EC00096303 /* vplist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vplist.c; path = ../liblwqq/lib/vplist.c; sourceTree = "<group>"; };
 		C01F2C8C17B644EC00096303 /* vplist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vplist.h; path = ../liblwqq/lib/vplist.h; sourceTree = "<group>"; };
-		C09E3EBE17D4067E000EAD78 /* js.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = js.c; path = ../src/js.c; sourceTree = "<group>"; };
-		C09E3EBF17D4067E000EAD78 /* js.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js.h; path = ../src/js.h; sourceTree = "<group>"; };
+		C057AA341881A2EF000DD97A /* lwjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lwjs.c; path = ../liblwqq/lib/lwjs.c; sourceTree = "<group>"; };
+		C057AA351881A2EF000DD97A /* lwjs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwjs.h; path = ../liblwqq/lib/lwjs.h; sourceTree = "<group>"; };
+		C057AA371881A306000DD97A /* lwqq-config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "lwqq-config.h"; path = "../build/liblwqq/lwqq-config.h"; sourceTree = "<group>"; };
+		C057AA391881A3D7000DD97A /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = config.h; path = ../build/src/config.h; sourceTree = "<group>"; };
 		C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "adium-lwqq.AdiumLibpurplePlugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0BE62A21763EE4100826A49 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		C0BE62A51763EE4100826A49 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -162,6 +164,8 @@
 				C01F2C8217B644EC00096303 /* smemory.h */,
 				C01F2C8317B644EC00096303 /* swsqlite.c */,
 				C01F2C8417B644EC00096303 /* swsqlite.h */,
+				C057AA341881A2EF000DD97A /* lwjs.c */,
+				C057AA351881A2EF000DD97A /* lwjs.h */,
 				C01F2C8517B644EC00096303 /* type.c */,
 				C01F2C8617B644EC00096303 /* type.h */,
 				C01F2C8717B644EC00096303 /* url.c */,
@@ -177,8 +181,6 @@
 		C01CC09717A9537600574486 /* pidgin-lwqq */ = {
 			isa = PBXGroup;
 			children = (
-				C09E3EBE17D4067E000EAD78 /* js.c */,
-				C09E3EBF17D4067E000EAD78 /* js.h */,
 				C01F2C5617B6446300096303 /* cgroup.c */,
 				C01F2C5717B6446300096303 /* cgroup.h */,
 				C01F2C5817B6446300096303 /* ft.c */,
@@ -211,9 +213,19 @@
 			path = ../src;
 			sourceTree = "<group>";
 		};
+		C057AA381881A311000DD97A /* build */ = {
+			isa = PBXGroup;
+			children = (
+				C057AA371881A306000DD97A /* lwqq-config.h */,
+				C057AA391881A3D7000DD97A /* config.h */,
+			);
+			name = build;
+			sourceTree = "<group>";
+		};
 		C0BE62941763EE4100826A49 = {
 			isa = PBXGroup;
 			children = (
+				C057AA381881A311000DD97A /* build */,
 				C01CC09717A9537600574486 /* pidgin-lwqq */,
 				C01CC05717A9533700574486 /* liblwqq */,
 				C035E83717887EB30013EB07 /* src */,
@@ -289,7 +301,7 @@
 		C0BE62961763EE4100826A49 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = C0BE62991763EE4100826A49 /* Build configuration list for PBXProject "adium-lwqq" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -336,6 +348,7 @@
 				C01F2C6517B6446300096303 /* trex.c in Sources */,
 				C01F2C6617B6446300096303 /* webqq.c in Sources */,
 				C01F2C8F17B644EC00096303 /* async.c in Sources */,
+				C057AA361881A2EF000DD97A /* lwjs.c in Sources */,
 				C01F2C9117B644EC00096303 /* http.c in Sources */,
 				C01F2C9217B644EC00096303 /* info.c in Sources */,
 				C01F2C9317B644EC00096303 /* internal.c in Sources */,
@@ -351,7 +364,6 @@
 				C01F2C9D17B644EC00096303 /* url.c in Sources */,
 				C01F2C9E17B644EC00096303 /* utility.c in Sources */,
 				C01F2C9F17B644EC00096303 /* vplist.c in Sources */,
-				C09E3EC017D4067E000EAD78 /* js.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,8 +374,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -377,7 +394,9 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -389,8 +408,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -398,7 +422,9 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
@@ -408,11 +434,10 @@
 		C0BE62B21763EE4100826A49 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
-					"../../adium/build/Release-Debug",
 					../../adium/Frameworks,
 					../../adium/build/Debug,
 				);
@@ -427,6 +452,7 @@
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-DPURPLE_STATIC_PRPL",
 					"-DAPPLE",
@@ -446,7 +472,7 @@
 		C0BE62B31763EE4100826A49 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -465,6 +491,7 @@
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-DPURPLE_STATIC_PRPL",
 					"-DAPPLE",

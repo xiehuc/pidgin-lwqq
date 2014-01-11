@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>F5946117-AFF8-4CA8-A2D7-045F87958FA7</string>
+	<key>IDESourceControlProjectName</key>
+	<string>adium-lwqq</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>0423A8C9-8CBC-47AA-808A-3B8765E1DA63</key>
+		<string>ssh://github.com/xiehuc/pidgin-lwqq.git</string>
+		<key>74CF6D4C-656A-4840-96F4-AF3AB29589DD</key>
+		<string>ssh://github.com/xiehuc/lwqq.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>adium/adium-lwqq.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>0423A8C9-8CBC-47AA-808A-3B8765E1DA63</key>
+		<string>../../..</string>
+		<key>74CF6D4C-656A-4840-96F4-AF3AB29589DD</key>
+		<string>../../../liblwqq</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/xiehuc/pidgin-lwqq.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>0423A8C9-8CBC-47AA-808A-3B8765E1DA63</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>74CF6D4C-656A-4840-96F4-AF3AB29589DD</string>
+			<key>IDESourceControlWCCName</key>
+			<string>liblwqq</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>0423A8C9-8CBC-47AA-808A-3B8765E1DA63</string>
+			<key>IDESourceControlWCCName</key>
+			<string>pidgin-lwqq</string>
+		</dict>
+	</array>
+</dict>
+</plist>

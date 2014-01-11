@@ -38,7 +38,10 @@ if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)
 endif()
 
+if(Linux)
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
+endif()
+
 if(WIN32)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS 
     # static link doesn't need these dlls
