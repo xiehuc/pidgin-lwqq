@@ -38,7 +38,7 @@ if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)
 endif()
 
-if(Linux)
+if(LINUX)
 INSTALL(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 endif()
 

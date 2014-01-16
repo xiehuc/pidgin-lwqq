@@ -13,7 +13,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(LINUX 1)
 endif()
 
-if(Linux)
+if(LINUX)
     set(SHARE_DIR "${CMAKE_INSTALL_PREFIX}/share")
 
     find_package(PkgConfig REQUIRED)
