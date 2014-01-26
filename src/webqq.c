@@ -189,9 +189,18 @@ static void action_about_webqq(PurplePluginAction *action)
 
     info = g_string_new("<html><body>");
     g_string_append(info, "<p>"
-            "<b>Author</b>:<br>xiehuc<br>"
-            "</p>"
+            "<b>Author</b>:xiehuc xiehuc@gmail.com"
+            "</p><br/>"
             );
+	char flags[1024];
+	format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s%s<br/></p>",
+			lwqq_features&LWQQ_WITH_LIBEV?"-with-libev<br/>":"",
+			lwqq_features&LWQQ_WITH_LIBUV?"-with-libuv<br/>":"",
+			lwqq_features&LWQQ_WITH_SQLITE?"-with-sqlite<br/>":"",
+			lwqq_features&LWQQ_WITH_MOZJS?"-with-mozjs<br/>":"",
+			lwqq_features&LWQQ_WITH_SSL?"-ssl<br/>":""
+			);
+	g_string_append(info,flags);
 
     g_string_append(info, "pidgin-lwqq mainly referenced: "
                             "1.openfetion for libpurple about<br/>"
@@ -1632,7 +1641,13 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 #endif
 		purple_connection_error_reason(ac->gc, 
 				PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
-				_("Hash Function Wrong, WebQQ Protocol update"));
+#ifndef WITH_MOZJS
+				_("Hash Function Wrong, Please recompile with mozjs \n"
+				"https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide#wiki-hash-function")
+#else
+				_("Hash Function Wrong, Please try again later or report to author")
+#endif
+				);
 		return;
     }
     if(ev->result != LWQQ_EC_OK){
