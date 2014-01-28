@@ -38,7 +38,7 @@ static void client_connect_signals(PurpleConnection* gc);
 static void whisper_message_delay_display(qq_account* ac,LwqqGroup* group,char* from,char* msg,time_t t);
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
-static void login_stage_1(LwqqClient* lc,LwqqErrorCode err);
+static void login_stage_1(LwqqClient* lc,LwqqErrorCode* err);
 static void login_stage_2(LwqqAsyncEvent* ev,LwqqClient* lc);
 static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
@@ -573,8 +573,9 @@ static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
 #define buddy_status(bu) ((bu->stat == LWQQ_STATUS_ONLINE && bu->client_type == LWQQ_CLIENT_MOBILE) \
         ? "mobile":lwqq_status_to_str(bu->stat))
 
-static void friend_come(LwqqClient* lc,LwqqBuddy* buddy)
+static void friend_come(LwqqClient* lc,LwqqBuddy** p_buddy)
 {
+	LwqqBuddy* buddy = *p_buddy;
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
@@ -655,8 +656,9 @@ static struct qq_chat_group_opt qq_cg_opt_default = {
 };
 #define QQ_CG_OPT &qq_cg_opt_default
 
-static void group_come(LwqqClient* lc,LwqqGroup* group)
+static void group_come(LwqqClient* lc,LwqqGroup** p_group)
 {
+	LwqqGroup* group = *p_group;
     qq_account* ac = lwqq_client_userdata(lc);
     ac->disable_send_server = 1;
     PurpleAccount* account=ac->account;
@@ -821,7 +823,7 @@ static void sys_g_message(LwqqClient* lc,LwqqMsgSysGMsg* msg)
                         msg->admin);
                 if(msg->is_myself){
                     LwqqAsyncEvent* ev = lwqq_info_get_group_public_info(lc, msg->group);
-                    lwqq_async_add_event_listener(ev, _C_(2p,group_come,lc,msg->group));
+                    lwqq_async_add_event_listener(ev, _C_(2p,group_come,lc,&msg->group));
                 }
             }
             break;
@@ -1097,7 +1099,7 @@ static void write_buddy_to_db(LwqqClient* lc,LwqqBuddy* b)
     qq_account* ac = lwqq_client_userdata(lc);
 
     lwdb_userdb_insert_buddy_info(ac->db, b);
-    friend_come(lc, b);
+    friend_come(lc, &b);
 }
 static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
 {
@@ -1116,7 +1118,7 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
             lwqq_async_evset_add_event(set, ev);
             lwqq_async_add_evset_listener(set,_C_(2p,write_buddy_to_db,lc,buddy));
         }else{
-            friend_come(lc, buddy);
+            friend_come(lc, &buddy);
         }
     }
     LIST_FOREACH(buddy,&blist->removed_friends,entries){
@@ -1277,13 +1279,13 @@ static void login_stage_f(LwqqClient* lc)
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(buddy->last_modify == -1 || buddy->last_modify == 0){
             lwdb_userdb_insert_buddy_info(ac->db, buddy);
-            friend_come(lc, buddy);
+            friend_come(lc, &buddy);
         }
     }
     LIST_FOREACH(group,&lc->groups,entries){
         if(group->last_modify == -1 || group->last_modify == 0){
             lwdb_userdb_insert_group_info(ac->db, group);
-            group_come(lc,group);
+            group_come(lc,&group);
         }
     }
     if(ac->flag & CACHE_TALKGROUP){
@@ -1291,7 +1293,7 @@ static void login_stage_f(LwqqClient* lc)
             if(discu->last_modify==-1){
                 lwqq_override(discu->account, s_strdup(discu->info_seq));
                 lwdb_userdb_insert_discu_info(ac->db, discu);
-                discu_come(lc,discu);
+                discu_come(lc,&discu);
             }
         }
     }
@@ -1378,7 +1380,7 @@ static void login_stage_3(LwqqClient* lc)
             }
         }
         if(buddy->last_modify != -1 && buddy->last_modify != 0)
-            friend_come(lc,buddy);
+            friend_come(lc,&buddy);
     }
     //friend_come(lc,create_system_buddy(lc));
     
@@ -1397,7 +1399,7 @@ static void login_stage_3(LwqqClient* lc)
         //because group avatar less changed.
         //so we dont reload it.
         if(group->last_modify != -1 && group->last_modify != 0)
-            group_come(lc,group);
+            group_come(lc,&group);
     }
 
     LwqqGroup* discu;
@@ -1408,13 +1410,13 @@ static void login_stage_3(LwqqClient* lc)
                 lwqq_async_evset_add_event(set, ev);
             }
             if(discu->last_modify!=-1){
-                discu_come(lc,discu);
+                discu_come(lc,&discu);
             }
         }
     }else{
         LIST_FOREACH(discu,&lc->discus,entries){
             lwqq_override(discu->account, s_strdup(discu->did));
-            discu_come(lc, discu);
+            discu_come(lc, &discu);
         }
     }
 
@@ -1432,8 +1434,11 @@ static void login_stage_3(LwqqClient* lc)
     lwqq_msglist_poll(lc->msg_list, flags);
 }
 
-static void upload_content_fail(LwqqClient* lc,const char* serv_id,LwqqMsgContent* c,int err)
+static void upload_content_fail(LwqqClient* lc,const char** p_serv_id,LwqqMsgContent** p_c,int* p_err)
 {
+	const char* serv_id = *p_serv_id;
+	LwqqMsgContent* c = *p_c;
+	int err = *p_err;
     switch(c->type){
         case LWQQ_CONTENT_OFFPIC:
             qq_sys_msg_write(lc->data, LWQQ_MS_BUDDY_MSG, serv_id, _("Send Pic Failed"), PURPLE_MESSAGE_ERROR, time(NULL));
@@ -1470,8 +1475,9 @@ static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
     vp_do(code->cmd,NULL);
 }
 
-static void show_verify_image(LwqqClient* lc,LwqqVerifyCode* code)
+static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
 {
+	LwqqVerifyCode* code = *p_code;
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleRequestFieldGroup *field_group;
     PurpleRequestField *code_entry;
@@ -1557,32 +1563,20 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
                           table->flags&LWQQ_CT_ENABLE_IGNORE?_("Ignore"):_("Deny"), G_CALLBACK(confirm_table_no),
                           ac->account, NULL, NULL, table);
 }
-static void delete_group_local(LwqqClient* lc,const LwqqGroup* g)
+static void delete_group_local(LwqqClient* lc,const LwqqGroup** p_g)
 {
+	const LwqqGroup* g = *p_g;
     qq_chat_group* cg = g->data;
     if(!cg) return;
     qq_account* ac = lc->data;
     qq_account_remove_index_node(ac, NULL, g);
     purple_blist_remove_chat(cg->chat);
 }
-static void flush_group_members(LwqqClient* lc,LwqqGroup* d)
+static void flush_group_members(LwqqClient* lc,LwqqGroup** d)
 {
-    qq_chat_group* cg = d->data;
+    qq_chat_group* cg = (*d)->data;
     qq_cgroup_flush_members(cg);
-
 }
-static LwqqAction qq_async_opt = {
-    .login_complete = login_stage_1,
-    .new_friend = friend_come,
-    .new_group = group_come,
-    .poll_msg = qq_msg_check,
-    .poll_lost = lost_connection,
-    .upload_fail = upload_content_fail,
-    .need_verify2 = show_verify_image,
-    .delete_group = delete_group_local,
-    //.discu_account_chg = discu_account_chg,
-    .group_members_chg = flush_group_members,
-};
 #ifdef WITH_MOZJS
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
 {
@@ -1660,9 +1654,10 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
     event = lwqq_info_get_group_name_list(lc,NULL);
     lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
 }
-static void login_stage_1(LwqqClient* lc,LwqqErrorCode err)
+static void login_stage_1(LwqqClient* lc,LwqqErrorCode* p_err)
 {
     //add a valid check
+	LwqqErrorCode err = *p_err;
     if(!lwqq_client_valid(lc)) return;
     qq_account* ac = lwqq_client_userdata(lc);
     PurpleConnection* gc = purple_account_get_connection(ac->account);
@@ -1743,7 +1738,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
         }
         if(err == LWQQ_EC_LOST_CONN){
-            ac->qq->action->poll_lost(ac->qq);
+			vp_do_repeat(ac->qq->events->poll_lost, NULL);
         }
     }
     if(mmsg->upload_retry <0)
@@ -1996,7 +1991,7 @@ static void qq_group_add_or_join(PurpleConnection *gc, GHashTable *data)
     if(group->data == NULL){
         //ignore discu group
         //if(group->type == LWQQ_GROUP_DISCU) return;
-        group_come(lc,group);
+        group_come(lc,&group);
         qq_chat_group* cg = group->data;
         PurpleConversation* conv = CGROUP_GET_CONV(cg);
         serv_got_joined_chat(gc, purple_conv_chat_get_id(PURPLE_CONV_CHAT(conv)), try_get(group->account,group->gid));
@@ -3098,6 +3093,31 @@ static int relink_keepalive(void* data)
     lwqq_relink(ac->qq);
     return 1;
 }
+#if 0
+    .upload_fail = upload_content_fail,
+    .delete_group = delete_group_local,
+#endif
+static void init_client_events(LwqqClient* lc)
+{
+	lwqq_add_event(lc->events->login_complete,
+			_C_(2p,login_stage_1,lc, &lc->args->login_ec));
+	lwqq_add_event(lc->events->new_friend,
+			_C_(2p,friend_come,lc, &lc->args->buddy));
+	lwqq_add_event(lc->events->new_group,
+			_C_(2p,group_come,lc, &lc->args->group));
+	lwqq_add_event(lc->events->poll_msg,
+			_C_(p,qq_msg_check,lc));
+	lwqq_add_event(lc->events->poll_lost,
+			_C_(p,lost_connection,lc));
+	lwqq_add_event(lc->events->need_verify,
+			_C_(2p,show_verify_image,lc, &lc->args->vf_image));
+	lwqq_add_event(lc->events->delete_group,
+			_C_(2p,delete_group_local,lc, &lc->args->deleted_group));
+	lwqq_add_event(lc->events->group_member_chg,
+			_C_(2p,flush_group_members,lc, &lc->args->group));
+	lwqq_add_event(lc->events->upload_fail,
+			_C_(4p,upload_content_fail,lc, &lc->args->serv_id, &lc->args->content, &lc->args->err));
+}
 
 static void qq_login(PurpleAccount *account)
 {
@@ -3112,7 +3132,7 @@ static void qq_login(PurpleAccount *account)
     }
     g_ref_count ++ ;
     ac->gc = pc;
-    ac->qq->action= &qq_async_opt;
+	init_client_events(ac->qq);
     
     lwqq_bit_set(ac->flag, IGNORE_FONT_SIZE,purple_account_get_bool(account, "disable_custom_font_size", FALSE));
     lwqq_bit_set(ac->flag, IGNORE_FONT_FACE, purple_account_get_bool(account, "disable_custom_font_face", FALSE));
@@ -3154,7 +3174,6 @@ static void qq_login(PurpleAccount *account)
     
     const char* status = purple_status_get_id(purple_account_get_active_status(ac->account));
     lwqq_login(ac->qq, qq_status_from_str(status), NULL);
-
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info)
