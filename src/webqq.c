@@ -192,7 +192,7 @@ static void action_about_webqq(PurplePluginAction *action)
             "<b>Author</b>:xiehuc xiehuc@gmail.com"
             "</p><br/>"
             );
-	char flags[1024];
+	char flags[1024] = {0};
 	format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s%s<br/></p>",
 			lwqq_features&LWQQ_WITH_LIBEV?"-with-libev<br/>":"",
 			lwqq_features&LWQQ_WITH_LIBUV?"-with-libuv<br/>":"",
