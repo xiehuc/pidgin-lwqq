@@ -1720,7 +1720,7 @@ static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
 }
 
 //send back receipt
-static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what)
+static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what,long retry)
 {
     if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) goto failed;
     qq_account* ac = lwqq_async_event_get_owner(ev)->data;
@@ -1733,12 +1733,17 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
         static char buf[1024]={0};
         PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
+        if(err == LWQQ_EC_LOST_CONN){
+			vp_do_repeat(ac->qq->events->poll_lost, NULL);
+        }else if(err == 108 && retry>0) {
+			LwqqAsyncEvent* event = lwqq_msg_send(ac->qq, mmsg);
+			lwqq_async_add_event_listener(event, _C_(4pl,send_receipt,event, msg, serv_id, what,retry-1));
+			return;
+		}
+
         if(conv && err > 0){
             snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
             qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
-        }
-        if(err == LWQQ_EC_LOST_CONN){
-			vp_do_repeat(ac->qq->events->poll_lost, NULL);
         }
     }
     if(mmsg->upload_retry <0)
@@ -1811,7 +1816,7 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 	}
 
     LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
-    lwqq_async_add_event_listener(ev,_C_(4p, send_receipt,ev,msg,strdup(who),strdup(what)));
+    lwqq_async_add_event_listener(ev,_C_(4pl, send_receipt,ev,msg,strdup(who),strdup(what),2L));
 
     return !send_visual;
 }
@@ -1842,7 +1847,7 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
 
     LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq,mmsg);
-    lwqq_async_add_event_listener(ev, _C_(4p,send_receipt,ev,msg,s_strdup(group->gid),s_strdup(message)));
+    lwqq_async_add_event_listener(ev, _C_(4pl,send_receipt,ev,msg,s_strdup(group->gid),s_strdup(message),2L));
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
 
     return 1;
