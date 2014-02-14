@@ -3000,6 +3000,8 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Text Lighter In Dark Theme"), "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
+	option = purple_account_option_bool_new(_("SSL"), "ssl", TRUE);
+	options = g_list_append(options,option);
     option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Don't Download Group Pic(Reduce Network Transfer)"), "no_download_group_pic", FALSE);
@@ -3149,6 +3151,7 @@ static void qq_login(PurpleAccount *account)
 	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", TRUE));
     lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
+	lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", TRUE);
     int relink_retry = 0;
     
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
