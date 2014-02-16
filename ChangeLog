@@ -1,6 +1,16 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+0.2d Release Note(14-02-16):
+	Mozjs改为可选依赖
+	所见即所发送
+	支持Mozjs-17.0版本
+	发送IM图片和群图片时延迟发送,增加成功率
+	统一VERBOSE信息格式
+	hash错误提示增加链接
+	修理Windows平台上编译问题.
+	
+
 0.2c Release Note:
 	完全跨平台（linux，macosx，windows）
 	使用libcurl的cookie管理
