@@ -2730,6 +2730,7 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
     }
     lwqq_ct_free(ct);
 }
+
 static void qq_merge_online_history(PurpleBuddy* buddy)
 {
     PurpleConnection* gc = buddy->account->gc;
