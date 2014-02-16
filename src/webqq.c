@@ -2776,8 +2776,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
         //act = g_list_append(act,action);
         action = purple_menu_action_new(_("Send Email"),(PurpleCallback)qq_send_mail,node,NULL);
         act  = g_list_append(act,action);
-        action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
-        act = g_list_append(act,action);
+        //action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
+        //act = g_list_append(act,action);
         action = purple_menu_action_new(_("Delete Oneside"),(PurpleCallback)qq_remove_buddy_oneside,buddy,NULL);
         act = g_list_append(act,action);
     } else if(PURPLE_BLIST_NODE_IS_CHAT(node)) {
@@ -2788,8 +2788,8 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
             act = g_list_append(act,action);
             action = purple_menu_action_new(_("Change Business Card"),(PurpleCallback)qq_set_self_card,node,NULL);
             act = g_list_append(act,action);
-            action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_group_history,chat,NULL);
-            act = g_list_append(act,action);
+            //action = purple_menu_action_new(_("Merge Online History"),(PurpleCallback)qq_merge_group_history,chat,NULL);
+            //act = g_list_append(act,action);
         }
         action = purple_menu_action_new(_("Block"),(PurpleCallback)qq_block_chat,node,NULL);
         act = g_list_append(act,action);
