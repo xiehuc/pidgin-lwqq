@@ -203,8 +203,7 @@ static void action_about_webqq(PurplePluginAction *action)
 			lwqq_features&LWQQ_WITH_LIBEV?"-with-libev<br/>":"",
 			lwqq_features&LWQQ_WITH_LIBUV?"-with-libuv<br/>":"",
 			lwqq_features&LWQQ_WITH_SQLITE?"-with-sqlite<br/>":"",
-			lwqq_features&LWQQ_WITH_MOZJS?"-with-mozjs<br/>":"",
-			lwqq_features&LWQQ_WITH_SSL?"-ssl<br/>":""
+			lwqq_features&LWQQ_WITH_MOZJS?"-with-mozjs<br/>":""
 			);
 	g_string_append(info,flags);
 
@@ -3007,7 +3006,7 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
     option = purple_account_option_bool_new(_("Text Lighter In Dark Theme"), "dark_theme_fix", FALSE);
     options = g_list_append(options, option);
-	option = purple_account_option_bool_new(_("SSL"), "ssl", TRUE);
+	option = purple_account_option_bool_new(_("SSL(encrypt on chat)"), "ssl", FALSE);
 	options = g_list_append(options,option);
     option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
     options = g_list_append(options, option);
@@ -3158,7 +3157,7 @@ static void qq_login(PurpleAccount *account)
 	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", SEND_VISUAL_DEFAULT));
     lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
-	lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", TRUE);
+	lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", FALSE);
     int relink_retry = 0;
     
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
