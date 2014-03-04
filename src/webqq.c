@@ -199,7 +199,7 @@ static void action_about_webqq(PurplePluginAction *action)
             "</p><br/>"
             );
 	char flags[1024] = {0};
-	format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s%s<br/></p>",
+	format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s<br/></p>",
 			lwqq_features&LWQQ_WITH_LIBEV?"-with-libev<br/>":"",
 			lwqq_features&LWQQ_WITH_LIBUV?"-with-libuv<br/>":"",
 			lwqq_features&LWQQ_WITH_SQLITE?"-with-sqlite<br/>":"",
@@ -1472,12 +1472,17 @@ static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
     vp_do(code->cmd,NULL);
 }
 
+static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code);
 static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
 {
     //valid client make sure it doesn't be freed
     LwqqClient* lc = code->lc;
     if(!lwqq_client_valid(lc)) return;
-    vp_do(code->cmd,NULL);
+    lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
+	char cmd[512];
+	snprintf(cmd,sizeof(cmd),"xdg-open '%s/%s'",LWQQ_CACHE_DIR,lc->username);
+	system(cmd);
+	show_verify_image(lc, &code);
 }
 
 static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
@@ -1495,7 +1500,6 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
 
     code_pic = purple_request_field_image_new("code_pic", "code", code->data, code->size);
     purple_request_field_group_add_field(field_group, code_pic);
-    lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
 
     code_entry = purple_request_field_string_new("code_entry", "input", "", FALSE);
     purple_request_field_set_required(code_entry,TRUE);
@@ -1504,7 +1508,7 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
     purple_request_fields(ac->account, NULL,
                           _("Captcha"), NULL,
                           fields, _("OK"), G_CALLBACK(input_verify_image),
-                          _("Cancel"), G_CALLBACK(cancel_verify_image),
+                          _("View Outside"), G_CALLBACK(cancel_verify_image),
                           ac->account, NULL, NULL, code);
 
     return ;
@@ -2600,6 +2604,7 @@ static void qq_get_group_info(PurpleBlistNode* node)
     lwqq_async_add_evset_listener(set, _C_(2p,display_group_info,ac,g));
 }
 
+#if 0
 static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,LwqqHistoryMsgList* history)
 {
     LwqqClient* lc = ev->lc;
@@ -2768,6 +2773,7 @@ static void qq_merge_group_history(PurpleChat* chat)
     ct->cmd = _C_(3p,download_online_history_begin,g,ct,ac);
     show_confirm_table(lc, ct);
 }
+#endif
 static GList* qq_blist_node_menu(PurpleBlistNode* node)
 {
     GList* act = NULL;
