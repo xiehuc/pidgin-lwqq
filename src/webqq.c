@@ -1679,6 +1679,9 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode* p_err)
         case LWQQ_EC_NETWORK_ERROR:
             purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_OTHER_ERROR,_("Network Error"));
             return;
+		case LWQQ_EC_LOGIN_NEED_BARCODE:
+			purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, lc->error_description);
+			return;
         default:
             purple_connection_error_reason(gc,PURPLE_CONNECTION_ERROR_NETWORK_ERROR,lc->last_err);
             return;
