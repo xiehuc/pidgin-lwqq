@@ -1126,8 +1126,12 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
             friend_come(lc, &buddy);
         }
     }
+	PurpleAccount* account = ((qq_account*)lc->data)->account;
     LIST_FOREACH(buddy,&blist->removed_friends,entries){
         PurpleBuddy* b = buddy->data;
+		PurpleConversation* conv = 
+			purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber?:buddy->uin, account);
+		if(conv) purple_conversation_destroy(conv);
         purple_blist_remove_buddy(b);
     }
 }
