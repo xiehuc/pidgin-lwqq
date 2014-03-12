@@ -1129,6 +1129,7 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
 	PurpleAccount* account = ((qq_account*)lc->data)->account;
     LIST_FOREACH(buddy,&blist->removed_friends,entries){
         PurpleBuddy* b = buddy->data;
+		//close opened chat window
 		PurpleConversation* conv = 
 			purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber?:buddy->uin, account);
 		if(conv) purple_conversation_destroy(conv);
@@ -1864,7 +1865,10 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
 
     LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq,mmsg);
     lwqq_async_add_event_listener(ev, _C_(4pl,send_receipt,ev,msg,s_strdup(group->gid),s_strdup(message),2L));
+#ifndef APPLE
+	//in adium it would automatic type send message
     purple_conversation_write(conv,NULL,message,flags,time(NULL));
+#endif
 
     return 1;
 }
