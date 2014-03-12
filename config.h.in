@@ -9,5 +9,7 @@
 #define GLOBAL_DATADIR "@datadir@"
 #define VERSION "@version@"
 
+#cmakedefine OPEN_PROG "@OPEN_PROG@"
+
 #endif /* __CONFIG_H__ */
 

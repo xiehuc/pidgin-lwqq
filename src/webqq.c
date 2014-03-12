@@ -224,7 +224,7 @@ static void visit_self_infocenter(PurplePluginAction *action)
     PurpleConnection* gc = action->context;
     qq_account* ac = purple_connection_get_protocol_data(gc);
     char url[256]={0};
-    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
+    snprintf(url,sizeof(url),OPEN_PROG" 'http://user.qzone.qq.com/%s/infocenter'",ac->qq->myself->uin);
     system(url);
 }
 static void user_help(PurplePluginAction* action)
@@ -1480,7 +1480,7 @@ static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
     if(!lwqq_client_valid(lc)) return;
     lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
 	char cmd[512];
-	snprintf(cmd,sizeof(cmd),"xdg-open '%s/%s'",LWQQ_CACHE_DIR,lc->username);
+	snprintf(cmd,sizeof(cmd),OPEN_PROG" '%s/%s'",LWQQ_CACHE_DIR,lc->username);
 	system(cmd);
 	show_verify_image(lc, &code);
 }
@@ -2199,7 +2199,7 @@ static void qq_remove_buddy_oneside(PurpleBuddy* buddy)
 static void visit_qqzone(LwqqBuddy* buddy)
 {
     char url[256]={0};
-    snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
+    snprintf(url,sizeof(url),OPEN_PROG" 'http://user.qzone.qq.com/%s'",buddy->qqnumber);
     system(url);
 }
 
@@ -2212,7 +2212,7 @@ static void qq_visit_qzone(PurpleBlistNode* node)
     if(ac->flag&QQ_USE_QQNUM){
         const char* qqnum = purple_buddy_get_name(buddy);
         char url[256]={0};
-        snprintf(url,sizeof(url),"xdg-open 'http://user.qzone.qq.com/%s'",qqnum);
+        snprintf(url,sizeof(url),OPEN_PROG" 'http://user.qzone.qq.com/%s'",qqnum);
         system(url);
         return;
     }else{
@@ -2236,7 +2236,7 @@ static void qq_send_member_mail(LwqqSimpleBuddy* sb)
 {
     char buf[128] = {0};
     if(sb->qq){
-        snprintf(buf, sizeof(buf), "xdg-open 'mailto: %s<%s@qq.com>'",
+        snprintf(buf, sizeof(buf), OPEN_PROG" 'mailto: %s<%s@qq.com>'",
                 sb->card?:sb->nick,sb->qq);
         system(buf);
     }
@@ -2262,10 +2262,10 @@ static void qq_send_mail(PurpleBlistNode* n)
     }else{
         buddy = b->proto_data;
         if(buddy->email) snprintf(buf,sizeof(buf),
-                "xdg-open 'mailto: %s<%s>'",buddy->markname?:buddy->nick,
+                OPEN_PROG" 'mailto: %s<%s>'",buddy->markname?:buddy->nick,
                 buddy->email);
         else if(buddy->qqnumber) snprintf(buf,sizeof(buf),
-                "xdg-open 'mailto: %s<%s@qq.com>'",buddy->markname?:
+                OPEN_PROG" 'mailto: %s<%s@qq.com>'",buddy->markname?:
                 buddy->nick,buddy->qqnumber);
         else return;
     }

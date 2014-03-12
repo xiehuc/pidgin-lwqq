@@ -27,6 +27,7 @@ if(LINUX)
     set(PURPLE_DATADIR "${PURPLE_DATADIR}/")
     exec_program("pkg-config --modversion purple 2>/dev/null"
         OUTPUT_VARIABLE PURPLE_VERSION)
+	set(OPEN_PROG "xdg-open")
 endif()
 
 if(APPLE)
@@ -34,6 +35,7 @@ if(APPLE)
 		"${PROJECT_SOURCE_DIR}/../adium/Frameworks/" )
 	find_library(LIBPURPLE NAMES "libpurple" PATHS "${CMAKE_PERFIX_PATH}")
 	find_library(GLIB NAMES "libglib" PATHS "${CMAKE_PERFIX_PATH}")
+	set(OPEN_PROG "open")
 endif()
 
 if(WIN32)
@@ -55,6 +57,7 @@ if(WIN32)
     find_package(GLIB2 REQUIRED)
     
     get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
+	set(OPEN_PROG "start")
 endif(WIN32)
 
 add_definitions(-Wall)

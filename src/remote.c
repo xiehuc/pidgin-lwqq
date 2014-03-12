@@ -73,7 +73,7 @@ void qq_remote_init()
 void qq_remote_call(qq_account* ac,const char* url)
 {
     char buf[2048];
-    snprintf(buf,sizeof(buf),"xdg-open 'http://127.0.0.1:%d/?%s&%s'",
+    snprintf(buf,sizeof(buf),OPEN_PROG" 'http://127.0.0.1:%d/?%s&%s'",
             PORT,url,lwqq_get_cookies(ac->qq));
     printf("%s\n",lwqq_get_cookies(ac->qq));
     system(buf);
