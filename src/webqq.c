@@ -3076,7 +3076,6 @@ static void version_statics(qq_account* ac,LwqqConfirmTable* ct)
         snprintf(post,sizeof(post),"v=%s",info.version);
         LwqqHttpRequest *req = lwqq_http_request_new(url);
         req->lc = ac->qq;
-        lwqq_http_set_option(req, LWQQ_HTTP_NOT_SET_COOKIE,1L);
         req->do_request_async(req,1,post,_C_(p,lwqq_http_request_free,req));
     }
 }
