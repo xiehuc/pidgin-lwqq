@@ -93,10 +93,11 @@ static int did_dispatch(void* param)
 
 void qq_dispatch(LwqqCommand cmd,unsigned long timeout)
 {
-    LwqqCommand* d = s_malloc0(sizeof(*d));
-    *d = cmd;
+	if(timeout==0)timeout=10;
+	LwqqCommand* d = s_malloc0(sizeof(*d));
+	*d = cmd;
 
-    purple_timeout_add(timeout,did_dispatch,d);
+	purple_timeout_add(timeout,did_dispatch,d);
 }
 qq_account* qq_account_new(PurpleAccount* account)
 {
