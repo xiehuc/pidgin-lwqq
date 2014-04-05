@@ -956,6 +956,12 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     LwqqGroup* group = find_group_by_gid(lc,(msg->super.super.type==LWQQ_MS_DISCU_MSG)?msg->discu.did:msg->super.from);
 
     if(group == NULL) return FAILED;
+	 int seq = group->last_seq;
+    if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg)==1){
+		 char lost_msg[256];
+		 snprintf(lost_msg, sizeof(lost_msg), "lost message from #%d to #%d",seq+1,msg->group.seq-1);
+       qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));
+	 }
 
     //force open dialog
     static char buf[BUFLEN] ;
@@ -1845,7 +1851,6 @@ static int qq_send_chat(PurpleConnection *gc, int id, const char *message, Purpl
     LwqqGroup* group = find_group_by_qqnumber(ac->qq,conv->name);
     LwqqMsg* msg;
 
-    
     msg = lwqq_msg_new(LWQQ_MS_GROUP_MSG);
     LwqqMsgMessage *mmsg = (LwqqMsgMessage*)msg;
     mmsg->super.to = s_strdup(group->gid);
