@@ -28,8 +28,8 @@ Quick Install
 
 ### Building From Source
 
-    git submodule init
-    git submodule update
+compile and install [lwqq](https://github.com/xiehuc/lwqq) library
+
     mkdir build;cd build
     cmake ..
     make

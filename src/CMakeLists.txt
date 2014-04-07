@@ -18,8 +18,7 @@ include_directories(
     ${LIBPURPLE_INCLUDE_DIRS}
     ${GLIB2_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/liblwqq
-    ../liblwqq/lib
+	 ${LWQQ_INCLUDE_DIRS}
     )
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-strict-aliasing")
@@ -32,7 +31,7 @@ endif()
 target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
-	lwqq-static
+	 ${LWQQ_LIBRARIES}
     )
 if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)

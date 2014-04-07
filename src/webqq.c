@@ -957,7 +957,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 
     if(group == NULL) return FAILED;
 	 int seq = group->last_seq;
-    if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg)==1){
+    if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg, group)==1){
 		 char lost_msg[256];
 		 snprintf(lost_msg, sizeof(lost_msg), "lost message from #%d to #%d",seq+1,msg->group.seq-1);
        qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));

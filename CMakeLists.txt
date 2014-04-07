@@ -2,11 +2,10 @@ project(libwebqq)
 cmake_minimum_required(VERSION 2.6)
 set(VERSION_MAJOR "0")
 set(VERSION_MINOR "2")
-set(VERSION_PATCH "d")
+set(VERSION_PATCH "4")
 
 set(CMAKE_MODULE_PATH 
     ${CMAKE_SOURCE_DIR}/cmake 
-    ${CMAKE_SOURCE_DIR}/liblwqq/cmake
     ${CMAKE_MODULE_PATH}
     )
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -19,6 +18,7 @@ if(LINUX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
+	 pkg_check_modules(LWQQ REQUIRED lwqq>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
@@ -83,16 +83,12 @@ else()
     set(ENABLE_NLS false)
 endif()
 
-set(WITH_LIBUV Off CACHE BOOL "Use Libuv To Provide Async ")
-set(LWQQ_INSTALL Off CACHE BOOL "Install Lwqq Library")
-
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)
 set(datadir ${SHARE_DIR}/lwqq)
 set(version "${VERSION_MAJOR}.${VERSION_MINOR}${VERSION_PATCH}")
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
-add_subdirectory(liblwqq)
 add_subdirectory(src)
 add_subdirectory(res)
 add_subdirectory(po)

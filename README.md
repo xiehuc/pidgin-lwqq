@@ -34,8 +34,8 @@ lwqq 即是 linux webqq 之意
 
 ### 从源代码编译
 
-    git submodule init
-    git submodule update
+编译并安装 [lwqq](https://github.com/xiehuc/lwqq) 库
+
     mkdir build;cd build
     cmake ..
     make
