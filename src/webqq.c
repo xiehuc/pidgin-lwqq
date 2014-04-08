@@ -2599,7 +2599,7 @@ static void display_group_info(qq_account* ac,LwqqGroup* g)
     //ADD_STRING("创建时间",ctime(&g->createtime));
     purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
 #undef ADD_STRING
-    lwdb_userdb_update_group_info(ac->db, g);
+    lwdb_userdb_update_group_info(ac->db, &g);
 }
 
 static void qq_get_group_info(PurpleBlistNode* node)
@@ -2885,7 +2885,7 @@ static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
         lwqq_buddy_free(b);
         s_free(who);
     }else{
-        lwdb_userdb_update_buddy_info(ac->db, b);
+        lwdb_userdb_update_buddy_info(ac->db, &b);
     }
 #undef ADD_INFO
 #undef ADD_HEADER
@@ -3175,10 +3175,10 @@ static void qq_login(PurpleAccount *account)
     lwqq_bit_set(ac->flag, REMOVE_DUPLICATED_MSG, purple_account_get_bool(account,"remove_duplicated_msg",FALSE));
     lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
     lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
-	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", SEND_VISUAL_DEFAULT));
+	 lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", SEND_VISUAL_DEFAULT));
     lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
-	lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", FALSE);
+	 lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", FALSE);
     int relink_retry = 0;
     
     if((relink_retry = purple_account_get_int(account, "relink_retry", 0))>0)
