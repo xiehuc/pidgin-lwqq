@@ -53,6 +53,7 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     LwdbUserDB* db;
+	 LwqqExtension* db_ext;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
     enum {
         DISCONNECT,

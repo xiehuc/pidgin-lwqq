@@ -1,6 +1,0 @@
--I ../
--I ./
--I ../liblwqq/lib
--I /usr/include/libpurple/
--I /usr/include/curl/
--I /usr/include/js

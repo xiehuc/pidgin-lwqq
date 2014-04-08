@@ -2570,7 +2570,8 @@ static void set_group_alias(PurpleBlistNode* node,const char* mark)
     else
         ev = lwqq_info_change_discu_topic(lc, group, mark);
     lwqq_async_add_event_listener(ev, _C_(2p,set_group_alias_local,node,s_strdup(mark)));
-    lwqq_async_add_event_listener(ev, _C_(2p,lwdb_userdb_update_group_info,ac->db, group));
+	 //LwdbExtension has already done this
+    //lwqq_async_add_event_listener(ev, _C_(2p,lwdb_userdb_update_group_info,ac->db, &group));
 }
 static void qq_set_group_alias(PurpleBlistNode* node)
 {
@@ -3185,6 +3186,8 @@ static void qq_login(PurpleAccount *account)
         ac->relink_timer = purple_timeout_add_seconds(relink_retry*60, relink_keepalive, ac);
     lwqq_log_set_level(purple_account_get_int(account,"verbose",0));
     ac->db = lwdb_userdb_new(username,NULL,0);
+	 LwqqExtension* db_ext = lwdb_make_extension(ac->db);
+	 db_ext->init(ac->qq, db_ext);
     ac->qq->data = ac;
     
     //for empathy

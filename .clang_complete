@@ -1,0 +1,4 @@
+-I /usr/local/include/lwqq
+-I /usr/include/libpurple
+-I /usr/include/curl
+-I /usr/include/js
