@@ -239,13 +239,7 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum)
     if(node->type != NODE_IS_GROUP) return NULL;
     return (LwqqGroup*)node->node;
 #else
-    LwqqGroup* group;
-    LIST_FOREACH(group,&lc->groups,entries) {
-        if(!group->account) continue;
-        if(strcmp(group->account,qqnum)==0)
-            return group;
-    }
-    return NULL;
+	 return lwqq_group_find_group_by_qqnumber(lc, qqnum);
 #endif
 }
 

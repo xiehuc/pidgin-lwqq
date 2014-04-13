@@ -11,5 +11,8 @@
 
 #cmakedefine OPEN_PROG "@OPEN_PROG@"
 
+//use hash to quickly find friend and group
+#define QQ_USE_FAST_INDEX 1
+
 #endif /* __CONFIG_H__ */
 

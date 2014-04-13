@@ -20,9 +20,6 @@
 #endif
 
 #define QQ_MAGIC 0x4153
-#define QQ_USE_FAST_INDEX 1
-#define SUCCESS 0
-#define FAILED -1
 #define BUFLEN 15000
 
 #ifdef USE_LIBEV
@@ -53,7 +50,6 @@ typedef struct qq_account {
     PurpleAccount* account;
     PurpleConnection* gc;
     LwdbUserDB* db;
-	 LwqqExtension* db_ext;
     int disable_send_server;///< this ensure not send buddy category change etc event to server
     enum {
         DISCONNECT,

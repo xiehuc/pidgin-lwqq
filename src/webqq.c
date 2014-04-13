@@ -955,7 +955,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     qq_account* ac = lwqq_client_userdata(lc);
     LwqqGroup* group = find_group_by_gid(lc,(msg->super.super.type==LWQQ_MS_DISCU_MSG)?msg->discu.did:msg->super.from);
 
-    if(group == NULL) return FAILED;
+    if(group == NULL) return LWQQ_EC_ERROR;
 	 int seq = group->last_seq;
     if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg, group)==1){
 		 char lost_msg[256];
@@ -997,7 +997,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
     }//else set user list in cgroup_got_msg
 
     qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV, buf, msg->time);
-    return SUCCESS;
+    return LWQQ_EC_OK;
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 {
@@ -1109,7 +1109,7 @@ static void write_buddy_to_db(LwqqClient* lc,LwqqBuddy* b)
 {
     qq_account* ac = lwqq_client_userdata(lc);
 
-    lwdb_userdb_insert_buddy_info(ac->db, b);
+    lwdb_userdb_insert_buddy_info(ac->db, &b);
     friend_come(lc, &b);
 }
 static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
@@ -1193,7 +1193,7 @@ void qq_msg_check(LwqqClient* lc)
     }
     msg = TAILQ_FIRST(&l->head);
     while(msg) {
-        int res = SUCCESS;
+        int res = LWQQ_EC_OK;
         if(msg->msg) {
             switch(lwqq_mt_bits(msg->msg->type)) {
             case LWQQ_MT_MESSAGE:
@@ -1263,7 +1263,7 @@ void qq_msg_check(LwqqClient* lc)
 
         prev = msg;
         msg = TAILQ_NEXT(msg,entries);
-        if(res == SUCCESS){
+        if(res == LWQQ_EC_OK){
             TAILQ_REMOVE(&l->head,prev, entries);
             lwqq_msg_free(prev->msg);
             s_free(prev);
@@ -1289,18 +1289,18 @@ void qq_msg_check(LwqqClient* lc)
 static void login_stage_f(LwqqClient* lc)
 {
     LwqqBuddy* buddy;
-    LwqqGroup* group,*discu;
+    LwqqGroup* group;
     qq_account* ac = lc->data;
     lwdb_userdb_begin(ac->db);
     LIST_FOREACH(buddy,&lc->friends,entries) {
         if(buddy->last_modify == -1 || buddy->last_modify == 0){
-            lwdb_userdb_insert_buddy_info(ac->db, buddy);
+            lwdb_userdb_insert_buddy_info(ac->db, &buddy);
             friend_come(lc, &buddy);
         }
     }
     LIST_FOREACH(group,&lc->groups,entries){
         if(group->last_modify == -1 || group->last_modify == 0){
-            lwdb_userdb_insert_group_info(ac->db, group);
+            lwdb_userdb_insert_group_info(ac->db, &group);
             group_come(lc,&group);
         }
     }
@@ -1308,7 +1308,6 @@ static void login_stage_f(LwqqClient* lc)
     if(ac->flag & CACHE_TALKGROUP){
         LIST_FOREACH(discu,&lc->discus,entries){
             if(discu->last_modify==-1){
-                lwqq_override(discu->account, s_strdup(discu->info_seq));
                 lwdb_userdb_insert_discu_info(ac->db, discu);
                 discu_come(lc,&discu);
             }
@@ -1421,6 +1420,12 @@ static void login_stage_3(LwqqClient* lc)
     }
 
     LwqqGroup* discu;
+	 LIST_FOREACH(discu,&lc->discus,entries){
+		 if(ac->flag&CACHE_TALKGROUP && discu->last_modify == LWQQ_LAST_MODIFY_UNKNOW)
+			 lwdb_userdb_insert_discu_info(ac->db, &discu);
+		 discu_come(lc, &discu);
+	 }
+#if 0
     if(ac->flag&CACHE_TALKGROUP){
         LIST_FOREACH(discu,&lc->discus,entries){
             if(!discu->account||discu->last_modify==-1){
@@ -1433,10 +1438,12 @@ static void login_stage_3(LwqqClient* lc)
         }
     }else{
         LIST_FOREACH(discu,&lc->discus,entries){
-            lwqq_override(discu->account, s_strdup(discu->did));
+			  //discu account is always generated
+            //lwqq_override(discu->account, s_strdup(discu->did));
             discu_come(lc, &discu);
         }
     }
+#endif
 
     lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
 
