@@ -1304,6 +1304,7 @@ static void login_stage_f(LwqqClient* lc)
             group_come(lc,&group);
         }
     }
+#if 0
     if(ac->flag & CACHE_TALKGROUP){
         LIST_FOREACH(discu,&lc->discus,entries){
             if(discu->last_modify==-1){
@@ -1313,6 +1314,7 @@ static void login_stage_f(LwqqClient* lc)
             }
         }
     }
+#endif
     lwdb_userdb_commit(ac->db);
 }
 /*
