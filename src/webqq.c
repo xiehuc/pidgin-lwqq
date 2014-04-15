@@ -962,6 +962,7 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 		 snprintf(lost_msg, sizeof(lost_msg), "lost message from #%d to #%d",seq+1,msg->group.seq-1);
        qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));
 	 }
+	 lwqq_msg_check_member_chg(lc, (LwqqMsg**)&msg, group);
 
     //force open dialog
     static char buf[BUFLEN] ;
