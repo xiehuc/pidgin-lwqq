@@ -425,39 +425,6 @@ static void qq_create_discu(PurplePluginAction* action)
 
     purple_request_fields(gc, _("Create Discussion"), NULL, NULL, root, _("Create"), G_CALLBACK(create_discu), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
-#if 0
-static void qq_open_recent(PurplePluginAction* action)
-{
-    PurpleConnection* gc = action->context;
-    LwqqBuddy* buddy = action->user_data;
-    PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber, gc->account);
-    if(conv == NULL) purple_conversation_new(PURPLE_CONV_TYPE_IM, gc->account, buddy->qqnumber);
-}
-#endif
-
-#if 0 
-static void add_buddies_to_talkgroup(PurpleConnection* gc,GList* row,void* data)
-{
-}
-
-static void close_add_buddies_to_talkgroup(void* ac)
-{
-}
-
-static void search_result_test(PurplePluginAction* act)
-{
-    PurpleConnection* gc = act->context;
-    PurpleNotifySearchResults* res = purple_notify_searchresults_new();
-    purple_notify_searchresults_column_add(res, purple_notify_searchresults_column_new("QQ"));
-    purple_notify_searchresults_column_add(res, purple_notify_searchresults_column_new("name"));
-    purple_notify_searchresults_button_add(res, PURPLE_NOTIFY_BUTTON_ADD, add_buddies_to_talkgroup);
-    GList* l = NULL;
-    l = g_list_append(l,s_strdup("123456"));
-    l = g_list_append(l,s_strdup("测试"));
-    purple_notify_searchresults_row_add(res, l);
-    purple_notify_searchresults(gc, "添加成员", NULL, NULL, res, close_add_buddies_to_talkgroup, gc->proto_data);
-}
-#endif
 
 static void modify_self_longnick(LwqqClient* lc,LwqqConfirmTable* ct)
 {
@@ -2936,7 +2903,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     PurpleConversation* conv = purple_find_chat(gc, id);
-    LwqqGroup* discu = find_group_by_gid(lc, conv->name);
+    LwqqGroup* discu = find_group_by_qqnumber(lc, conv->name) || find_group_by_gid(lc,conv->name);
     if(discu->type != LWQQ_GROUP_DISCU){
         purple_notify_info(gc,_("Error"),_("Only Discussion Can Add new member"),NULL);
         return;
