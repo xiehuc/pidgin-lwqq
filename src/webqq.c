@@ -920,9 +920,8 @@ static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGro
 static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
     qq_account* ac = lwqq_client_userdata(lc);
-    LwqqGroup* group = find_group_by_gid(lc,(msg->super.super.type==LWQQ_MS_DISCU_MSG)?msg->discu.did:msg->super.from);
+    LwqqGroup* group = msg->group.from;
 
-    if(group == NULL) return LWQQ_EC_ERROR;
 	 int seq = group->last_seq;
     if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg, group)==1){
 		 char lost_msg[256];
@@ -2903,7 +2902,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     qq_account* ac = gc->proto_data;
     LwqqClient* lc = ac->qq;
     PurpleConversation* conv = purple_find_chat(gc, id);
-    LwqqGroup* discu = find_group_by_qqnumber(lc, conv->name) || find_group_by_gid(lc,conv->name);
+    LwqqGroup* discu = find_group_by_qqnumber(lc, conv->name)?:find_group_by_gid(lc,conv->name);
     if(discu->type != LWQQ_GROUP_DISCU){
         purple_notify_info(gc,_("Error"),_("Only Discussion Can Add new member"),NULL);
         return;
