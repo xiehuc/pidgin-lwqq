@@ -548,59 +548,59 @@ static void qq_set_status(PurpleAccount* account,PurpleStatus* status)
 static void friend_come(LwqqClient* lc,LwqqBuddy** p_buddy)
 {
 	LwqqBuddy* buddy = *p_buddy;
-    qq_account* ac = lwqq_client_userdata(lc);
-    ac->disable_send_server = 1;
-    PurpleAccount* account=ac->account;
-    PurpleBuddy* bu = NULL;
-    LwqqFriendCategory* cate;
+	qq_account* ac = lwqq_client_userdata(lc);
+	ac->disable_send_server = 1;
+	PurpleAccount* account=ac->account;
+	PurpleBuddy* bu = NULL;
+	LwqqFriendCategory* cate;
 
-    int cate_index = buddy->cate_index;
-    PurpleGroup* group = NULL;
-    if(cate_index == LWQQ_FRIEND_CATE_IDX_DEFAULT){
-        group = purple_group_new(QQ_DEFAULT_CATE);
-    }else if(cate_index == LWQQ_FRIEND_CATE_IDX_PASSERBY){
-        group = purple_group_new(QQ_PASSERBY_CATE);
-    }else if(cate_index != 0) {
-        LIST_FOREACH(cate,&lc->categories,entries) {
-            if(cate->index==cate_index) {
-                group = purple_group_new(cate->name);
-                break;
-            }
-        }
-    }
+	int cate_index = buddy->cate_index;
+	PurpleGroup* group = NULL;
+	if(cate_index == LWQQ_FRIEND_CATE_IDX_DEFAULT){
+		group = purple_group_new(QQ_DEFAULT_CATE);
+	}else if(cate_index == LWQQ_FRIEND_CATE_IDX_PASSERBY){
+		group = purple_group_new(QQ_PASSERBY_CATE);
+	}else if(cate_index != 0) {
+		LIST_FOREACH(cate,&lc->categories,entries) {
+			if(cate->index==cate_index) {
+				group = purple_group_new(cate->name);
+				break;
+			}
+		}
+	}
 
-    const char* key = try_get(buddy->qqnumber,buddy->uin);
-    const char* disp = try_get(buddy->markname,buddy->nick);
-    bu = purple_find_buddy(account,key);
-    if(bu == NULL) {
-        bu = purple_buddy_new(ac->account,key,(buddy->markname)?buddy->markname:buddy->nick);
-        purple_blist_add_buddy(bu,NULL,group,NULL);
-        //if there isn't a qqnumber we shouldn't save it.
-        if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
-    }
-    purple_buddy_set_protocol_data(bu, buddy);
-    buddy->data = bu;
-    if(purple_buddy_get_group(bu)!=group&&strcmp(purple_buddy_get_group(bu)->name,ac->recent_group_name)!=0) 
-        purple_blist_add_buddy(bu,NULL,group,NULL);
-    if(!bu->alias || strcmp(bu->alias,disp)!=0 )
-        purple_blist_alias_buddy(bu,disp);
-    if(buddy->stat){
-        purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
-    }
-    //this is avaliable when reload avatar in
-    //login_stage_f
-    if(buddy->avatar_len)
-        friend_avatar(ac, buddy);
-    //download avatar 
-    PurpleBuddyIcon* icon;
-    if((icon = purple_buddy_icons_find(account,key))==0) {
-        LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
-        lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
-    }
+	const char* key = try_get(buddy->qqnumber,buddy->uin);
+	const char* disp = try_get(buddy->markname,buddy->nick);
+	bu = purple_find_buddy(account,key);
+	if(bu == NULL) {
+		bu = purple_buddy_new(ac->account,key,(buddy->markname)?buddy->markname:buddy->nick);
+		purple_blist_add_buddy(bu,NULL,group,NULL);
+		//if there isn't a qqnumber we shouldn't save it.
+		if(!buddy->qqnumber) purple_blist_node_set_flags(PURPLE_BLIST_NODE(bu),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
+	}
+	purple_buddy_set_protocol_data(bu, buddy);
+	buddy->data = bu;
+	if(purple_buddy_get_group(bu)!=group&&strcmp(purple_buddy_get_group(bu)->name,ac->recent_group_name)!=0) 
+		purple_blist_add_buddy(bu,NULL,group,NULL);
+	if(!bu->alias || strcmp(bu->alias,disp)!=0 )
+		purple_blist_alias_buddy(bu,disp);
+	if(buddy->stat){
+		purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
+	}
+	//this is avaliable when reload avatar in
+	//login_stage_f
+	if(buddy->avatar_len)
+		friend_avatar(ac, buddy);
+	//download avatar 
+	PurpleBuddyIcon* icon;
+	if((icon = purple_buddy_icons_find(account,key))==0) {
+		LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc,buddy);
+		lwqq_async_add_event_listener(ev,_C_(2p,friend_avatar,ac,buddy));
+	}
 
-    qq_account_insert_index_node(ac, buddy,NULL);
+	qq_account_insert_index_node(ac, buddy, NULL);
 
-    ac->disable_send_server = 0;
+	ac->disable_send_server = 0;
 }
 
 static void qq_set_group_name(qq_chat_group* cg)
@@ -1099,15 +1099,18 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
             friend_come(lc, &buddy);
         }
     }
-	PurpleAccount* account = ((qq_account*)lc->data)->account;
-    LIST_FOREACH(buddy,&blist->removed_friends,entries){
-        PurpleBuddy* b = buddy->data;
-		//close opened chat window
-		PurpleConversation* conv = 
-			purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, buddy->qqnumber?:buddy->uin, account);
-		if(conv) purple_conversation_destroy(conv);
-        purple_blist_remove_buddy(b);
-    }
+	 PurpleAccount* account = ((qq_account*)lc->data)->account;
+	 LIST_FOREACH(buddy,&blist->removed_friends,entries){
+		 const char* key = try_get(buddy->qqnumber,buddy->uin);
+		 //when one side delete, b doesn't remove from blist
+		 //when directly delete, b has already remove from blist
+		 PurpleBuddy* b = purple_find_buddy(account, key);
+		 //close opened chat window
+		 PurpleConversation* conv = 
+			 purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, key, account);
+		 if(conv) purple_conversation_destroy(conv);
+		 if(b) purple_blist_remove_buddy(b);
+	 }
 }
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
 {
