@@ -393,19 +393,25 @@ static void qq_add_group(PurplePluginAction* action)
 }
 static void create_discu(qq_account* ac,PurpleRequestFields* root)
 {
-    LwqqClient* lc = ac->qq;
-    const char* name = purple_request_fields_get_string(root, "name");
-    char* members = s_strdup(purple_request_fields_get_string(root, "members"));
-    char* ptr = members;
-    char* piece;
-    LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
-    while((piece = strsep(&ptr,";"))){
-        LwqqBuddy* b = find_buddy_by_qqnumber(lc, piece);
-        if(b == NULL) b = lwqq_buddy_find_buddy_by_name(lc, piece);
-        lwqq_discu_add_buddy(chg, b);
-    }
-    lwqq_info_create_discu(lc, chg, name);
-    s_free(members);
+	LwqqClient* lc = ac->qq;
+	char err[1024] = {0};
+	const char* name = purple_request_fields_get_string(root, "name");
+	char* members = s_strdup(purple_request_fields_get_string(root, "members"));
+	char* ptr = members;
+	char* piece;
+	LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
+	while((piece = strsep(&ptr,";"))){
+		piece = strtrim(piece);
+		if(strcmp(piece,"")==0) continue;
+		LwqqBuddy* b = find_buddy_by_qqnumber(lc, piece);
+		if(b == NULL) b = lwqq_buddy_find_buddy_by_name(lc, piece);
+		if(b) lwqq_discu_add_buddy(chg, b);
+		else format_append(err, "%s\n", piece);
+	}
+	if(err[0])
+		purple_notify_warning(ac->account, _("Warning"), _("Couldn't find friend"), err);
+	lwqq_info_create_discu(lc, chg, name);
+	s_free(members);
 }
 static void qq_create_discu(PurplePluginAction* action)
 {
@@ -2931,7 +2937,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     else
         b = find_buddy_by_uin(lc, local_id);
     if(b == NULL)
-        b = lwqq_buddy_find_buddy_by_name(lc, local_id)?:find_buddy_by_markname(lc, local_id);
+        b = lwqq_buddy_find_buddy_by_name(lc, local_id);
 	 if(b == NULL){
 		 purple_notify_warning(ac->account, _("Warning"), _("Coundn't find friend"), local_id);
 		 return;

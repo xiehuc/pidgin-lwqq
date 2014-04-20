@@ -268,14 +268,6 @@ LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
 #endif
 }
 
-LwqqBuddy* find_buddy_by_markname(LwqqClient* lc, const char* markname)
-{
-	LwqqBuddy* b;
-	LIST_FOREACH(b, &lc->friends, entries){
-		if(b->markname && strcmp(b->markname,markname)==0) return b;
-	}
-	return NULL;
-}
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*,void*,void*,long);
@@ -323,4 +315,14 @@ void qq_system_log(qq_account* ac,const char* log)
     char buf[8192];
     snprintf(buf,sizeof(buf),"[帐号 %s]:<br>%s",ac->account->username,log);
     purple_log_write(ac->sys_log, PURPLE_LOG_SYSTEM, "system", time(NULL), buf);
+}
+
+char* strtrim(char* source)
+{
+	char* beg = source;
+	while(*beg==' ')++beg;
+	char *end = source+strlen(source)-1;
+	while(*end==' ')--end;
+	end[1]='\0';
+	return beg;
 }

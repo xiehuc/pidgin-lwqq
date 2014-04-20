@@ -120,7 +120,6 @@ void qq_send_offline_file(PurpleBlistNode* node);
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin);
-LwqqBuddy* find_buddy_by_markname(LwqqClient* lc, const char* markname);
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid);
 
@@ -134,5 +133,7 @@ const char* qq_status_to_str(LwqqStatus status);
 LwqqStatus qq_status_from_str(const char* str);
 
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* p);
+
+char* strtrim(char* source);
 
 #endif
