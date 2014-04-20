@@ -1109,7 +1109,10 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
 		 PurpleConversation* conv = 
 			 purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, key, account);
 		 if(conv) purple_conversation_destroy(conv);
-		 if(b) purple_blist_remove_buddy(b);
+		 if(b){
+			 qq_account_remove_index_node(lc->data, buddy, NULL);
+			 purple_blist_remove_buddy(b);
+		 }
 	 }
 }
 static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
@@ -1565,11 +1568,14 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table)
 static void delete_group_local(LwqqClient* lc,const LwqqGroup** p_g)
 {
 	const LwqqGroup* g = *p_g;
-    qq_chat_group* cg = g->data;
-    if(!cg) return;
-    qq_account* ac = lc->data;
-    qq_account_remove_index_node(ac, NULL, g);
-    purple_blist_remove_chat(cg->chat);
+	qq_chat_group* cg = g->data;
+	if(!cg) return;
+	qq_account* ac = lc->data;
+	const char* key = try_get(g->account,g->gid);
+	PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, key, ac->account);
+	if(conv) purple_conversation_destroy(conv);
+	qq_account_remove_index_node(ac, NULL, g);
+	purple_blist_remove_chat(cg->chat);
 }
 static void flush_group_members(LwqqClient* lc,LwqqGroup** d)
 {
@@ -3107,10 +3113,6 @@ static int relink_keepalive(void* data)
     lwqq_relink(ac->qq);
     return 1;
 }
-#if 0
-    .upload_fail = upload_content_fail,
-    .delete_group = delete_group_local,
-#endif
 static void init_client_events(LwqqClient* lc)
 {
 	lwqq_add_event(lc->events->login_complete,
