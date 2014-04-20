@@ -119,10 +119,10 @@ void qq_send_offline_file(PurpleBlistNode* node);
 //=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum);
-LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc,const char* uin);
+LwqqBuddy* find_buddy_by_markname(LwqqClient* lc, const char* markname);
+LwqqGroup* find_group_by_qqnumber(LwqqClient* lc,const char* qqnum);
 LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid);
-struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin);
 
 const char* qq_gender_to_str(LwqqGender gender);
 const char* qq_constel_to_str(LwqqConstel constel);

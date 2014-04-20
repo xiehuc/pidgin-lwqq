@@ -267,6 +267,15 @@ LwqqGroup* find_group_by_gid(LwqqClient* lc,const char* gid)
     return lwqq_group_find_group_by_gid(lc, gid);
 #endif
 }
+
+LwqqBuddy* find_buddy_by_markname(LwqqClient* lc, const char* markname)
+{
+	LwqqBuddy* b;
+	LIST_FOREACH(b, &lc->friends, entries){
+		if(b->markname && strcmp(b->markname,markname)==0) return b;
+	}
+	return NULL;
+}
 void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
 {
     typedef void (*f)(void*,void*,void*,void*,long);
@@ -287,17 +296,6 @@ void vp_func_4pl(CALLBACK_FUNC func,vp_list* vp,void* q)
     long p5 = vp_arg(*vp,long);
     ((f)func)(p1,p2,p3,p4,p5);
 }
-struct qq_extra_info* get_extra_info(LwqqClient* lc,const char* uin)
-{
-#if QQ_USE_FAST_INDEX
-    qq_account* ac = lwqq_client_userdata(lc);
-    index_node* node = g_hash_table_lookup(ac->fast_index.uin_index,uin);
-    if(node == NULL) return NULL;
-    //return &node->info;
-    return NULL;
-#endif
-}
-
 
 LwqqErrorCode qq_download(const char* url,const char* file,const char* dir)
 {

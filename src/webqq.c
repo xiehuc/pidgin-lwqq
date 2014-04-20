@@ -611,7 +611,7 @@ static void qq_set_group_name(qq_chat_group* cg)
     const char* left = cg->group->mask==2? "((":"(";
     const char* right = cg->group->mask==2?"))":")";
     if(hide) strcat(gname,left);
-    strcat(gname,cg->group->markname?:cg->group->name);
+    strcat(gname,cg->group->markname?:cg->group->name?:cg->group->account);
     if(hide){
         strcat(gname,right);
         if(hide==1){
@@ -2906,6 +2906,15 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
         }
     }
 }
+static void receipt_notify_error(qq_account* ac,char* msg,LwqqAsyncEvent* ev)
+{
+	char err[32];
+	if(ev->result != 0){
+		snprintf(err, sizeof(err), "%d", ev->result);
+		purple_notify_error(ac->account, _("Error"), msg, err);
+	}
+	s_free(msg);
+}
 static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* message,const char* local_id)
 {
     qq_account* ac = gc->proto_data;
@@ -2922,12 +2931,17 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* mess
     else
         b = find_buddy_by_uin(lc, local_id);
     if(b == NULL)
-        b = lwqq_buddy_find_buddy_by_name(lc, local_id);
+        b = lwqq_buddy_find_buddy_by_name(lc, local_id)?:find_buddy_by_markname(lc, local_id);
+	 if(b == NULL){
+		 purple_notify_warning(ac->account, _("Warning"), _("Coundn't find friend"), local_id);
+		 return;
+	 }
 
     LwqqDiscuMemChange* chg = lwqq_discu_mem_change_new();
     lwqq_discu_add_buddy(chg, b);
 
-    lwqq_info_change_discu_mem(lc,discu, chg);
+    LwqqAsyncEvent* ev = lwqq_info_change_discu_mem(lc,discu, chg);
+	 lwqq_async_add_event_listener(ev, _C_(3p,receipt_notify_error, ac, s_strdup(_("Change discu member failed")), ev));
 }
 
 PurplePluginProtocolInfo webqq_prpl_info = {
