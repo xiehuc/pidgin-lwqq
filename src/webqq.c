@@ -46,7 +46,6 @@ static void friend_avatar(qq_account* ac,LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group);
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode* err);
 static void login_stage_2(LwqqAsyncEvent* ev,LwqqClient* lc);
-static void add_friend_receipt(LwqqAsyncEvent* ev);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
@@ -76,6 +75,23 @@ static void qq_debug(int l,const char* msg)
 }
 #endif
 
+static void delete_back_broken_buddy(PurpleConnection* pc,char* name)
+{
+    qq_account* ac = pc->proto_data;
+    PurpleBuddy* buddy = purple_find_buddy(ac->account, name);
+    if(buddy){
+        purple_blist_remove_buddy(buddy);
+    }
+}
+static void receipt_notify_error(qq_account* ac,char* msg,LwqqAsyncEvent* ev)
+{
+	char err[32];
+	if(ev->result != 0){
+		snprintf(err, sizeof(err), "errcode:%d", ev->result);
+		purple_notify_error(ac->account, _("Error"), msg, err);
+	}
+	s_free(msg);
+}
 static const char* serv_id_to_local(qq_account* ac,const char* serv_id)
 {
     if(ac->flag & QQ_USE_QQNUM){
@@ -329,8 +345,10 @@ static void add_group_receipt(LwqqAsyncEvent* ev,LwqqGroup* g)
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
-    if(err == 6 ){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("ErrCode:6\nPlease try agagin later\n"),NULL,NULL,NULL);
+    if(err){
+		 char msg[32];
+		 snprintf(msg,sizeof(msg),"errcode:%d",err);
+		 purple_notify_error(ac->account, _("Error"), _("Add Group failed"), msg);
     }
     lwqq_group_free(g);
 }
@@ -2276,15 +2294,6 @@ static void qq_send_mail(PurpleBlistNode* n)
     system(buf);
 }
 
-static void add_friend_receipt(LwqqAsyncEvent* ev)
-{
-    int err = ev->result;
-    LwqqClient* lc = ev->lc;
-    qq_account* ac = lc->data;
-    if(err == 6 ){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("ErrCode:6\nPlease try agagin later\n"),NULL,NULL,NULL);
-    }
-}
 static void add_friend_ask_message(LwqqClient* lc,LwqqConfirmTable* ask,LwqqBuddy* b)
 {
     add_friend(lc,ask,b,s_strdup(ask->input));
@@ -2303,7 +2312,7 @@ static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* mes
         return ;
     }else{
         LwqqAsyncEvent* ev = lwqq_info_add_friend(lc, b,message);
-        lwqq_async_add_event_listener(ev, _C_(p,add_friend_receipt,ev));
+		  lwqq_async_add_event_listener(ev, _C_(3p, receipt_notify_error, lc->data, strdup(_("Add Friend Failed")), ev));
     }
 done:
     lwqq_ct_free(c);
@@ -2315,19 +2324,20 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev,LwqqBuddy* buddy,char* uni_i
     int err = ev->result;
     LwqqClient* lc = ev->lc;
     qq_account* ac = lc->data;
+	 //delete_back_broken_buddy(ac->gc, buddy->name);
     //captcha wrong
     if(err == 10000){
         LwqqAsyncEvent* event = lwqq_info_search_friend(lc,uni_id,buddy);
         lwqq_async_add_event_listener(event, _C_(4p,search_buddy_receipt,event,buddy,uni_id,message));
         return;
     }
-    if(err == LWQQ_EC_NO_RESULT){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("Account not exists or not main display account"),NULL,NULL,NULL);
-        goto failed;
-    }
+	 if(err == LWQQ_EC_NO_RESULT){
+		 purple_notify_info(ac->gc, _("Error"),_("Account not exists or not main display account"),NULL);
+		 goto failed;
+	 }
     if(!buddy->token){
-        purple_notify_message(ac->gc,PURPLE_NOTIFY_MSG_INFO,_("Error Message"),_("Get friend infomation failed"),NULL,NULL,NULL);
-        goto failed;
+		 purple_notify_info(ac->gc, _("Error"),_("Get friend information failed"),NULL);
+		 goto failed;
     }
     LwqqConfirmTable* confirm = s_malloc0(sizeof(*confirm));
     confirm->title = s_strdup(_("Friend Confirm"));
@@ -2342,14 +2352,6 @@ failed:
     lwqq_buddy_free(buddy);
     s_free(message);
     s_free(uni_id);
-}
-static void delete_back_broken_buddy(PurpleConnection* pc,char* name)
-{
-    qq_account* ac = pc->proto_data;
-    PurpleBuddy* buddy = purple_find_buddy(ac->account, name);
-    if(buddy){
-        purple_blist_remove_buddy(buddy);
-    }
 }
 static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* group
 #if PURPLE_OUTDATE
@@ -2379,7 +2381,6 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
         ev = lwqq_info_get_friend_qqnumber(lc,friend);
         lwqq_async_evset_add_event(set,ev);
         lwqq_async_add_evset_listener(set, _C_(3p,lwqq_info_add_group_member_as_friend,lc,friend,NULL));
-        lwqq_client_dispatch(lc,_C_(2p,delete_back_broken_buddy,pc,s_strdup(buddy->name)));
     }else{
         //friend->qqnumber = s_strdup(qqnum);
         LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
@@ -2390,6 +2391,8 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
 #endif
         lwqq_async_add_event_listener(ev, _C_(4p,search_buddy_receipt,ev,friend,s_strdup(uni_id),s_strdup(msg)));
     }
+	 //delete on next cycle
+	 lwqq_client_dispatch(lc,_C_(2p,delete_back_broken_buddy,pc,s_strdup(buddy->name)));
 }
 //#endif
 static gboolean qq_send_attention(PurpleConnection* gc,const char* username,guint type)
@@ -2911,15 +2914,6 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
             lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,s_strdup(who)));
         }
     }
-}
-static void receipt_notify_error(qq_account* ac,char* msg,LwqqAsyncEvent* ev)
-{
-	char err[32];
-	if(ev->result != 0){
-		snprintf(err, sizeof(err), "%d", ev->result);
-		purple_notify_error(ac->account, _("Error"), msg, err);
-	}
-	s_free(msg);
 }
 static void qq_add_buddies_to_discu(PurpleConnection* gc,int id,const char* message,const char* local_id)
 {
