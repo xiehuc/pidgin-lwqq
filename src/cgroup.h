@@ -5,23 +5,23 @@
 struct qq_chat_group_opt;
 
 /*typedef enum {
-    QQ_CGROUP_HIDE_NEW = 1<<1,
-}qq_cgroup_properties;*/
+  QQ_CGROUP_HIDE_NEW = 1<<1,
+  }qq_cgroup_properties;*/
 
 //this is data model for special
 //qq chat group to purple chat group 
 //adapter
 typedef struct qq_chat_group
 {
-    PurpleChat * chat;
-    LwqqGroup * group;
-    int properties;
-    struct qq_chat_group_opt* opt;
+	PurpleChat * chat;
+	LwqqGroup * group;
+	int properties;
+	struct qq_chat_group_opt* opt;
 } qq_chat_group;
 
 struct qq_chat_group_opt
 {
-    void (*new_msg_notice)(struct qq_chat_group* cg);
+	void (*new_msg_notice)(struct qq_chat_group* cg);
 };
 
 #define CGROUP_LWQQ(cg) (cg->group)
@@ -44,3 +44,5 @@ void qq_cgroup_flush_members(qq_chat_group* cg);
 
 unsigned int qq_cgroup_unread_num(qq_chat_group* cg);
 #define CGROUP_UNREAD(cg) qq_cgroup_unread_num(cg)
+
+// vim: tabstop=3 sw=3 sts=3 noexpandtab
