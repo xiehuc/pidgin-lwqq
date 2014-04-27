@@ -3044,7 +3044,7 @@ init_plugin(PurplePlugin *plugin)
 	options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("What you seen Is What you send"), "send_visualbility", SEND_VISUAL_DEFAULT);
 	options = g_list_append(options, option);
-	option = purple_account_option_bool_new(_("Cache Talk Group(Experimental)"),"cache_talk", FALSE);
+	option = purple_account_option_bool_new(_("Cache Talk Group"),"cache_talk", TRUE);
 	options = g_list_append(options, option);
 #if 0 | DISABLED_AREA
 	option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
