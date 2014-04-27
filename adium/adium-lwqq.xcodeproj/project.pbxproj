@@ -20,23 +20,6 @@
 		C01F2C6417B6446300096303 /* translate.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5B17B6446300096303 /* translate.c */; };
 		C01F2C6517B6446300096303 /* trex.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5D17B6446300096303 /* trex.c */; };
 		C01F2C6617B6446300096303 /* webqq.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C5F17B6446300096303 /* webqq.c */; };
-		C01F2C8F17B644EC00096303 /* async.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6A17B644EC00096303 /* async.c */; };
-		C01F2C9117B644EC00096303 /* http.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6D17B644EC00096303 /* http.c */; };
-		C01F2C9217B644EC00096303 /* info.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C6F17B644EC00096303 /* info.c */; };
-		C01F2C9317B644EC00096303 /* internal.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7117B644EC00096303 /* internal.c */; };
-		C01F2C9417B644EC00096303 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7317B644EC00096303 /* json.c */; };
-		C01F2C9517B644EC00096303 /* logger.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7517B644EC00096303 /* logger.c */; };
-		C01F2C9617B644EC00096303 /* login.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7717B644EC00096303 /* login.c */; };
-		C01F2C9717B644EC00096303 /* lwdb.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7917B644EC00096303 /* lwdb.c */; };
-		C01F2C9817B644EC00096303 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7C17B644EC00096303 /* md5.c */; };
-		C01F2C9917B644EC00096303 /* msg.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C7E17B644EC00096303 /* msg.c */; };
-		C01F2C9A17B644EC00096303 /* smemory.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8117B644EC00096303 /* smemory.c */; };
-		C01F2C9B17B644EC00096303 /* swsqlite.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8317B644EC00096303 /* swsqlite.c */; };
-		C01F2C9C17B644EC00096303 /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8517B644EC00096303 /* type.c */; };
-		C01F2C9D17B644EC00096303 /* url.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8717B644EC00096303 /* url.c */; };
-		C01F2C9E17B644EC00096303 /* utility.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8917B644EC00096303 /* utility.c */; };
-		C01F2C9F17B644EC00096303 /* vplist.c in Sources */ = {isa = PBXBuildFile; fileRef = C01F2C8B17B644EC00096303 /* vplist.c */; };
-		C057AA361881A2EF000DD97A /* lwjs.c in Sources */ = {isa = PBXBuildFile; fileRef = C057AA341881A2EF000DD97A /* lwjs.c */; };
 		C0BE62A31763EE4100826A49 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0BE62A21763EE4100826A49 /* Cocoa.framework */; };
 		C0C2851617F2FBB40056627E /* smiley.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0C2851517F2FBB40056627E /* smiley.txt */; };
 		C0E5A5531769333E005C6362 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E5A5521769333E005C6362 /* AIUtilities.framework */; };
@@ -66,44 +49,6 @@
 		C01F2C5D17B6446300096303 /* trex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trex.c; path = ../src/trex.c; sourceTree = "<group>"; };
 		C01F2C5E17B6446300096303 /* trex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = trex.h; path = ../src/trex.h; sourceTree = "<group>"; };
 		C01F2C5F17B6446300096303 /* webqq.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = webqq.c; path = ../src/webqq.c; sourceTree = "<group>"; };
-		C01F2C6717B644EC00096303 /* async_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_impl.h; path = ../liblwqq/lib/async_impl.h; sourceTree = "<group>"; };
-		C01F2C6A17B644EC00096303 /* async.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = async.c; path = ../liblwqq/lib/async.c; sourceTree = "<group>"; };
-		C01F2C6B17B644EC00096303 /* async.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async.h; path = ../liblwqq/lib/async.h; sourceTree = "<group>"; };
-		C01F2C6D17B644EC00096303 /* http.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http.c; path = ../liblwqq/lib/http.c; sourceTree = "<group>"; };
-		C01F2C6E17B644EC00096303 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = ../liblwqq/lib/http.h; sourceTree = "<group>"; };
-		C01F2C6F17B644EC00096303 /* info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = info.c; path = ../liblwqq/lib/info.c; sourceTree = "<group>"; };
-		C01F2C7017B644EC00096303 /* info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = info.h; path = ../liblwqq/lib/info.h; sourceTree = "<group>"; };
-		C01F2C7117B644EC00096303 /* internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = internal.c; path = ../liblwqq/lib/internal.c; sourceTree = "<group>"; };
-		C01F2C7217B644EC00096303 /* internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = internal.h; path = ../liblwqq/lib/internal.h; sourceTree = "<group>"; };
-		C01F2C7317B644EC00096303 /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json.c; path = ../liblwqq/lib/json.c; sourceTree = "<group>"; };
-		C01F2C7417B644EC00096303 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = json.h; path = ../liblwqq/lib/json.h; sourceTree = "<group>"; };
-		C01F2C7517B644EC00096303 /* logger.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = logger.c; path = ../liblwqq/lib/logger.c; sourceTree = "<group>"; };
-		C01F2C7617B644EC00096303 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = logger.h; path = ../liblwqq/lib/logger.h; sourceTree = "<group>"; };
-		C01F2C7717B644EC00096303 /* login.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = login.c; path = ../liblwqq/lib/login.c; sourceTree = "<group>"; };
-		C01F2C7817B644EC00096303 /* login.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = login.h; path = ../liblwqq/lib/login.h; sourceTree = "<group>"; };
-		C01F2C7917B644EC00096303 /* lwdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lwdb.c; path = ../liblwqq/lib/lwdb.c; sourceTree = "<group>"; };
-		C01F2C7A17B644EC00096303 /* lwdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwdb.h; path = ../liblwqq/lib/lwdb.h; sourceTree = "<group>"; };
-		C01F2C7B17B644EC00096303 /* lwqq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwqq.h; path = ../liblwqq/lib/lwqq.h; sourceTree = "<group>"; };
-		C01F2C7C17B644EC00096303 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = ../liblwqq/lib/md5.c; sourceTree = "<group>"; };
-		C01F2C7D17B644EC00096303 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = md5.h; path = ../liblwqq/lib/md5.h; sourceTree = "<group>"; };
-		C01F2C7E17B644EC00096303 /* msg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = msg.c; path = ../liblwqq/lib/msg.c; sourceTree = "<group>"; };
-		C01F2C7F17B644EC00096303 /* msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = msg.h; path = ../liblwqq/lib/msg.h; sourceTree = "<group>"; };
-		C01F2C8017B644EC00096303 /* queue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = queue.h; path = ../liblwqq/lib/queue.h; sourceTree = "<group>"; };
-		C01F2C8117B644EC00096303 /* smemory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = smemory.c; path = ../liblwqq/lib/smemory.c; sourceTree = "<group>"; };
-		C01F2C8217B644EC00096303 /* smemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = smemory.h; path = ../liblwqq/lib/smemory.h; sourceTree = "<group>"; };
-		C01F2C8317B644EC00096303 /* swsqlite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = swsqlite.c; path = ../liblwqq/lib/swsqlite.c; sourceTree = "<group>"; };
-		C01F2C8417B644EC00096303 /* swsqlite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swsqlite.h; path = ../liblwqq/lib/swsqlite.h; sourceTree = "<group>"; };
-		C01F2C8517B644EC00096303 /* type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = type.c; path = ../liblwqq/lib/type.c; sourceTree = "<group>"; };
-		C01F2C8617B644EC00096303 /* type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = type.h; path = ../liblwqq/lib/type.h; sourceTree = "<group>"; };
-		C01F2C8717B644EC00096303 /* url.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = url.c; path = ../liblwqq/lib/url.c; sourceTree = "<group>"; };
-		C01F2C8817B644EC00096303 /* url.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = url.h; path = ../liblwqq/lib/url.h; sourceTree = "<group>"; };
-		C01F2C8917B644EC00096303 /* utility.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = utility.c; path = ../liblwqq/lib/utility.c; sourceTree = "<group>"; };
-		C01F2C8A17B644EC00096303 /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utility.h; path = ../liblwqq/lib/utility.h; sourceTree = "<group>"; };
-		C01F2C8B17B644EC00096303 /* vplist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vplist.c; path = ../liblwqq/lib/vplist.c; sourceTree = "<group>"; };
-		C01F2C8C17B644EC00096303 /* vplist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vplist.h; path = ../liblwqq/lib/vplist.h; sourceTree = "<group>"; };
-		C057AA341881A2EF000DD97A /* lwjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lwjs.c; path = ../liblwqq/lib/lwjs.c; sourceTree = "<group>"; };
-		C057AA351881A2EF000DD97A /* lwjs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lwjs.h; path = ../liblwqq/lib/lwjs.h; sourceTree = "<group>"; };
-		C057AA371881A306000DD97A /* lwqq-config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "lwqq-config.h"; path = "../build/liblwqq/lwqq-config.h"; sourceTree = "<group>"; };
 		C057AA391881A3D7000DD97A /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = config.h; path = ../build/src/config.h; sourceTree = "<group>"; };
 		C0BE629F1763EE4100826A49 /* adium-lwqq.AdiumLibpurplePlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "adium-lwqq.AdiumLibpurplePlugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0BE62A21763EE4100826A49 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -133,50 +78,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C01CC05717A9533700574486 /* liblwqq */ = {
-			isa = PBXGroup;
-			children = (
-				C01F2C6717B644EC00096303 /* async_impl.h */,
-				C01F2C6A17B644EC00096303 /* async.c */,
-				C01F2C6B17B644EC00096303 /* async.h */,
-				C01F2C6D17B644EC00096303 /* http.c */,
-				C01F2C6E17B644EC00096303 /* http.h */,
-				C01F2C6F17B644EC00096303 /* info.c */,
-				C01F2C7017B644EC00096303 /* info.h */,
-				C01F2C7117B644EC00096303 /* internal.c */,
-				C01F2C7217B644EC00096303 /* internal.h */,
-				C01F2C7317B644EC00096303 /* json.c */,
-				C01F2C7417B644EC00096303 /* json.h */,
-				C01F2C7517B644EC00096303 /* logger.c */,
-				C01F2C7617B644EC00096303 /* logger.h */,
-				C01F2C7717B644EC00096303 /* login.c */,
-				C01F2C7817B644EC00096303 /* login.h */,
-				C01F2C7917B644EC00096303 /* lwdb.c */,
-				C01F2C7A17B644EC00096303 /* lwdb.h */,
-				C01F2C7B17B644EC00096303 /* lwqq.h */,
-				C01F2C7C17B644EC00096303 /* md5.c */,
-				C01F2C7D17B644EC00096303 /* md5.h */,
-				C01F2C7E17B644EC00096303 /* msg.c */,
-				C01F2C7F17B644EC00096303 /* msg.h */,
-				C01F2C8017B644EC00096303 /* queue.h */,
-				C01F2C8117B644EC00096303 /* smemory.c */,
-				C01F2C8217B644EC00096303 /* smemory.h */,
-				C01F2C8317B644EC00096303 /* swsqlite.c */,
-				C01F2C8417B644EC00096303 /* swsqlite.h */,
-				C057AA341881A2EF000DD97A /* lwjs.c */,
-				C057AA351881A2EF000DD97A /* lwjs.h */,
-				C01F2C8517B644EC00096303 /* type.c */,
-				C01F2C8617B644EC00096303 /* type.h */,
-				C01F2C8717B644EC00096303 /* url.c */,
-				C01F2C8817B644EC00096303 /* url.h */,
-				C01F2C8917B644EC00096303 /* utility.c */,
-				C01F2C8A17B644EC00096303 /* utility.h */,
-				C01F2C8B17B644EC00096303 /* vplist.c */,
-				C01F2C8C17B644EC00096303 /* vplist.h */,
-			);
-			name = liblwqq;
-			sourceTree = "<group>";
-		};
 		C01CC09717A9537600574486 /* pidgin-lwqq */ = {
 			isa = PBXGroup;
 			children = (
@@ -214,7 +115,6 @@
 		C057AA381881A311000DD97A /* build */ = {
 			isa = PBXGroup;
 			children = (
-				C057AA371881A306000DD97A /* lwqq-config.h */,
 				C057AA391881A3D7000DD97A /* config.h */,
 			);
 			name = build;
@@ -225,7 +125,6 @@
 			children = (
 				C057AA381881A311000DD97A /* build */,
 				C01CC09717A9537600574486 /* pidgin-lwqq */,
-				C01CC05717A9533700574486 /* liblwqq */,
 				C035E83717887EB30013EB07 /* src */,
 				C0C2851817F2FBBB0056627E /* resource */,
 				C0BE62A11763EE4100826A49 /* Frameworks */,
@@ -345,23 +244,6 @@
 				C01F2C6417B6446300096303 /* translate.c in Sources */,
 				C01F2C6517B6446300096303 /* trex.c in Sources */,
 				C01F2C6617B6446300096303 /* webqq.c in Sources */,
-				C01F2C8F17B644EC00096303 /* async.c in Sources */,
-				C057AA361881A2EF000DD97A /* lwjs.c in Sources */,
-				C01F2C9117B644EC00096303 /* http.c in Sources */,
-				C01F2C9217B644EC00096303 /* info.c in Sources */,
-				C01F2C9317B644EC00096303 /* internal.c in Sources */,
-				C01F2C9417B644EC00096303 /* json.c in Sources */,
-				C01F2C9517B644EC00096303 /* logger.c in Sources */,
-				C01F2C9617B644EC00096303 /* login.c in Sources */,
-				C01F2C9717B644EC00096303 /* lwdb.c in Sources */,
-				C01F2C9817B644EC00096303 /* md5.c in Sources */,
-				C01F2C9917B644EC00096303 /* msg.c in Sources */,
-				C01F2C9A17B644EC00096303 /* smemory.c in Sources */,
-				C01F2C9B17B644EC00096303 /* swsqlite.c in Sources */,
-				C01F2C9C17B644EC00096303 /* type.c in Sources */,
-				C01F2C9D17B644EC00096303 /* url.c in Sources */,
-				C01F2C9E17B644EC00096303 /* utility.c in Sources */,
-				C01F2C9F17B644EC00096303 /* vplist.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,6 +329,7 @@
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
 					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
+					/usr/local/include/lwqq,
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
@@ -461,6 +344,7 @@
 					"-lz",
 					"-lsqlite3",
 					"-lmozjs185",
+					"-llwqq",
 				);
 				PRODUCT_NAME = "adium-lwqq";
 				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
@@ -486,6 +370,7 @@
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
 					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
+					/usr/local/include/lwqq,
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
@@ -500,6 +385,7 @@
 					"-lz",
 					"-lsqlite3",
 					"-lmozjs185",
+					"-llwqq",
 				);
 				PRODUCT_NAME = "adium-lwqq";
 				WRAPPER_EXTENSION = AdiumLibpurplePlugin;
