@@ -45,7 +45,7 @@ if(WIN32)
     set(SHARE_DIR "share")
 
     set(CMAKE_PREFIX_PATH 
-        "${WIN32_LIBS_DIR}/../pidgin-2.10.7/libpurple" )
+        "${WIN32_LIBS_DIR}/../pidgin/libpurple" )
     find_package(LibPurple REQUIRED)
 
     set(CMAKE_PREFIX_PATH 
@@ -55,8 +55,15 @@ if(WIN32)
         "${WIN32_LIBS_DIR}/gtk_2_0-2.14/lib"
         )
     find_package(GLIB2 REQUIRED)
+
+    set(CMAKE_PREFIX_PATH 
+        "${WIN32_LIBS_DIR}/../lwqq/lib" 
+        "${WIN32_LIBS_DIR}/../lwqq/build"
+        "${WIN32_LIBS_DIR}/../lwqq/build/lib"
+        )
+    find_package(Lwqq REQUIRED)
     
-    get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
+    #get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
 	set(OPEN_PROG "start")
 endif(WIN32)
 

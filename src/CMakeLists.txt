@@ -20,6 +20,7 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 	 ${LWQQ_INCLUDE_DIRS}
     )
+message("${LWQQ_LIBRARIES}")
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-strict-aliasing")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DUSE_DEBUG=1")
