@@ -3044,7 +3044,7 @@ init_plugin(PurplePlugin *plugin)
     options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("What you seen Is What you send"), "send_visualbility", SEND_VISUAL_DEFAULT);
     options = g_list_append(options, option);
-    option = purple_account_option_bool_new(_("Cache Talk Group(Experimental)"),"cache_talk", FALSE);
+    option = purple_account_option_bool_new(_("Cache Talk Group"),"cache_talk", TRUE);
     options = g_list_append(options, option);
 #if 0 | DISABLED_AREA
     option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
@@ -3178,7 +3178,7 @@ static void qq_login(PurpleAccount *account)
     lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
     lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
 	 lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", SEND_VISUAL_DEFAULT));
-    lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
+    lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", TRUE));
     ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
 	 lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", FALSE);
     int relink_retry = 0;
