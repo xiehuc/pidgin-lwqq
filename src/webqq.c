@@ -13,7 +13,6 @@
 
 #include "qq_types.h"
 #include "translate.h"
-#include "remote.h"
 #include "cgroup.h"
 #include "lwqq.h"
 #include "lwdb.h"

@@ -1,6 +1,20 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+version 0.3.0: (2014-04-28):
+
+	+  gnome 3.12 下的pidgin-extension支持提醒群组消息
+	+  删除添加好友时创建的空Buddy
+	+  创建讨论组时提示更多信息
+	+  群消息提供group参数
+	-  删除 LWQQ_HTTP_NOT_SET_COOKIE
+	+  lwqq完全分离出去
+	*  adium默认禁用所见即所发
+	*  删除好友/退出群组时关闭聊天窗口
+	+  不同的系统上使用不同的 'open' 程序
+	+  验证码添加 '使用外部程序查看' 选项
+	*  默认禁用SSL
+
 0.2d Release Note(14-02-16):
 	Mozjs改为可选依赖
 	所见即所发送

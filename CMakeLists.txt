@@ -1,8 +1,8 @@
 project(libwebqq)
 cmake_minimum_required(VERSION 2.6)
 set(VERSION_MAJOR "0")
-set(VERSION_MINOR "2")
-set(VERSION_PATCH "4")
+set(VERSION_MINOR "3")
+set(VERSION_PATCH "0")
 
 set(CMAKE_MODULE_PATH 
     ${CMAKE_SOURCE_DIR}/cmake 
@@ -93,7 +93,7 @@ endif()
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)
 set(datadir ${SHARE_DIR}/lwqq)
-set(version "${VERSION_MAJOR}.${VERSION_MINOR}${VERSION_PATCH}")
+set(version "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 
 add_subdirectory(src)
