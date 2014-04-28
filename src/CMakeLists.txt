@@ -28,10 +28,16 @@ if(WIN32)
     )
 endif()
 
+set(OTHER_LIBRARIES "")
+if(WIN32)
+    set(OTHER_LIBRARIES "-Wl,-Bdynamic -lpthread")
+endif()
+
 target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
-	 ${LWQQ_LIBRARIES}
+	${LWQQ_LIBRARIES}
+    ${OTHER_LIBRARIES}
     )
 if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)
