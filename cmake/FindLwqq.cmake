@@ -44,7 +44,7 @@ else (LWQQ_LIBRARIES AND LWQQ_INCLUDE_DIRS)
 
     find_library(LWQQ_LIBRARY
         NAMES
-            liblwqq.a
+            lwqq
         PATHS
             ${_LWQQLinkDir}
             /usr/local/lib/
