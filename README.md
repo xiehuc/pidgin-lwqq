@@ -1,6 +1,7 @@
 pidgin-lwqq
 ===========
 
+![kuma企鹅](http://i.imgur.com/uxFYLIq.png)
 ![蚊香企鹅](http://i.imgur.com/NKpB4En.png)
 
 简  介
@@ -61,7 +62,7 @@ lwqq 即是 linux webqq 之意
 * 支持访问QQ空间
 * 支持更改在线状态|群名片
 * 支持多账户登录
-*   <del>支持发送接受离线文件</del>
+* <del>支持发送接受离线文件</del>
 * 支持文本样式
 * 支持群消息屏蔽
 * 支持接受文件传输
