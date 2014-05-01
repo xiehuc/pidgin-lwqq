@@ -10,10 +10,6 @@ set(SRC_LIST
 
 add_definitions(-Wall)
 
-add_library(webqq MODULE
-    ${SRC_LIST}
-    )
-
 include_directories(
     ${LIBPURPLE_INCLUDE_DIRS}
     ${GLIB2_INCLUDE_DIRS}
@@ -27,28 +23,27 @@ if(WIN32)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++" )
 endif()
 
-set(OTHER_LIBRARIES "")
-if(WIN32)
-    set(OTHER_LIBRARIES "-Wl,-Bdynamic -lpthread")
-endif()
+add_library(webqq MODULE
+    ${SRC_LIST}
+    )
 
 target_link_libraries(webqq
     ${LIBPURPLE_LIBRARIES}
     ${GLIB2_LIBRARIES}
 	${LWQQ_LIBRARIES}
-    ${OTHER_LIBRARIES}
     )
 if(NLS AND WIN32)
     target_link_libraries(webqq intl iconv)
+endif()
+if(WIN32)
+    target_link_libraries(webqq "-Wl,-Bdynamic -lpthread")
 endif()
 
 install(TARGETS webqq DESTINATION ${LIB_INSTALL_DIR})
 
 if(WIN32)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS 
-    # static link doesn't need these dlls
-    #    ${MinGW_Path}/libintl-8.dll 
-    #    ${MinGW_Path}/libiconv-2.dll
+        ${MinGW_Path}/libgcc_s_dw2-1.dll
     )
 
     install(PROGRAMS 

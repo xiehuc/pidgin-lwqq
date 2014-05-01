@@ -63,7 +63,7 @@ if(WIN32)
         )
     find_package(Lwqq REQUIRED)
     
-    #get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
+    get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
 	set(OPEN_PROG "start")
 endif(WIN32)
 
