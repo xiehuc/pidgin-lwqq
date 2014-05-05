@@ -26,40 +26,60 @@ const char* REGEXP_TAIL = "|:[^ :]+:";
 //this is used for build smiley regex expression
 static void build_smiley_exp_from_file(char* exp,const char* path)
 {
+	enum {LAST_IS_NUMBER, LAST_IS_PIC} last_mode;
 	char smiley[256];
+	char last_file[256];
+	char file_dir[256];
 	long id,num;
 	char *beg,*end;
 	const char* spec_char = "?()[]*$\\|+.";
 	FILE* f =fopen(path,"r");
 	if(f==NULL) return;
+	strcpy(file_dir, path);
+	*strrchr(file_dir, '/') = '\0'; //strip for the last dir
 	while(fscanf(f,"%s",smiley)!=EOF){
 		num = strtoul(smiley, &end, 10);
-		if(end-smiley == strlen(smiley)){
-			id=num+1;//remap 0->1
+		if(end-smiley == strlen(smiley)){ /* this is a number */
+			id=num+1; /* so we need increase id, and remap 0->1 */
+			last_mode = LAST_IS_NUMBER;
 			continue;
+		}
+		if(strlen(smiley)>3){
+			const char* ext = smiley+strlen(smiley)-3;
+			if(strcmp(ext,"gif")==0 || strcmp(ext,"png")==0){
+				strncpy(last_file, smiley, 256);
+				snprintf(last_file, sizeof(last_file), "%s/%s", file_dir, smiley);
+				last_mode = LAST_IS_PIC;
+				continue;
+			}
 		}
 
-		//insert id->table map only once
-		if(smiley_tables[id-1]==NULL)
-			smiley_tables[id-1]=s_strdup(smiley);
-		//insert hash table
-		g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
-		if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
-			//move to next smiley
-			continue;
+		if(last_mode == LAST_IS_PIC){
+			purple_smiley_new_from_file(smiley, last_file);
 		}
-		strcat(exp,"|");
-		beg = smiley;
-		do{
-			end=strpbrk(beg,spec_char);
-			if(end==NULL) strcat(exp,beg);
-			else {
-				strncat(exp, beg, end-beg);
-				strcat(exp,"\\");
-				strncat(exp,end,1);
-				beg = end+1;
+		if(last_mode == LAST_IS_NUMBER){
+			//insert id->table map only once
+			if(smiley_tables[id-1]==NULL)
+				smiley_tables[id-1]=s_strdup(smiley);
+			//insert hash table
+			g_hash_table_insert(smiley_hash,s_strdup(smiley),(gpointer)id);
+			if(smiley[0]==':'&&smiley[strlen(smiley)-1]==':'){
+				//move to next smiley
+				continue;
 			}
-		}while(end);
+			strcat(exp,"|");
+			beg = smiley;
+			do{
+				end=strpbrk(beg,spec_char);
+				if(end==NULL) strcat(exp,beg);
+				else {
+					strncat(exp, beg, end-beg);
+					strcat(exp,"\\");
+					strncat(exp,end,1);
+					beg = end+1;
+				}
+			}while(end);
+		}
 	}
 	fclose(f);
 }
@@ -369,14 +389,12 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
 }
 void translate_global_init()
 {
-
 	if(_regex==NULL){
 		const char* err = NULL;
 		char *smiley_exp = s_malloc0(2048);
 		smiley_hash = g_hash_table_new_full(g_str_hash,g_str_equal,NULL,NULL);
 		char path[1024];
 		strcat(smiley_exp,REGEXP_HEAD);
-		//build_smiley_exp(smiley_exp);
 		build_smiley_exp_from_file(smiley_exp, GLOBAL_SMILEY_PATH(path));
 		build_smiley_exp_from_file(smiley_exp, LOCAL_SMILEY_PATH(path));
 		strcat(smiley_exp,REGEXP_TAIL);
@@ -424,7 +442,7 @@ const char* translate_smile(int face)
 	return buf;
 }
 
-void add_smiley(void* data,void* userdata)
+static void add_smiley(void* data,void* userdata)
 {
 	PurpleConversation* conv = userdata;
 	PurpleSmiley* smiley = data;
@@ -438,6 +456,10 @@ void add_smiley(void* data,void* userdata)
 void translate_add_smiley_to_conversation(PurpleConversation* conv)
 {
 	GList* list = purple_smileys_get_all();
+	if(list == NULL){
+		translate_global_init();
+		list = purple_smileys_get_all();
+	}
 	g_list_foreach(list,add_smiley,conv);
 	g_list_free(list);
 }

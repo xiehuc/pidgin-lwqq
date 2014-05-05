@@ -1,5 +1,6 @@
 install(FILES "hash.js" DESTINATION "${datadir}")
 install(FILES "smiley.txt" DESTINATION "${datadir}")
+install(DIRECTORY "baozou" DESTINATION "${datadir}")
 
 #install qq faces
 install(DIRECTORY "qqfaces/"

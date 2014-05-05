@@ -2830,22 +2830,13 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
 }
 static void client_connect_signals(PurpleConnection* gc)
 {
+	static int handle;
+	void *h = &handle;
+
+	purple_signal_connect(purple_conversations_get_handle(),
+			"conversation-created", h,
+			PURPLE_CALLBACK(translate_add_smiley_to_conversation), NULL);
 }
-#if 0
-static const char* qq_list_emblem(PurpleBuddy* b)
-{
-	LwqqBuddy* buddy = b->proto_data;
-	const char* ret = NULL;
-	switch(buddy->client_type){
-		case LWQQ_CLIENT_WEBQQ:
-			ret = "external";
-			break;
-		default:
-			break;
-	}
-	return ret;
-}
-#endif
 
 static void display_user_info(PurpleConnection* gc,LwqqBuddy* b,char *who)
 {
