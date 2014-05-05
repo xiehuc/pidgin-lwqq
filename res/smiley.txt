@@ -103,6 +103,100 @@
 133    :左太极:
 134    :右太极:
 
+emoji/1f625.png   :emoji:
+emoji/1f60f.png   :smirk:
+emoji/1f614.png   :pensive:
+emoji/1f601.png   :grin:
+emoji/1f609.png   :wink:
+emoji/1f631.png   :scream:
+emoji/1f616.png   :confounded:
+emoji/1f61a.png   :kissing_closed_eyes:
+emoji/1f61d.png   :stuck_out_tongue_closed_eyes:
+emoji/1f60c.png   :relieved:
+emoji/1f628.png   :fearful: 
+
+emoji/1f637.png   :mask:
+emoji/1f633.png   :flushed:
+emoji/1f612.png   :unamused:
+emoji/1f630.png   :cold_sweat:
+emoji/1f635.png   :astonished:
+emoji/1f62d.png   :sob:
+emoji/1f61c.png   :stuck_out_tongue_winking_eye:
+emoji/1f618.png   :kissing_heart:
+emoji/1f621.png   :rage:
+emoji/1f4aa.png   :muscle:
+emoji/1f44a.png   :punch: 
+
+emoji/1f44d.png   :thumbsup:
+emoji/261d.png    :point_up:
+emoji/1f44f.png   :clap:
+emoji/270c.png    :v:
+emoji/1f44e.png   :thumbsdown:
+emoji/1f64f.png   :pray:
+emoji/1f44c.png   :ok_hand:
+emoji/1f448.png   :point_left:
+emoji/1f449.png   :point_right:
+emoji/1f446.png   :point_up_2:
+emoji/1f447.png   :point_down: 
+
+emoji/1f440.png   :eyes:
+emoji/1f443.png   :nose:
+emoji/1f444.png   :lips:
+emoji/1f442.png   :ear:
+emoji/1f35a.png   :rice:
+emoji/1f35d.png   :spaghetti:
+emoji/1f35c.png   :ramen:
+emoji/1f359.png   :rice_ball:
+emoji/1f367.png   :shaved_ice:
+emoji/1f363.png   :sushi: 
+
+emoji/1f382.png   :birthday:
+emoji/1f35e.png   :bread:
+emoji/1f354.png   :hamburger:
+emoji/1f373.png   :egg:
+emoji/1f35f.png   :fries:
+emoji/1f37a.png   :beer:
+emoji/1f37b.png   :beers:
+emoji/1f378.png   :cocktail:
+emoji/2615.png    :coffee:
+emoji/1f34e.png   :apple:
+emoji/1f34a.png   :tangerine: 
+
+emoji/1f353.png   :strawberry:
+emoji/1f349.png   :watermelon:
+emoji/1f48a.png   :pill:
+emoji/1f6ac.png   :smoking:
+emoji/1f384.png   :christmas_tree:
+emoji/1f339.png   :rose:
+emoji/1f389.png   :tada:
+emoji/1f334.png   :palm_tree:
+emoji/1f49d.png   :gift_heart:
+emoji/1f380.png   :ribbon:
+emoji/1f388.png   :balloon: 
+
+emoji/1f41a.png   :shell:
+emoji/1f48d.png   :ring:
+emoji/1f4a3.png   :bomb:
+emoji/1f451.png   :crown:
+emoji/1f514.png   :bell:
+emoji/2b50.png    :star:
+emoji/2728.png    :sparkles:
+emoji/1f4a8.png   :dash:
+emoji/1f4a6.png   :sweat_drops:
+emoji/1f525.png   :fire:
+emoji/1f3c6.png   :trophy: 
+
+emoji/1f4b0.png   :moneybag:
+emoji/1f4a4.png   :zzz:
+emoji/26a1.png    :zap:
+emoji/1f463.png   :feet:
+emoji/1f4a9.png   :shit:
+emoji/1f489.png   :syringe:
+emoji/2668.png    :hotsprings:
+emoji/1f4eb.png   :mailbox:
+emoji/1f511.png   :key:
+emoji/1f512.png   :lock: 
+
 baozou/01.gif   [不错喔]
 baozou/02.gif   [呆滞]
 baozou/03.gif   [呼哧呼哧]
