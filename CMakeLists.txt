@@ -17,6 +17,7 @@ set(CPACK_PACKAGE_CONTACT "edhelas@movim.eu")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpurple0,libglib2.0-0,libwebqq")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(ACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jaussoin Timothée") #required
@@ -37,6 +38,7 @@ if(LINUX)
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
 	pkg_check_modules(LWQQ REQUIRED lwqq>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+	
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
         OUTPUT_VARIABLE LIB_INSTALL_DIR)
