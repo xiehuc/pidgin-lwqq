@@ -10,14 +10,16 @@ set(CMAKE_MODULE_PATH
     )
     
 set(CPACK_GENERATOR "DEB")
-set(ACK_PACKAGE_DESCRIPTION_SUMMARY "pidgin lwqq library")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A pidgin plugin for QQ protocol support, based on lwqq")
 set(CPACK_PACKAGE_VENDOR "edhelas")
-set(CPACK_PACKAGE_DESCRIPTION "pidgin-lwqq provide a Pidgin plugin to connect to the QQ network using the lwqq library")
+set(CPACK_PACKAGE_DESCRIPTION "pidgin-lwqq is a pidgin plugin for QQ protocol support. It's based on the lwqq library which uses the webqq.")
 set(CPACK_PACKAGE_CONTACT "edhelas@movim.eu")
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "pidgin")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpurple0,libglib2.0-0,libwebqq")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON) 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libwebqq (>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(ACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jaussoin Timothée") #required
@@ -31,10 +33,11 @@ endif()
 if(LINUX)
     set(SHARE_DIR "${CMAKE_INSTALL_PREFIX}/share")
     
-    include_directories(/usr/include/lwqq)
+    include(UsePkgConfig)
 
     find_package(PkgConfig REQUIRED)
-    find_package(lwqq)
+    find_package(Lwqq REQUIRED)
+    
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
 	pkg_check_modules(LWQQ REQUIRED lwqq>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
