@@ -3,20 +3,21 @@ pidgin-lwqq
 
 Intro
 -----
- This plugin provide the QQ Protocol support for Pidgin on Linux. It's based on the lwqq library [lwqq](https://github.com/mathslinux/lwqq) and use the WebQQ service.
+ This plugin provide the QQ Protocol support for Pidgin on Linux. 
+ It's based on the lwqq library [lwqq](https://github.com/mathslinux/lwqq) and use the WebQQ service.
 
 License: GPLv3
 
 ScreenShot
 ----------
 
-### linux ###
+### Linux ###
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
-If you want the effect above? see:[gnome3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
+If you want the effect above see [Gnome 3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
 
-### mac osx ###
+### MacOSX ###
 
 ![adium](http://i.imgur.com/y4vweAL.png)
 
@@ -25,19 +26,20 @@ Quick Install
 
 ### Building From Source
 
-Compile and install [lwqq](https://github.com/xiehuc/lwqq) library
+Compile and install the [lwqq](https://github.com/xiehuc/lwqq) library
 
-    mkdir build;cd build
+    mkdir build; cd build
     cmake ..
     make
     sudo make install
 
-First use? see:[user guide](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
+First use? See the [User Guide](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
 
 ### Debian Package
 
 To create a Debian package from the source::
-   mkdir build;cd build
+
+   mkdir build; cd build
    cmake ..
    cpack
 
@@ -51,7 +53,7 @@ Build Option
 - SSL[=On]
 > enable ssl support.
 
-See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detailled install guide.
+See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for a detailled install guide.
 
 
 ### Notice
@@ -101,5 +103,5 @@ Known Issue
 Donate
 ------
 
-To support better develop (such as cross platform,other plugin compability,code refactoring),
-You can donate this open source project [link](https://me.alipay.com/xiehuc)
+To support the development (such as a cross platform implementation, other plugin compability ,code refactoring)
+you can donate to this open source project [here](https://me.alipay.com/xiehuc).
