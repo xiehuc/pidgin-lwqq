@@ -197,6 +197,53 @@ emoji/1f4eb.png   :mailbox:
 emoji/1f511.png   :key:
 emoji/1f512.png   :lock: 
 
+emoji/2708.png    :airplane:
+emoji/1f684.png   :bullettrain_side:
+emoji/1f697.png   :red_car:
+emoji/1f6a4.png   :speedboat:
+emoji/1f6b2.png   :bike:
+emoji/1f40e.png   :racehorse:
+emoji/1f680.png   :rocket:
+emoji/1f68c.png   :bus:
+emoji/26f5.png    :boat:
+emoji/1f469.png   :woman:
+emoji/1f468.png   :man: 
+
+emoji/1f467.png   :girl:
+emoji/1f466.png   :boy:
+emoji/1f435.png   :monkey_face:
+emoji/1f419.png   :octopus:
+emoji/1f437.png   :pig:
+emoji/1f480.png   :skull:
+emoji/1f424.png   :baby_chick:
+emoji/1f428.png   :koala:
+emoji/1f42e.png   :cow:
+emoji/1f414.png   :chicken:
+emoji/1f438.png   :frog: 
+
+emoji/1f47b.png   :ghost:
+emoji/1f41b.png   :bug:
+emoji/1f420.png   :tropical_fish:
+emoji/1f436.png   :dog:
+emoji/1f42f.png   :tiger:
+emoji/1f47c.png   :angel:
+emoji/1f427.png   :penguin:
+emoji/1f433.png   :whale:
+emoji/1f42d.png   :mouse:
+emoji/1f452.png   :womans_hat:
+emoji/1f457.png   :dress: 
+
+emoji/1f484.png   :lipstick:
+emoji/1f460.png   :high_heel:
+emoji/1f462.png   :boot:
+emoji/1f302.png   :closed_umbrella:
+emoji/1f45c.png   :handbag:
+emoji/1f459.png   :bikini:
+emoji/1f455.png   :shirt:
+emoji/1f45f.png   :shoe:
+emoji/2601.png    :cloud:
+emoji/2600.png    :sunny: 
+
 baozou/01.gif   [不错喔]
 baozou/02.gif   [呆滞]
 baozou/03.gif   [呼哧呼哧]
