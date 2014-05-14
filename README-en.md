@@ -3,23 +3,21 @@ pidgin-lwqq
 
 Intro
 -----
- provide qq protocol for pidgin on linux. based on webqq service.  
- a pidgin plugin based on [lwqq](https://github.com/mathslinux/lwqq).
- a excellent compact useful library for webqq protocol.   
- since the name may confused. lwqq is linux webqq
+ This plugin provide the QQ Protocol support for Pidgin on Linux. 
+ It's based on the lwqq library [lwqq](https://github.com/mathslinux/lwqq) and use the WebQQ service.
 
 License: GPLv3
 
 ScreenShot
 ----------
 
-### linux ###
+### Linux ###
 
 ![gnome3](http://i.imgur.com/8kuEPHI.png)
 
-want above effect? see:[gnome3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
+If you want the effect above see [Gnome 3 support](https://github.com/xiehuc/pidgin-lwqq/wiki/gnome3-support)
 
-### mac osx ###
+### MacOSX ###
 
 ![adium](http://i.imgur.com/y4vweAL.png)
 
@@ -28,25 +26,34 @@ Quick Install
 
 ### Building From Source
 
-compile and install [lwqq](https://github.com/xiehuc/lwqq) library
+Compile and install the [lwqq](https://github.com/xiehuc/lwqq) library
 
-    mkdir build;cd build
+    mkdir build; cd build
     cmake ..
     make
     sudo make install
 
-first use? see:[user guide](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
+First use? See the [User Guide](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
+
+### Debian Package
+
+To create a Debian package from the source::
+
+   mkdir build; cd build
+   cmake ..
+   cpack
+
 
 Build Option
 ------------
 
 - VERBOSE[=0]
-> set the verbose level .0 means no verbose,3 means max verbose.
+> set the verbose level from 0 (off) to 3 (maximum).
 
 - SSL[=On]
 > enable ssl support.
 
-See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detail install guide.
+See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for a detailled install guide.
 
 
 ### Notice
@@ -56,7 +63,7 @@ See [wiki](https://github.com/xiehuc/pidgin-lwqq/wiki) for the detail install gu
 Function list
 -------------
 
-### pidgin support
+### Pidgin support
 
 * send / recv buddy|group|discu messages
 * send / recv picture messages
@@ -79,11 +86,11 @@ Function list
 * support add friend/group
 * support import online chat log
 
-### empathy not support ###
+### Empathy not yet supported ###
 
-because telepathy-haze can not create local cache.
-make lwqq performanced bad. 
-so we do not recommand empathy with lwqq anymore.
+Empathy is not yet supported because telepathy-haze can''t create the local cache 
+which make lwqq performances really bad. 
+So we do not recommand to use Empathy with lwqq anymore.
 
 Known Issue
 -----------
@@ -96,5 +103,5 @@ Known Issue
 Donate
 ------
 
-To support better develop (such as cross platform,other plugin compability,code refactoring),
-You can donate this open source project [link](https://me.alipay.com/xiehuc)
+To support the development (such as a cross platform implementation, other plugin compability ,code refactoring)
+you can donate to this open source project [here](https://me.alipay.com/xiehuc).

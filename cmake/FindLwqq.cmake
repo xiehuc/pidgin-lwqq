@@ -31,7 +31,7 @@ else (LWQQ_LIBRARIES AND LWQQ_INCLUDE_DIRS)
             lwqq.h
         PATHS
             ${_LWQQIncDir}
-            /usr/local/include
+            /usr/include/lwqq/
     )
 
     find_path(LWQQ_CONFIG_INCLUDE_DIR
@@ -39,7 +39,7 @@ else (LWQQ_LIBRARIES AND LWQQ_INCLUDE_DIRS)
             lwqq-config.h
         PATHS
             ${_LWQQIncDir}
-            /usr/local/include
+            /usr/include/lwqq/
     )
 
     find_library(LWQQ_LIBRARY
@@ -47,7 +47,7 @@ else (LWQQ_LIBRARIES AND LWQQ_INCLUDE_DIRS)
             lwqq
         PATHS
             ${_LWQQLinkDir}
-            /usr/local/lib/
+            /usr/lib/
     )
 
     set(LWQQ_INCLUDE_DIRS
