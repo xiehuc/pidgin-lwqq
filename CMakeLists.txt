@@ -9,23 +9,6 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
     )
     
-set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A pidgin plugin for QQ protocol support, based on lwqq")
-set(CPACK_PACKAGE_VENDOR "edhelas")
-set(CPACK_PACKAGE_DESCRIPTION "pidgin-lwqq is a pidgin plugin for QQ protocol support. It's based on the lwqq library which uses the webqq.")
-set(CPACK_PACKAGE_CONTACT "edhelas@movim.eu")
-set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "pidgin")
-set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON) 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libwebqq (>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(ACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION_MAJOR}.${VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jaussoin Timothée") #required
-
-include(CPack)
-
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(LINUX 1)
 endif()
@@ -33,14 +16,11 @@ endif()
 if(LINUX)
     set(SHARE_DIR "${CMAKE_INSTALL_PREFIX}/share")
     
-    include(UsePkgConfig)
-
     find_package(PkgConfig REQUIRED)
-    find_package(Lwqq REQUIRED)
     
     pkg_check_modules(LIBPURPLE REQUIRED  purple)
     pkg_check_modules(GLIB REQUIRED  glib-2.0)
-	pkg_check_modules(LWQQ REQUIRED lwqq>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+    pkg_check_modules(LWQQ REQUIRED lwqq>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 	
     #recommand libcurl>=7.22.0
     exec_program("pkg-config --variable=plugindir purple 2>/dev/null"
@@ -87,7 +67,7 @@ if(WIN32)
     find_package(Lwqq REQUIRED)
     
     get_filename_component( MinGW_Path ${CMAKE_CXX_COMPILER} PATH )
-	set(OPEN_PROG "start")
+    set(OPEN_PROG "start")
 endif(WIN32)
 
 add_definitions(-Wall)
@@ -143,15 +123,26 @@ if(UOA)
     add_subdirectory(ubuntu-online-account)
 endif(UOA)
 
+set(CPACK_PACKAGE_NAME "pidgin-lwqq")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A pidgin plugin for QQ protocol support, based on lwqq")
+set(CPACK_PACKAGE_VENDOR "xiehuc")
+set(CPACK_PACKAGE_DESCRIPTION "pidgin-lwqq is a pidgin plugin for QQ protocol support. It's based on the lwqq library which uses the webqq.")
+set(CPACK_PACKAGE_CONTACT "edhelas@movim.eu")
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "pidgin")
+set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON) 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "liblwqq (>=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${version}")
+set(ACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${version}")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jaussoin Timothée") #required
+
 if(WIN32)
-option(INST_ZIP "Make Zip Archive" Off)
-if(INST_ZIP)
     set(CPACK_GENERATOR "ZIP")
-    set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-    set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-    set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-    set(CPACK_PACKAGE_NAME "pidgin-lwqq")
-    include(CPACK)
     include(InstallRequiredSystemLibraries)
-endif(INST_ZIP)
 endif()
+if(LINUX)
+   set(CPACK_GENERATOR "DEB")
+endif()
+include(CPack)
