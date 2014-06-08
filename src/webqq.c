@@ -2891,8 +2891,13 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
 	else 
 		buddy = lc->find_buddy_by_uin(lc,who);
 	if(buddy){
-		LwqqAsyncEvent* ev = lwqq_info_get_friend_detail_info(lc, buddy);
-		lwqq_async_add_event_listener(ev, _C_(3p,display_user_info,gc,buddy,NULL));
+		LwqqAsyncEvset* set = lwqq_async_evset_new();
+		LwqqAsyncEvent* ev = NULL;
+		ev = lwqq_info_get_single_long_nick(lc, buddy);
+		lwqq_async_evset_add_event(set, ev);
+		ev = lwqq_info_get_friend_detail_info(lc, buddy);
+		lwqq_async_evset_add_event(set, ev);
+		lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,NULL));
 	}else{
 		// Not a buddy? try fetch stranger info
 		LwqqGroup* g = NULL;
