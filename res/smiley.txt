@@ -244,6 +244,45 @@ emoji/1f45f.png   :shoe:
 emoji/2601.png    :cloud:
 emoji/2600.png    :sunny: 
 
+emoji/2614.png    :umbrella:
+emoji/1f319.png   :moon:
+emoji/26c4.png    :snowman:
+emoji/2b55.png    :o:
+emoji/274c.png    :x:
+emoji/2754.png    :grey_question:
+emoji/2755.png    :grey_exclamation:
+emoji/260e.png    :telephone:
+emoji/1f4f7.png   :camera:
+emoji/1f4f1.png   :iphone:
+emoji/1f4e0.png   :fax:
+
+emoji/1f4bb.png   :computer:
+emoji/1f3a5.png   :movie_camera:
+emoji/1f3a4.png   :microphone:
+emoji/1f52b.png   :gun:
+emoji/1f4bf.png   :cd:
+emoji/1f493.png   :heartbeat:
+emoji/2663.png    :clubs:
+emoji/1f004.png   :mahjong:
+emoji/303d.png    :part_alternation_mark:
+emoji/1f3b0.png   :slot_machine:
+emoji/1f6a5.png   :traffic_light: 
+
+emoji/1f6a7.png   :construction:
+emoji/1f3b8.png   :guitar:
+emoji/1f488.png   :barber:
+emoji/1f6c0.png   :bath:
+emoji/1f6bd.png   :toilet:
+emoji/1f3e0.png   :house:
+emoji/26ea.png    :church:
+emoji/1f3e6.png   :bank:
+emoji/1f3e5.png   :hospital:
+emoji/1f3e8.png   :hotel:
+emoji/1f3e7.png   :atm:
+emoji/1f3ea.png   :convenience_store:
+emoji/1f6b9.png   :mens:
+emoji/1f6ba.png   :womens: 
+
 baozou/01.gif   [不错喔]
 baozou/02.gif   [呆滞]
 baozou/03.gif   [呼哧呼哧]
