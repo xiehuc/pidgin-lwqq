@@ -33,10 +33,6 @@
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
-#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
-			lwdb_get_config_dir()),buf)
-#define GLOBAL_HASH_JS(buf) (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
-			GLOBAL_DATADIR),buf)
 
 char *qq_get_cb_real_name(PurpleConnection *gc, int id, const char *who);
 static void client_connect_signals(PurpleConnection* gc);
@@ -48,7 +44,7 @@ static void login_stage_2(LwqqAsyncEvent* ev,LwqqClient* lc);
 static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
-static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash);
+static void friends_valid_hash(LwqqAsyncEvent* ev);
 
 enum ResetOption{
 	RESET_BUDDY=1<<0,
@@ -1611,62 +1607,11 @@ static void flush_group_members(LwqqClient* lc,LwqqGroup** d)
 	qq_chat_group* cg = (*d)->data;
 	qq_cgroup_flush_members(cg);
 }
-#ifdef WITH_MOZJS
-static char* hash_with_local_file(const char* uin,const char* ptwebqq,void* ac_)
-{
-	char path[512] = {0};
-	lwqq_js_t* js = ((qq_account*)ac_)->js;
-	if(access(LOCAL_HASH_JS(path), F_OK)!=0)
-		if(access(GLOBAL_HASH_JS(path),F_OK)!=0)
-			return NULL;
-	lwqq_jso_t* obj = lwqq_js_load(js,path);
-	char* res = NULL;
-
-	res = lwqq_js_hash(uin, ptwebqq, js);
-	lwqq_js_unload(js, obj);
-
-	return res;
-}
-static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* ac_)
-{
-	//github.com is too slow
-	const char* url = "http://pidginlwqq.sinaapp.com/hash.js";
-	LwqqErrorCode ec = qq_download(url, "hash.js", lwdb_get_config_dir());
-	if(ec){
-		lwqq_log(LOG_ERROR,"Could not download JS From %s",url);
-	}
-	return hash_with_local_file(uin, ptwebqq, ac_);
-}
-static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
-{
-	qq_account* ac = ac_;
-	const char* url = lwdb_userdb_read(ac->db, "hash.js");
-	if(url == NULL) return NULL;
-	if(qq_download(url,"hash.js",lwdb_get_config_dir())==LWQQ_EC_ERROR) return NULL;
-	return hash_with_local_file(uin, ptwebqq, ac_);
-}
-static void get_friends_info_retry(LwqqClient* lc,LwqqHashFunc hashtry)
-{
-	LwqqAsyncEvent* ev;
-	qq_account* ac = lc->data;
-	ev = lwqq_info_get_friends_info(lc,hashtry,ac);
-	lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,hashtry));
-}
-#endif
-static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
+static void friends_valid_hash(LwqqAsyncEvent* ev)
 {
 	LwqqClient* lc = ev->lc;
 	qq_account* ac = lc->data;
 	if(ev->result == LWQQ_EC_HASH_WRONG){
-#ifdef WITH_MOZJS
-		if(last_hash == hash_with_local_file){
-			get_friends_info_retry(lc, hash_with_remote_file);
-			return;
-		}else if(last_hash == hash_with_remote_file){
-			get_friends_info_retry(lc, hash_with_db_url);
-			return;
-		}
-#endif
 		purple_connection_error_reason(ac->gc, 
 				PURPLE_CONNECTION_ERROR_OTHER_ERROR, 
 #ifndef WITH_MOZJS
@@ -1684,6 +1629,8 @@ static void friends_valid_hash(LwqqAsyncEvent* ev,LwqqHashFunc last_hash)
 				_("Get Friend List Failed"));
 		return;
 	}
+	const char* succ_hash = lwqq_hash_get_last(lc)->name;
+	if(succ_hash) lwdb_userdb_write(ac->db, "last_hash", succ_hash);
 	LwqqAsyncEvent* event;
 	event = lwqq_info_get_group_name_list(lc,NULL);
 	lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
@@ -1717,17 +1664,9 @@ static void login_stage_1(LwqqClient* lc,LwqqErrorCode* p_err)
 	gc->flags |= PURPLE_CONNECTION_HTML;
 
 
-#ifdef WITH_MOZJS
-	char path[512];
-	if(access(LOCAL_HASH_JS(path),F_OK)==0)
-		get_friends_info_retry(lc, hash_with_local_file);
-	else
-		get_friends_info_retry(lc, hash_with_remote_file);
-#else
-	LwqqAsyncEvent* ev = lwqq_info_get_friends_info(lc, lwqq_util_hashQ,NULL);
-	lwqq_async_add_event_listener(ev, _C_(2p,friends_valid_hash,ev,lwqq_util_hashQ));
-#endif
-
+	// use lwqq 0.3.1 hash auto select api
+	LwqqAsyncEvent* ev = lwqq_info_get_friends_info(lc, NULL, NULL);
+	lwqq_async_add_event_listener(ev, _C_(p,friends_valid_hash,ev));
 	return ;
 }
 static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
@@ -3194,6 +3133,9 @@ static void qq_login(PurpleAccount *account)
 		lwqq_override(ac->font.family,s_strdup(lwdb_userdb_read(ac->db, "f_family")));
 		ac->font.size = s_atoi(lwdb_userdb_read(ac->db,"f_size"),ac->font.size);
 		ac->font.style = s_atoi(lwdb_userdb_read(ac->db,"f_style"),ac->font.style);
+
+		const char* last_hash = lwdb_userdb_read(ac->db, "last_hash");
+		if(last_hash) lwqq_hash_set_beg(ac->qq, last_hash);
 	}
 
 

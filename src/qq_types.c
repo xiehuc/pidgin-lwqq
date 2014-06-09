@@ -8,6 +8,10 @@
 #define mkdir(a,b) _mkdir(a)
 #endif
 
+#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
+			lwdb_get_config_dir()),buf)
+#define GLOBAL_HASH_JS(buf) (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
+			GLOBAL_DATADIR),buf)
 
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
     TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))
@@ -99,6 +103,43 @@ void qq_dispatch(LwqqCommand cmd,unsigned long timeout)
 
 	purple_timeout_add(timeout,did_dispatch,d);
 }
+#ifdef WITH_MOZJS
+static char* hash_with_local_file(const char* uin,const char* ptwebqq,lwqq_js_t* js)
+{
+	char path[512] = {0};
+	if(access(LOCAL_HASH_JS(path), F_OK)!=0)
+		if(access(GLOBAL_HASH_JS(path),F_OK)!=0)
+			return NULL;
+	lwqq_jso_t* obj = lwqq_js_load(js, path);
+	char* res = NULL;
+
+	res = lwqq_js_hash(uin, ptwebqq, js);
+	lwqq_js_unload(js, obj);
+
+	return res;
+}
+
+static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)
+{
+	//github.com is too slow
+	const char* url = "http://pidginlwqq.sinaapp.com/hash.js";
+	LwqqErrorCode ec = qq_download(url, "hash.js", lwdb_get_config_dir());
+	if(ec){
+		lwqq_log(LOG_ERROR,"Could not download JS From %s",url);
+	}
+	return hash_with_local_file(uin, ptwebqq, js);
+}
+
+static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
+{
+	qq_account* ac = ac_;
+	const char* url = lwdb_userdb_read(ac->db, "hash.js");
+	if(url == NULL) return NULL;
+	if(qq_download(url,"hash.js",lwdb_get_config_dir())==LWQQ_EC_ERROR) return NULL;
+	return hash_with_local_file(uin, ptwebqq, ac_);
+}
+#endif
+
 qq_account* qq_account_new(PurpleAccount* account)
 {
 	qq_account* ac = g_malloc0(sizeof(qq_account));
@@ -111,6 +152,11 @@ qq_account* qq_account_new(PurpleAccount* account)
 	ac->qq = lwqq_client_new(username,password);
 	ac->js = lwqq_js_init();
 	ac->sys_log = purple_log_new(PURPLE_LOG_SYSTEM, "system", account, NULL, time(NULL), NULL);
+#ifdef WITH_MOZJS
+	lwqq_hash_add_entry(ac->qq, "hash_local", hash_with_local_file, ac->js);
+	lwqq_hash_add_entry(ac->qq, "hash_url", hash_with_remote_file, ac->js);
+	lwqq_hash_add_entry(ac->qq, "hash_db", hash_with_db_url, ac);
+#endif
 
 	ac->font.family = s_strdup("宋体");
 	ac->font.size = 12;
