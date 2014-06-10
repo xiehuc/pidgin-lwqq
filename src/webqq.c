@@ -2970,8 +2970,9 @@ init_plugin(PurplePlugin *plugin)
 	options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("SSL(encrypt on chat)"), "ssl", FALSE);
 	options = g_list_append(options,option);
-	option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
-	options = g_list_append(options, option);
+	// disable duplicated message, it seems no use
+	// option = purple_account_option_bool_new(_("Remove Duplicated Message"),"remove_duplicated_msg",FALSE);
+	// options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("Don't Download Group Pic(Reduce Network Transfer)"), "no_download_group_pic", FALSE);
 	options = g_list_append(options,option);
 	option = purple_account_option_bool_new(_("Version Statics"), "version_statics", TRUE);
