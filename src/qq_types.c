@@ -1,6 +1,7 @@
 #include "qq_types.h"
 #include "smemory.h"
 #include "utility.h"
+#include <unistd.h>
 
 #include <sys/stat.h>
 #ifdef WIN32
@@ -130,13 +131,12 @@ static char* hash_with_remote_file(const char* uin,const char* ptwebqq,void* js)
 	return hash_with_local_file(uin, ptwebqq, js);
 }
 
-static char* hash_with_db_url(const char* uin,const char* ptwebqq,void* ac_)
+static char* hash_with_db_url(const char* uin,const char* ptwebqq,qq_account* ac)
 {
-	qq_account* ac = ac_;
 	const char* url = lwdb_userdb_read(ac->db, "hash.js");
 	if(url == NULL) return NULL;
 	if(qq_download(url,"hash.js",lwdb_get_config_dir())==LWQQ_EC_ERROR) return NULL;
-	return hash_with_local_file(uin, ptwebqq, ac_);
+	return hash_with_local_file(uin, ptwebqq, ac->js);
 }
 #endif
 
@@ -153,9 +153,9 @@ qq_account* qq_account_new(PurpleAccount* account)
 	ac->js = lwqq_js_init();
 	ac->sys_log = purple_log_new(PURPLE_LOG_SYSTEM, "system", account, NULL, time(NULL), NULL);
 #ifdef WITH_MOZJS
-	lwqq_hash_add_entry(ac->qq, "hash_local", hash_with_local_file, ac->js);
-	lwqq_hash_add_entry(ac->qq, "hash_url", hash_with_remote_file, ac->js);
-	lwqq_hash_add_entry(ac->qq, "hash_db", hash_with_db_url, ac);
+	lwqq_hash_add_entry(ac->qq, "hash_local", (LwqqHashFunc)hash_with_local_file,  ac->js);
+	lwqq_hash_add_entry(ac->qq, "hash_url",   (LwqqHashFunc)hash_with_remote_file, ac->js);
+	lwqq_hash_add_entry(ac->qq, "hash_db",    (LwqqHashFunc)hash_with_db_url,      ac);
 #endif
 
 	ac->font.family = s_strdup("宋体");

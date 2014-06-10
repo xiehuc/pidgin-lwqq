@@ -9,7 +9,6 @@
 #include <ft.h>
 #include <imgstore.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include "qq_types.h"
 #include "translate.h"
