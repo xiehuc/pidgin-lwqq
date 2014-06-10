@@ -50,7 +50,7 @@ lwqq 即是 linux webqq 之意
 ### pidgin
 
 * 支持发送接受 好友|群|讨论组 消息
-* 支持发送接受图片
+* 支持发送接受图片(webqq不稳定)
 * 支持发送接受表情(在设置中使用webqq表情主题)
 * 支持发送接受 输入提示|窗口摇动
 * 支持设置 好友|群|讨论组 备注
@@ -65,10 +65,10 @@ lwqq 即是 linux webqq 之意
 * <del>支持发送接受离线文件</del>
 * 支持文本样式
 * 支持群消息屏蔽
-* 支持接受文件传输
+* <del>支持接受文件传输(webqq已移除)</del>
 * 支持本地QQ号缓存机制
 * 支持添加好友|群
-* 支持下载漫游记录
+* <del>支持下载漫游记录(webqq不稳定)</del>
 
 ### empathy not support ###
 
@@ -82,7 +82,7 @@ lwqq 即是 linux webqq 之意
 * pidgin使用明文保存密码
     请配合使用[pidgin-gnome-keyring](https://code.google.com/p/pidgin-gnome-keyring/)并开启插件
 
-* 当libcurl版本低于7.22.0时可能造成图片发送失败
+* pidgin自身的问题,登录密码需要小于12位
 
 *telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*
 
