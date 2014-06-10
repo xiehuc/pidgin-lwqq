@@ -940,6 +940,8 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
 	qq_account* ac = lwqq_client_userdata(lc);
 	LwqqGroup* group;
+	static char buf[BUFLEN] ;
+	strcpy(buf,"");
 	if(msg->super.super.type == LWQQ_MS_GROUP_WEB_MSG){
 		group = find_group_by_gid(lc, msg->group_web.send);
 		if(group == NULL) return LWQQ_EC_OK;
@@ -947,17 +949,19 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 		group = msg->group.from;
 
 		int seq = group->last_seq;
-		if(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg, group)==1){
-			char lost_msg[256];
-			snprintf(lost_msg, sizeof(lost_msg), "lost message from #%d to #%d",seq+1,msg->group.seq-1);
-			qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));
+		char lost_msg[256];
+		switch(lwqq_msg_check_lost(lc, (LwqqMsg**)&msg, group)){
+			case 1:
+				snprintf(lost_msg, sizeof(lost_msg), "lost message from #%d to #%d",seq+1,msg->group.seq-1);
+				qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));
+				break;
+			case -1:
+				format_append(buf, "(#%d)", msg->group.seq);
+				break;
 		}
 		lwqq_msg_check_member_chg(lc, (LwqqMsg**)&msg, group);
 	}
 
-	//force open dialog
-	static char buf[BUFLEN] ;
-	strcpy(buf,"");
 
 	translate_struct_to_message(ac,msg,buf,PURPLE_MESSAGE_RECV);
 
