@@ -44,6 +44,7 @@ static void show_confirm_table(LwqqClient* lc,LwqqConfirmTable* table);
 static void qq_login(PurpleAccount *account);
 static void add_friend(LwqqClient* lc,LwqqConfirmTable* c,LwqqBuddy* b,char* message);
 static void friends_valid_hash(LwqqAsyncEvent* ev);
+static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code);
 
 enum ResetOption{
 	RESET_BUDDY=1<<0,
@@ -400,7 +401,7 @@ static void qq_add_group(PurplePluginAction* action)
 	qq_account* ac = purple_connection_get_protocol_data(gc);
 
 
-	purple_request_input(gc,_("Add QQ Group"), _("QQ Number"), NULL, NULL, FALSE, FALSE, NULL, 
+	purple_request_input(gc, _("Add QQ Group"), _("QQ Number"), NULL, NULL, FALSE, FALSE, NULL, 
 			_("Search"), G_CALLBACK(search_group), _("Cancel"), G_CALLBACK(do_no_thing), ac->account, NULL, NULL, ac);
 }
 static void create_discu(qq_account* ac,PurpleRequestFields* root)
@@ -1489,7 +1490,6 @@ static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
 	vp_do(code->cmd,NULL);
 }
 
-static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code);
 static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
 {
 	//valid client make sure it doesn't be freed
@@ -1522,7 +1522,7 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
 	purple_request_field_set_required(code_entry,TRUE);
 	purple_request_field_group_add_field(field_group, code_entry);
 
-	purple_request_fields(ac->account, NULL,
+	purple_request_fields(ac->gc, NULL,
 			_("Captcha"), NULL,
 			fields, _("OK"), G_CALLBACK(input_verify_image),
 			_("View Outside"), G_CALLBACK(cancel_verify_image),
