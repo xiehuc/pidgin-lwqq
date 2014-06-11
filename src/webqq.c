@@ -1306,36 +1306,8 @@ static void login_stage_f(LwqqClient* lc)
 			group_come(lc,&group);
 		}
 	}
-#if 0
-	if(ac->flag & CACHE_TALKGROUP){
-		LIST_FOREACH(discu,&lc->discus,entries){
-			if(discu->last_modify==-1){
-				lwdb_userdb_insert_discu_info(ac->db, discu);
-				discu_come(lc,&discu);
-			}
-		}
-	}
-#endif
 	lwdb_userdb_commit(ac->db);
 }
-/*
-	static LwqqBuddy* create_system_buddy(LwqqClient* lc)
-	{
-	LwqqBuddy* self = lc->myself;
-	LwqqBuddy* sys = lwqq_buddy_new();
-	sys->uin = s_strdup(self->uin);
-	sys->qqnumber = s_strdup("system");
-	sys->nick = s_strdup(_("system"));
-	sys->markname = s_strdup(_("system"));
-	sys->level = 100;
-	sys->stat = LWQQ_STATUS_ONLINE;
-	sys->avatar = malloc(self->avatar_len);
-	sys->avatar_len = self->avatar_len;
-	memcpy(sys->avatar,self->avatar,self->avatar_len);
-	LIST_INSERT_HEAD(&lc->friends,sys, entries);
-	return sys;
-	}
-	*/
 
 static void login_stage_3(LwqqClient* lc)
 {
@@ -1424,28 +1396,11 @@ static void login_stage_3(LwqqClient* lc)
 	LwqqGroup* discu;
 	LIST_FOREACH(discu,&lc->discus,entries){
 		if(ac->flag&CACHE_TALKGROUP && discu->last_modify == LWQQ_LAST_MODIFY_UNKNOW)
+			// discu is imediately date, doesn't need get info from server, we can
+			// directly write it into database
 			lwdb_userdb_insert_discu_info(ac->db, &discu);
 		discu_come(lc, &discu);
 	}
-#if 0
-	if(ac->flag&CACHE_TALKGROUP){
-		LIST_FOREACH(discu,&lc->discus,entries){
-			if(!discu->account||discu->last_modify==-1){
-				ev = lwqq_info_get_discu_detail_info(lc, discu);
-				lwqq_async_evset_add_event(set, ev);
-			}
-			if(discu->last_modify!=-1){
-				discu_come(lc,&discu);
-			}
-		}
-	}else{
-		LIST_FOREACH(discu,&lc->discus,entries){
-			//discu account is always generated
-			//lwqq_override(discu->account, s_strdup(discu->did));
-			discu_come(lc, &discu);
-		}
-	}
-#endif
 
 	lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
 
@@ -3116,7 +3071,7 @@ static void qq_login(PurpleAccount *account)
 	lwqq_bit_set(ac->flag, QQ_DONT_EXPECT_100_CONTINUE,purple_account_get_bool(account,"dont_expected_100_continue",FALSE));
 	lwqq_bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC, purple_account_get_bool(account, "no_download_group_pic", FALSE));
 	lwqq_bit_set(ac->flag, SEND_VISUALBILITY, purple_account_get_bool(account, "send_visualbility", SEND_VISUAL_DEFAULT));
-	lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", FALSE));
+	lwqq_bit_set(ac->flag, CACHE_TALKGROUP, purple_account_get_bool(account, "cache_talk", TRUE));
 	ac->recent_group_name = s_strdup(purple_account_get_string(account, "recent_group_name", "Recent Contacts"));
 	lwqq_get_http_handle(ac->qq)->ssl = purple_account_get_bool(account, "ssl", FALSE);
 	int relink_retry = 0;
