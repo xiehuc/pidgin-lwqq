@@ -1656,14 +1656,13 @@ static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
 //send back receipt
 static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what,long retry)
 {
-	if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) goto failed;
 	qq_account* ac = lwqq_async_event_get_owner(ev)->data;
 	LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
 
 	if(ev == NULL){
 		qq_sys_msg_write(ac,msg->type,serv_id,_("Message body too long"),PURPLE_MESSAGE_ERROR,time(NULL));
 	}else{
-		int err = lwqq_async_event_get_result(ev);
+		int err = ev->result;
 		static char buf[1024]={0};
 		PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
@@ -1675,8 +1674,8 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 			return;
 		}
 
-		if(conv && err > 0){
-			snprintf(buf,sizeof(buf),_("Send failed, err:%d:\n%s"),err,what);
+		if(conv && err != 0){
+			snprintf(buf,sizeof(buf),_("Send failed, err(%d):\n%s"),err,what);
 			qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
 		}
 	}
@@ -1685,7 +1684,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 
 	if(msg->type == LWQQ_MS_GROUP_MSG) mmsg->group.group_code = NULL;
 	else if(msg->type == LWQQ_MS_DISCU_MSG) mmsg->discu.did = NULL;
-failed:
+
 	s_free(what);
 	s_free(serv_id);
 	lwqq_msg_free(msg);
