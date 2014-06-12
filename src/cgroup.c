@@ -69,7 +69,8 @@ static void set_user_list(qq_chat_group* cg)
 				users = g_list_append(users,member->card?:member->nick);
 			}
 		}
-		purple_conv_chat_add_users(chat,users,extra_msgs,flags,FALSE);
+		if(users) // sometimes, member is empty, so users is NULL
+			purple_conv_chat_add_users(chat,users,extra_msgs,flags,FALSE);
 		g_list_free(users);
 		g_list_free(flags);
 		g_list_free(extra_msgs);
