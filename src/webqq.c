@@ -1307,6 +1307,14 @@ static void login_stage_f(LwqqClient* lc)
 		}
 	}
 	lwdb_userdb_commit(ac->db);
+
+	LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
+	if(ac->flag& REMOVE_DUPLICATED_MSG)
+		flags |= POLL_REMOVE_DUPLICATED_MSG;
+	if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
+		flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
+
+	lwqq_msglist_poll(lc->msg_list, flags);
 }
 
 static void login_stage_3(LwqqClient* lc)
@@ -1406,14 +1414,6 @@ static void login_stage_3(LwqqClient* lc)
 
 
 	ac->state = LOAD_COMPLETED;
-
-	LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
-	if(ac->flag& REMOVE_DUPLICATED_MSG)
-		flags |= POLL_REMOVE_DUPLICATED_MSG;
-	if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
-		flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
-
-	lwqq_msglist_poll(lc->msg_list, flags);
 }
 
 static void upload_content_fail(LwqqClient* lc,const char** p_serv_id,LwqqMsgContent** p_c,int* p_err)
