@@ -1,6 +1,18 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+version 0.3.1: (2014-06-13):
+	+  加入一套暴走漫画表情(只能接受)
+	+  加入一套emoji表情(只能接受). 理论上还可以加入其它流行的表情, 当然只能接
+		受, 发送不出去.
+	+  加入cpack自动打包脚本 by edhelas
+	*  在查看详细资料时刷新昵称 by lainme
+	+  使用lwqq 0.3.1的自动hash选择
+	-  移除'移除重复消息'选项, 实际无用
+	*  修正退出时验证码窗口没有关闭
+	+  在群聊天中显示重复消息的序号(#num)
+	*  修正github上两个导致crash的issue
+
 version 0.3.0: (2014-04-28):
 
 	+  gnome 3.12 下的pidgin-extension支持提醒群组消息
