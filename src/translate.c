@@ -241,6 +241,9 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
 						purple_imgstore_get_filename(simg), 
 						purple_imgstore_get_data(simg), 
 						purple_imgstore_get_size(simg));
+				char buf[12];
+				snprintf(buf, sizeof(buf), "%d", img_id);
+				c->data.img.file_path = s_strdup(buf);
 			}
 		}else if(*begin==':'&&*(end-1)==':'){
 			if(strstr(begin,":face")==begin){
@@ -306,6 +309,8 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
 {
 	LwqqMsgContent* c;
 	char piece[24] = {0};
+	char* img_idstr = NULL, **img_data = NULL, *img_url = NULL;
+	size_t img_sz = 0;
 	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) strcat(buf,"<b>");
 	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"<i>");
 	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"<u>");
@@ -334,44 +339,36 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
 					strcat(buf,translate_smile(c->data.face));
 				break;
 			case LWQQ_CONTENT_OFFPIC:
-				if(c->data.img.size>0){
-					int img_id = purple_imgstore_add_with_id(c->data.img.data,c->data.img.size,NULL);
-					//let it freed by purple
-					c->data.img.data = NULL;
-					//make it room to change num if necessary.
-					snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
-					strcat(buf,piece);
-				}else{
-					if((msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)){
-						strcat(buf,_("【DISABLE PIC】"));
-					}else if(c->data.img.url){
-						format_append(buf, "<a href=\"%s\">%s</a>",
-								c->data.img.url,
-								_("【PIC】")
-								);
-					}else{
-						strcat(buf,_("【PIC NOT FOUND】"));
-					}
-				}
-				break;
 			case LWQQ_CONTENT_CFACE:
-				if(flags & PURPLE_MESSAGE_SEND){
-					int img_id =  s_atoi(c->data.cface.file_id,0);
-					snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
+				if(c->type == LWQQ_CONTENT_CFACE){
+					img_idstr = c->data.cface.file_id;
+					img_sz = c->data.cface.size;
+					img_data = &c->data.cface.data;
+					img_url = c->data.cface.url;
+				}else{
+					img_idstr = c->data.img.file_path;
+					img_sz = c->data.img.size;
+					img_data = &c->data.img.data;
+					img_url = c->data.img.url;
+				}
+				if(flags & PURPLE_MESSAGE_SEND) {
+					int img_id = s_atoi(img_idstr,0);
+					snprintf(piece, sizeof(piece), "<IMG ID=\"%4d\">", img_id);
 					strcat(buf,piece);
 				}else{
-					if(c->data.cface.size>0){
-						int img_id = purple_imgstore_add_with_id(c->data.cface.data,c->data.cface.size,NULL);
+					if(img_sz>0){
+						int img_id = purple_imgstore_add_with_id(*img_data,img_sz,NULL);
 						//let it freed by purple
-						c->data.cface.data = NULL;
+						*img_data = NULL;
+						//make it room to change num if necessary.
 						snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
 						strcat(buf,piece);
 					}else{
 						if((msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)){
 							strcat(buf,_("【DISABLE PIC】"));
-						}else if(c->data.cface.url){
+						}else if(img_url){
 							format_append(buf, "<a href=\"%s\">%s</a>",
-									c->data.cface.url,
+									img_url,
 									_("【PIC】")
 									);
 						}else{
