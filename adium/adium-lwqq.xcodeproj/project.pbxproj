@@ -344,12 +344,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "adium-lwqq.pch";
 				HEADER_SEARCH_PATHS = (
-					../liblwqq/lib,
 					../../adium/Frameworks/libpurple.framework/Headers,
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
-					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
-					/usr/local/include/lwqq,
+					"\"$(SRCROOT)/lwqq.framework/Headers\"",
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
@@ -380,12 +378,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "adium-lwqq.pch";
 				HEADER_SEARCH_PATHS = (
-					../liblwqq/lib,
 					../../adium/Frameworks/libpurple.framework/Headers,
 					../../adium/Frameworks/libglib.framework/Headers,
 					../build/src,
-					/usr/local/Cellar/spidermonkey/1.8.5/include/js,
-					/usr/local/include/lwqq,
+					"\"$(SRCROOT)/lwqq.framework/Headers\"",
 				);
 				INFOPLIST_FILE = "adium-lwqq.plist";
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
