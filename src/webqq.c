@@ -1658,35 +1658,34 @@ static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
 //send back receipt
 static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* what,long retry)
 {
-	qq_account* ac = lwqq_async_event_get_owner(ev)->data;
 	LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+	if(ev == NULL) goto done;
 
-	if(ev == NULL){
-		qq_sys_msg_write(ac,msg->type,serv_id,_("Message body too long"),PURPLE_MESSAGE_ERROR,time(NULL));
-	}else{
-		int err = ev->result;
-		static char buf[1024]={0};
-		PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
+	qq_account* ac = ev->lc->data;
+	int err = ev->result;
+	static char buf[1024]={0};
+	PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
-		if(err == LWQQ_EC_LOST_CONN){
-			vp_do_repeat(ac->qq->events->poll_lost, NULL);
-		}else if(err == 108 && retry>0) {
-			LwqqAsyncEvent* event = lwqq_msg_send(ac->qq, mmsg);
-			lwqq_async_add_event_listener(event, _C_(4pl,send_receipt,event, msg, serv_id, what,retry-1));
-			return;
-		}
-
-		if(conv && err != 0){
-			snprintf(buf,sizeof(buf),_("Send failed, err(%d):\n%s"),err,what);
-			qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
-		}
+	if(err == LWQQ_EC_LOST_CONN){
+		vp_do_repeat(ac->qq->events->poll_lost, NULL);
+	}else if(err == 108 && retry>0) {
+		LwqqAsyncEvent* event = lwqq_msg_send(ac->qq, mmsg);
+		lwqq_async_add_event_listener(event, _C_(4pl,send_receipt,event, msg, serv_id, what,retry-1));
+		return;
 	}
+
+	if(conv && err != 0){
+		snprintf(buf,sizeof(buf),_("Send failed, err(%d):\n%s"),err,what);
+		qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
+	}
+
 	if(mmsg->upload_retry <0)
 		qq_sys_msg_write(ac, msg->type, serv_id, _("Upload content retry over limit"), PURPLE_MESSAGE_ERROR, time(NULL));
 
 	if(msg->type == LWQQ_MS_GROUP_MSG) mmsg->group.group_code = NULL;
 	else if(msg->type == LWQQ_MS_DISCU_MSG) mmsg->discu.did = NULL;
 
+done:
 	s_free(what);
 	s_free(serv_id);
 	lwqq_msg_free(msg);
