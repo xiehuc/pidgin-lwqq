@@ -1308,6 +1308,7 @@ static void login_stage_f(LwqqClient* lc)
 	}
 	lwdb_userdb_commit(ac->db);
 
+	// wait all download finished, start msg pool, to get all qqnumber
 	LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
 	if(ac->flag& REMOVE_DUPLICATED_MSG)
 		flags |= POLL_REMOVE_DUPLICATED_MSG;
@@ -1315,6 +1316,9 @@ static void login_stage_f(LwqqClient* lc)
 		flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
 
 	lwqq_msglist_poll(lc->msg_list, flags);
+
+	// now open status, allow user start talk
+	ac->state = LOAD_COMPLETED;
 }
 
 static void login_stage_3(LwqqClient* lc)
@@ -1412,8 +1416,6 @@ static void login_stage_3(LwqqClient* lc)
 
 	lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
 
-
-	ac->state = LOAD_COMPLETED;
 }
 
 static void upload_content_fail(LwqqClient* lc,const char** p_serv_id,LwqqMsgContent** p_c,int* p_err)
