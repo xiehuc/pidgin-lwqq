@@ -100,8 +100,3 @@ Known Issue
 * telepathy-haze store buddy list on /tmp/haze-XXX.
   every time startup recreate every thing.
 
-Donate
-------
-
-To support the development (such as a cross platform implementation, other plugin compability ,code refactoring)
-you can donate to this open source project [here](https://me.alipay.com/xiehuc).
