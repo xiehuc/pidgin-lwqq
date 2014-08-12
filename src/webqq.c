@@ -857,7 +857,7 @@ struct rewrite_pic_entry {
 };
 static void rewrite_whole_message_list(LwqqAsyncEvent* ev,qq_account* ac,LwqqGroup* group)
 {
-	if(lwqq_async_event_get_code(ev)==LWQQ_CALLBACK_FAILED) return;
+	if(ev->result != LWQQ_EC_OK) return;
 	qq_chat_group* cg = group->data;
 	qq_cgroup_flush_members(cg);
 
@@ -1160,7 +1160,7 @@ static void friend_avatar(qq_account* ac,LwqqBuddy* buddy)
 }
 static void group_avatar(LwqqAsyncEvent* ev,LwqqGroup* group)
 {
-	qq_account* ac = lwqq_async_event_get_owner(ev)->data;
+	qq_account* ac = ev->lc->data;
 
 	PurpleAccount* account = ac->account;
 	PurpleChat* chat;
@@ -2001,7 +2001,7 @@ static void change_category_back(LwqqAsyncEvent* event,void* data)
 	void**d = data;
 	qq_account* ac = d[2];
 	if(event == NULL) goto clean;
-	if(lwqq_async_event_get_result(event)!=0) {
+	if(event->result!=LWQQ_EC_OK) {
 		move_buddy_back(data);
 		purple_notify_error(ac->gc,NULL,_("Change friend category failed"),_("Server fault returns"));
 		return;
