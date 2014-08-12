@@ -1952,11 +1952,10 @@ static void on_create(void *data,PurpleConnection* gc)
 static void qq_close(PurpleConnection *gc)
 {
 	qq_account* ac = purple_connection_get_protocol_data(gc);
-	LwqqErrorCode err;
 
 	if(ac->relink_timer>0) purple_timeout_remove(ac->relink_timer);
 	if(lwqq_client_logined(ac->qq))
-		lwqq_logout(ac->qq,&err);
+		lwqq_logout(ac->qq, 3);// only wait 3 seconds to logout
 	lwqq_msglist_close(ac->qq->msg_list);
 	LwqqGroup* g;
 	LIST_FOREACH(g,&ac->qq->groups,entries){
@@ -1968,7 +1967,7 @@ static void qq_close(PurpleConnection *gc)
 	translate_global_free();
 	g_ref_count -- ;
 	if(g_ref_count == 0){
-		lwqq_http_global_free();
+		lwqq_http_global_free(LWQQ_CLEANUP_IGNORE);
 		lwqq_async_global_quit();
 		lwdb_global_free();
 	}
