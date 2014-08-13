@@ -1448,7 +1448,7 @@ static void input_verify_image(LwqqVerifyCode* code,PurpleRequestFields* fields)
 	value = purple_request_fields_get_string(fields, "code_entry");
 	code->str = s_strdup(value);
 
-	vp_do(code->cmd,NULL);
+	vp_do(code->cmd, NULL);
 }
 
 static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
@@ -1456,11 +1456,14 @@ static void cancel_verify_image(LwqqVerifyCode* code,PurpleRequestField* fields)
 	//valid client make sure it doesn't be freed
 	LwqqClient* lc = code->lc;
 	if(!lwqq_client_valid(lc)) return;
-	lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
-	char cmd[512];
-	snprintf(cmd,sizeof(cmd),OPEN_PROG" '%s/%s'",LWQQ_CACHE_DIR,lc->username);
-	system(cmd);
-	show_verify_image(lc, &code);
+	if(CAPTCHA_VIEW_OUTSIDE){
+		lwqq_util_save_img(code->data, code->size, lc->username,LWQQ_CACHE_DIR);
+		char cmd[512];
+		snprintf(cmd,sizeof(cmd),OPEN_PROG" '%s/%s'",LWQQ_CACHE_DIR,lc->username);
+		system(cmd);
+		show_verify_image(lc, &code);
+	}else
+		vp_do(code->cmd, NULL);
 }
 
 static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
@@ -1483,10 +1486,12 @@ static void show_verify_image(LwqqClient* lc,LwqqVerifyCode** p_code)
 	purple_request_field_set_required(code_entry,TRUE);
 	purple_request_field_group_add_field(field_group, code_entry);
 
+
 	purple_request_fields(ac->gc, NULL,
 			_("Captcha"), NULL,
 			fields, _("OK"), G_CALLBACK(input_verify_image),
-			_("View Outside"), G_CALLBACK(cancel_verify_image),
+			(CAPTCHA_VIEW_OUTSIDE)?_("View Outside"):_("Cancel"), 
+			G_CALLBACK(cancel_verify_image),
 			ac->account, NULL, NULL, code);
 
 	return ;

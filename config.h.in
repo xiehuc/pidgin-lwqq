@@ -13,6 +13,8 @@
 
 //use hash to quickly find friend and group
 #define QQ_USE_FAST_INDEX 1
+// captcha button is View OutSide Or Cancel
+#define CAPTCHA_VIEW_OUTSIDE 0
 
 #endif /* __CONFIG_H__ */
 
