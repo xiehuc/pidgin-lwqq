@@ -703,14 +703,12 @@ static void buddy_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
 	qq_account* ac = lwqq_client_userdata(lc);
 	PurpleConnection* pc = ac->gc;
-	char buf[BUFLEN]={0};
-	//clean buffer
-	strcpy(buf,"");
 	LwqqBuddy* buddy = msg->buddy.from;
 	const char* local_id = (ac->flag&QQ_USE_QQNUM)?buddy->qqnumber:buddy->uin;
 
-	translate_struct_to_message(ac,msg,buf,PURPLE_MESSAGE_RECV);
-	serv_got_im(pc, local_id, buf, PURPLE_MESSAGE_RECV, msg->time);
+	struct ds body = translate_struct_to_message(ac,msg,PURPLE_MESSAGE_RECV);
+	serv_got_im(pc, local_id, ds_c_str(body), PURPLE_MESSAGE_RECV, msg->time);
+	ds_free(body);
 }
 static void offline_file(LwqqClient* lc,LwqqMsgOffFile* msg)
 {
@@ -940,8 +938,9 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 {
 	qq_account* ac = lwqq_client_userdata(lc);
 	LwqqGroup* group;
-	static char buf[BUFLEN] ;
-	strcpy(buf,"");
+	char piece[8192];
+	struct ds buf = ds_initializer, body = ds_initializer;
+	ds_sure(buf, BUFLEN);
 	if(msg->super.super.type == LWQQ_MS_GROUP_WEB_MSG){
 		group = find_group_by_gid(lc, msg->group_web.send);
 		if(group == NULL) return LWQQ_EC_OK;
@@ -956,17 +955,19 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 				qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_ERROR, lost_msg, time(0));
 				break;
 			case -1:
-				format_append(buf, "(#%d)", msg->group.seq);
+				snprintf(piece, sizeof(piece), "(#%d)", msg->group.seq);
+				ds_cat(buf, piece);
 				break;
 		}
 		lwqq_msg_check_member_chg(lc, (LwqqMsg**)&msg, group);
 	}
 
 
-	translate_struct_to_message(ac,msg,buf,PURPLE_MESSAGE_RECV);
+	body = translate_struct_to_message(ac,msg,PURPLE_MESSAGE_RECV);
+	ds_cat(buf, ds_c_str(body));
 
 	if(LIST_EMPTY(&group->members)) {
-		const char* pic = buf;
+		const char* pic = ds_c_str(buf);
 		while((pic = strstr(pic,"<IMG"))!=NULL){
 			int id;
 			sscanf(pic, "<IMG ID=\"%d\">",&id);
@@ -992,7 +993,9 @@ static int group_message(LwqqClient* lc,LwqqMsgMessage* msg)
 		}
 	}//else set user list in cgroup_got_msg
 
-	qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV, buf, msg->time);
+	qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV, ds_c_str(buf), msg->time);
+	ds_free(buf);
+	ds_free(body);
 	return LWQQ_EC_OK;
 }
 static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
@@ -1003,19 +1006,20 @@ static void whisper_message(LwqqClient* lc,LwqqMsgMessage* mmsg)
 	const char* from = mmsg->super.from;
 	const char* gid = mmsg->sess.id;
 	char name[70]={0};
-	static char buf[BUFLEN]={0};
-	strcpy(buf,"");
+	struct ds buf = ds_initializer;
 
-	translate_struct_to_message(ac,mmsg,buf,PURPLE_MESSAGE_RECV);
+	buf = translate_struct_to_message(ac,mmsg,PURPLE_MESSAGE_RECV);
 
 	LwqqGroup* group = find_group_by_gid(lc,gid);
 	if(group == NULL) {
 		snprintf(name,sizeof(name),"%s #(broken)# %s",from,gid);
-		serv_got_im(pc,name,buf,PURPLE_MESSAGE_RECV,mmsg->time);
+		serv_got_im(pc,name,ds_c_str(buf),PURPLE_MESSAGE_RECV,mmsg->time);
+		ds_free(buf);
 		return;
 	}
 
-	LwqqCommand cmd = _C_(4pl,whisper_message_delay_display,ac,group,s_strdup(from),s_strdup(buf),mmsg->time);
+	LwqqCommand cmd = _C_(4pl,whisper_message_delay_display,ac,group,s_strdup(from),s_strdup(ds_c_str(buf)),mmsg->time);
+	ds_free(buf);
 	if(LIST_EMPTY(&group->members)) {
 		lwqq_async_add_event_listener(lwqq_info_get_group_detail_info(lc,group,NULL),cmd);
 	} else
@@ -1754,12 +1758,13 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 	strcpy(mmsg->f_color,"000000");
 
 	translate_message_to_struct(lc, who, what, msg, 1);
+	/*
 	if(send_visual){
 		char whatsnew[1024*10] = {0};
 		translate_struct_to_message(ac, mmsg, whatsnew,PURPLE_MESSAGE_SEND);
 		PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, ac->account);
 		purple_conversation_write(conv, NULL, whatsnew, flags, time(NULL));
-	}
+	}*/
 
 	LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
 	if(!ev) msg_unsend_print_reason(ac, msg, who);

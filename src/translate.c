@@ -272,71 +272,74 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
 	}
 	return 0;
 }
-static void paste_content_string(const char* from,char* to)
+static void paste_content_string(const char* from,struct ds* to)
 {
 	const char* read = from;
 	const char* ptr = read;
-	char* write = to;
+	struct ds write = *to;
 	size_t n = 0;
 	while((ptr = strpbrk(read,"<>&\""))){
 		if(ptr>read){
 			n = ptr-read;
-			strncpy(write,read,n);
-			write += n;
+			ds_pokes_n(write, read, n);
 		}
 		switch(*ptr){
-			case '<' : strcpy(write,"&lt;");break;
-			case '>' : strcpy(write,"&gt;");break;
-			case '&' : strcpy(write,"&amp;");break;
-			case '"' : strcpy(write,"&quot;");break;
+			case '<' : ds_cat(write,"&lt;");break;
+			case '>' : ds_cat(write,"&gt;");break;
+			case '&' : ds_cat(write,"&amp;");break;
+			case '"' : ds_cat(write,"&quot;");break;
 		}
 		read = ptr+1;
-		write+=strlen(write);
 	}
 	if(*read != '\0'){
-		strcpy(write,read);
-		write+=strlen(read);
+		ds_cat(write, read);
 	}
-	*write = '\0';
+	*to = write;
 }
 char* translate_to_html_symbol(const char* s)
 {
-	char buf[2048] = {0};
-	paste_content_string(s, buf);
-	return s_strdup(buf);
+	struct ds buf = ds_initializer;
+	paste_content_string(s, &buf);
+	char* ret = ds_c_str(buf);
+	buf.d = NULL;
+	ds_free(buf);
+	return ret;
 }
-void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,PurpleMessageFlags flags)
+struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, PurpleMessageFlags flags)
 {
 	LwqqMsgContent* c;
-	char piece[24] = {0};
+	char piece[8192] = {0};
+	struct ds buf = ds_initializer;
+	ds_sure(buf, BUFLEN);
 	char* img_idstr = NULL, **img_data = NULL, *img_url = NULL;
 	size_t img_sz = 0;
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) strcat(buf,"<b>");
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"<i>");
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"<u>");
-	snprintf(buf+strlen(buf),300,"<font ");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) ds_cat(buf,"<b>");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) ds_cat(buf,"<i>");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) ds_cat(buf,"<u>");
+	strcpy(piece, "");
 	if(ac->flag&DARK_THEME_ADAPT){
 		int c = strtoul(msg->f_color, NULL, 16);
 		int t = (c==0)?0xffffff:(c%256)/2+128+((c/256%256)/2+128)*256+((c/256/256%256)/2+128)*256*256;
-		snprintf(buf+strlen(buf),300,"color=\"#%x\" ",t);
+		format_append(piece,"color=\"#%x\" ",t);
 	}else
-		snprintf(buf+strlen(buf),300,"color=\"#%s\" ",msg->f_color);
+		format_append(piece,"color=\"#%s\" ",msg->f_color);
 	if(!(ac->flag&IGNORE_FONT_FACE)&&msg->f_name)
-		snprintf(buf+strlen(buf),300,"face=\"%s\" ",msg->f_name);
+		format_append(piece,"face=\"%s\" ",msg->f_name);
 	if(!(ac->flag&IGNORE_FONT_SIZE))
-		snprintf(buf+strlen(buf),300,"size=\"%d\" ",sizeunmap(msg->f_size));
-	strcat(buf,">");
+		format_append(piece,"size=\"%d\" ",sizeunmap(msg->f_size));
+	ds_cat(buf, "<font ", piece, ">");
 
 	TAILQ_FOREACH(c, &msg->content, entries) {
 		switch(c->type){
 			case LWQQ_CONTENT_STRING:
-				paste_content_string(c->data.str,buf+strlen(buf));
+				paste_content_string(c->data.str, &buf);
 				break;
 			case LWQQ_CONTENT_FACE:
-				if(flags & PURPLE_MESSAGE_SEND)
-					format_append(buf, ":face%d:",c->data.face);
-				else
-					strcat(buf,translate_smile(c->data.face));
+				if(flags & PURPLE_MESSAGE_SEND){
+					snprintf(piece, sizeof(piece), ":face%d:",c->data.face);
+					ds_cat(buf, piece);
+				} else
+					ds_cat(buf, translate_smile(c->data.face));
 				break;
 			case LWQQ_CONTENT_OFFPIC:
 			case LWQQ_CONTENT_CFACE:
@@ -354,7 +357,7 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
 				if(flags & PURPLE_MESSAGE_SEND) {
 					int img_id = s_atoi(img_idstr,0);
 					snprintf(piece, sizeof(piece), "<IMG ID=\"%4d\">", img_id);
-					strcat(buf,piece);
+					ds_cat(buf, piece);
 				}else{
 					if(img_sz>0){
 						int img_id = purple_imgstore_add_with_id(*img_data,img_sz,NULL);
@@ -362,27 +365,27 @@ void translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg, char* buf,
 						*img_data = NULL;
 						//make it room to change num if necessary.
 						snprintf(piece,sizeof(piece),"<IMG ID=\"%4d\">",img_id);
-						strcat(buf,piece);
+						ds_cat(buf, piece);
 					}else{
 						if((msg->super.super.type==LWQQ_MS_GROUP_MSG&&ac->flag&NOT_DOWNLOAD_GROUP_PIC)){
-							strcat(buf,_("【DISABLE PIC】"));
+							ds_cat(buf,_("【DISABLE PIC】"));
 						}else if(img_url){
-							format_append(buf, "<a href=\"%s\">%s</a>",
-									img_url,
-									_("【PIC】")
-									);
+							snprintf(piece,sizeof(piece), "<a href=\"%s\">%s</a>",
+									img_url, _("【PIC】") );
+							ds_cat(buf, piece);
 						}else{
-							strcat(buf,_("【PIC NOT FOUND】"));
+							ds_cat(buf,_("【PIC NOT FOUND】"));
 						}
 					}
 				}
 				break;
 		}
 	}
-	strcat(buf,"</font>");
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) strcat(buf,"</u>");
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) strcat(buf,"</i>");
-	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) strcat(buf,"</b>");
+	ds_cat(buf,"</font>");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_BOLD)) ds_cat(buf,"</u>");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_ITALIC)) ds_cat(buf,"</i>");
+	if(lwqq_bit_get(msg->f_style,LWQQ_FONT_UNDERLINE)) ds_cat(buf,"</b>");
+	return buf;
 }
 void translate_global_init()
 {
