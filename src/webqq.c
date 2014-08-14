@@ -1600,8 +1600,7 @@ static void friends_valid_hash(LwqqAsyncEvent* ev)
 	}
 	const LwqqHashEntry* succ_hash = lwqq_hash_get_last(lc);
 	lwdb_userdb_write(ac->db, "last_hash", succ_hash->name);
-	LwqqAsyncEvent* event;
-	event = lwqq_info_get_group_name_list(lc, succ_hash->func, succ_hash->data);
+	LwqqAsyncEvent* event = lwqq_info_get_group_name_list(lc, NULL, NULL);
 	lwqq_async_add_event_listener(event,_C_(2p,login_stage_2,event,lc));
 }
 static void login_stage_1(LwqqClient* lc,LwqqErrorCode* p_err)
