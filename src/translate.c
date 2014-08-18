@@ -118,28 +118,33 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 			memmove(write,read,begin-read);
 			write+=(begin-read);
 		}
-		if(strncmp(begin,"<br>",strlen("<br>"))==0){
-			strcpy(write,"\n");
-			write++;
-		}else if(strncmp(begin,"&amp;",strlen("&amp;"))==0){
-			strcpy(write,"&");
-			write++;
-		}else if(strncmp(begin,"&quot;",strlen("&quot;"))==0){
-			strcpy(write,"\"");
-			write++;
-		}else if(strncmp(begin,"&lt;",strlen("&lt;"))==0){
-			strcpy(write,"<");
-			write++;
-		}else if(strncmp(begin,"&gt;",strlen("&gt;"))==0){
-			strcpy(write,">");
-			write++;
+		if(strncmp(begin,"<br>",4)==0){
+			*write++ = '\n';
+		}else if(strncmp(begin,"&amp;",5)==0){
+			*write++ = '&';
+		}else if(strncmp(begin,"&quot;",6)==0){
+			*write++ = '"';
+		}else if(strncmp(begin,"&lt;",4)==0){
+			*write++ = '<';
+		}else if(strncmp(begin,"&gt;",4)==0){
+			*write++ = '>';
 		}else if(begin[0]=='<'){
 			if(begin[1]=='/'){
+			}else if(strncmp(begin,"<a ", 3)==0){
+				char *end, *start = strstr(begin, "href=\"");
+				if(!start) goto failed;
+				start += 6;
+				end = strchr(start,'"');
+				if(!end) goto failed;
+				*write++ = '<';
+				strncpy(write, start, end-start);
+				write+=end-start;
+				*write++ = '>';
 			}else{
-				if(begin[1]=='b')lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,1);
-				else if(begin[1]=='i')lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,1);
-				else if(begin[1]=='u')lwqq_bit_set(msg->f_style,LWQQ_FONT_UNDERLINE,1);
-				else if(strncmp(begin+1,"font",4)==0){
+				if(strncmp(begin,"<b ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,1);
+				else if(strncmp(begin,"<i ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,1);
+				else if(strncmp(begin,"<u ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_UNDERLINE,1);
+				else if(strncmp(begin,"<font ",6)==0){
 					const char *key = begin+6;
 					const char *value = strchr(begin,'=')+2;
 					const char *end = strchr(value,'"');
@@ -158,6 +163,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 				}
 			}
 		}
+failed:
 		read = end;
 	}
 	*write = '\0';
@@ -223,7 +229,7 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
 			if(c) TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 		}
 		trex_getsubexp(x,0,&m);
-		if(strstr(begin,"<IMG")==begin){
+		if(strstr(begin,"<IMG ")==begin){
 			//process ing img.
 			sscanf(begin,"<IMG ID=\"%d\">",&img_id);
 			PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
