@@ -1757,13 +1757,13 @@ static int qq_send_im(PurpleConnection *gc, const gchar *who, const gchar *what,
 	strcpy(mmsg->f_color,"000000");
 
 	translate_message_to_struct(lc, who, what, msg, 1);
-	/*
+
 	if(send_visual){
-		char whatsnew[1024*10] = {0};
-		translate_struct_to_message(ac, mmsg, whatsnew,PURPLE_MESSAGE_SEND);
+		struct ds whatsnew = translate_struct_to_message(ac, mmsg, PURPLE_MESSAGE_SEND);
 		PurpleConversation* conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, ac->account);
-		purple_conversation_write(conv, NULL, whatsnew, flags, time(NULL));
-	}*/
+		purple_conversation_write(conv, NULL, ds_c_str(whatsnew), flags, time(NULL));
+		ds_free(whatsnew);
+	}
 
 	LwqqAsyncEvent* ev = lwqq_msg_send(lc,mmsg);
 	if(!ev) msg_unsend_print_reason(ac, msg, who);
