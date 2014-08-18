@@ -140,6 +140,16 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 				strncpy(write, start, end-start);
 				write+=end-start;
 				*write++ = '>';
+			}else if(strncmp(begin, "<img ",5)==0){
+				char *end, *start = strstr(begin, "src=\"");
+				if(!start) goto failed;
+				start += 5;
+				end = strchr(start,'"');
+				if(!end) goto failed;
+				*write++ = '<';
+				strncpy(write, start, end-start);
+				write+=end-start;
+				*write++ = '>';
 			}else{
 				if(strncmp(begin,"<b ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,1);
 				else if(strncmp(begin,"<i ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,1);
@@ -229,9 +239,8 @@ int translate_message_to_struct(LwqqClient* lc,const char* to,const char* what,L
 			if(c) TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 		}
 		trex_getsubexp(x,0,&m);
-		if(strstr(begin,"<IMG ")==begin){
-			//process ing img.
-			sscanf(begin,"<IMG ID=\"%d\">",&img_id);
+		if(strncmp(begin,"<IMG ", 5)==0 && sscanf(begin,"<IMG ID=\"%d\">",&img_id)==1){
+			//processing purple internal img.
 			PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
 			if(using_cface||msg->type == LWQQ_MS_GROUP_MSG){
 				c = lwqq_msg_fill_upload_cface(
