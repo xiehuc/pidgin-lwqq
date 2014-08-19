@@ -1,6 +1,13 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+version 0.4.0: (2014-08-19):
+	*  更新 lwqq 0.4.0 版本, 更好的退出, 更好的长文本支持
+	+  增加lwqq版本检测
+	*  取消验证码的'在外部查看'按钮
+	*  转换<a href>和<img src>将链接暴露出来.
+
+
 version 0.3.1: (2014-06-13):
 	+  加入一套暴走漫画表情(只能接受)
 	+  加入一套emoji表情(只能接受). 理论上还可以加入其它流行的表情, 当然只能接
