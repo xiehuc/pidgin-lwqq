@@ -44,6 +44,9 @@ lwqq 即是 linux webqq 之意
 
 第一次使用? 猛击:[简易使用教程](https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide)
 
+如果在安装lwqq的时候安装了python绑定, 则可以使用 `lwqq-cli.py --make-cache`
+手动建立缓存. 好处是更加稳定. 如果在pidgin登录的时候好友数过多, 容易崩溃的可以试一试.
+
 功能列表
 --------
 
@@ -84,7 +87,7 @@ lwqq 即是 linux webqq 之意
 
 * pidgin自身的问题,登录密码需要小于12位
 
-*telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.*
+* telepathy-haze 本身不支持群组聊天和图片显示.比较纠结.
 
 **注意:**
 telepathy-haze 比较坑爹.居然不保存好友列表.!!

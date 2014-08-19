@@ -1961,6 +1961,7 @@ static void on_create(void *data,PurpleConnection* gc)
 static void qq_close(PurpleConnection *gc)
 {
 	qq_account* ac = purple_connection_get_protocol_data(gc);
+	if(!ac) return;
 
 	if(ac->relink_timer>0) purple_timeout_remove(ac->relink_timer);
 	if(lwqq_client_logined(ac->qq))
@@ -3030,13 +3031,19 @@ static void qq_login(PurpleAccount *account)
 {
 
 	PurpleConnection* pc= purple_account_get_connection(account);
-	qq_account* ac = qq_account_new(account);
 	const char* username = purple_account_get_username(account);
 	const char* password = purple_account_get_password(account);
 	if(password==NULL||strcmp(password,"")==0) {
 		purple_connection_error_reason(pc,PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,_("Password is empty"));
 		return;
 	}
+	if(strcmp(lwqq_version,VERSION)!=0){
+		char buf[256];
+		snprintf(buf, sizeof(buf), _("lwqq version didn't match, found %s, require %s"), lwqq_version, VERSION);
+		purple_connection_error_reason(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, buf);
+		return;
+	}
+	qq_account* ac = qq_account_new(account);
 	g_ref_count ++ ;
 	ac->gc = pc;
 	init_client_events(ac->qq);
