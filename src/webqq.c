@@ -607,7 +607,7 @@ static void friend_come(LwqqClient* lc,LwqqBuddy** p_buddy)
 		purple_prpl_got_user_status(account, key, buddy_status(buddy), NULL);
 	}
 	//this is avaliable when reload avatar in
-	//login_stage_f
+	//login_stage_e
 	if(buddy->avatar_len)
 		friend_avatar(ac, buddy);
 	//download avatar 
@@ -679,10 +679,13 @@ static void group_come(LwqqClient* lc,LwqqGroup** p_group)
 		if(!group->account) purple_blist_node_set_flags(PURPLE_BLIST_NODE(chat),PURPLE_BLIST_NODE_FLAG_NO_SAVE);
 	}
 
-	qq_chat_group* cg = qq_cgroup_new(QQ_CG_OPT);
-	group->data = cg;
-	cg->group = group;
-	cg->chat = chat;
+	qq_chat_group* cg = group->data;
+	if(!cg){
+		cg = qq_cgroup_new(QQ_CG_OPT);
+		group->data = cg;
+		cg->group = group;
+		cg->chat = chat;
+	}
 
 	if(lwqq_group_is_qun(group)){
 		qq_set_group_name(cg);
@@ -1281,22 +1284,45 @@ void qq_msg_check(LwqqClient* lc)
 }
 
 
-/*static void check_exist(void* data,void* userdata)
-  {
-  qq_account* ac = userdata;
-  PurpleBuddy* bu = data;
-  LwqqClient* lc = ac->qq;
-  if(purple_buddy_get_account(bu)==ac->account&&
-  find_buddy_by_qqnumber(lc,purple_buddy_get_name(bu))==NULL){
-  purple_blist_remove_buddy(bu);
-  }
-  }*/
-
+// stage finish, all qqnumber downloaded
 static void login_stage_f(LwqqClient* lc)
 {
 	LwqqBuddy* buddy;
 	LwqqGroup* group;
 	qq_account* ac = lc->data;
+	LIST_FOREACH(buddy,&lc->friends,entries) {
+		if(buddy->last_modify == -1 || buddy->last_modify == 0){
+			friend_come(lc, &buddy);
+		}
+	}
+	LIST_FOREACH(group,&lc->groups,entries){
+		if(group->last_modify == -1 || group->last_modify == 0){
+			group_come(lc,&group);
+		}
+	}
+
+	// wait all download finished, start msg pool, to get all qqnumber
+	LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
+	if(ac->flag& REMOVE_DUPLICATED_MSG)
+		flags |= POLL_REMOVE_DUPLICATED_MSG;
+	if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
+		flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
+
+	lwqq_msglist_poll(lc->msg_list, flags);
+	lwqq_puts("[all download finished]");
+
+	// now open status, allow user start talk
+	ac->state = LOAD_COMPLETED;
+}
+
+// stage extra, all extra infomation downloaded
+static void login_stage_e(LwqqClient* lc)
+{
+	LwqqBuddy* buddy;
+	LwqqGroup* group;
+	qq_account* ac = lwqq_client_userdata(lc);
+	if(ac->state != LOAD_COMPLETED) return;
+
 	lwdb_userdb_begin(ac->db);
 	LIST_FOREACH(buddy,&lc->friends,entries) {
 		if(buddy->last_modify == -1 || buddy->last_modify == 0){
@@ -1311,18 +1337,6 @@ static void login_stage_f(LwqqClient* lc)
 		}
 	}
 	lwdb_userdb_commit(ac->db);
-
-	// wait all download finished, start msg pool, to get all qqnumber
-	LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC|POLL_AUTO_DOWN_GROUP_PIC|POLL_AUTO_DOWN_BUDDY_PIC;
-	if(ac->flag& REMOVE_DUPLICATED_MSG)
-		flags |= POLL_REMOVE_DUPLICATED_MSG;
-	if(ac->flag& NOT_DOWNLOAD_GROUP_PIC)
-		flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
-
-	lwqq_msglist_poll(lc->msg_list, flags);
-
-	// now open status, allow user start talk
-	ac->state = LOAD_COMPLETED;
 }
 
 static void login_stage_3(LwqqClient* lc)
@@ -1365,25 +1379,26 @@ static void login_stage_3(LwqqClient* lc)
 	//clean extra duplicated node
 	all_reset(ac,RESET_GROUP_SOFT|(ac->flag&CACHE_TALKGROUP?RESET_DISCU_SOFT:RESET_DISCU));
 
-	LwqqAsyncEvset* set = lwqq_async_evset_new();
+	LwqqAsyncEvset* qq_pool = lwqq_async_evset_new();
+	LwqqAsyncEvset* info_pool = lwqq_async_evset_new();
 
 	LwqqBuddy* buddy;
 	LIST_FOREACH(buddy,&lc->friends,entries) {
 		lwdb_userdb_query_buddy(ac->db, buddy);
 		if((ac->flag& QQ_USE_QQNUM)&& ! buddy->qqnumber){
 			ev = lwqq_info_get_friend_qqnumber(lc,buddy);
-			lwqq_async_evset_add_event(set, ev);
+			lwqq_async_evset_add_event(qq_pool, ev);
 		}
 		if(buddy->last_modify == 0 || buddy->last_modify == -1) {
 			ev = lwqq_info_get_single_long_nick(lc, buddy);
-			lwqq_async_evset_add_event(set, ev);
+			lwqq_async_evset_add_event(info_pool, ev);
 			ev = lwqq_info_get_level(lc, buddy);
-			lwqq_async_evset_add_event(set, ev);
+			lwqq_async_evset_add_event(info_pool, ev);
 			//if buddy is unknow we should update avatar in friend_come
 			//for better speed in first load
 			if(buddy->last_modify == LWQQ_LAST_MODIFY_RESET){
 				ev = lwqq_info_get_friend_avatar(lc,buddy);
-				lwqq_async_evset_add_event(set, ev);
+				lwqq_async_evset_add_event(info_pool, ev);
 			}
 		}
 		if(buddy->last_modify != -1 && buddy->last_modify != 0)
@@ -1397,11 +1412,11 @@ static void login_stage_3(LwqqClient* lc)
 		lwdb_userdb_query_group(ac->db, group);
 		if((ac->flag && QQ_USE_QQNUM)&& ! group->account){
 			ev = lwqq_info_get_group_qqnumber(lc,group);
-			lwqq_async_evset_add_event(set, ev);
+			lwqq_async_evset_add_event(qq_pool, ev);
 		}
 		if(group->last_modify == -1 || group->last_modify == 0){
 			ev = lwqq_info_get_group_memo(lc, group);
-			lwqq_async_evset_add_event(set, ev);
+			lwqq_async_evset_add_event(info_pool, ev);
 		}
 		//because group avatar less changed.
 		//so we dont reload it.
@@ -1418,7 +1433,8 @@ static void login_stage_3(LwqqClient* lc)
 		discu_come(lc, &discu);
 	}
 
-	lwqq_async_add_evset_listener(set, _C_(p,login_stage_f,lc));
+	lwqq_async_add_evset_listener(qq_pool, _C_(p,login_stage_f,lc));
+	lwqq_async_add_evset_listener(info_pool, _C_(p,login_stage_e,lc));
 
 }
 
