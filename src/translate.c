@@ -130,6 +130,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 			*write++ = '>';
 		}else if(begin[0]=='<'){
 			if(begin[1]=='/'){
+#if 0
 			}else if(strncmp(begin,"<a ", 3)==0){
 				char *end, *start = strstr(begin, "href=\"");
 				if(!start) goto failed;
@@ -140,6 +141,7 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 				strncpy(write, start, end-start);
 				write+=end-start;
 				*write++ = '>';
+#endif
 			}else if(strncmp(begin, "<img ",5)==0){
 				char *end, *start = strstr(begin, "src=\"");
 				if(!start) goto failed;
