@@ -1693,7 +1693,6 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 	qq_account* ac = ev->lc->data;
 	int err = ev->result;
 	static char buf[1024]={0};
-	PurpleConversation* conv = find_conversation(msg->type,serv_id,ac);
 
 	if(err == LWQQ_EC_LOST_CONN){
 		vp_do_repeat(ac->qq->events->poll_lost, NULL);
@@ -1704,7 +1703,7 @@ static void send_receipt(LwqqAsyncEvent* ev,LwqqMsg* msg,char* serv_id,char* wha
 		return;
 	}
 
-	if(conv && err != 0){
+	if(err != 0){
 		snprintf(buf,sizeof(buf),_("Send failed, err(%d):\n%s"),err,what);
 		qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR, time(NULL));
 	}

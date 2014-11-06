@@ -232,38 +232,54 @@ void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGr
 #endif
 }
 
-
-void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t)
-{
-	//ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
-
-	PurpleConversation* conv = find_conversation(m_t,serv_id,ac);
-	if(conv)
-		purple_conversation_write(conv,NULL,msg,type,t);
-}
-
-PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac)
+static PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac, const char** local_id_out)
 {
 	PurpleAccount* account = ac->account;
 	LwqqClient* lc = ac->qq;
 	//add a valid check
 	if(!lwqq_client_valid(lc)) return NULL;
-	const char* local_id;
-	if(msg_type == LWQQ_MS_BUDDY_MSG || msg_type == LWQQ_MS_SESS_MSG){
-		if(ac->flag&QQ_USE_QQNUM){
-			LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
-			local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;
-		}else local_id = serv_id;
-		return purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,local_id,account);
-	} else if(msg_type == LWQQ_MS_GROUP_MSG || msg_type == LWQQ_MS_DISCU_MSG){
-		if(ac->flag&QQ_USE_QQNUM){
-			LwqqGroup* group = find_group_by_gid(ac->qq,serv_id);
-			local_id = (group&&group->account)?group->account:serv_id;
-		}else local_id = serv_id;
-		return purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,local_id,account);
-	} else 
-		return NULL;
+	const char* local_id = NULL;
+	PurpleConversation* conv = NULL;
+	switch(msg_type){
+		case LWQQ_MS_BUDDY_MSG:
+		case LWQQ_MS_SESS_MSG:
+			if(ac->flag&QQ_USE_QQNUM){
+				LwqqBuddy* buddy = ac->qq->find_buddy_by_uin(ac->qq,serv_id);
+				local_id = (buddy&&buddy->qqnumber)?buddy->qqnumber:serv_id;
+			}else local_id = serv_id;
+			conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,local_id,account);
+			break;
+
+		case LWQQ_MS_GROUP_MSG:
+		case LWQQ_MS_DISCU_MSG:
+			if(ac->flag&QQ_USE_QQNUM){
+				LwqqGroup* group = find_group_by_gid(ac->qq,serv_id);
+				local_id = (group&&group->account)?group->account:serv_id;
+			}else local_id = serv_id;
+			conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,local_id,account);
+			break;
+		default:
+			break;
+	}
+	*local_id_out = local_id;
+	return conv;
 }
+
+void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t)
+{
+	//ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
+
+	const char* local_id;
+	PurpleConversation* conv = find_conversation(m_t,serv_id,ac,&local_id);
+	if(conv){
+		purple_conversation_write(conv,NULL,msg,type,t);
+		const char* signal = (m_t == LWQQ_MS_BUDDY_MSG || m_t ==
+				LWQQ_MS_SESS_MSG)?"received-im-msg":"recieved-chat-msg";
+		purple_signal_emit(purple_conversations_get_handle(), signal,
+				ac->account, conv->name, msg, conv, type);
+	}
+}
+
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc,const char* qqnum)
 {

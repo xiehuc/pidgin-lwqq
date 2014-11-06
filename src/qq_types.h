@@ -111,7 +111,6 @@ void qq_account_remove_index_node(qq_account* ac,const LwqqBuddy* b,const LwqqGr
 void qq_sys_msg_write(qq_account* ac,LwqqMsgType m_t,const char* serv_id,const char* msg,PurpleMessageFlags type,time_t t);
 void qq_system_log(qq_account* ac,const char* log);
 
-PurpleConversation* find_conversation(LwqqMsgType msg_type,const char* serv_id,qq_account* ac);
 //----------------------------ft.h-----------------------------
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
