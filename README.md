@@ -11,6 +11,10 @@ pidgin-lwqq
 lwqq库是一个非常严谨有效的webqq协议的库.  
 lwqq 即是 linux webqq 之意
 
+#### 说明 ####
+
+lwqq 基于[WebQQ](http://w.qq.com)，所以WebQQ做不到的，lwqq不可能做到。出了问题，建议用WebQQ尝试下，发issue前请先搜索下历史issue。lwqq 仅是 Pidgin 的一个插件，有些 Pidgin 不支持的，lwqq 也无法越权支持。
+
 截  图
 ------
 
