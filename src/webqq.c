@@ -685,6 +685,7 @@ static void group_come(LwqqClient* lc,LwqqGroup** p_group)
 		group->data = cg;
 		cg->group = group;
 		cg->chat = chat;
+		cg->mask_local = group->mask;
 	}
 
 	if(lwqq_group_is_qun(group)){
@@ -2350,9 +2351,14 @@ static LwqqGroup* find_group_by_chat(PurpleChat* chat)
 static void set_cgroup_block(LwqqConfirmTable* ct,LwqqClient* lc,LwqqGroup* g)
 {
 	if(ct->answer != LWQQ_IGNORE){
+#ifdef QQ_LOCAL_MASK
+		qq_cgroup_mask_local(g->data, ct->answer);
+		qq_set_group_name(g->data);
+#else
 		lwqq_async_add_event_listener(
 				lwqq_info_mask_group(lc,g,ct->answer),
 				_C_(p,qq_set_group_name,g->data));
+#endif
 	}
 	lwqq_ct_free(ct);
 }
@@ -2490,6 +2496,10 @@ static void display_group_info(qq_account* ac,LwqqGroup* g)
 	//ADD_STRING("创建时间",ctime(&g->createtime));
 	purple_notify_userinfo(ac->gc, g->account, info, (PurpleNotifyCloseCallback)purple_notify_user_info_destroy, info);
 #undef ADD_STRING
+#ifdef QQ_LOCAL_MASK
+	qq_chat_group* cg = g->data;
+	g->mask = cg->mask_local;
+#endif
 	lwdb_userdb_update_group_info(ac->db, &g);
 }
 

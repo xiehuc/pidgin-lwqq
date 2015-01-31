@@ -15,6 +15,7 @@ typedef struct qq_chat_group
 {
 	PurpleChat * chat;
 	LwqqGroup * group;
+	LwqqMask mask_local;
 	int properties;
 	struct qq_chat_group_opt* opt;
 } qq_chat_group;
@@ -39,6 +40,8 @@ void qq_cgroup_free(qq_chat_group* cg);
 void qq_cgroup_open(qq_chat_group* cg);
 
 void qq_cgroup_got_msg(qq_chat_group* cg,const char* local_id,PurpleMessageFlags flags,const char* message,time_t t);
+
+void qq_cgroup_mask_local(qq_chat_group* cg, LwqqMask m);
 
 void qq_cgroup_flush_members(qq_chat_group* cg);
 

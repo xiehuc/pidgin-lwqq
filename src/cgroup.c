@@ -214,4 +214,12 @@ unsigned int qq_cgroup_unread_num(qq_chat_group* cg)
 	return ((qq_chat_group_*)cg)->unread_num;
 }
 
+void qq_cgroup_mask_local(qq_chat_group* cg, LwqqMask m)
+{
+	cg->mask_local = m;
+	cg->group->mask = m;
+	qq_account* ac = cg->chat->account->gc->proto_data;
+	lwdb_userdb_update_group_info(ac->db, &cg->group);
+}
+
 // vim: tabstop=3 sw=3 sts=3 noexpandtab
