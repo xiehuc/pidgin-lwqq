@@ -16,7 +16,7 @@ static TRex* hs_regex;
 
 //we dont free this, let it leak a small memory.
 static char *smiley_tables[150]={0};
-const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;";
+const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;|&apos;";
 const char* REGEXP_HEAD = "<[^>]+>|:face\\d+:|:-face:";
 const char* REGEXP_TAIL = "|:[^ :]+:";
 //font size map space : pidgin:[1,7] to webqq[8:20]
@@ -128,6 +128,8 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 			*write++ = '<';
 		}else if(strncmp(begin,"&gt;",4)==0){
 			*write++ = '>';
+		}else if(strncmp(begin,"&apos;",6)==0){
+			*write++ = '\'';
 		}else if(begin[0]=='<'){
 			if(begin[1]=='/'){
 #if 0
