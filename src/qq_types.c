@@ -9,11 +9,6 @@
 #define mkdir(a,b) _mkdir(a)
 #endif
 
-#define LOCAL_HASH_JS(buf)  (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
-			lwdb_get_config_dir()),buf)
-#define GLOBAL_HASH_JS(buf) (snprintf(buf,sizeof(buf),"%s"LWQQ_PATH_SEP"hash.js",\
-			GLOBAL_DATADIR),buf)
-
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
     TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))
     TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
@@ -107,15 +102,13 @@ void qq_dispatch(LwqqCommand cmd,unsigned long timeout)
 #ifdef WITH_MOZJS
 static char* hash_with_local_file(const char* uin,const char* ptwebqq,lwqq_js_t* js)
 {
-	char path[512] = {0};
-	if(access(LOCAL_HASH_JS(path), F_OK)!=0)
-		if(access(GLOBAL_HASH_JS(path),F_OK)!=0)
-			return NULL;
-	lwqq_jso_t* obj = lwqq_js_load(js, path);
-	char* res = NULL;
+	char* js_txt = lwqq_util_load_res("hash.js", 0);
+	if(js_txt == NULL) return NULL;
 
-	res = lwqq_js_hash(uin, ptwebqq, js);
-	lwqq_js_unload(js, obj);
+	lwqq_js_load_buffer(js, js_txt);
+
+	char* res = lwqq_js_hash(uin, ptwebqq, js);
+	s_free(js_txt);
 
 	return res;
 }
@@ -152,6 +145,8 @@ qq_account* qq_account_new(PurpleAccount* account)
 	ac->qq = lwqq_client_new(username,password);
 	ac->js = lwqq_js_init();
 	ac->sys_log = purple_log_new(PURPLE_LOG_SYSTEM, "system", account, NULL, time(NULL), NULL);
+	// add ~/.config/lwqq into search path
+	lwqq_util_add_path(lwdb_get_config_dir());
 #ifdef WITH_MOZJS
 	lwqq_hash_add_entry(ac->qq, "hash_local", (LwqqHashFunc)hash_with_local_file,  ac->js);
 	lwqq_hash_add_entry(ac->qq, "hash_url",   (LwqqHashFunc)hash_with_remote_file, ac->js);

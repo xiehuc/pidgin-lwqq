@@ -8,7 +8,7 @@
 #include "qq_types.h"
 
 #define LOCAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",lwdb_get_config_dir()),path)
-#define GLOBAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",GLOBAL_DATADIR),path)
+#define GLOBAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",RES_DIR),path)
 
 static GHashTable* smiley_hash;
 static TRex* _regex;
