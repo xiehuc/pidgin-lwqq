@@ -1247,9 +1247,9 @@ void qq_msg_check(LwqqClient* lc)
 				case LWQQ_MT_OFFFILE:
 					offline_file(lc,(LwqqMsgOffFile*)msg->msg);
 					break;
-				case LWQQ_MT_FILE_MSG:
+				/*case LWQQ_MT_FILE_MSG:
 					file_message(lc,(LwqqMsgFileMessage*)msg->msg);
-					break;
+					break;*/
 				case LWQQ_MT_FILETRANS:
 					//complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
 					break;

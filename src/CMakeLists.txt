@@ -3,7 +3,7 @@ set(SRC_LIST
     webqq.c
     translate.c
     qq_types.c
-    ft.c
+    #    ft.c
     cgroup.c
     win.c
     )
