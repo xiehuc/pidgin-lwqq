@@ -10,17 +10,17 @@
 #endif
 
 TABLE_BEGIN_LONG(qq_shengxiao_to_str, const char*,LwqqShengxiao , "")
-    TR(LWQQ_MOUTH,_("Mouth"))     TR(LWQQ_CATTLE,_("Cattle"))
-    TR(LWQQ_TIGER,_("Tiger"))    TR(LWQQ_RABBIT,_("Rabbit"))
-    TR(LWQQ_DRAGON,_("Dragon"))   TR(LWQQ_SNACK,_("Snack"))
-    TR(LWQQ_HORSE,_("Horse"))    TR(LWQQ_SHEEP,_("Sheep"))
-    TR(LWQQ_MONKEY,_("Monkey"))   TR(LWQQ_CHOOK,_("Chook"))
-    TR(LWQQ_DOG,_("Dog"))        TR(LWQQ_PIG,_("Pig"))
+    TR(LWQQ_MOUTH,_("Mouth"))       TR(LWQQ_CATTLE,_("Cattle"))
+    TR(LWQQ_TIGER,_("Tiger"))       TR(LWQQ_RABBIT,_("Rabbit"))
+    TR(LWQQ_DRAGON,_("Dragon"))     TR(LWQQ_SNACK,_("Snack"))
+    TR(LWQQ_HORSE,_("Horse"))       TR(LWQQ_SHEEP,_("Sheep"))
+    TR(LWQQ_MONKEY,_("Monkey"))     TR(LWQQ_CHOOK,_("Chook"))
+    TR(LWQQ_DOG,_("Dog"))           TR(LWQQ_PIG,_("Pig"))
 TABLE_END()
 
 TABLE_BEGIN_LONG(qq_blood_to_str, const char*,LwqqBloodType , "")
-    TR(LWQQ_BLOOD_A,_("A"))   TR(LWQQ_BLOOD_B,_("B"))
-    TR(LWQQ_BLOOD_O,_("O")) TR(LWQQ_BLOOD_AB,_("AB"))
+    TR(LWQQ_BLOOD_A,_("A"))           TR(LWQQ_BLOOD_B,_("B"))
+    TR(LWQQ_BLOOD_O,_("O"))           TR(LWQQ_BLOOD_AB,_("AB"))
     TR(LWQQ_BLOOD_OTHER,_("Other"))
 TABLE_END()
 

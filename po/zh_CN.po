@@ -292,12 +292,12 @@ msgstr "城市"
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2741
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/qq_types.c:54
 msgid "Phone"
-msgstr "电话"
+msgstr "手机"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:761
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2742
 msgid "Mobile"
-msgstr "手机"
+msgstr "移动设备"
 
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:762
 #: /home/xiehuc/PROJECT/pidgin-lwqq/build/po/../../src/webqq.c:2399
