@@ -10,13 +10,44 @@
 #define LOCAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",lwdb_get_config_dir()),path)
 #define GLOBAL_SMILEY_PATH(path) (snprintf(path,sizeof(path),"%s"LWQQ_PATH_SEP"smiley.txt",RES_DIR),path)
 
+static
+TABLE_BEGIN_LONG(to_html_symbol, const char*, const char, "")
+	TR('<' , "&lt;"  )
+	TR('>' , "&gt;"  )
+	TR('&' , "&amp;" )
+	TR('"' , "&quot;")
+	TR('\'', "&apos;")
+TABLE_END()
+
+#define key_eq(a,b) (a==b)
+#define val_eq(a,b) (strncmp(a,b,strlen(a))==0)
+PAIR_BEGIN_LONG(html_map, const char, const char*)
+	PAIR('\n', "<br>"  )
+	PAIR('&' , "&amp;" )
+	PAIR('"' , "&quot;")
+	PAIR('<' , "&lt;"  )
+	PAIR('>' , "&gt;"  )
+	PAIR('\'', "&apos;")
+PAIR_END(html_map, const char, const char*, 0, NULL)
+
+PAIR_BEGIN_LONG(style_map, int, const char*)
+	PAIR(LWQQ_FONT_BOLD     , "<b ")
+	PAIR(LWQQ_FONT_BOLD     , "<b>")
+	PAIR(LWQQ_FONT_ITALIC   , "<i ")
+	PAIR(LWQQ_FONT_ITALIC   , "<i>")
+	PAIR(LWQQ_FONT_UNDERLINE, "<u ")
+	PAIR(LWQQ_FONT_UNDERLINE, "<u>")
+PAIR_END(style_map, int, const char*, 0, NULL)
+
 static GHashTable* smiley_hash;
 static TRex* _regex;
 static TRex* hs_regex;
 
 //we dont free this, let it leak a small memory.
 static char *smiley_tables[150]={0};
-const char* HTML_SYMBOL = "<[^>]+>|&amp;|&quot;|&gt;|&lt;|&apos;";
+#define HTML_SPEC_SYMBOL "<>&\"'"
+#define HTML_SPEC_SYMBOL_ESCAPE "&lt;|&gt;|&quot;|&apos;|&amp;"
+#define HTML_SYMBOL "<[^>]+>|"HTML_SPEC_SYMBOL_ESCAPE
 const char* REGEXP_HEAD = "<[^>]+>|:face\\d+:|:-face:";
 const char* REGEXP_TAIL = "|:[^ :]+:";
 //font size map space : pidgin:[1,7] to webqq[8:20]
@@ -118,32 +149,10 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 			memmove(write,read,begin-read);
 			write+=(begin-read);
 		}
-		if(strncmp(begin,"<br>",4)==0){
-			*write++ = '\n';
-		}else if(strncmp(begin,"&amp;",5)==0){
-			*write++ = '&';
-		}else if(strncmp(begin,"&quot;",6)==0){
-			*write++ = '"';
-		}else if(strncmp(begin,"&lt;",4)==0){
-			*write++ = '<';
-		}else if(strncmp(begin,"&gt;",4)==0){
-			*write++ = '>';
-		}else if(strncmp(begin,"&apos;",6)==0){
-			*write++ = '\'';
-		}else if(begin[0]=='<'){
+		const char s = html_map_to_key(begin);
+		if(s) *write++ = s;
+		else if(begin[0]=='<'){
 			if(begin[1]=='/'){
-#if 0
-			}else if(strncmp(begin,"<a ", 3)==0){
-				char *end, *start = strstr(begin, "href=\"");
-				if(!start) goto failed;
-				start += 6;
-				end = strchr(start,'"');
-				if(!end) goto failed;
-				*write++ = '<';
-				strncpy(write, start, end-start);
-				write+=end-start;
-				*write++ = '>';
-#endif
 			}else if(strncmp(begin, "<img ",5)==0){
 				char *end, *start = strstr(begin, "src=\"");
 				if(!start) goto failed;
@@ -155,9 +164,8 @@ static LwqqMsgContent* build_string_content(const char* from,const char* to,Lwqq
 				write+=end-start;
 				*write++ = '>';
 			}else{
-				if(strncmp(begin,"<b ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_BOLD,1);
-				else if(strncmp(begin,"<i ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_ITALIC,1);
-				else if(strncmp(begin,"<u ",3)==0)lwqq_bit_set(msg->f_style,LWQQ_FONT_UNDERLINE,1);
+				int s = style_map_to_key(begin);
+				if(s) lwqq_bit_set(msg->f_style, s, 1);
 				else if(strncmp(begin,"<font ",6)==0){
 					const char *key = begin+6;
 					const char *value = strchr(begin,'=')+2;
@@ -297,17 +305,12 @@ static void paste_content_string(const char* from,struct ds* to)
 	const char* ptr = read;
 	struct ds write = *to;
 	size_t n = 0;
-	while((ptr = strpbrk(read,"<>&\""))){
+	while((ptr = strpbrk(read,HTML_SPEC_SYMBOL))){
 		if(ptr>read){
 			n = ptr-read;
 			ds_pokes_n(write, read, n);
 		}
-		switch(*ptr){
-			case '<' : ds_cat(write,"&lt;");break;
-			case '>' : ds_cat(write,"&gt;");break;
-			case '&' : ds_cat(write,"&amp;");break;
-			case '"' : ds_cat(write,"&quot;");break;
-		}
+		ds_cat(write, to_html_symbol(*ptr));
 		read = ptr+1;
 	}
 	if(*read != '\0'){
