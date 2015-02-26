@@ -76,7 +76,6 @@ typedef struct qq_account {
 		QQ_DONT_EXPECT_100_CONTINUE = 1<<6,
 		NOT_DOWNLOAD_GROUP_PIC = 1<<7,
 		SEND_VISUALBILITY = 1<<8,
-		CACHE_TALKGROUP = 1<<9,
 	}flag;
 #if QQ_USE_FAST_INDEX
 	struct{
