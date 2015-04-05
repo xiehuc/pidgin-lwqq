@@ -1,13 +1,8 @@
 #include <prpl.h>
 #include <ft.h>
 #include <string.h>
-#include "qq_types.h"
-#include "type.h"
-#include "msg.h"
-#include "http.h"
-#include "async.h"
-#include "smemory.h"
 
+#include "qq_types.h"
 
 static int file_trans_on_progress(void* data,size_t now,size_t total)
 {

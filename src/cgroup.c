@@ -1,4 +1,6 @@
 #include "cgroup.h"
+#include "qq_types.h"
+
 #include <unistd.h>
 #include <errno.h>
 

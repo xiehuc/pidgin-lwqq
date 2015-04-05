@@ -1,7 +1,7 @@
 #ifdef WIN32
 #include <stdio.h>
 #include <stdlib.h>
-#include "lwqq.h"
+#include <lwqq.h>
 
 const char *wpurple_install_dir(void);
 

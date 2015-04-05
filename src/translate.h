@@ -1,7 +1,7 @@
 #ifndef INFO_H_H
 #define INFO_H_H
-#include <msg.h>
-#include "qq_types.h"
+
+typedef struct qq_account qq_account;
 
 void translate_global_init();
 void translate_global_free();

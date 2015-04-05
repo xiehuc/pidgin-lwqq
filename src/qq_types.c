@@ -1,6 +1,4 @@
 #include "qq_types.h"
-#include "smemory.h"
-#include "utility.h"
 #include <unistd.h>
 
 #include <sys/stat.h>

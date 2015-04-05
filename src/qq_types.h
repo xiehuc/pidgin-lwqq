@@ -1,12 +1,12 @@
 #ifndef QQ_TYPES_H_H
 #define QQ_TYPES_H_H
 
+#include "config.h"
 
 #include <connection.h>
-#include "lwqq.h"
-#include "lwdb.h"
-#include "config.h"
-#include "lwjs.h"
+#include <lwqq.h>
+#include <lwjs.h>
+#include <lwdb.h>
 
 #ifdef ENABLE_NLS
 #include <glib/gi18n.h>
@@ -67,15 +67,15 @@ typedef struct qq_account {
 		LwqqFontStyle style;
 	}font;
 	enum {
-		QQ_USE_QQNUM = 1<<0,
-		IGNORE_FONT_FACE = 1<<1,
-		IGNORE_FONT_SIZE = 1<<2,
-		DARK_THEME_ADAPT = 1<<3,
-		DEBUG_FILE_SEND = 1<<4,
-		REMOVE_DUPLICATED_MSG = 1<<5,
+		QQ_USE_QQNUM                = 1<<0,
+		IGNORE_FONT_FACE            = 1<<1,
+		IGNORE_FONT_SIZE            = 1<<2,
+		DARK_THEME_ADAPT            = 1<<3,
+		DEBUG_FILE_SEND             = 1<<4,
+		REMOVE_DUPLICATED_MSG       = 1<<5,
 		QQ_DONT_EXPECT_100_CONTINUE = 1<<6,
-		NOT_DOWNLOAD_GROUP_PIC = 1<<7,
-		SEND_VISUALBILITY = 1<<8,
+		NOT_DOWNLOAD_GROUP_PIC      = 1<<7,
+		SEND_VISUALBILITY           = 1<<8,
 	}flag;
 #if QQ_USE_FAST_INDEX
 	struct{

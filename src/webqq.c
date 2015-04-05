@@ -13,9 +13,6 @@
 #include "qq_types.h"
 #include "translate.h"
 #include "cgroup.h"
-#include "lwqq.h"
-#include "lwdb.h"
-#include "lwjs.h"
 
 #ifndef WITH_LIBEV
 #include "async_purple.c"
@@ -25,10 +22,18 @@
 #include "win.h"
 #endif
 
+
 #if APPLE
 #define SEND_VISUAL_DEFAULT FALSE
 #else
 #define SEND_VISUAL_DEFAULT TRUE
+#endif
+
+#ifdef UNUSED
+#elif defined(__GNUC__)
+# 	define UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#else
+#	define UNUSED(x) x
 #endif
 
 #define OPEN_URL(var,url) snprintf(var,sizeof(var),"xdg-open '%s'",url);
