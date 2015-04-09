@@ -1137,6 +1137,7 @@ static void blist_change(LwqqClient* lc,LwqqMsgBlistChange* blist)
 			ev = lwqq_info_get_friend_detail_info(lc, buddy);
 			lwqq_async_evset_add_event(set, ev);
 			lwqq_async_add_evset_listener(set,_C_(2p,write_buddy_to_db,lc,buddy));
+			lwqq_async_evset_unref(set);
 		}else{
 			friend_come(lc, &buddy);
 		}
@@ -1441,7 +1442,8 @@ static void login_stage_3(LwqqClient* lc)
 
 	lwqq_async_add_evset_listener(qq_pool, _C_(p,login_stage_f,lc));
 	lwqq_async_add_evset_listener(info_pool, _C_(p,login_stage_e,lc));
-
+	lwqq_async_evset_unref(qq_pool);
+	lwqq_async_evset_unref(info_pool);
 }
 
 static void upload_content_fail(LwqqClient* lc,const char** p_serv_id,LwqqMsgContent** p_c,int* p_err)
@@ -1683,6 +1685,7 @@ static void login_stage_2(LwqqAsyncEvent* event,LwqqClient* lc)
 	}
 
 	lwqq_async_add_evset_listener(set,_C_(p,login_stage_3,lc));
+	lwqq_async_evset_unref(set);
 }
 
 static void msg_unsend_print_reason(qq_account* ac, LwqqMsg* msg, const char* serv_id)
@@ -2283,6 +2286,7 @@ static void qq_add_buddy(PurpleConnection* pc,PurpleBuddy* buddy,PurpleGroup* gr
 		ev = lwqq_info_get_friend_qqnumber(lc,friend);
 		lwqq_async_evset_add_event(set,ev);
 		lwqq_async_add_evset_listener(set, _C_(3p,lwqq_info_add_group_member_as_friend,lc,friend,NULL));
+		lwqq_async_evset_unref(set);
 	}else{
 		//friend->qqnumber = s_strdup(qqnum);
 		LwqqAsyncEvent* ev = lwqq_info_search_friend(ac->qq,uni_id,friend);
@@ -2524,6 +2528,7 @@ static void qq_get_group_info(PurpleBlistNode* node)
 	ev = lwqq_info_get_group_memo(lc, g);
 	lwqq_async_evset_add_event(set, ev);
 	lwqq_async_add_evset_listener(set, _C_(2p,display_group_info,ac,g));
+	lwqq_async_evset_unref(set);
 }
 
 #if 0
@@ -2655,6 +2660,7 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
 				lwqq_async_evset_add_event(set, ev);
 				lwqq_async_add_evset_listener(set, 
 						_C_(4p,download_online_history_continue,ev,NULL,g,history));
+				lwqq_async_evset_unref(set);
 			}else
 				lwqq_async_add_event_listener(ev, 
 						_C_(4p,download_online_history_continue,ev,NULL,g,history));
@@ -2804,6 +2810,7 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
 		ev = lwqq_info_get_friend_detail_info(lc, buddy);
 		lwqq_async_evset_add_event(set, ev);
 		lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,NULL));
+		lwqq_async_evset_unref(set);
 	}else{
 		// Not a buddy? try fetch stranger info
 		LwqqGroup* g = NULL;
@@ -2819,6 +2826,7 @@ static void qq_get_user_info(PurpleConnection* gc,const char* who)
 			ev = lwqq_info_get_friend_qqnumber(lc,buddy);
 			lwqq_async_evset_add_event(set, ev);
 			lwqq_async_add_evset_listener(set, _C_(3p,display_user_info,gc,buddy,s_strdup(who)));
+			lwqq_async_evset_unref(set);
 		}
 	}
 }
