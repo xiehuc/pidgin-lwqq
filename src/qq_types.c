@@ -163,6 +163,12 @@ qq_account* qq_account_new(PurpleAccount* account)
 	ac->fast_index.qqnum_index = g_hash_table_new_full(g_str_hash,g_str_equal,g_free,NULL);
 #endif
 	ac->qq->dispatch = qq_dispatch;
+
+	char cookie[256];
+	snprintf(cookie, sizeof(cookie), "%s/%s.cookie", lwdb_get_config_dir(), username);
+	LwqqExtension* ext = lwqq_make_cookie_extension(ac->qq, cookie);
+	ext->init(ac->qq, ext);
+
 	return ac;
 }
 void qq_account_free(qq_account* ac)
