@@ -4,33 +4,32 @@
 #include <lwqq.h>
 #include <connection.h>
 
-//this is data model for special
-//qq chat group to purple chat group 
-//adapter
-typedef struct qq_chat_group
-{
-	PurpleChat * chat;
-	LwqqGroup * group;
-	LwqqMask mask_local;
-	int properties;
-	struct qq_chat_group_opt* opt;
+// this is data model for special
+// qq chat group to purple chat group
+// adapter
+typedef struct qq_chat_group {
+   PurpleChat* chat;
+   LwqqGroup* group;
+   LwqqMask mask_local;
+   int properties;
+   struct qq_chat_group_opt* opt;
 } qq_chat_group;
 
-typedef struct qq_chat_group_opt
-{
-	void (*new_msg_notice)(struct qq_chat_group* cg);
-}qq_chat_group_opt;
+typedef struct qq_chat_group_opt {
+   void (*new_msg_notice)(struct qq_chat_group* cg);
+} qq_chat_group_opt;
 
 #define CGROUP_LWQQ(cg) (cg->group)
 #define CGROUP_PURPLE(cg) (cg->chat)
 
-#define CGROUP_SET_PROP(cg,prop,val) (val?(cg->properties|=prop):(cg->properties&=~prop))
-#define CGROUP_GET_PROP(cg,prop) ((cg->properties&prop)>0)
+#define CGROUP_SET_PROP(cg, prop, val)                                         \
+   (val ? (cg->properties |= prop) : (cg->properties &= ~prop))
+#define CGROUP_GET_PROP(cg, prop) ((cg->properties & prop) > 0)
 
 #define CGROUP_GET_CONV(cg)                                                    \
-  purple_find_conversation_with_account(                                       \
-      PURPLE_CONV_TYPE_CHAT, try_get(cg->group->account, cg->group->gid),      \
-      cg->chat->account)
+   purple_find_conversation_with_account(                                      \
+       PURPLE_CONV_TYPE_CHAT, try_get(cg->group->account, cg->group->gid),     \
+       cg->chat->account)
 
 qq_chat_group* qq_cgroup_new(struct qq_chat_group_opt* opt);
 
@@ -38,8 +37,8 @@ void qq_cgroup_free(qq_chat_group* cg);
 
 void qq_cgroup_open(qq_chat_group* cg);
 
-void qq_cgroup_got_msg(qq_chat_group *cg, const char *local_id,
-                       PurpleMessageFlags flags, const char *message, time_t t);
+void qq_cgroup_got_msg(qq_chat_group* cg, const char* local_id,
+                       PurpleMessageFlags flags, const char* message, time_t t);
 
 void qq_cgroup_mask_local(qq_chat_group* cg, LwqqMask m);
 

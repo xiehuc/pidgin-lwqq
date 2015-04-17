@@ -2,11 +2,11 @@
 #define WEBQQ_WIN_H_H
 #ifdef WIN32
 
-char *  strsep(char **stringp, const char* delim);
-const char *wpurple_locale_dir(void);
+char* strsep(char** stringp, const char* delim);
+const char* wpurple_locale_dir(void);
 const char* global_data_dir();
 
-#undef  LOCALEDIR
+#undef LOCALEDIR
 #define LOCALEDIR wpurple_locale_dir()
 
 #undef GLOBAL_DATADIR
