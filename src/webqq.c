@@ -1796,7 +1796,7 @@ static void login_stage_1(LwqqClient* lc, LwqqErrorCode* p_err)
       return;
    default:
       purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     lc->last_err);
+                                     lc->error_description);
       return;
    }
 
@@ -3465,7 +3465,7 @@ static void qq_login(PurpleAccount* account)
 
    const char* status
        = purple_status_get_id(purple_account_get_active_status(ac->account));
-   lwqq_login(ac->qq, qq_status_from_str(status), NULL);
+   lwqq_login(ac->qq, qq_status_from_str(status));
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info);
