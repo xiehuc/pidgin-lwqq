@@ -513,4 +513,3 @@ void translate_add_smiley_to_conversation(PurpleConversation* conv)
    g_list_free(list);
 }
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

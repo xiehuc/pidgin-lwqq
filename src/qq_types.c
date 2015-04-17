@@ -421,4 +421,3 @@ char* strtrim(char* source)
    return beg;
 }
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

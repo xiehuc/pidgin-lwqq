@@ -49,4 +49,3 @@ unsigned int qq_cgroup_unread_num(qq_chat_group* cg);
 
 #endif
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

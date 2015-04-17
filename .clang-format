@@ -1,0 +1,9 @@
+---
+BasedOnStyle: WebKit
+IndentWidth: 3
+---
+Language: Cpp
+PointerAlignment: Left
+ColumnLimit: 80 
+AllowShortBlocksOnASingleLine: true
+...

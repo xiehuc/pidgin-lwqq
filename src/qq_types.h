@@ -138,4 +138,3 @@ char* strtrim(char* source);
 
 #endif
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

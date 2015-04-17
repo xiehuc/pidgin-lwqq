@@ -254,4 +254,3 @@ void file_message(LwqqClient* lc, LwqqMsgFileMessage* file)
    }
 }
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

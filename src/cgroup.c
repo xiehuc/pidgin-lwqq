@@ -235,4 +235,3 @@ void qq_cgroup_mask_local(qq_chat_group* cg, LwqqMask m)
    lwdb_userdb_update_group_info(ac->db, &cg->group);
 }
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

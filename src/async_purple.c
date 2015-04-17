@@ -85,4 +85,3 @@ static LwqqAsyncImpl impl_purple = {
    .timer_again = blank_func,
 };
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

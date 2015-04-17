@@ -3470,4 +3470,3 @@ static void qq_login(PurpleAccount* account)
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info);
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab

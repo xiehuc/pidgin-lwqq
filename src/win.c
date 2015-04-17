@@ -41,4 +41,3 @@ const char* global_data_dir()
 
 #endif
 
-// vim: tabstop=3 sw=3 sts=3 noexpandtab
