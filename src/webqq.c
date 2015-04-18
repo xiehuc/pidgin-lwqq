@@ -41,25 +41,12 @@ char* qq_get_cb_real_name(PurpleConnection* gc, int id, const char* who);
 static void client_connect_signals(PurpleConnection* gc);
 static void whisper_message_delay_display(qq_account* ac, LwqqGroup* group,
                                           char* from, char* msg, time_t t);
-static void friend_avatar(qq_account* ac, LwqqBuddy* buddy);
 static void group_avatar(LwqqAsyncEvent* ev, LwqqGroup* group);
-static void login_stage_1(LwqqClient* lc, LwqqErrorCode* err);
-static void login_stage_2(LwqqAsyncEvent* ev, LwqqClient* lc);
 static void show_confirm_table(LwqqClient* lc, LwqqConfirmTable* table);
-static void qq_login(PurpleAccount* account);
+static void start_login(PurpleAccount* account);
 static void add_friend(LwqqClient* lc, LwqqConfirmTable* c, LwqqBuddy* b,
                        char* message);
-static void friends_valid_hash(LwqqAsyncEvent* ev);
 static void show_verify_image(LwqqClient* lc, LwqqVerifyCode** p_code);
-
-enum ResetOption {
-   RESET_BUDDY = 1 << 0,
-   RESET_GROUP = 1 << 1,
-   RESET_DISCU = 1 << 2,
-   RESET_GROUP_SOFT = 1 << 3, ///<this only delete duplicated chat
-   RESET_DISCU_SOFT = 1 << 4,
-   RESET_ALL = RESET_BUDDY | RESET_GROUP | RESET_DISCU
-};
 
 ///###  global data area ###///
 int g_ref_count = 0;
@@ -286,7 +273,7 @@ static void buddies_all_remove(void* data, void* userdata)
    }
 }
 // this remove all buddy and chat.
-static void all_reset(qq_account* ac, int opt)
+void qq_all_reset(qq_account* ac, QQResetFlags opt)
 {
    if (opt & RESET_BUDDY) {
       GSList* buddies = purple_blist_get_buddies();
@@ -333,7 +320,7 @@ static void all_reset_action(PurplePluginAction* action)
    PurpleConnection* gc = action->context;
    qq_account* ac = purple_connection_get_protocol_data(gc);
 
-   all_reset(ac, RESET_ALL);
+   qq_all_reset(ac, RESET_ALL);
 
    purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR,
                                   _("all reloaded,please relogin"));
@@ -607,7 +594,7 @@ static void qq_set_status(PurpleAccount* account, PurpleStatus* status)
         ? "mobile"                                                             \
         : lwqq_status_to_str(bu->stat))
 
-static void friend_come(LwqqClient* lc, LwqqBuddy** p_buddy)
+void friend_come(LwqqClient* lc, LwqqBuddy** p_buddy)
 {
    LwqqBuddy* buddy = *p_buddy;
    qq_account* ac = lwqq_client_userdata(lc);
@@ -699,7 +686,7 @@ static struct qq_chat_group_opt qq_cg_opt_default
     = { .new_msg_notice = qq_set_group_name };
 #define QQ_CG_OPT &qq_cg_opt_default
 
-static void group_come(LwqqClient* lc, LwqqGroup** p_group)
+void group_come(LwqqClient* lc, LwqqGroup** p_group)
 {
    LwqqGroup* group = *p_group;
    qq_account* ac = lwqq_client_userdata(lc);
@@ -763,7 +750,6 @@ static void group_come(LwqqClient* lc, LwqqGroup** p_group)
 
    ac->disable_send_server = 0;
 }
-#define discu_come(lc, data) (group_come(lc, data))
 static void buddy_message(LwqqClient* lc, LwqqMsgMessage* msg)
 {
    qq_account* ac = lwqq_client_userdata(lc);
@@ -1219,13 +1205,12 @@ static void blist_change(LwqqClient* lc, LwqqMsgBlistChange* blist)
    LwqqSimpleBuddy* sb;
    LwqqBuddy* buddy;
    LwqqAsyncEvent* ev;
-   LwqqAsyncEvset* set;
    LIST_FOREACH(sb, &blist->added_friends, entries)
    {
       // in this. we didn't add it to fast cache.
       buddy = lwqq_buddy_find_buddy_by_uin(lc, sb->uin);
       if (!buddy->qqnumber) {
-         set = lwqq_async_evset_new();
+         LwqqAsyncEvset* set = lwqq_async_evset_new();
          ev = lwqq_info_get_friend_qqnumber(lc, buddy);
          lwqq_async_evset_add_event(set, ev);
          ev = lwqq_info_get_friend_detail_info(lc, buddy);
@@ -1255,7 +1240,7 @@ static void blist_change(LwqqClient* lc, LwqqMsgBlistChange* blist)
       }
    }
 }
-static void friend_avatar(qq_account* ac, LwqqBuddy* buddy)
+void friend_avatar(qq_account* ac, LwqqBuddy* buddy)
 {
    PurpleAccount* account = ac->account;
    if (buddy->avatar_len == 0)
@@ -1395,171 +1380,6 @@ void qq_msg_check(LwqqClient* lc)
    }
    pthread_mutex_unlock(&l->mutex);
    return;
-}
-
-// stage finish, all qqnumber downloaded
-static void login_stage_f(LwqqClient* lc)
-{
-   LwqqBuddy* buddy;
-   LwqqGroup* group;
-   qq_account* ac = lc->data;
-   LIST_FOREACH(buddy, &lc->friends, entries)
-   {
-      if (buddy->last_modify == -1 || buddy->last_modify == 0) {
-         friend_come(lc, &buddy);
-      }
-   }
-   LIST_FOREACH(group, &lc->groups, entries)
-   {
-      if (group->last_modify == -1 || group->last_modify == 0) {
-         group_come(lc, &group);
-      }
-   }
-
-   // wait all download finished, start msg pool, to get all qqnumber
-   LwqqPollOption flags = POLL_AUTO_DOWN_DISCU_PIC | POLL_AUTO_DOWN_GROUP_PIC
-                          | POLL_AUTO_DOWN_BUDDY_PIC;
-   if (ac->flag & REMOVE_DUPLICATED_MSG)
-      flags |= POLL_REMOVE_DUPLICATED_MSG;
-   if (ac->flag & NOT_DOWNLOAD_GROUP_PIC)
-      flags &= ~POLL_AUTO_DOWN_GROUP_PIC;
-
-   lwqq_msglist_poll(lc->msg_list, flags);
-   lwqq_puts("[all download finished]");
-
-   // now open status, allow user start talk
-   ac->state = LOAD_COMPLETED;
-}
-
-// stage extra, all extra infomation downloaded
-static void login_stage_e(LwqqClient* lc)
-{
-   LwqqBuddy* buddy;
-   LwqqGroup* group;
-   qq_account* ac = lwqq_client_userdata(lc);
-   if (ac->state != LOAD_COMPLETED)
-      return;
-
-   lwdb_userdb_begin(ac->db);
-   LIST_FOREACH(buddy, &lc->friends, entries)
-   {
-      if (buddy->last_modify == -1 || buddy->last_modify == 0) {
-         lwdb_userdb_insert_buddy_info(ac->db, &buddy);
-         friend_come(lc, &buddy);
-      }
-   }
-   LIST_FOREACH(group, &lc->groups, entries)
-   {
-      if (group->last_modify == -1 || group->last_modify == 0) {
-         lwdb_userdb_insert_group_info(ac->db, &group);
-         group_come(lc, &group);
-      }
-   }
-   lwdb_userdb_commit(ac->db);
-}
-
-static void login_stage_3(LwqqClient* lc)
-{
-   qq_account* ac = lwqq_client_userdata(lc);
-
-   lwdb_userdb_flush_buddies(ac->db, 5, 5);
-   lwdb_userdb_flush_groups(ac->db, 1, 10);
-
-   if (ac->flag & QQ_USE_QQNUM) {
-      lwdb_userdb_query_qqnumbers(ac->db, lc);
-   }
-
-   // make sure all qqnumber is setup,then make state connected
-   purple_connection_set_state(purple_account_get_connection(ac->account),
-                               PURPLE_CONNECTED);
-
-   if (!purple_account_get_alias(ac->account))
-      purple_account_set_alias(ac->account, lc->myself->nick);
-   if (purple_buddy_icons_find_account_icon(ac->account) == NULL) {
-      LwqqAsyncEvent* ev = lwqq_info_get_friend_avatar(lc, lc->myself);
-      lwqq_async_add_event_listener(ev, _C_(2p, friend_avatar, ac, lc->myself));
-   }
-
-   LwqqAsyncEvent* ev = NULL;
-
-   // we must put buddy and group clean before any add operation.
-   GSList* ptr = purple_blist_get_buddies();
-   while (ptr) {
-      PurpleBuddy* buddy = ptr->data;
-      if (buddy->account == ac->account) {
-         const char* qqnum = purple_buddy_get_name(buddy);
-         // if it isn't a qqnumber,we should delete it whatever.
-         if (lwqq_buddy_find_buddy_by_qqnumber(lc, qqnum) == NULL) {
-            purple_blist_remove_buddy(buddy);
-         }
-      }
-      ptr = ptr->next;
-   }
-
-   // clean extra duplicated node
-   all_reset(ac, RESET_GROUP_SOFT | RESET_DISCU_SOFT);
-
-   LwqqAsyncEvset* qq_pool = lwqq_async_evset_new();
-   LwqqAsyncEvset* info_pool = lwqq_async_evset_new();
-
-   LwqqBuddy* buddy;
-   LIST_FOREACH(buddy, &lc->friends, entries)
-   {
-      lwdb_userdb_query_buddy(ac->db, buddy);
-      if ((ac->flag & QQ_USE_QQNUM) && !buddy->qqnumber) {
-         ev = lwqq_info_get_friend_qqnumber(lc, buddy);
-         lwqq_async_evset_add_event(qq_pool, ev);
-      }
-      if (buddy->last_modify == 0 || buddy->last_modify == -1) {
-         ev = lwqq_info_get_single_long_nick(lc, buddy);
-         lwqq_async_evset_add_event(info_pool, ev);
-         ev = lwqq_info_get_level(lc, buddy);
-         lwqq_async_evset_add_event(info_pool, ev);
-         // if buddy is unknow we should update avatar in friend_come
-         // for better speed in first load
-         if (buddy->last_modify == LWQQ_LAST_MODIFY_RESET) {
-            ev = lwqq_info_get_friend_avatar(lc, buddy);
-            lwqq_async_evset_add_event(info_pool, ev);
-         }
-      }
-      if (buddy->last_modify != -1 && buddy->last_modify != 0)
-         friend_come(lc, &buddy);
-   }
-   // friend_come(lc,create_system_buddy(lc));
-
-   LwqqGroup* group;
-   LIST_FOREACH(group, &lc->groups, entries)
-   {
-      // LwqqAsyncEvset* set = NULL;
-      lwdb_userdb_query_group(ac->db, group);
-      if ((ac->flag && QQ_USE_QQNUM) && !group->account) {
-         ev = lwqq_info_get_group_qqnumber(lc, group);
-         lwqq_async_evset_add_event(qq_pool, ev);
-      }
-      if (group->last_modify == -1 || group->last_modify == 0) {
-         ev = lwqq_info_get_group_memo(lc, group);
-         lwqq_async_evset_add_event(info_pool, ev);
-      }
-      // because group avatar less changed.
-      // so we dont reload it.
-      if (group->last_modify != -1 && group->last_modify != 0)
-         group_come(lc, &group);
-   }
-
-   LwqqGroup* discu;
-   LIST_FOREACH(discu, &lc->discus, entries)
-   {
-      if (discu->last_modify == LWQQ_LAST_MODIFY_UNKNOW)
-         // discu is imediately date, doesn't need get info from server, we can
-         // directly write it into database
-         lwdb_userdb_insert_discu_info(ac->db, &discu);
-      discu_come(lc, &discu);
-   }
-
-   lwqq_async_add_evset_listener(qq_pool, _C_(p, login_stage_f, lc));
-   lwqq_async_add_evset_listener(info_pool, _C_(p, login_stage_e, lc));
-   lwqq_async_evset_unref(qq_pool);
-   lwqq_async_evset_unref(info_pool);
 }
 
 static void upload_content_fail(LwqqClient* lc, const char** p_serv_id,
@@ -1741,99 +1561,6 @@ static void flush_group_members(LwqqClient* lc, LwqqGroup** d)
 {
    qq_chat_group* cg = (*d)->data;
    qq_cgroup_flush_members(cg);
-}
-static void friends_valid_hash(LwqqAsyncEvent* ev)
-{
-   LwqqClient* lc = ev->lc;
-   qq_account* ac = lc->data;
-   if (ev->result == LWQQ_EC_HASH_WRONG) {
-      purple_connection_error_reason(
-          ac->gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR,
-#ifndef WITH_MOZJS
-          _("Hash Function Wrong, Please recompile with mozjs \n"
-            "https://github.com/xiehuc/pidgin-lwqq/wiki/"
-            "simple-user-guide#wiki-hash-function")
-#else
-          _("Hash Function Wrong, Please try again later or report to author")
-#endif
-          );
-      return;
-   }
-   if (ev->result != LWQQ_EC_OK) {
-      purple_connection_error_reason(ac->gc,
-                                     PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     _("Get Friend List Failed"));
-      return;
-   }
-   const LwqqHashEntry* succ_hash = lwqq_hash_get_last(lc);
-   lwdb_userdb_write(ac->db, "last_hash", succ_hash->name);
-   LwqqAsyncEvent* event = lwqq_info_get_group_name_list(lc, NULL, NULL);
-   lwqq_async_add_event_listener(event, _C_(2p, login_stage_2, event, lc));
-}
-static void login_stage_1(LwqqClient* lc, LwqqErrorCode* p_err)
-{
-   // add a valid check
-   LwqqErrorCode err = *p_err;
-   if (!lwqq_client_valid(lc))
-      return;
-   qq_account* ac = lwqq_client_userdata(lc);
-   PurpleConnection* gc = purple_account_get_connection(ac->account);
-   switch (err) {
-   case LWQQ_EC_OK:
-      break;
-   case LWQQ_EC_LOGIN_ABNORMAL:
-      purple_connection_error_reason(
-          gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR,
-          _("Account Problem Occurs,Need lift the ban"));
-      return;
-   case LWQQ_EC_NETWORK_ERROR:
-      purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR,
-                                     _("Network Error"));
-      return;
-   case LWQQ_EC_LOGIN_NEED_BARCODE:
-      purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR,
-                                     lc->error_description);
-      return;
-   default:
-      purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     lc->error_description);
-      return;
-   }
-
-   ac->state = CONNECTED;
-
-   gc->flags |= PURPLE_CONNECTION_HTML;
-
-   // use lwqq 0.3.1 hash auto select api
-   LwqqAsyncEvent* ev = lwqq_info_get_friends_info(lc, NULL, NULL);
-   lwqq_async_add_event_listener(ev, _C_(p, friends_valid_hash, ev));
-   return;
-}
-static void login_stage_2(LwqqAsyncEvent* event, LwqqClient* lc)
-{
-   if (event->result != LWQQ_EC_OK) {
-      qq_account* ac = lc->data;
-      purple_connection_error_reason(ac->gc,
-                                     PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     _("Get Group List Failed"));
-      return;
-   }
-   LwqqAsyncEvset* set = lwqq_async_evset_new();
-   LwqqAsyncEvent* ev;
-   ev = lwqq_info_get_discu_name_list(lc);
-   lwqq_async_evset_add_event(set, ev);
-   ev = lwqq_info_get_online_buddies(lc, NULL);
-   lwqq_async_evset_add_event(set, ev);
-
-   qq_account* ac = lwqq_client_userdata(lc);
-   const char* alias = purple_account_get_alias(ac->account);
-   if (alias == NULL) {
-      ev = lwqq_info_get_friend_detail_info(lc, lc->myself);
-      lwqq_async_evset_add_event(set, ev);
-   }
-
-   lwqq_async_add_evset_listener(set, _C_(p, login_stage_3, lc));
-   lwqq_async_evset_unref(set);
 }
 
 static void msg_unsend_print_reason(qq_account* ac, LwqqMsg* msg,
@@ -3167,7 +2894,7 @@ PurplePluginProtocolInfo webqq_prpl_info = {
 #endif
    .icon_spec = { "jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND },
    .list_icon = qq_list_icon,
-   .login = qq_login,
+   .login = start_login,
    .close = qq_close,
    .status_text = qq_status_text,
    .tooltip_text = qq_tooltip_text,
@@ -3355,7 +3082,7 @@ static TABLE_BEGIN(proxy_map, long, 0)
 static void init_client_events(LwqqClient* lc)
 {
    lwqq_add_event(lc->events->login_complete,
-                  _C_(2p, login_stage_1, lc, &lc->args->login_ec));
+                  _C_(2p, qq_login, lc, &lc->args->login_ec));
    lwqq_add_event(lc->events->new_friend,
                   _C_(2p, friend_come, lc, &lc->args->buddy));
    lwqq_add_event(lc->events->new_group,
@@ -3373,7 +3100,7 @@ static void init_client_events(LwqqClient* lc)
                       &lc->args->content, &lc->args->err));
 }
 
-static void qq_login(PurpleAccount* account)
+static void start_login(PurpleAccount* account)
 {
 
    PurpleConnection* pc = purple_account_get_connection(account);
@@ -3453,7 +3180,7 @@ static void qq_login(PurpleAccount* account)
    }
 
    if (!ac->flag & QQ_USE_QQNUM)
-      all_reset(ac, RESET_ALL);
+      qq_all_reset(ac, RESET_ALL);
 
    purple_connection_set_protocol_data(pc, ac);
    client_connect_signals(ac->gc);

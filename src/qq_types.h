@@ -41,6 +41,15 @@
 #define QQ_ROOM_TYPE_QUN "qun"
 #define QQ_ROOM_TYPE_DISCU "discu"
 
+typedef enum {
+   RESET_BUDDY = 1 << 0,
+   RESET_GROUP = 1 << 1,
+   RESET_DISCU = 1 << 2,
+   RESET_GROUP_SOFT = 1 << 3, ///<this only delete duplicated chat
+   RESET_DISCU_SOFT = 1 << 4,
+   RESET_ALL = RESET_BUDDY | RESET_GROUP | RESET_DISCU
+}QQResetFlags;
+
 typedef struct {
    enum { NODE_IS_BUDDY, NODE_IS_GROUP } type;
    const void* node;
@@ -135,6 +144,18 @@ LwqqStatus qq_status_from_str(const char* str);
 void vp_func_4pl(CALLBACK_FUNC func, vp_list* vp, void* p);
 
 char* strtrim(char* source);
+
+//-----------------------login.c------------------------
+void qq_login(LwqqClient* lc, LwqqErrorCode* p_err);
+//======================================================
+//
+//----------------------webqq.c-------------------------
+void friend_avatar(qq_account* ac, LwqqBuddy* buddy);
+void qq_all_reset(qq_account* ac, QQResetFlags opt);
+void friend_come(LwqqClient* lc, LwqqBuddy** p_buddy);
+void group_come(LwqqClient* lc, LwqqGroup** p_group);
+#define discu_come(lc, data) (group_come(lc, data))
+//======================================================
 
 #endif
 

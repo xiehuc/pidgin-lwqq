@@ -6,6 +6,7 @@ set(SRC_LIST
     #    ft.c
     cgroup.c
     win.c
+    login.c
     )
 
 add_definitions(-Wall)
