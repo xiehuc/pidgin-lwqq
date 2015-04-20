@@ -213,11 +213,17 @@ static void action_about_webqq(PurplePluginAction* action)
                          "<b>Author</b>:xiehuc xiehuc@gmail.com"
                          "</p><br/>");
    char flags[1024] = { 0 };
-   format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s<br/></p>",
-                 lwqq_features & LWQQ_WITH_LIBEV ? "-with-libev<br/>" : "",
-                 lwqq_features & LWQQ_WITH_LIBUV ? "-with-libuv<br/>" : "",
-                 lwqq_features & LWQQ_WITH_SQLITE ? "-with-sqlite<br/>" : "",
-                 lwqq_features & LWQQ_WITH_MOZJS ? "-with-mozjs<br/>" : "");
+   LwqqFeatures f = lwqq_features();
+   format_append(flags, "<p><b>Compile Flags</b>:<br/>%s%s%s%s%s</p>",
+                 f & LWQQ_WITH_LIBEV     ? "-with-libev<br/>" : "",
+                 f & LWQQ_WITH_LIBUV     ? "-with-libuv<br/>" : "",
+                 f & LWQQ_WITH_SQLITE    ? "-with-sqlite<br/>" : "",
+                 f & LWQQ_WITH_MOZJS     ? "-with-mozjs<br/>" : "",
+                 f & LWQQ_WITH_ASYNCHDNS ? "-with-asyncdns<br/>" : ""
+                 );
+   g_string_append(info, flags);
+   flags[0] = 0;
+   format_append(flags, "<p><b>eventloop:</b> %s<br/></p>", lwqq__async_impl_->name);
    g_string_append(info, flags);
 
    g_string_append(info, "pidgin-lwqq mainly referenced: "
@@ -3006,14 +3012,16 @@ static void init_plugin(PurplePlugin* plugin)
    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"),
                                           "relink_retry", 20);
    options = g_list_append(options, option);
+   webqq_prpl_info.protocol_options = options;
 
-#ifndef WITH_LIBEV
-   LWQQ_ASYNC_IMPLEMENT(impl_purple);
-#endif
+   int is_win32=0;
 #ifdef WIN32
    lwqq_log_redirect(qq_debug);
+   is_win32 = 1;
 #endif
-   webqq_prpl_info.protocol_options = options;
+   lwqq_async_global_init();
+   if(is_win32 || (lwqq_features() & LWQQ_WITH_ASYNCHDNS))
+      LWQQ_ASYNC_IMPLEMENT(impl_purple);
 }
 
 static void version_statics(qq_account* ac, LwqqConfirmTable* ct)
@@ -3196,4 +3204,3 @@ static void start_login(PurpleAccount* account)
 }
 
 PURPLE_INIT_PLUGIN(webqq, init_plugin, info);
-

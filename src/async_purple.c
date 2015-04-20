@@ -68,6 +68,8 @@ void LWQQ__ASYNC_IMPL(timer_stop)(void* t)
 }
 
 static LwqqAsyncImpl impl_purple = {
+   .name = "purple",
+   .flags = NO_THREAD,
    .loop_create = blank_func,
    .loop_run = blank_func,
    .loop_stop = blank_func,
