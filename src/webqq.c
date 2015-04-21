@@ -13,10 +13,7 @@
 #include "qq_types.h"
 #include "translate.h"
 #include "cgroup.h"
-
-#ifndef WITH_LIBEV
 #include "async_purple.c"
-#endif
 
 #ifdef WIN32
 #include "win.h"
