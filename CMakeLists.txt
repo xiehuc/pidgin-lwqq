@@ -93,6 +93,8 @@ else()
     set(ENABLE_NLS false)
 endif()
 
+option(REDIRECT_DEBUG "Redirect debug output to pidgin" On)
+
 set(package pidgin-lwqq)
 set(localedir ${SHARE_DIR}/locale)
 set(datadir ${SHARE_DIR}/lwqq)

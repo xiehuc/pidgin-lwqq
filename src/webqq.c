@@ -49,7 +49,7 @@ static void show_verify_image(LwqqClient* lc, LwqqVerifyCode** p_code);
 int g_ref_count = 0;
 ///###  global data area ###///
 
-#ifdef WIN32
+#ifdef REDIRECT_DEBUG
 static void qq_debug(int l, const char* msg)
 {
    /**purple debug would use gtk text,
@@ -3013,8 +3013,10 @@ static void init_plugin(PurplePlugin* plugin)
 
    int is_win32=0;
 #ifdef WIN32
-   lwqq_log_redirect(qq_debug);
    is_win32 = 1;
+#endif
+#ifdef REDIRECT_DEBUG
+   lwqq_log_redirect(qq_debug);
 #endif
    lwqq_async_global_init();
    if(is_win32 || (lwqq_features() & LWQQ_WITH_ASYNCHDNS))
