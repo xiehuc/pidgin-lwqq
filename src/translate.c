@@ -166,7 +166,7 @@ static LwqqMsgContent* build_string_content(const char* from, const char* to,
          } else {
             int s = style_map_to_key(begin);
             if (s)
-               lwqq_bit_set(msg->f_style, s, 1);
+               bit_set(msg->f_style, s, 1);
             else if (strncmp(begin, "<font ", 6) == 0) {
                const char* key = begin + 6;
                const char* value = strchr(begin, '=') + 2;
@@ -345,11 +345,11 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
    ds_sure(buf, BUFLEN);
    char* img_idstr = NULL, **img_data = NULL, *img_url = NULL;
    size_t img_sz = 0;
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_BOLD))
+   if (bit_get(msg->f_style, LWQQ_FONT_BOLD))
       ds_cat(buf, "<b>");
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_ITALIC))
+   if (bit_get(msg->f_style, LWQQ_FONT_ITALIC))
       ds_cat(buf, "<i>");
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_UNDERLINE))
+   if (bit_get(msg->f_style, LWQQ_FONT_UNDERLINE))
       ds_cat(buf, "<u>");
    strcpy(piece, "");
    if (ac->flag & DARK_THEME_ADAPT) {
@@ -422,11 +422,11 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
       }
    }
    ds_cat(buf, "</font>");
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_BOLD))
+   if (bit_get(msg->f_style, LWQQ_FONT_BOLD))
       ds_cat(buf, "</u>");
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_ITALIC))
+   if (bit_get(msg->f_style, LWQQ_FONT_ITALIC))
       ds_cat(buf, "</i>");
-   if (lwqq_bit_get(msg->f_style, LWQQ_FONT_UNDERLINE))
+   if (bit_get(msg->f_style, LWQQ_FONT_UNDERLINE))
       ds_cat(buf, "</b>");
    return buf;
 }

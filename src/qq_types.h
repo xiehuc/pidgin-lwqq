@@ -22,13 +22,8 @@
 #define QQ_MAGIC 0x4153
 #define BUFLEN 15000
 
-#ifdef USE_LIBEV
-// the ev dispatch macro
-// ld:long dispatch,d:lc->dispatch,sd:short dispatch
-#define _EV_(ld, d, sd) ld, d, vp_func_##sd
-#else
-#define _EV_(ld, d, sd) sd
-#endif
+#define bit_set(var, bit, value) (var = (value) ? var | bit : var & ~bit)
+#define bit_get(var, bit) ((var & bit) > 0)
 
 #define DBGID "webqq"
 #define QQ_DEFAULT_CATE _("Friend")

@@ -3131,28 +3131,24 @@ static void start_login(PurpleAccount* account)
    ac->gc = pc;
    init_client_events(ac->qq);
 
-   lwqq_bit_set(
-       ac->flag, IGNORE_FONT_SIZE,
-       purple_account_get_bool(account, "disable_custom_font_size", FALSE));
-   lwqq_bit_set(
-       ac->flag, IGNORE_FONT_FACE,
-       purple_account_get_bool(account, "disable_custom_font_face", FALSE));
-   lwqq_bit_set(ac->flag, DARK_THEME_ADAPT,
-                purple_account_get_bool(account, "dark_theme_fix", FALSE));
-   lwqq_bit_set(ac->flag, DEBUG_FILE_SEND,
-                purple_account_get_bool(account, "debug_file_send", FALSE));
-   lwqq_bit_set(
-       ac->flag, REMOVE_DUPLICATED_MSG,
-       purple_account_get_bool(account, "remove_duplicated_msg", FALSE));
-   lwqq_bit_set(
+   bit_set(ac->flag, IGNORE_FONT_SIZE,
+           purple_account_get_bool(account, "disable_custom_font_size", FALSE));
+   bit_set(ac->flag, IGNORE_FONT_FACE,
+           purple_account_get_bool(account, "disable_custom_font_face", FALSE));
+   bit_set(ac->flag, DARK_THEME_ADAPT,
+           purple_account_get_bool(account, "dark_theme_fix", FALSE));
+   bit_set(ac->flag, DEBUG_FILE_SEND,
+           purple_account_get_bool(account, "debug_file_send", FALSE));
+   bit_set(ac->flag, REMOVE_DUPLICATED_MSG,
+           purple_account_get_bool(account, "remove_duplicated_msg", FALSE));
+   bit_set(
        ac->flag, QQ_DONT_EXPECT_100_CONTINUE,
        purple_account_get_bool(account, "dont_expected_100_continue", FALSE));
-   lwqq_bit_set(
-       ac->flag, NOT_DOWNLOAD_GROUP_PIC,
-       purple_account_get_bool(account, "no_download_group_pic", FALSE));
-   lwqq_bit_set(ac->flag, SEND_VISUALBILITY,
-                purple_account_get_bool(account, "send_visualbility",
-                                        SEND_VISUAL_DEFAULT));
+   bit_set(ac->flag, NOT_DOWNLOAD_GROUP_PIC,
+           purple_account_get_bool(account, "no_download_group_pic", FALSE));
+   bit_set(ac->flag, SEND_VISUALBILITY,
+           purple_account_get_bool(account, "send_visualbility",
+                                   SEND_VISUAL_DEFAULT));
    ac->recent_group_name = s_strdup(purple_account_get_string(
        account, "recent_group_name", "Recent Contacts"));
    lwqq_get_http_handle(ac->qq)->ssl
@@ -3169,8 +3165,8 @@ static void start_login(PurpleAccount* account)
    ac->qq->data = ac;
 
    // for empathy
-   lwqq_bit_set(ac->flag, QQ_USE_QQNUM, ac->db != NULL);
-   purple_buddy_icons_set_caching(lwqq_bit_get(ac->flag, QQ_USE_QQNUM));
+   bit_set(ac->flag, QQ_USE_QQNUM, ac->db != NULL);
+   purple_buddy_icons_set_caching(bit_get(ac->flag, QQ_USE_QQNUM));
    if (ac->db) {
       version_statics_dlg(ac);
       lwqq_override(ac->font.family,
