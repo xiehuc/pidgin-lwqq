@@ -1591,6 +1591,7 @@ static void send_receipt(LwqqAsyncEvent* ev, LwqqMsg* msg, char* serv_id,
       LwqqAsyncEvent* event = lwqq_msg_send(ac->qq, mmsg);
       if (!event)
          msg_unsend_print_reason(ac, msg, serv_id);
+      translate_append_string(msg, " "); // we append a blankspace, increase resend success rate
       lwqq_async_add_event_listener(
           event, _C_(4pl, send_receipt, event, msg, serv_id, what, retry - 1));
       return;

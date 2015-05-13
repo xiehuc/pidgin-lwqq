@@ -12,4 +12,5 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
 void translate_add_smiley_to_conversation(PurpleConversation* conv);
 const char* translate_smile(int face);
 char* translate_to_html_symbol(const char* s);
+void translate_append_string(LwqqMsg* msg, const char* text);
 #endif

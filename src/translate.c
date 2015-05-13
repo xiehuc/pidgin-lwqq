@@ -513,3 +513,13 @@ void translate_add_smiley_to_conversation(PurpleConversation* conv)
    g_list_free(list);
 }
 
+void translate_append_string(LwqqMsg* msg, const char* text)
+{
+   if(lwqq_mt_bits(msg->type) != LWQQ_MT_MESSAGE) return;
+   LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
+   LwqqMsgContent* c = s_malloc0(sizeof(*c));
+   c->type = LWQQ_CONTENT_STRING;
+   c->data.str = s_strdup(text);
+   TAILQ_INSERT_TAIL(&mmsg->content, c, entries);
+}
+
