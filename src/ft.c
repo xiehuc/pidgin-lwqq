@@ -4,6 +4,7 @@
 
 #include "qq_types.h"
 
+#if 0
 static int file_trans_on_progress(void* data, size_t now, size_t total)
 {
    PurpleXfer* xfer = data;
@@ -253,4 +254,30 @@ void file_message(LwqqClient* lc, LwqqMsgFileMessage* file)
                           time(NULL));
    }
 }
+#endif
 
+static void set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
+{
+   C->data.ext.param[0] = req->response;
+   req->response = 0;
+   s_free(data);
+   lwqq_http_request_free(req);
+}
+
+LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, LwqqMsgContent** Content)
+{
+   const char* name = purple_imgstore_get_filename(img);
+   LwqqMsgContent* C = LWQQ_CONTENT_EXT_IMG(name);
+   LwqqHttpRequest* req
+       = lwqq_http_request_new(ac->settings.upload_server);
+   lwqq_puts(ac->settings.upload_server);
+   req->lc = ac->qq;
+   size_t len = purple_imgstore_get_size(img);
+   void* buffer = s_malloc(len);
+   memcpy(buffer, purple_imgstore_get_data(img), len);
+   const char* ext = purple_imgstore_get_extension(img);
+   req->add_form(req, LWQQ_FORM_CONTENT, "user", ac->qq->myself->qqnumber);
+   req->add_file_content(req, "fname", name, buffer, len, ext);
+   *Content = C;
+   return req->do_request_async(req, 0, "", _C_(3p, set_img_url, req, C, buffer));
+}

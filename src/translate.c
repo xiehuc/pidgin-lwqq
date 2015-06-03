@@ -224,7 +224,7 @@ static LwqqMsgContent* build_face_direct(int num)
    c->data.face = num;
    return c;
 }
-int translate_message_to_struct(qq_account* ac, const char* to,
+LwqqAsyncEvset* translate_message_to_struct(qq_account* ac, const char* to,
                                 const char* what, LwqqMsg* msg, int using_cface)
 {
    const char* ptr = what;
@@ -237,6 +237,7 @@ int translate_message_to_struct(qq_account* ac, const char* to,
    TRex* x = _regex;
    LwqqMsgMessage* mmsg = (LwqqMsgMessage*)msg;
    int translate_face = 1;
+   LwqqAsyncEvset* set = lwqq_async_evset_new();
 
    while (*ptr != '\0') {
       c = NULL;
@@ -262,22 +263,22 @@ int translate_message_to_struct(qq_account* ac, const char* to,
           && sscanf(begin, "<IMG ID=\"%d\">", &img_id) == 1) {
          // processing purple internal img.
          PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
+         char buf[12];
+         snprintf(buf, sizeof(buf), "%d", img_id);
+         // record extra information to file_id
          if (ac->settings.upload_server) {
-           c = LWQQ_CONTENT_EXT_IMG(0);
+            lwqq_async_evset_add_event(set,
+                                       upload_image_to_server(ac, simg, &c));
+            c->data.ext.param[2] = s_strdup(buf); // store a special value for echo
          } else if (using_cface || msg->type == LWQQ_MS_GROUP_MSG) {
             c = lwqq_msg_fill_upload_cface(purple_imgstore_get_filename(simg),
                                            purple_imgstore_get_data(simg),
                                            purple_imgstore_get_size(simg));
-            char buf[12];
-            snprintf(buf, sizeof(buf), "%d", img_id);
-            // record extra information to file_id
             c->data.cface.file_id = s_strdup(buf);
          } else {
             c = lwqq_msg_fill_upload_offline_pic(
                 purple_imgstore_get_filename(simg),
                 purple_imgstore_get_data(simg), purple_imgstore_get_size(simg));
-            char buf[12];
-            snprintf(buf, sizeof(buf), "%d", img_id);
             c->data.img.file_path = s_strdup(buf);
          }
       } else if (*begin == ':' && *(end - 1) == ':') {
@@ -308,7 +309,7 @@ int translate_message_to_struct(qq_account* ac, const char* to,
       if (c != NULL)
          lwqq_msg_content_append(mmsg, c);
    }
-   return 0;
+   return set;
 }
 static void paste_content_string(const char* from, struct ds* to)
 {
@@ -421,6 +422,17 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
             }
          }
          break;
+      case LWQQ_CONTENT_EXTENSION:
+         if(strcmp(c->data.ext.name, "img")==0){
+            if (flags & PURPLE_MESSAGE_SEND){// should only echo once
+               snprintf(piece, sizeof(piece), "<IMG ID=\"%s\">", c->data.ext.param[2]);
+               ds_cat(buf, piece);
+            }
+         }else{
+            lwqq_msg_ext_to_string(c, piece, sizeof(piece));
+            ds_cat(buf, piece);
+         }
+         break;
       }
    }
    ds_cat(buf, "</font>");
@@ -524,4 +536,3 @@ void translate_append_string(LwqqMsg* msg, const char* text)
    c->data.str = s_strdup(text);
    TAILQ_INSERT_TAIL(&mmsg->content, c, entries);
 }
-

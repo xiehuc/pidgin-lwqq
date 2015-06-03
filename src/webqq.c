@@ -1587,11 +1587,12 @@ static void send_receipt(LwqqAsyncEvent* ev, LwqqMsg* msg, char* serv_id,
 
    if (err == LWQQ_EC_LOST_CONN) {
       vp_do_repeat(ac->qq->events->poll_lost, NULL);
-   } else if (err == 108 && retry > 0) {
+   } else if ((err == QQ_FIRST_SEND || err == 108) && retry > 0) {
       LwqqAsyncEvent* event = lwqq_msg_send(ac->qq, mmsg);
       if (!event)
          msg_unsend_print_reason(ac, msg, serv_id);
-      translate_append_string(msg, " "); // we append a blankspace, increase resend success rate
+      if(err == 108) translate_append_string(msg, " "); // we append a blankspace, increase resend success rate
+      else s_free(ev); // we created a fake event, no complex data
       lwqq_async_add_event_listener(
           event, _C_(4pl, send_receipt, event, msg, serv_id, what, retry - 1));
       return;
@@ -1672,7 +1673,7 @@ static int qq_send_im(PurpleConnection* gc, const gchar* who, const gchar* what,
    mmsg->f_style = ac->font.style;
    strcpy(mmsg->f_color, "000000");
 
-   translate_message_to_struct(ac, who, what, msg, 1);
+   LwqqAsyncEvset* set = translate_message_to_struct(ac, who, what, msg, 1);
 
    if (send_visual) {
       struct ds whatsnew
@@ -1684,11 +1685,13 @@ static int qq_send_im(PurpleConnection* gc, const gchar* who, const gchar* what,
       ds_free(whatsnew);
    }
 
-   LwqqAsyncEvent* ev = lwqq_msg_send(lc, mmsg);
-   if (!ev)
-      msg_unsend_print_reason(ac, msg, who);
-   lwqq_async_add_event_listener(
-       ev, _C_(4pl, send_receipt, ev, msg, strdup(who), strdup(what), 2L));
+   LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+   ev->lc = lc;
+   ev->result = QQ_FIRST_SEND; // a fake event
+   // reuse send_receipt to do real send
+   lwqq_async_add_evset_listener(
+         set, _C_(4pl, send_receipt, ev, msg, strdup(who), strdup(what), 3L));
+   lwqq_async_evset_unref(set);
 
    return !send_visual;
 }
@@ -1716,14 +1719,16 @@ static int qq_send_chat(PurpleConnection* gc, int id, const char* message,
    mmsg->f_style = ac->font.style;
    strcpy(mmsg->f_color, "000000");
 
-   translate_message_to_struct(ac, group->gid, message, msg, 1);
+   LwqqAsyncEvset* set = translate_message_to_struct(ac, group->gid, message, msg, 1);
 
-   LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq, mmsg);
-   if (!ev)
-      msg_unsend_print_reason(ac, msg, group->gid);
-   lwqq_async_add_event_listener(ev, _C_(4pl, send_receipt, ev, msg,
-                                         s_strdup(group->gid),
-                                         s_strdup(message), 2L));
+   LwqqAsyncEvent* ev = lwqq_async_event_new(NULL);
+   ev->lc = ac->qq;
+   ev->result = QQ_FIRST_SEND; // a fake event
+   // reuse send_receipt to do real send
+   lwqq_async_add_evset_listener(set,
+                                 _C_(4pl, send_receipt, ev, msg,
+                                     strdup(group->gid), strdup(message), 3L));
+   lwqq_async_evset_unref(set);
 #ifndef APPLE
    // in adium it would automatic type send message
    purple_conversation_write(conv, NULL, message, flags, time(NULL));
