@@ -422,3 +422,13 @@ char* strtrim(char* source)
    return beg;
 }
 
+const char* get_name_from_chat(PurpleChat* chat)
+{
+   GHashTable* table = purple_chat_get_components(chat);
+   return g_hash_table_lookup(table, QQ_ROOM_KEY_GID);
+}
+const char* get_type_from_chat(PurpleChat* chat)
+{
+   GHashTable* table = purple_chat_get_components(chat);
+   return g_hash_table_lookup(table, QQ_ROOM_TYPE);
+}

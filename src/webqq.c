@@ -117,18 +117,6 @@ static LwqqGroup* qq_get_group_from_chat(PurpleChat* chat)
       ret = find_group_by_gid(lc, key);
    return ret;
 }
-//#define get_name_from_chat(chat)
-//(g_hash_table_lookup(purple_chat_get_components(chat),QQ_ROOM_KEY_GID));
-static const char* get_name_from_chat(PurpleChat* chat)
-{
-   GHashTable* table = purple_chat_get_components(chat);
-   return g_hash_table_lookup(table, QQ_ROOM_KEY_GID);
-}
-static const char* get_type_from_chat(PurpleChat* chat)
-{
-   GHashTable* table = purple_chat_get_components(chat);
-   return g_hash_table_lookup(table, QQ_ROOM_TYPE);
-}
 static LwqqGroup* find_group_by_name(LwqqClient* lc, const char* name)
 {
    LwqqGroup* group = NULL;
@@ -1731,6 +1719,39 @@ static int qq_send_chat(PurpleConnection* gc, int id, const char* message,
    return 1;
 }
 
+void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer)
+{
+   char message[1024];
+   // now xfer is not valid.
+   LwqqErrorCode err = req->err;
+   if(err == LWQQ_EC_CANCELED)
+      goto done;
+   LwqqClient* lc = req->lc;
+   qq_account* ac = lc->data;
+   LwqqMsgOffFile* file = xfer->data;
+   PurpleConvChat* chat;
+   if (err) {
+      qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.to,
+                       _("Send offline file failed"), PURPLE_MESSAGE_ERROR,
+                       time(NULL));
+      purple_xfer_set_completed(xfer, 1);
+   } else {
+      LwqqMsgContent* C = LWQQ_CONTENT_EXT_FILE(req->response, strrchr(xfer->local_filename, '/'));
+      lwqq_msg_ext_to_string(C, message, sizeof(message));
+      if(purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, xfer->who, xfer->account))
+         qq_send_im(xfer->account->gc, xfer->who, message, PURPLE_MESSAGE_SEND);
+      else if ((chat = PURPLE_CONV_CHAT(purple_find_conversation_with_account(
+                    PURPLE_CONV_TYPE_CHAT, xfer->who, xfer->account))))
+         qq_send_chat(xfer->account->gc, chat->id, message, PURPLE_MESSAGE_SEND);
+      lwqq_msg_content_clean(C);
+      s_free(C);
+   }
+   lwqq_msg_free((LwqqMsg*)file);
+   purple_xfer_set_completed(xfer, 1);
+done:
+   lwqq_http_request_free(req);
+}
+
 static unsigned int qq_send_typing(PurpleConnection* gc, const char* local_id,
                                    PurpleTypingState state)
 {
@@ -2732,6 +2753,9 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
    } else if (PURPLE_BLIST_NODE_IS_CHAT(node)) {
       PurpleChat* chat = PURPLE_CHAT(node);
       LwqqGroup* group = qq_get_group_from_chat(chat);
+      action = purple_menu_action_new(
+          _("Send File"), (PurpleCallback)qq_send_offline_file, node, NULL);
+      act = g_list_append(act, action);
       if (group && group->type == LWQQ_GROUP_QUN) {
          action = purple_menu_action_new(_("Get Information"),
                                          (PurpleCallback)qq_get_group_info,
@@ -2741,9 +2765,6 @@ static GList* qq_blist_node_menu(PurpleBlistNode* node)
                                          (PurpleCallback)qq_set_self_card, node,
                                          NULL);
          act = g_list_append(act, action);
-         // action = purple_menu_action_new(_("Merge Online
-         // History"),(PurpleCallback)qq_merge_group_history,chat,NULL);
-         // act = g_list_append(act,action);
       }
       action = purple_menu_action_new(_("Block"), (PurpleCallback)qq_block_chat,
                                       node, NULL);
@@ -2896,40 +2917,39 @@ PurplePluginProtocolInfo webqq_prpl_info = {
               | OPT_PROTO_CHAT_TOPIC,
 #endif
    .icon_spec = { "jpg,jpeg,gif,png", 0, 0, 96, 96, 0, PURPLE_ICON_SCALE_SEND },
-   .list_icon = qq_list_icon,
-   .login = start_login,
-   .close = qq_close,
-   .status_text = qq_status_text,
-   .tooltip_text = qq_tooltip_text,
-   .status_types = qq_status_types,
-   .set_status = qq_set_status,
-   .blist_node_menu = qq_blist_node_menu,
-   //.list_emblem=       qq_list_emblem,
-   .get_info = qq_get_user_info,
+   .list_icon            = qq_list_icon,
+   .login                = start_login,
+   .close                = qq_close,
+   .status_text          = qq_status_text,
+   .tooltip_text         = qq_tooltip_text,
+   .status_types         = qq_status_types,
+   .set_status           = qq_set_status,
+   .blist_node_menu      = qq_blist_node_menu,
+   //.list_emblem        = qq_list_emblem,
+   .get_info             = qq_get_user_info,
    /**group part start*/
-   .chat_info = qq_chat_info, /* chat_info implement this to enable chat*/
-   .chat_info_defaults = qq_chat_info_defaults, /* chat_info_defaults */
-   .roomlist_get_list = qq_get_all_group_list,
-   .join_chat = qq_group_add_or_join,
-   .chat_invite = qq_add_buddies_to_discu,
-   //.set_chat_topic=    qq_set_chat_topic,
-   .get_cb_real_name = qq_get_cb_real_name,
+   .chat_info            = qq_chat_info, /* chat_info implement this to enable chat*/
+   .chat_info_defaults   = qq_chat_info_defaults, /* chat_info_defaults */
+   .roomlist_get_list    = qq_get_all_group_list,
+   .join_chat            = qq_group_add_or_join,
+   .chat_invite          = qq_add_buddies_to_discu,
+   //.set_chat_topic     = qq_set_chat_topic,
+   .get_cb_real_name     = qq_get_cb_real_name,
    /**group part end*/
-   .send_im = qq_send_im, /* send_im */
-   .send_typing = qq_send_typing,
-   .chat_send = qq_send_chat,
-   .send_attention = qq_send_attention,
-   //.chat_leave=        qq_leave_chat,
-   /*webqq disabled send file function*/
-   //.send_file=         qq_send_file,
-   //.chat_whisper=      qq_send_whisper,
-   .offline_message = qq_offline_message,
-   .alias_buddy = qq_change_markname, /* change buddy alias on server */
-   .group_buddy = qq_change_category /* change buddy category on server */,
-   .rename_group = qq_rename_category,
-   .remove_buddy = qq_remove_buddy,
+   .send_im              = qq_send_im, /* send_im */
+   .send_typing          = qq_send_typing,
+   .chat_send            = qq_send_chat,
+   .send_attention       = qq_send_attention,
+   //.chat_leave         = qq_leave_chat,
+   .send_file            = qq_send_file, /*webqq disabled send file function*/
+   //.chat_whisper       = qq_send_whisper,
+   .offline_message      = qq_offline_message,
+   .alias_buddy          = qq_change_markname, /* change buddy alias on server */
+   .group_buddy          = qq_change_category /* change buddy category on server */,
+   .rename_group         = qq_rename_category,
+   .remove_buddy         = qq_remove_buddy,
 #if PURPLE_OUTDATE
-   .add_buddy = qq_add_buddy,
+   .add_buddy             = qq_add_buddy,
 #else
    .add_buddy_with_invite = qq_add_buddy,
 #endif
@@ -3157,9 +3177,8 @@ static void start_login(PurpleAccount* account)
        account, "recent_group_name", "Recent Contacts"));
    const char* upload_server = purple_account_get_string(account, 
             "upload_server", _("Upload Server Default"));
-   if(strncmp(upload_server, "http", 4) !=0) upload_server = "";
    if(strcmp(upload_server, "") == 0) upload_server = NULL;
-   ac->settings.upload_server = strcmp(upload_server, "")==0?NULL:s_strdup(upload_server);
+   ac->settings.upload_server = upload_server?s_strdup(upload_server):NULL;
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
    int relink_retry = 0;

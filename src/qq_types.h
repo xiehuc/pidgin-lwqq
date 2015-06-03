@@ -121,18 +121,21 @@ void qq_system_log(qq_account* ac, const char* log);
 //----------------------------ft.h-----------------------------
 #if 0
 void file_message(LwqqClient* lc,LwqqMsgFileMessage* file);
+#endif
 void qq_send_file(PurpleConnection* gc,const char* who,const char* filename);
 void qq_send_offline_file(PurpleBlistNode* node);
-#endif
 LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img,
                                        LwqqMsgContent** Content);
 LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C);
+void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer);
 //=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc, const char* qqnum);
 LwqqBuddy* find_buddy_by_uin(LwqqClient* lc, const char* uin);
 LwqqGroup* find_group_by_qqnumber(LwqqClient* lc, const char* qqnum);
 LwqqGroup* find_group_by_gid(LwqqClient* lc, const char* gid);
+const char* get_name_from_chat(PurpleChat* chat);
+const char* get_type_from_chat(PurpleChat* chat);
 
 const char* qq_gender_to_str(LwqqGender gender);
 const char* qq_constel_to_str(LwqqConstel constel);
