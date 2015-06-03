@@ -58,15 +58,18 @@ typedef struct qq_account {
                             ///event to server
    enum { DISCONNECT, CONNECTED, LOAD_COMPLETED } state;
    int msg_poll_handle;
-   int relink_timer;
    GList* rewrite_pic_list;
-   char* recent_group_name;
    PurpleLog* sys_log;
    struct {
       char* family;
       int size;
       LwqqFontStyle style;
    } font;
+   struct {
+      char* recent_group_name;
+      char* upload_server;
+      unsigned relink_timer;
+   } settings;
    enum {
       QQ_USE_QQNUM                = 1 << 0,
       IGNORE_FONT_FACE            = 1 << 1,

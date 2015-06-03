@@ -637,7 +637,7 @@ void friend_come(LwqqClient* lc, LwqqBuddy** p_buddy)
    purple_buddy_set_protocol_data(bu, buddy);
    buddy->data = bu;
    if (purple_buddy_get_group(bu) != group
-       && strcmp(purple_buddy_get_group(bu)->name, ac->recent_group_name) != 0)
+       && strcmp(purple_buddy_get_group(bu)->name, ac->settings.recent_group_name) != 0)
       purple_blist_add_buddy(bu, NULL, group, NULL);
    if (!bu->alias || strcmp(bu->alias, disp) != 0)
       purple_blist_alias_buddy(bu, disp);
@@ -1672,7 +1672,7 @@ static int qq_send_im(PurpleConnection* gc, const gchar* who, const gchar* what,
    mmsg->f_style = ac->font.style;
    strcpy(mmsg->f_color, "000000");
 
-   translate_message_to_struct(lc, who, what, msg, 1);
+   translate_message_to_struct(ac, who, what, msg, 1);
 
    if (send_visual) {
       struct ds whatsnew
@@ -1716,7 +1716,7 @@ static int qq_send_chat(PurpleConnection* gc, int id, const char* message,
    mmsg->f_style = ac->font.style;
    strcpy(mmsg->f_color, "000000");
 
-   translate_message_to_struct(ac->qq, group->gid, message, msg, 1);
+   translate_message_to_struct(ac, group->gid, message, msg, 1);
 
    LwqqAsyncEvent* ev = lwqq_msg_send(ac->qq, mmsg);
    if (!ev)
@@ -1905,8 +1905,8 @@ static void qq_close(PurpleConnection* gc)
    if (!ac)
       return;
 
-   if (ac->relink_timer > 0)
-      purple_timeout_remove(ac->relink_timer);
+   if (ac->settings.relink_timer > 0)
+      purple_timeout_remove(ac->settings.relink_timer);
    if (lwqq_client_logined(ac->qq))
       lwqq_logout(ac->qq, 3); // only wait 3 seconds to logout
    lwqq_msglist_close(ac->qq->msg_list);
@@ -1993,8 +1993,8 @@ static void qq_change_category(PurpleConnection* gc, const char* who,
    qq_account* ac = purple_connection_get_protocol_data(gc);
    if (ac->disable_send_server)
       return;
-   if (strcmp(new_group, ac->recent_group_name) == 0
-       || strcmp(old_group, ac->recent_group_name) == 0)
+   if (strcmp(new_group, ac->settings.recent_group_name) == 0
+       || strcmp(old_group, ac->settings.recent_group_name) == 0)
       return;
    LwqqClient* lc = ac->qq;
    LwqqBuddy* buddy = ac->flag & QQ_USE_QQNUM ? find_buddy_by_qqnumber(lc, who)
@@ -3007,6 +3007,8 @@ static void init_plugin(PurplePlugin* plugin)
    options = g_list_append(options, option);
    option = purple_account_option_int_new(_("Verbose"), "verbose", 0);
    options = g_list_append(options, option);
+   option = purple_account_option_string_new(_("Upload Server"), "upload_server", _("Upload Server Default"));
+   options = g_list_append(options, option);
    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"),
                                           "relink_retry", 20);
    options = g_list_append(options, option);
@@ -3152,14 +3154,17 @@ static void start_login(PurpleAccount* account)
    bit_set(ac->flag, SEND_VISUALBILITY,
            purple_account_get_bool(account, "send_visualbility",
                                    SEND_VISUAL_DEFAULT));
-   ac->recent_group_name = s_strdup(purple_account_get_string(
+   ac->settings.recent_group_name = s_strdup(purple_account_get_string(
        account, "recent_group_name", "Recent Contacts"));
+   const char* upload_server = purple_account_get_string(account, 
+            "upload_server", _("Upload Server Default"));
+   ac->settings.upload_server = strcmp(upload_server, "")==0?NULL:s_strdup(upload_server);
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
    int relink_retry = 0;
 
    if ((relink_retry = purple_account_get_int(account, "relink_retry", 0)) > 0)
-      ac->relink_timer
+      ac->settings.relink_timer
           = purple_timeout_add_seconds(relink_retry * 60, relink_keepalive, ac);
    lwqq_log_set_level(purple_account_get_int(account, "verbose", 0));
    ac->db = lwdb_userdb_new(username, NULL, 0);

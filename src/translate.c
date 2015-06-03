@@ -224,7 +224,7 @@ static LwqqMsgContent* build_face_direct(int num)
    c->data.face = num;
    return c;
 }
-int translate_message_to_struct(LwqqClient* lc, const char* to,
+int translate_message_to_struct(qq_account* ac, const char* to,
                                 const char* what, LwqqMsg* msg, int using_cface)
 {
    const char* ptr = what;
@@ -262,7 +262,9 @@ int translate_message_to_struct(LwqqClient* lc, const char* to,
           && sscanf(begin, "<IMG ID=\"%d\">", &img_id) == 1) {
          // processing purple internal img.
          PurpleStoredImage* simg = purple_imgstore_find_by_id(img_id);
-         if (using_cface || msg->type == LWQQ_MS_GROUP_MSG) {
+         if (ac->settings.upload_server) {
+           c = LWQQ_CONTENT_EXT_IMG(0);
+         } else if (using_cface || msg->type == LWQQ_MS_GROUP_MSG) {
             c = lwqq_msg_fill_upload_cface(purple_imgstore_get_filename(simg),
                                            purple_imgstore_get_data(simg),
                                            purple_imgstore_get_size(simg));

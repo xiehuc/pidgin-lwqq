@@ -183,7 +183,8 @@ void qq_account_free(qq_account* ac)
    purple_log_free(ac->sys_log);
    lwqq_js_close(ac->js);
    // g_ptr_array_free(ac->opend_chat,1);
-   s_free(ac->recent_group_name);
+   s_free(ac->settings.recent_group_name);
+   s_free(ac->settings.upload_server);
    s_free(ac->font.family);
 #if QQ_USE_FAST_INDEX
    g_hash_table_destroy(ac->fast_index.qqnum_index);

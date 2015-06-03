@@ -5,7 +5,7 @@ typedef struct qq_account qq_account;
 
 void translate_global_init();
 void translate_global_free();
-int translate_message_to_struct(LwqqClient* lc, const char* to,
+int translate_message_to_struct(qq_account* ac, const char* to,
                                 const char* what, LwqqMsg*, int using_cface);
 struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
                                       PurpleMessageFlags flags);
