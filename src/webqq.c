@@ -2,6 +2,8 @@
 
 #include <plugin.h>
 #include <version.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <request.h>
 #include <signal.h>
@@ -1339,9 +1341,6 @@ void qq_msg_check(LwqqClient* lc)
          case LWQQ_MT_OFFFILE:
             offline_file(lc, (LwqqMsgOffFile*)msg);
             break;
-            /*case LWQQ_MT_FILE_MSG:
-              file_message(lc,(LwqqMsgFileMessage*)msg->msg);
-              break;*/
          case LWQQ_MT_FILETRANS:
             // complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
             break;
@@ -1736,7 +1735,10 @@ void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer)
                        time(NULL));
       purple_xfer_set_completed(xfer, 1);
    } else {
-      LwqqMsgContent* C = LWQQ_CONTENT_EXT_FILE(req->response, strrchr(xfer->local_filename, '/'));
+      struct stat st = {0};
+      stat(xfer->local_filename, &st);
+      snprintf(message, sizeof(message), "%lu", st.st_size);
+      LwqqMsgContent* C = LWQQ_CONTENT_EXT_FILE(req->response, strrchr(xfer->local_filename, '/')+1, message);
       lwqq_msg_ext_to_string(C, message, sizeof(message));
       if(purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, xfer->who, xfer->account))
          qq_send_im(xfer->account->gc, xfer->who, message, PURPLE_MESSAGE_SEND);

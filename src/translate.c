@@ -6,6 +6,7 @@
 
 #include "qq_types.h"
 #include "translate.h"
+#include "cgroup.h"
 #include "trex.h"
 
 #define LOCAL_SMILEY_PATH(path)                                                \
@@ -350,6 +351,12 @@ LwqqAsyncEvset* download_before_translate(qq_account* ac, LwqqMsgMessage* msg)
       const char* name = c->data.ext.name;
       if(strcmp(name, "img")==0){
          lwqq_async_evset_add_event(set, download_image_from_server(ac, c));
+      } else if(strcmp(name, "file")==0){
+         const char* local_id = NULL;
+         LwqqMsgType type = ((LwqqMsg*)msg)->type;
+         find_conversation(type, msg->super.from, ac, &local_id);
+         // xfer doesn't design for chat, so shouldn't have name;
+         qq_ask_download_file(ac, c, local_id);
       }
    }
    return set;

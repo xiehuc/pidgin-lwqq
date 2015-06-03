@@ -242,10 +242,8 @@ void qq_account_remove_index_node(qq_account* ac, const LwqqBuddy* b,
 #endif
 }
 
-static PurpleConversation* find_conversation(LwqqMsgType msg_type,
-                                             const char* serv_id,
-                                             qq_account* ac,
-                                             const char** local_id_out)
+PurpleConversation* find_conversation(LwqqMsgType msg_type, const char* serv_id,
+                                      qq_account* ac, const char** local_id_out)
 {
    PurpleAccount* account = ac->account;
    LwqqClient* lc = ac->qq;
@@ -286,8 +284,6 @@ static PurpleConversation* find_conversation(LwqqMsgType msg_type,
 void qq_sys_msg_write(qq_account* ac, LwqqMsgType m_t, const char* serv_id,
                       const char* msg, PurpleMessageFlags type, time_t t)
 {
-   // ac->qq->dispatch(vp_func_2p,(CALLBACK_FUNC)sys_msg_write,ac->qq,system_msg_new(m_t,serv_id,ac,msg,type,t));
-
    const char* local_id;
    PurpleConversation* conv = find_conversation(m_t, serv_id, ac, &local_id);
    if (conv) {

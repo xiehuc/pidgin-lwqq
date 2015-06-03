@@ -128,6 +128,7 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img,
                                        LwqqMsgContent** Content);
 LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C);
 void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer);
+void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_id);
 //=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc, const char* qqnum);
@@ -136,6 +137,8 @@ LwqqGroup* find_group_by_qqnumber(LwqqClient* lc, const char* qqnum);
 LwqqGroup* find_group_by_gid(LwqqClient* lc, const char* gid);
 const char* get_name_from_chat(PurpleChat* chat);
 const char* get_type_from_chat(PurpleChat* chat);
+PurpleConversation* find_conversation(LwqqMsgType msg_type, const char* serv_id,
+                                      qq_account* ac, const char** local_id_out);
 
 const char* qq_gender_to_str(LwqqGender gender);
 const char* qq_constel_to_str(LwqqConstel constel);

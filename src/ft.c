@@ -1,54 +1,11 @@
 #include <prpl.h>
 #include <ft.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "qq_types.h"
 
 #if 0
-static void recv_file_complete(PurpleXfer* xfer, LwqqAsyncEvent* ev)
-{
-   if (ev->result != LWQQ_EC_OK)
-      return;
-   qq_account* ac = purple_connection_get_protocol_data(
-       purple_account_get_connection(xfer->account));
-   LwqqMsgFileMessage* file = xfer->data;
-   char buf[512];
-   const char* extra = NULL;
-   if (ev->result) {
-      snprintf(buf, sizeof(buf), _("Transport Failed,Error Code:%d\n"),
-               ev->result);
-      if (ev->result == 102)
-         extra = _("Other may send via webqq.\nPlease call him send via email "
-                   "or offline file.");
-      else
-         extra = NULL;
-      purple_notify_error(ac->gc, _("File Transport"), buf, extra);
-   }
-   purple_xfer_set_completed(xfer, 1);
-   lwqq_msg_free((LwqqMsg*)file);
-}
-static void recv_file_init(PurpleXfer* xfer)
-{
-   qq_account* ac = purple_connection_get_protocol_data(
-       purple_account_get_connection(xfer->account));
-   LwqqClient* lc = ac->qq;
-   LwqqMsgFileMessage* file = xfer->data;
-   const char* filename = purple_xfer_get_local_filename(xfer);
-   xfer->start_time = time(NULL);
-   LwqqAsyncEvent* ev = lwqq_msg_accept_file(lc, file, filename);
-   if (ev == NULL) {
-      lwqq_puts("file trans error ");
-      purple_xfer_error(PURPLE_XFER_RECEIVE, ac->account,
-                        purple_xfer_get_remote_user(xfer),
-                        _("Receive file failed"));
-      purple_xfer_cancel_local(xfer);
-      return;
-   }
-   LwqqHttpRequest* req = lwqq_async_event_get_conn(ev);
-   lwqq_http_on_progress(req, file_trans_on_progress, xfer);
-   lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE, 1L);
-   lwqq_async_add_event_listener(ev, _C_(2p, recv_file_complete, xfer, ev));
-}
 static void recv_file_request_denied(PurpleXfer* xfer)
 {
    qq_account* ac = purple_connection_get_protocol_data(
@@ -102,33 +59,6 @@ static void upload_file_init(PurpleXfer* xfer)
 // the entrience for recv file messages
 void file_message(LwqqClient* lc, LwqqMsgFileMessage* file)
 {
-   qq_account* ac = lwqq_client_userdata(lc);
-   if (file->mode == MODE_RECV) {
-      PurpleAccount* account = ac->account;
-      LwqqClient* lc = ac->qq;
-      LwqqBuddy* buddy = lc->find_buddy_by_uin(lc, file->super.from);
-      if (buddy == NULL)
-         return;
-      const char* key = try_get(buddy->qqnumber, buddy->uin);
-      PurpleXfer* xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, key);
-      purple_xfer_set_filename(xfer, file->recv.name);
-      purple_xfer_set_init_fnc(xfer, recv_file_init);
-      purple_xfer_set_request_denied_fnc(xfer, recv_file_request_denied);
-      purple_xfer_set_cancel_recv_fnc(xfer, recv_file_cancel);
-      LwqqMsgFileMessage* fdup = s_malloc0(sizeof(*fdup));
-      lwqq_msg_move(fdup, file);
-      xfer->data = fdup;
-      purple_xfer_request(xfer);
-   } else if (file->mode == MODE_REFUSE) {
-      if (file->refuse.cancel_type == CANCEL_BY_USER)
-         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from,
-                          _("Other canceled file transport"),
-                          PURPLE_MESSAGE_SYSTEM, time(NULL));
-      else if (file->refuse.cancel_type == CANCEL_BY_OVERTIME)
-         qq_sys_msg_write(ac, LWQQ_MS_BUDDY_MSG, file->super.from,
-                          _("File transport timeout"), PURPLE_MESSAGE_SYSTEM,
-                          time(NULL));
-   }
 }
 #endif
 
@@ -167,11 +97,39 @@ static void upload_file_to_server(PurpleXfer* xfer)
    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE, 1L);
    req->do_request_async(req, 0, "", _C_(2p, send_file_message, req, xfer));
 }
+static void download_file_finish(PurpleXfer* xfer, LwqqHttpRequest* req)
+{
+   if(req->err != LWQQ_EC_CANCELED){
+      fclose(xfer->dest_fp);
+      purple_xfer_set_completed(xfer, 1);
+   }
+   lwqq_http_request_free(req);
+}
+static void download_file_from_server(PurpleXfer* xfer)
+{
+   qq_account* ac = purple_connection_get_protocol_data(
+       purple_account_get_connection(xfer->account));
+   xfer->start_time = time(NULL);
+   LwqqHttpRequest* req = lwqq_http_request_new(xfer->message);
+   xfer->data = req;
+   req->lc = ac->qq;
+   lwqq_http_on_progress(req, file_trans_on_progress, xfer);
+   lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE, 1L);
+   xfer->dest_fp = fopen(xfer->local_filename, "w");
+   lwqq_http_set_option(req, LWQQ_HTTP_SAVE_FILE, xfer->dest_fp);
+   req->do_request_async(req,0,"", _C_(2p, download_file_finish, xfer, req));
+}
 
 static void cancel_upload(PurpleXfer* xfer)
 {
    LwqqMsgOffFile* file = xfer->data;
    lwqq_http_cancel(file->req);
+}
+
+static void cancel_download(PurpleXfer* xfer)
+{
+   if (xfer->data)
+      lwqq_http_cancel(xfer->data);
 }
 
 void qq_send_file(PurpleConnection* gc, const char* who, const char* filename)
@@ -191,6 +149,19 @@ void qq_send_offline_file(PurpleBlistNode* node)
    purple_xfer_set_init_fnc(xfer, upload_file_to_server);
    purple_xfer_set_request_denied_fnc(xfer, NULL);
    purple_xfer_set_cancel_send_fnc(xfer, cancel_upload);
+   purple_xfer_request(xfer);
+}
+
+void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_id)
+{
+   PurpleXfer* xfer = purple_xfer_new(ac->account, PURPLE_XFER_RECEIVE, local_id);
+   xfer->data = NULL;
+   purple_xfer_set_filename(xfer, C->data.ext.param[1]);
+   purple_xfer_set_message(xfer, C->data.ext.param[0]);
+   purple_xfer_set_size(xfer, s_atol(C->data.ext.param[2], 0));
+   purple_xfer_set_init_fnc(xfer, download_file_from_server);
+   purple_xfer_set_request_denied_fnc(xfer, cancel_download);
+   purple_xfer_set_cancel_recv_fnc(xfer, cancel_download);
    purple_xfer_request(xfer);
 }
 
