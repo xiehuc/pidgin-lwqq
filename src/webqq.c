@@ -3157,6 +3157,8 @@ static void start_login(PurpleAccount* account)
        account, "recent_group_name", "Recent Contacts"));
    const char* upload_server = purple_account_get_string(account, 
             "upload_server", _("Upload Server Default"));
+   if(strncmp(upload_server, "http", 4) !=0) upload_server = "";
+   if(strcmp(upload_server, "") == 0) upload_server = NULL;
    ac->settings.upload_server = strcmp(upload_server, "")==0?NULL:s_strdup(upload_server);
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
