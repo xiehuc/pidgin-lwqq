@@ -126,6 +126,7 @@ void qq_send_offline_file(PurpleBlistNode* node);
 #endif
 LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img,
                                        LwqqMsgContent** Content);
+LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C);
 //=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc, const char* qqnum);

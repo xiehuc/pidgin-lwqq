@@ -264,13 +264,25 @@ static void set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
    lwqq_http_request_free(req);
 }
 
+static void replace_img_ext(LwqqHttpRequest* req, LwqqMsgContent* C)
+{
+   char* name = s_strdup(C->data.ext.name);
+   lwqq_msg_content_clean(C);
+   C->type = LWQQ_CONTENT_OFFPIC;
+   C->data.img.name = name;
+   C->data.img.data = req->response;
+   C->data.img.size = req->resp_len;
+   C->data.img.url = s_strdup(name);
+   req->response = NULL;
+   lwqq_http_request_free(req);
+}
+
 LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, LwqqMsgContent** Content)
 {
    const char* name = purple_imgstore_get_filename(img);
    LwqqMsgContent* C = LWQQ_CONTENT_EXT_IMG(name);
    LwqqHttpRequest* req
        = lwqq_http_request_new(ac->settings.upload_server);
-   lwqq_puts(ac->settings.upload_server);
    req->lc = ac->qq;
    size_t len = purple_imgstore_get_size(img);
    void* buffer = s_malloc(len);
@@ -280,4 +292,11 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, L
    req->add_file_content(req, "fname", name, buffer, len, ext);
    *Content = C;
    return req->do_request_async(req, 0, "", _C_(3p, set_img_url, req, C, buffer));
+}
+
+LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C)
+{
+   LwqqHttpRequest* req = lwqq_http_request_new(C->data.ext.param[0]);
+   req->lc = ac->qq;
+   return req->do_request_async(req, 0, "", _C_(2p, replace_img_ext, req, C));
 }

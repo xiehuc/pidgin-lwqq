@@ -1288,100 +1288,94 @@ static void lost_connection(LwqqClient* lc)
        gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
        _("webqq lost connection,relogin now,please retry by hand later"));
 }
+static void dispatch_message(LwqqClient* lc, LwqqMsgMessage* msg)
+{
+   LwqqMsg* m = (LwqqMsg*)msg;
+   switch (m->type) {
+      case LWQQ_MS_BUDDY_MSG:
+         buddy_message(lc, (LwqqMsgMessage*)msg);
+         break;
+      case LWQQ_MS_GROUP_MSG:
+      case LWQQ_MS_DISCU_MSG:
+      case LWQQ_MS_GROUP_WEB_MSG:
+         group_message(lc, (LwqqMsgMessage*)msg);
+         break;
+      case LWQQ_MS_SESS_MSG:
+         whisper_message(lc, (LwqqMsgMessage*)msg);
+         break;
+      default:
+         break;
+   }
+   lwqq_msg_free(m);
+}
 void qq_msg_check(LwqqClient* lc)
 {
    if (!lwqq_client_valid(lc))
       return;
    LwqqRecvMsgList* l = lc->msg_list;
-   LwqqRecvMsg* msg, *prev;
+   LwqqMsg* msg;
    LwqqMsgSystem* sys_msg;
+   qq_account* ac = lwqq_client_userdata(lc);
 
-   pthread_mutex_lock(&l->mutex);
-   if (TAILQ_EMPTY(&l->head)) {
-      /* No message now, wait 100ms */
-      pthread_mutex_unlock(&l->mutex);
-      return;
-   }
-   msg = TAILQ_FIRST(&l->head);
-   while (msg) {
-      int res = LWQQ_EC_OK;
-      if (msg->msg) {
-         switch (lwqq_mt_bits(msg->msg->type)) {
+   LwqqAsyncEvset* set;
+   while ((msg = lwqq_msglist_read(l))) {
+      switch (lwqq_mt_bits(msg->type)) {
          case LWQQ_MT_MESSAGE:
-            switch (msg->msg->type) {
-            case LWQQ_MS_BUDDY_MSG:
-               buddy_message(lc, (LwqqMsgMessage*)msg->msg);
-               break;
-            case LWQQ_MS_GROUP_MSG:
-            case LWQQ_MS_DISCU_MSG:
-            case LWQQ_MS_GROUP_WEB_MSG:
-               res = group_message(lc, (LwqqMsgMessage*)msg->msg);
-               break;
-            case LWQQ_MS_SESS_MSG:
-               whisper_message(lc, (LwqqMsgMessage*)msg->msg);
-               break;
-            default:
-               break;
-            }
+            set = download_before_translate(ac, (LwqqMsgMessage*)msg);
+            lwqq_async_add_evset_listener(set, _C_(2p, dispatch_message, lc, msg));
+            lwqq_async_evset_unref(set);
+            msg = NULL;
             break;
          case LWQQ_MT_STATUS_CHANGE:
-            status_change(lc, (LwqqMsgStatusChange*)msg->msg);
+            status_change(lc, (LwqqMsgStatusChange*)msg);
             break;
          case LWQQ_MT_KICK_MESSAGE:
-            kick_message(lc, (LwqqMsgKickMessage*)msg->msg);
+            kick_message(lc, (LwqqMsgKickMessage*)msg);
             break;
          case LWQQ_MT_SYSTEM:
-            sys_msg = (LwqqMsgSystem*)msg->msg;
+            sys_msg = (LwqqMsgSystem*)msg;
             if (sys_msg->type == VERIFY_REQUIRED) {
-               msg->msg = NULL;
+               msg = NULL;
                LwqqBuddy* buddy = lwqq_buddy_new();
                LwqqAsyncEvent* ev = lwqq_info_get_stranger_info(
-                   lc, sys_msg->super.from, buddy);
+                     lc, sys_msg->super.from, buddy);
                lwqq_async_add_event_listener(
-                   ev, _C_(3p, system_message, lc, sys_msg, buddy));
+                     ev, _C_(3p, system_message, lc, sys_msg, buddy));
             } else {
-               system_message(lc, (LwqqMsgSystem*)msg->msg, NULL);
+               system_message(lc, (LwqqMsgSystem*)msg, NULL);
             }
             break;
          case LWQQ_MT_BLIST_CHANGE:
-            blist_change(lc, (LwqqMsgBlistChange*)msg->msg);
+            blist_change(lc, (LwqqMsgBlistChange*)msg);
             break;
          case LWQQ_MT_OFFFILE:
-            offline_file(lc, (LwqqMsgOffFile*)msg->msg);
+            offline_file(lc, (LwqqMsgOffFile*)msg);
             break;
-         /*case LWQQ_MT_FILE_MSG:
-                 file_message(lc,(LwqqMsgFileMessage*)msg->msg);
-                 break;*/
+            /*case LWQQ_MT_FILE_MSG:
+              file_message(lc,(LwqqMsgFileMessage*)msg->msg);
+              break;*/
          case LWQQ_MT_FILETRANS:
             // complete_file_trans(lc,(LwqqMsgFileTrans*)msg->msg->opaque);
             break;
          case LWQQ_MT_NOTIFY_OFFFILE:
-            notify_offfile(lc, (LwqqMsgNotifyOfffile*)msg->msg);
+            notify_offfile(lc, (LwqqMsgNotifyOfffile*)msg);
             break;
          case LWQQ_MT_INPUT_NOTIFY:
-            input_notify(lc, (LwqqMsgInputNotify*)msg->msg);
+            input_notify(lc, (LwqqMsgInputNotify*)msg);
             break;
          case LWQQ_MT_SYS_G_MSG:
-            sys_g_message(lc, (LwqqMsgSysGMsg*)msg->msg);
+            sys_g_message(lc, (LwqqMsgSysGMsg*)msg);
             break;
          case LWQQ_MT_SHAKE_MESSAGE:
-            shake_message(lc, (LwqqMsgShakeMessage*)msg->msg);
+            shake_message(lc, (LwqqMsgShakeMessage*)msg);
             break;
          default:
             lwqq_puts("unknow message\n");
             break;
-         }
       }
 
-      prev = msg;
-      msg = TAILQ_NEXT(msg, entries);
-      if (res == LWQQ_EC_OK) {
-         TAILQ_REMOVE(&l->head, prev, entries);
-         lwqq_msg_free(prev->msg);
-         s_free(prev);
-      }
+      lwqq_msg_free(msg);
    }
-   pthread_mutex_unlock(&l->mutex);
    return;
 }
 

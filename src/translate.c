@@ -339,6 +339,22 @@ char* translate_to_html_symbol(const char* s)
    ds_free(buf);
    return ret;
 }
+
+LwqqAsyncEvset* download_before_translate(qq_account* ac, LwqqMsgMessage* msg)
+{
+   LwqqAsyncEvset* set = lwqq_async_evset_new();
+   LwqqMsgContent* c;
+   TAILQ_FOREACH(c, &msg->content, entries)
+   {
+      if(c->type != LWQQ_CONTENT_EXTENSION) continue;
+      const char* name = c->data.ext.name;
+      if(strcmp(name, "img")==0){
+         lwqq_async_evset_add_event(set, download_image_from_server(ac, c));
+      }
+   }
+   return set;
+}
+
 struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
                                       PurpleMessageFlags flags)
 {
