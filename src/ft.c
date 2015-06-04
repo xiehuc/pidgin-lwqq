@@ -167,8 +167,9 @@ void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_i
 
 static void set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
 {
-   C->data.ext.param[0] = req->response;
-   req->response = 0;
+   char buffer[1024];
+   snprintf(buffer,sizeof(buffer),"%s ", req->response); // append a blank to url
+   C->data.ext.param[0] = s_strdup(buffer);
    s_free(data);
    lwqq_http_request_free(req);
 }

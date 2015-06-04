@@ -1737,16 +1737,13 @@ void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer)
    } else {
       struct stat st = {0};
       stat(xfer->local_filename, &st);
-      snprintf(message, sizeof(message), "%lu", st.st_size);
-      LwqqMsgContent* C = LWQQ_CONTENT_EXT_FILE(req->response, strrchr(xfer->local_filename, '/')+1, message);
-      lwqq_msg_ext_to_string(C, message, sizeof(message));
+      snprintf(message, sizeof(message), ":file:`%s ``%s``%lu`", req->response,
+               strrchr(xfer->local_filename, '/') + 1, st.st_size);
       if(purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, xfer->who, xfer->account))
          qq_send_im(xfer->account->gc, xfer->who, message, PURPLE_MESSAGE_SEND);
       else if ((chat = PURPLE_CONV_CHAT(purple_find_conversation_with_account(
                     PURPLE_CONV_TYPE_CHAT, xfer->who, xfer->account))))
          qq_send_chat(xfer->account->gc, chat->id, message, PURPLE_MESSAGE_SEND);
-      lwqq_msg_content_clean(C);
-      s_free(C);
    }
    lwqq_msg_free((LwqqMsg*)file);
    purple_xfer_set_completed(xfer, 1);
