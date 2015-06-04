@@ -2798,7 +2798,7 @@ static void display_user_info(PurpleConnection* gc, LwqqBuddy* b, char* who)
    // ADD_HEADER("基本信息");
    ADD_INFO(_("QQ"), b->qqnumber);
    ADD_INFO(_("Nick"), b->nick);
-   ADD_INFO(_("Mark"), b->markname);
+   ADD_INFO(_("Display name"), b->markname);
    ADD_INFO(_("Longnick"), b->long_nick);
    ADD_INFO(_("Level"), qq_level_to_str(b->level));
    ADD_HEADER(_("Self Information"));
