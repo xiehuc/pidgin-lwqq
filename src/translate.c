@@ -267,10 +267,11 @@ LwqqAsyncEvset* translate_message_to_struct(qq_account* ac, const char* to,
          char buf[12];
          snprintf(buf, sizeof(buf), "%d", img_id);
          // record extra information to file_id
-         if (ac->settings.upload_server) {
+         if (ac->settings.image_server) {
             lwqq_async_evset_add_event(set,
                                        upload_image_to_server(ac, simg, &c));
-            c->data.ext.param[2] = s_strdup(buf); // store a special value for echo
+            c->data.ext.param[2]
+                = s_strdup(buf); // store a special value for echo
          } else if (using_cface || msg->type == LWQQ_MS_GROUP_MSG) {
             c = lwqq_msg_fill_upload_cface(purple_imgstore_get_filename(simg),
                                            purple_imgstore_get_data(simg),

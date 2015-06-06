@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "qq_types.h"
+#include "Localizable.h"
 
 #if 0
 static void recv_file_request_denied(PurpleXfer* xfer)
@@ -88,11 +89,11 @@ static void upload_file_to_server(PurpleXfer* xfer)
 
    xfer->data = file;
    xfer->start_time = time(NULL);
-   LwqqHttpRequest* req = lwqq_http_request_new(ac->settings.upload_server);
+   LwqqHttpRequest* req = lwqq_http_request_new(ac->settings.file_server);
    file->req = req;
    req->lc = lc;
    req->add_form(req, LWQQ_FORM_CONTENT, "user", user);
-   req->add_form(req, LWQQ_FORM_FILE, "fname", xfer->local_filename);
+   req->add_form(req, LWQQ_FORM_FILE, "name", xfer->local_filename);
    lwqq_http_on_progress(req, file_trans_on_progress, xfer);
    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE, 1L);
    req->do_request_async(req, 0, "", _C_(2p, send_file_message, req, xfer));
@@ -134,6 +135,11 @@ static void cancel_download(PurpleXfer* xfer)
 
 void qq_send_file(PurpleConnection* gc, const char* who, const char* filename)
 {
+   qq_account* ac = gc->proto_data;
+   if(!ac->settings.file_server){
+      purple_notify_error(ac->account, qError, qFileServerNotSet, NULL);
+      return;
+   }
    PurpleXfer* xfer = purple_xfer_new(gc->account, PURPLE_XFER_SEND, who);
    purple_xfer_set_init_fnc(xfer, upload_file_to_server);
    purple_xfer_set_request_denied_fnc(xfer, NULL); // send offline file to server, would not denied
@@ -145,6 +151,11 @@ void qq_send_offline_file(PurpleBlistNode* node)
 {
    PurpleChat* chat = PURPLE_CHAT(node);
    PurpleAccount* account = purple_chat_get_account(chat);
+   qq_account* ac = account->gc->proto_data;
+   if(!ac->settings.file_server){
+      purple_notify_error(ac->account, qError, qFileServerNotSet, NULL);
+      return;
+   }
    PurpleXfer* xfer = purple_xfer_new(account, PURPLE_XFER_SEND, get_name_from_chat(chat));
    purple_xfer_set_init_fnc(xfer, upload_file_to_server);
    purple_xfer_set_request_denied_fnc(xfer, NULL);
@@ -168,7 +179,7 @@ void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_i
 static void set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
 {
    char buffer[1024];
-   snprintf(buffer,sizeof(buffer),"%s ", req->response); // append a blank to url
+   snprintf(buffer,sizeof(buffer),"%s ", strtrim(req->response)); // append a blank to url
    C->data.ext.param[0] = s_strdup(buffer);
    s_free(data);
    lwqq_http_request_free(req);
@@ -192,14 +203,14 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, L
    const char* name = purple_imgstore_get_filename(img);
    LwqqMsgContent* C = LWQQ_CONTENT_EXT_IMG(name);
    LwqqHttpRequest* req
-       = lwqq_http_request_new(ac->settings.upload_server);
+       = lwqq_http_request_new(ac->settings.image_server);
    req->lc = ac->qq;
    size_t len = purple_imgstore_get_size(img);
    void* buffer = s_malloc(len);
    memcpy(buffer, purple_imgstore_get_data(img), len);
    const char* ext = purple_imgstore_get_extension(img);
    req->add_form(req, LWQQ_FORM_CONTENT, "user", ac->qq->myself->qqnumber);
-   req->add_file_content(req, "fname", name, buffer, len, ext);
+   req->add_file_content(req, "name", name, buffer, len, ext);
    *Content = C;
    return req->do_request_async(req, 0, "", _C_(3p, set_img_url, req, C, buffer));
 }

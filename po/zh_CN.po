@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-03 14:45+0800\n"
+"POT-Creation-Date: 2015-06-06 14:01+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,185 +16,179 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../src/webqq.c:75 ../../src/webqq.c:361 ../../src/webqq.c:2198
-#: ../../src/webqq.c:2204 ../../src/webqq.c:2545 ../../src/webqq.c:2652
-#: ../../src/webqq.c:2683 ../../src/webqq.c:2864
-msgid "Error"
-msgstr "错误"
-
-#: ../../src/webqq.c:232
+#: ../../src/webqq.c:223
 #, c-format
 msgid "About pidgin-lwqq %s"
 msgstr "关于pidgin-lwqq %s"
 
-#: ../../src/webqq.c:253
+#: ../../src/webqq.c:244
 msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide"
 msgstr ""
 
 #. the web page of faq
-#: ../../src/webqq.c:260
+#: ../../src/webqq.c:251
 msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/FAQ"
 msgstr ""
 
 #. the web page of feedback
-#: ../../src/webqq.c:267
+#: ../../src/webqq.c:258
 msgid "https://github.com/xiehuc/pidgin-lwqq/issues"
 msgstr ""
 
-#: ../../src/webqq.c:329
+#: ../../src/webqq.c:320
 msgid "all reloaded,please relogin"
 msgstr "全部重载，请重新登录"
 
-#: ../../src/webqq.c:361
+#: ../../src/webqq.c:352
 msgid "Add Group failed"
 msgstr "添加群组失败"
 
-#: ../../src/webqq.c:387
+#: ../../src/webqq.c:378
 msgid "Error Message"
 msgstr "错误消息"
 
-#: ../../src/webqq.c:388
+#: ../../src/webqq.c:379
 msgid "Get QQ Group Infomation Failed"
 msgstr "获取群信息失败"
 
-#: ../../src/webqq.c:394
+#: ../../src/webqq.c:385
 msgid "Confirm QQ Group"
 msgstr "确认QQ群"
 
-#: ../../src/webqq.c:395
+#: ../../src/webqq.c:386
 msgid "Additional Reason"
 msgstr "附加理由"
 
-#: ../../src/webqq.c:397
+#: ../../src/webqq.c:388
 #, c-format
 msgid ":%s\n"
 msgstr ":%s\n"
 
 #. act = purple_plugin_action_new("好友管理",visit_my_qq_center);
 #. m = g_list_append(m, act);
-#: ../../src/webqq.c:419 ../../src/webqq.c:526
+#: ../../src/webqq.c:410 ../../src/webqq.c:517
 msgid "Add QQ Group"
 msgstr "添加QQ群"
 
-#: ../../src/webqq.c:419
+#: ../../src/webqq.c:410
 msgid "QQ Number"
 msgstr "QQ号"
 
-#: ../../src/webqq.c:420
+#: ../../src/webqq.c:411
 msgid "Search"
 msgstr "查找"
 
-#: ../../src/webqq.c:421 ../../src/webqq.c:470 ../../src/webqq.c:1471
-#: ../../src/webqq.c:2421 ../../src/webqq.c:2484
+#: ../../src/webqq.c:412 ../../src/webqq.c:461 ../../src/webqq.c:1459
+#: ../../src/webqq.c:2442 ../../src/webqq.c:2505
 msgid "Cancel"
 msgstr "取消"
 
-#: ../../src/webqq.c:446 ../../src/webqq.c:2876
+#: ../../src/webqq.c:437 ../../src/webqq.c:2897
 msgid "Warning"
 msgstr "警告"
 
-#: ../../src/webqq.c:447
+#: ../../src/webqq.c:438
 msgid "Couldn't find friend"
 msgstr "找不到好友"
 
-#: ../../src/webqq.c:460
+#: ../../src/webqq.c:451
 msgid "Discussion Name"
 msgstr "讨论组名称"
 
-#: ../../src/webqq.c:461
+#: ../../src/webqq.c:452
 msgid "UnName Discussion"
 msgstr "未命名讨论组"
 
-#: ../../src/webqq.c:465
+#: ../../src/webqq.c:456
 msgid "members(seperate by ;)"
 msgstr "成员(用;分隔)"
 
-#: ../../src/webqq.c:469
+#: ../../src/webqq.c:460
 msgid "Create Discussion"
 msgstr "创建讨论组"
 
-#: ../../src/webqq.c:470
+#: ../../src/webqq.c:461
 msgid "Create"
 msgstr "创建"
 
-#: ../../src/webqq.c:486
+#: ../../src/webqq.c:477
 msgid "Modify Self Longnick"
 msgstr "修改个性签名"
 
-#: ../../src/webqq.c:487 ../../src/webqq.c:812 ../../src/webqq.c:2300
-#: ../../src/webqq.c:2502 ../../src/webqq.c:2782
+#: ../../src/webqq.c:478 ../../src/webqq.c:803 ../../src/webqq.c:2321
+#: ../../src/webqq.c:2523 ../../src/webqq.c:2803
 msgid "Longnick"
 msgstr "签名"
 
-#: ../../src/webqq.c:514
+#: ../../src/webqq.c:505
 msgid "About pidgin-lwqq"
 msgstr "关于pidgin-lwqq"
 
-#: ../../src/webqq.c:516
+#: ../../src/webqq.c:507
 msgid "User Help"
 msgstr "使用帮助"
 
-#: ../../src/webqq.c:518
+#: ../../src/webqq.c:509
 msgid "FAQ"
 msgstr "FAQ"
 
-#: ../../src/webqq.c:520
+#: ../../src/webqq.c:511
 msgid "Feedback"
 msgstr "问题反馈"
 
-#: ../../src/webqq.c:522
+#: ../../src/webqq.c:513
 msgid "Self Center"
 msgstr "访问个人中心"
 
-#: ../../src/webqq.c:528
+#: ../../src/webqq.c:519
 msgid "Create Discussion Group"
 msgstr "创建讨论组"
 
-#: ../../src/webqq.c:531
+#: ../../src/webqq.c:522
 msgid "Modify Self LongNick"
 msgstr "修改个性签名"
 
-#: ../../src/webqq.c:534
+#: ../../src/webqq.c:525
 msgid "All Reload(Debug)"
 msgstr "全部重载(调试)"
 
-#: ../../src/webqq.c:555
+#: ../../src/webqq.c:546
 msgid "Available"
 msgstr "可用"
 
-#: ../../src/webqq.c:559 ../../src/webqq.c:581
+#: ../../src/webqq.c:550 ../../src/webqq.c:572
 msgid "Online"
 msgstr "我在线上"
 
-#: ../../src/webqq.c:562
+#: ../../src/webqq.c:553
 msgid "Callme"
 msgstr "Q我"
 
-#: ../../src/webqq.c:565
+#: ../../src/webqq.c:556
 msgid "Away"
 msgstr "离开"
 
-#: ../../src/webqq.c:568
+#: ../../src/webqq.c:559
 msgid "Busy"
 msgstr "忙碌"
 
-#: ../../src/webqq.c:571
+#: ../../src/webqq.c:562
 msgid "Slience"
 msgstr "勿扰"
 
-#: ../../src/webqq.c:575
+#: ../../src/webqq.c:566
 msgid "Hidden"
 msgstr "隐身"
 
-#: ../../src/webqq.c:578
+#: ../../src/webqq.c:569
 msgid "Offline"
 msgstr "离线"
 
-#: ../../src/webqq.c:699
+#: ../../src/webqq.c:690
 msgid "Discussion"
 msgstr "讨论组"
 
-#: ../../src/webqq.c:773
+#: ../../src/webqq.c:764
 #, c-format
 msgid ""
 "You Got an Offline File: %s\n"
@@ -204,15 +198,15 @@ msgstr ""
 "截止日期: %s\n"
 "<a href=\"%s\">点此下载</a>"
 
-#: ../../src/webqq.c:785
+#: ../../src/webqq.c:776
 msgid "Refuse"
 msgstr "拒绝"
 
-#: ../../src/webqq.c:786 ../../src/webqq.c:3066
+#: ../../src/webqq.c:777 ../../src/webqq.c:3090
 msgid "Agree"
 msgstr "同意"
 
-#: ../../src/webqq.c:787
+#: ../../src/webqq.c:778
 #, c-format
 msgid "Peer %s Accept receive Offline file(%s)\n"
 msgstr "对方%s同意接受离线文件(%s)\n"
@@ -220,73 +214,73 @@ msgstr "对方%s同意接受离线文件(%s)\n"
 #. #define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info,
 #. s)
 #. ADD_HEADER("基本信息");
-#: ../../src/webqq.c:810 ../../src/webqq.c:1786 ../../src/webqq.c:2499
-#: ../../src/webqq.c:2779
+#: ../../src/webqq.c:801 ../../src/webqq.c:1807 ../../src/webqq.c:2520
+#: ../../src/webqq.c:2800
 msgid "QQ"
 msgstr "QQ"
 
-#: ../../src/webqq.c:811 ../../src/webqq.c:2296 ../../src/webqq.c:2780
+#: ../../src/webqq.c:802 ../../src/webqq.c:2317 ../../src/webqq.c:2801
 msgid "Nick"
 msgstr "昵称"
 
-#: ../../src/webqq.c:813 ../../src/webqq.c:2785
+#: ../../src/webqq.c:804 ../../src/webqq.c:2806
 msgid "Gender"
 msgstr "性别"
 
-#: ../../src/webqq.c:814 ../../src/webqq.c:2786
+#: ../../src/webqq.c:805 ../../src/webqq.c:2807
 msgid "Shengxiao"
 msgstr "生肖"
 
-#: ../../src/webqq.c:815 ../../src/webqq.c:2787
+#: ../../src/webqq.c:806 ../../src/webqq.c:2808
 msgid "Constellation"
 msgstr "星座"
 
-#: ../../src/webqq.c:816 ../../src/webqq.c:2788
+#: ../../src/webqq.c:807 ../../src/webqq.c:2809
 msgid "Blood Type"
 msgstr "血型"
 
-#: ../../src/webqq.c:817 ../../src/webqq.c:2789
+#: ../../src/webqq.c:808 ../../src/webqq.c:2810
 msgid "Birthday"
 msgstr "生日"
 
-#: ../../src/webqq.c:818
+#: ../../src/webqq.c:809
 msgid "Country"
 msgstr "国家"
 
-#: ../../src/webqq.c:819 ../../src/webqq.c:2792
+#: ../../src/webqq.c:810 ../../src/webqq.c:2813
 msgid "Province"
 msgstr "省份"
 
-#: ../../src/webqq.c:820 ../../src/webqq.c:2793
+#: ../../src/webqq.c:811 ../../src/webqq.c:2814
 msgid "City"
 msgstr "城市"
 
-#: ../../src/webqq.c:821 ../../src/webqq.c:2411 ../../src/webqq.c:2795
+#: ../../src/webqq.c:812 ../../src/webqq.c:2432 ../../src/webqq.c:2816
 #: ../../src/qq_types.c:34
 msgid "Phone"
 msgstr "手机"
 
-#: ../../src/webqq.c:822 ../../src/webqq.c:2796
+#: ../../src/webqq.c:813 ../../src/webqq.c:2817
 msgid "Mobile"
 msgstr "移动设备"
 
-#: ../../src/webqq.c:823 ../../src/webqq.c:2413 ../../src/webqq.c:2797
+#: ../../src/webqq.c:814 ../../src/webqq.c:2434 ../../src/webqq.c:2818
 msgid "Email"
 msgstr "邮箱"
 
-#: ../../src/webqq.c:824 ../../src/webqq.c:2798
+#: ../../src/webqq.c:815 ../../src/webqq.c:2819
 msgid "Occupation"
 msgstr "职业"
 
-#: ../../src/webqq.c:825 ../../src/webqq.c:2799
+#: ../../src/webqq.c:816 ../../src/webqq.c:2820
 msgid "College"
 msgstr "学校"
 
-#: ../../src/webqq.c:826 ../../src/webqq.c:2800
+#: ../../src/webqq.c:817 ../../src/webqq.c:2821
 msgid "Homepage"
 msgstr "主页"
 
-#: ../../src/webqq.c:846
+#: ../../src/webqq.c:837
 #, c-format
 msgid ""
 "Request QQ Group:%s\n"
@@ -295,19 +289,19 @@ msgstr ""
 "申请的群:%s\n"
 "申请理由:%s\n"
 
-#: ../../src/webqq.c:850
+#: ../../src/webqq.c:841
 msgid "QQ Group Request Confirm"
 msgstr "群申请确认"
 
-#: ../../src/webqq.c:853
+#: ../../src/webqq.c:844
 msgid "Deny Reason"
 msgstr "拒绝理由"
 
-#: ../../src/webqq.c:867
+#: ../../src/webqq.c:858
 msgid "You create a new group"
 msgstr "您创建了一个新的群"
 
-#: ../../src/webqq.c:873
+#: ../../src/webqq.c:864
 #, c-format
 msgid ""
 "%s Added in QQ Group[%s]\n"
@@ -316,33 +310,33 @@ msgstr ""
 "%s加入了群[%s]\n"
 "管理员%s"
 
-#: ../../src/webqq.c:874 ../../src/webqq.c:886
+#: ../../src/webqq.c:865 ../../src/webqq.c:877
 msgid "You"
 msgstr "您"
 
-#: ../../src/webqq.c:885
+#: ../../src/webqq.c:876
 #, c-format
 msgid "%s Leave QQ Group[%s]"
 msgstr "%s离开了群[%s]"
 
-#: ../../src/webqq.c:894
+#: ../../src/webqq.c:885
 #, c-format
 msgid "QQ Group [%s] refused your request"
 msgstr "群[%s]拒绝了您的申请"
 
-#: ../../src/webqq.c:911
+#: ../../src/webqq.c:902
 msgid "QQ Group Sys Message"
 msgstr "群系统消息"
 
-#: ../../src/webqq.c:1141
+#: ../../src/webqq.c:1132
 msgid "Oups, You was kicked offline by somewhat"
 msgstr "您被不知道什么东西给踢下线了"
 
-#: ../../src/webqq.c:1165 ../../src/webqq.c:2209
+#: ../../src/webqq.c:1156 ../../src/webqq.c:2230
 msgid "Friend Confirm"
 msgstr "好友确认"
 
-#: ../../src/webqq.c:1167
+#: ../../src/webqq.c:1158
 #, c-format
 msgid ""
 "%s\n"
@@ -355,85 +349,85 @@ msgstr ""
 "附加理由:%s\n"
 "\n"
 
-#: ../../src/webqq.c:1171
+#: ../../src/webqq.c:1162
 msgid "Agree and add back"
 msgstr "同意并添加好友"
 
-#: ../../src/webqq.c:1172
+#: ../../src/webqq.c:1163
 msgid "Refuse reason"
 msgstr "拒绝理由"
 
-#: ../../src/webqq.c:1183
+#: ../../src/webqq.c:1174
 #, c-format
 msgid "%s accept your request,and add back you as friend too"
 msgstr "%s接受了您的请求,并且加您为好友"
 
-#: ../../src/webqq.c:1185 ../../src/webqq.c:1192
+#: ../../src/webqq.c:1176 ../../src/webqq.c:1183
 msgid "System Message"
 msgstr "系统消息"
 
-#: ../../src/webqq.c:1186 ../../src/webqq.c:1193
+#: ../../src/webqq.c:1177 ../../src/webqq.c:1184
 msgid "Add Friend"
 msgstr "添加好友"
 
-#: ../../src/webqq.c:1190
+#: ../../src/webqq.c:1181
 #, c-format
 msgid "%s accept your request"
 msgstr "%s接受了您的请求"
 
-#: ../../src/webqq.c:1289
+#: ../../src/webqq.c:1280
 msgid "webqq lost connection,relogin now,please retry by hand later"
 msgstr "webqq掉线了,正在重新登录,请稍后再手工重试"
 
-#: ../../src/webqq.c:1391 ../../src/webqq.c:1398 ../../src/webqq.c:1404
+#: ../../src/webqq.c:1379 ../../src/webqq.c:1386 ../../src/webqq.c:1392
 msgid "Send Pic Failed"
 msgstr "发送图片失败"
 
-#: ../../src/webqq.c:1397
+#: ../../src/webqq.c:1385
 msgid "Send Pic over 1MB"
 msgstr "发送图片大小超过1MB"
 
-#: ../../src/webqq.c:1403
+#: ../../src/webqq.c:1391
 msgid "Send Custom Face over 250KB"
 msgstr "发送自定义表情超过250KB"
 
-#: ../../src/webqq.c:1469
+#: ../../src/webqq.c:1457
 msgid "Captcha"
 msgstr "验证码"
 
-#: ../../src/webqq.c:1469
+#: ../../src/webqq.c:1457
 msgid "OK"
 msgstr "确定"
 
-#: ../../src/webqq.c:1471
+#: ../../src/webqq.c:1459
 msgid "View Outside"
 msgstr "用外部程序查看"
 
-#: ../../src/webqq.c:1521
+#: ../../src/webqq.c:1509
 msgid "Please Select"
 msgstr "请选择"
 
-#: ../../src/webqq.c:1522 ../../src/webqq.c:1539 ../../src/webqq.c:3067
+#: ../../src/webqq.c:1510 ../../src/webqq.c:1527 ../../src/webqq.c:3091
 msgid "Deny"
 msgstr "拒绝"
 
-#: ../../src/webqq.c:1523
+#: ../../src/webqq.c:1511
 msgid "Accept"
 msgstr "同意"
 
-#: ../../src/webqq.c:1537
+#: ../../src/webqq.c:1525
 msgid "Confirm"
 msgstr "确认"
 
-#: ../../src/webqq.c:1539
+#: ../../src/webqq.c:1527
 msgid "Ignore"
 msgstr "忽略"
 
-#: ../../src/webqq.c:1566
+#: ../../src/webqq.c:1554
 msgid "unable send message"
 msgstr "无法发送消息"
 
-#: ../../src/webqq.c:1596
+#: ../../src/webqq.c:1584
 #, c-format
 msgid ""
 "Send failed, err(%d):\n"
@@ -442,47 +436,51 @@ msgstr ""
 "发送失败,错误号(%d):\n"
 "%s"
 
-#: ../../src/webqq.c:1603
+#: ../../src/webqq.c:1591
 msgid "Upload content retry over limit"
 msgstr "上传内容重试超过限制"
 
-#: ../../src/webqq.c:1789
+#: ../../src/webqq.c:1735
+msgid "Send offline file failed"
+msgstr "发送离线文件失败"
+
+#: ../../src/webqq.c:1810
 msgid "Type"
 msgstr "类型"
 
-#: ../../src/webqq.c:1966 ../../src/webqq.c:2018
+#: ../../src/webqq.c:1987 ../../src/webqq.c:2039
 msgid "Change friend category failed"
 msgstr "更改好友分组失败"
 
-#: ../../src/webqq.c:1967
+#: ../../src/webqq.c:1988
 msgid "Server fault returns"
 msgstr "服务器返回错误"
 
-#: ../../src/webqq.c:1982
+#: ../../src/webqq.c:2003
 msgid "Add passerby as friend"
 msgstr "添加陌生人为好友"
 
-#: ../../src/webqq.c:1983
+#: ../../src/webqq.c:2004
 msgid "Send add request successful"
 msgstr "发送添加请求成功"
 
-#: ../../src/webqq.c:1986
+#: ../../src/webqq.c:2007
 msgid "Add friend failed"
 msgstr "添加好友失败"
 
-#: ../../src/webqq.c:1986
+#: ../../src/webqq.c:2007
 msgid "???"
 msgstr "???"
 
-#: ../../src/webqq.c:2019
+#: ../../src/webqq.c:2040
 msgid "no such category exists"
 msgstr "不存在该分组"
 
-#: ../../src/webqq.c:2067
+#: ../../src/webqq.c:2088
 msgid "Delete Friend Oneside"
 msgstr "单向删除好友"
 
-#: ../../src/webqq.c:2068
+#: ../../src/webqq.c:2089
 msgid ""
 "This would delete your friends,but keep yourself in friend's buddy list\n"
 "Are you sure?"
@@ -490,83 +488,83 @@ msgstr ""
 "这个会删除您的好友，但是在对方的好友列表中保留您\n"
 "继续吗?"
 
-#: ../../src/webqq.c:2167
+#: ../../src/webqq.c:2188
 msgid "Invite Message"
 msgstr "验证消息"
 
-#: ../../src/webqq.c:2176
+#: ../../src/webqq.c:2197
 msgid "Add Friend Failed"
 msgstr "添加好友失败"
 
-#: ../../src/webqq.c:2199
+#: ../../src/webqq.c:2220
 msgid "Account not exists or not main display account"
 msgstr "帐号不存在或者不是主显帐号"
 
-#: ../../src/webqq.c:2204
+#: ../../src/webqq.c:2225
 msgid "Get friend information failed"
 msgstr "获取好友信息失败"
 
-#: ../../src/webqq.c:2298 ../../src/webqq.c:2501 ../../src/webqq.c:2781
+#: ../../src/webqq.c:2319 ../../src/webqq.c:2522
 msgid "Mark"
 msgstr "备注"
 
-#: ../../src/webqq.c:2302 ../../src/webqq.c:2783
+#: ../../src/webqq.c:2323 ../../src/webqq.c:2804
 msgid "Level"
 msgstr "等级"
 
-#: ../../src/webqq.c:2303
+#: ../../src/webqq.c:2324
 msgid "Client"
 msgstr "终端"
 
-#: ../../src/webqq.c:2356
+#: ../../src/webqq.c:2377
 msgid "Block Setting"
 msgstr "屏蔽设置"
 
-#: ../../src/webqq.c:2357
+#: ../../src/webqq.c:2378
 msgid "No Block"
 msgstr "不屏蔽"
 
-#: ../../src/webqq.c:2358
+#: ../../src/webqq.c:2379
 msgid "Slience Receive"
 msgstr "接收不提示"
 
-#: ../../src/webqq.c:2359 ../../src/webqq.c:2748
+#: ../../src/webqq.c:2380 ../../src/webqq.c:2769
 msgid "Block"
 msgstr "屏蔽"
 
-#: ../../src/webqq.c:2409 ../../src/webqq.c:2500
+#: ../../src/webqq.c:2430 ../../src/webqq.c:2521
 msgid "Name"
 msgstr "名称"
 
-#: ../../src/webqq.c:2415
+#: ../../src/webqq.c:2436
 msgid "Remark"
 msgstr "备注"
 
-#: ../../src/webqq.c:2420
+#: ../../src/webqq.c:2441
 msgid "Group Business Card"
 msgstr "群名片"
 
-#: ../../src/webqq.c:2421 ../../src/webqq.c:2484
+#: ../../src/webqq.c:2442 ../../src/webqq.c:2505
 msgid "Update"
 msgstr "更新"
 
-#: ../../src/webqq.c:2483
+#: ../../src/webqq.c:2504
 msgid "Modify Mark"
 msgstr "修改备注"
 
-#: ../../src/webqq.c:2483
+#: ../../src/webqq.c:2504
 msgid "Input Mark"
 msgstr "输入备注"
 
-#: ../../src/webqq.c:2488
+#: ../../src/webqq.c:2509
 msgid "Set Topic"
 msgstr "设置主题"
 
-#: ../../src/webqq.c:2488
+#: ../../src/webqq.c:2509
 msgid "Input Topic"
 msgstr "输入主题"
 
-#: ../../src/webqq.c:2489
+#: ../../src/webqq.c:2510
 msgid ""
 "Note:You are setting discussion topic on server.\n"
 "Which would affect all discussion member"
@@ -574,45 +572,45 @@ msgstr ""
 "注意:您正在设置服务器端讨论组的主题.\n"
 "所有讨论组成员都会受到影响"
 
-#: ../../src/webqq.c:2544
+#: ../../src/webqq.c:2565
 #, c-format
 msgid "Error Code:%d"
 msgstr "错误号:%d"
 
-#: ../../src/webqq.c:2606
+#: ../../src/webqq.c:2627
 #, c-format
 msgid "Merge %d Entry"
 msgstr "合并%d条消息记录"
 
-#: ../../src/webqq.c:2607 ../../src/webqq.c:2617
+#: ../../src/webqq.c:2628 ../../src/webqq.c:2638
 msgid "Merge Online History"
 msgstr "合并漫游记录"
 
-#: ../../src/webqq.c:2617
+#: ../../src/webqq.c:2638
 msgid "Merge 0 Entry"
 msgstr "合并0条消息记录"
 
-#: ../../src/webqq.c:2652
+#: ../../src/webqq.c:2673
 msgid "Input Invalid"
 msgstr "输入不合法"
 
-#: ../../src/webqq.c:2683
+#: ../../src/webqq.c:2704
 msgid "Tempory Session not support this function"
 msgstr "临时会话不支持此功能"
 
-#: ../../src/webqq.c:2701
+#: ../../src/webqq.c:2722
 msgid "How many pages want to merge"
 msgstr "您想合并多少页"
 
-#: ../../src/webqq.c:2702
+#: ../../src/webqq.c:2723
 msgid "Each Page has 60 Entry"
 msgstr "每页有60条记录"
 
-#: ../../src/webqq.c:2703
+#: ../../src/webqq.c:2724
 msgid "Pages"
 msgstr "页数"
 
-#: ../../src/webqq.c:2716
+#: ../../src/webqq.c:2737
 msgid "Visit QZone"
 msgstr "访问空间"
 
@@ -620,122 +618,123 @@ msgstr "访问空间"
 #. action = purple_menu_action_new(_("Send Offline
 #. File"),(PurpleCallback)qq_send_offline_file,node,NULL);
 #. act = g_list_append(act,action);
-#: ../../src/webqq.c:2722
+#: ../../src/webqq.c:2743
 msgid "Send Email"
 msgstr "发送邮件"
 
 #. action = purple_menu_action_new(_("Merge Online
 #. History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
 #. act = g_list_append(act,action);
-#: ../../src/webqq.c:2728
+#: ../../src/webqq.c:2749
 msgid "Delete Oneside"
 msgstr "单向删除"
 
-#: ../../src/webqq.c:2736
+#: ../../src/webqq.c:2757
+#, fuzzy
+msgid "Send File"
+msgstr "发送图片失败"
+
+#: ../../src/webqq.c:2760
 msgid "Get Information"
 msgstr "获取信息"
 
-#: ../../src/webqq.c:2740
+#: ../../src/webqq.c:2764
 msgid "Change Business Card"
 msgstr "更改群名片"
 
-#: ../../src/webqq.c:2752
+#: ../../src/webqq.c:2773
 msgid "Change Mark"
 msgstr "更改备注"
 
-#: ../../src/webqq.c:2755
+#: ../../src/webqq.c:2776
 msgid "Quit Group"
 msgstr "退出群组"
 
-#: ../../src/webqq.c:2784
+#: ../../src/webqq.c:2802
+msgid "Display name"
+msgstr ""
+
+#: ../../src/webqq.c:2805
 msgid "Self Information"
 msgstr "个人信息"
 
-#: ../../src/webqq.c:2790
+#: ../../src/webqq.c:2811
 msgid "Place Information"
 msgstr "住宅信息"
 
-#: ../../src/webqq.c:2791
+#: ../../src/webqq.c:2812
 msgid "Contry"
 msgstr "国家"
 
-#: ../../src/webqq.c:2794
+#: ../../src/webqq.c:2815
 msgid "Conmunicate Information"
 msgstr "通讯信息"
 
-#: ../../src/webqq.c:2865
+#: ../../src/webqq.c:2886
 msgid "Only Discussion Can Add new member"
 msgstr "只有讨论组能够添加成员"
 
-#: ../../src/webqq.c:2877
+#: ../../src/webqq.c:2898
 msgid "Coundn't find friend"
 msgstr "找不到好友"
 
-#: ../../src/webqq.c:2887
+#: ../../src/webqq.c:2908
 msgid "Change discu member failed"
 msgstr "更改讨论组成员失败"
 
-#: ../../src/webqq.c:2969
+#: ../../src/webqq.c:2989
 msgid "Ignore Received Message Font Family"
 msgstr "忽略接受消息字体"
 
-#: ../../src/webqq.c:2973
+#: ../../src/webqq.c:2993
 msgid "Ignore Received Message Font Size"
 msgstr "忽略接受消息文字大小"
 
-#: ../../src/webqq.c:2976
+#: ../../src/webqq.c:2996
 msgid "Text Lighter In Dark Theme"
 msgstr "暗色主题下文字加亮"
 
-#: ../../src/webqq.c:2979
+#: ../../src/webqq.c:2999
 msgid "SSL(encrypt on chat)"
 msgstr "SSL(聊天加密)"
 
-#: ../../src/webqq.c:2987
+#: ../../src/webqq.c:3007
 msgid "Don't Download Group Pic(Reduce Network Transfer)"
 msgstr "不下载群聊天图片(省流量)"
 
-#: ../../src/webqq.c:2990
+#: ../../src/webqq.c:3010
 msgid "Version Statics"
 msgstr "版本统计"
 
-#: ../../src/webqq.c:2993
+#: ../../src/webqq.c:3013
 msgid "What you seen Is What you send"
 msgstr "所见即所发"
 
-#: ../../src/webqq.c:2998
+#: ../../src/webqq.c:3018
 msgid "Do not use Expected:100 Continue when send offline message"
 msgstr "发送离线文件时不使用Expected:100 Continue"
 
-#: ../../src/webqq.c:3000
+#: ../../src/webqq.c:3020
 msgid "Debug File Transport"
 msgstr "调试文件传输"
 
-#: ../../src/webqq.c:3004
+#: ../../src/webqq.c:3024
 msgid "Ignore Group(Compatible with recent plugin)"
 msgstr "忽略的组(兼容recent插件)"
 
-#: ../../src/webqq.c:3007
+#: ../../src/webqq.c:3027
 msgid "Verbose"
 msgstr "输出等级"
 
-#: ../../src/webqq.c:3009
-msgid "Upload Server"
-msgstr "上传服务器"
-
-#: ../../src/webqq.c:3009 ../../src/webqq.c:3159
-msgid "Upload Server Default"
-msgstr "http://pidginlwqq.sinaapp.com/images.php"
-
-#: ../../src/webqq.c:3011
+#: ../../src/webqq.c:3035
 msgid "Send Relink Time Interval(m)"
 msgstr "发送Relink间隔(m)"
 
-#: ../../src/webqq.c:3052
+#: ../../src/webqq.c:3076
 msgid "Need Your Attention"
 msgstr "需要您的注意"
 
-#: ../../src/webqq.c:3055
+#: ../../src/webqq.c:3079
 #, c-format
 msgid ""
 "To Support the sustained development of pidgin-lwqq,\n"
@@ -755,66 +754,33 @@ msgstr ""
 "POST:v=%s\n"
 "Code:%s:%d\n"
 
-#: ../../src/webqq.c:3121
+#: ../../src/webqq.c:3152
 msgid "Password is empty"
 msgstr "密码为空"
 
-#: ../../src/webqq.c:3127
+#: ../../src/webqq.c:3158
 #, c-format
 msgid "lwqq version didn't match, found %s, require %s"
 msgstr "lwqq版本不匹配,找到 %s, 需要 %s"
 
-#: ../../src/ft.c:30
-#, c-format
-msgid "Transport Failed,Error Code:%d\n"
-msgstr "文件传输失败,错误号:%d\n"
-
-#: ../../src/ft.c:33
-msgid ""
-"Other may send via webqq.\n"
-"Please call him send via email or offline file."
-msgstr ""
-"对方可能使用webqq发送文件.\n"
-"请让他使用邮件或离线文件发送."
-
-#: ../../src/ft.c:37
-msgid "File Transport"
-msgstr "文件传输"
-
-#: ../../src/ft.c:55
-msgid "Receive file failed"
-msgstr "接收文件失败"
-
-#: ../../src/ft.c:100
+#: ../../src/ft.c:29
 msgid "Send offline file successful"
 msgstr "发送离线文件成功"
 
-#: ../../src/ft.c:104
+#: ../../src/ft.c:33
 #, c-format
 msgid "Send offline file failed,Error Code:%d"
 msgstr "发送离线文件失败,错误号:%d"
 
-#: ../../src/ft.c:127
-msgid "Send offline file failed"
-msgstr "发送离线文件失败"
-
-#: ../../src/ft.c:249
-msgid "Other canceled file transport"
-msgstr "对方取消文件传输"
-
-#: ../../src/ft.c:253
-msgid "File transport timeout"
-msgstr "文件传输超时"
-
-#: ../../src/translate.c:430
+#: ../../src/translate.c:438
 msgid "【DISABLE PIC】"
 msgstr "【禁用的图片】"
 
-#: ../../src/translate.c:433
+#: ../../src/translate.c:441
 msgid "【PIC】"
 msgstr "【图片】"
 
-#: ../../src/translate.c:436
+#: ../../src/translate.c:444
 msgid "【PIC NOT FOUND】"
 msgstr "【图片未找到】"
 
@@ -965,3 +931,49 @@ msgstr "陌生人"
 #: ../../src/qq_types.h:31
 msgid "Chat"
 msgstr "聊天"
+
+#: ../../src/Localizable.h:2
+msgid "Error"
+msgstr "错误"
+
+#: ../../src/Localizable.h:4
+msgid "Image Server"
+msgstr "图片服务器"
+
+#: ../../src/Localizable.h:5
+msgid "Image Server Default"
+msgstr "img.vim-cn.com"
+
+#: ../../src/Localizable.h:6
+msgid "File Server"
+msgstr "文件服务器"
+
+#: ../../src/Localizable.h:7
+msgid "File Server Default"
+msgstr "pidginlwqq.sinaapp.com/images.php"
+
+#: ../../src/Localizable.h:8
+msgid "Not set file server option"
+msgstr "没有设置文件服务器选项"
+
+#~ msgid "Transport Failed,Error Code:%d\n"
+#~ msgstr "文件传输失败,错误号:%d\n"
+
+#~ msgid ""
+#~ "Other may send via webqq.\n"
+#~ "Please call him send via email or offline file."
+#~ msgstr ""
+#~ "对方可能使用webqq发送文件.\n"
+#~ "请让他使用邮件或离线文件发送."
+
+#~ msgid "File Transport"
+#~ msgstr "文件传输"
+
+#~ msgid "Receive file failed"
+#~ msgstr "接收文件失败"
+
+#~ msgid "Other canceled file transport"
+#~ msgstr "对方取消文件传输"
+
+#~ msgid "File transport timeout"
+#~ msgstr "文件传输超时"

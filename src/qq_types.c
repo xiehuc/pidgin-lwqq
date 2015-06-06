@@ -184,7 +184,8 @@ void qq_account_free(qq_account* ac)
    lwqq_js_close(ac->js);
    // g_ptr_array_free(ac->opend_chat,1);
    s_free(ac->settings.recent_group_name);
-   s_free(ac->settings.upload_server);
+   s_free(ac->settings.image_server);
+   s_free(ac->settings.file_server);
    s_free(ac->font.family);
 #if QQ_USE_FAST_INDEX
    g_hash_table_destroy(ac->fast_index.qqnum_index);
@@ -412,7 +413,7 @@ char* strtrim(char* source)
    while (*beg == ' ')
       ++beg;
    char* end = source + strlen(source) - 1;
-   while (*end == ' ')
+   while (*end == ' ' || *end == '\n')
       --end;
    end[1] = '\0';
    return beg;

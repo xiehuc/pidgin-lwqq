@@ -5,3 +5,4 @@
 @REL_SOURCE_ROOT@src/translate.c
 @REL_SOURCE_ROOT@src/qq_types.c
 @REL_SOURCE_ROOT@src/qq_types.h
+@REL_SOURCE_ROOT@src/Localizable.h

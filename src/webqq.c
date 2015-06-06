@@ -16,6 +16,7 @@
 #include "translate.h"
 #include "cgroup.h"
 #include "async_purple.c"
+#include "Localizable.h"
 
 #ifdef WIN32
 #include "win.h"
@@ -74,7 +75,7 @@ static void receipt_notify_error(qq_account* ac, char* msg, LwqqAsyncEvent* ev)
    char err[32];
    if (ev->result != 0) {
       snprintf(err, sizeof(err), "errcode:%d", ev->result);
-      purple_notify_error(ac->account, _("Error"), msg, err);
+      purple_notify_error(ac->account, qError, msg, err);
    }
    s_free(msg);
 }
@@ -348,7 +349,7 @@ static void add_group_receipt(LwqqAsyncEvent* ev, LwqqGroup* g)
    if (err) {
       char msg[32];
       snprintf(msg, sizeof(msg), "errcode:%d", err);
-      purple_notify_error(ac->account, _("Error"), _("Add Group failed"), msg);
+      purple_notify_error(ac->account, qError, _("Add Group failed"), msg);
    }
    lwqq_group_free(g);
 }
@@ -2215,13 +2216,13 @@ static void search_buddy_receipt(LwqqAsyncEvent* ev, LwqqBuddy* buddy,
       return;
    }
    if (err == LWQQ_EC_NO_RESULT) {
-      purple_notify_info(ac->gc, _("Error"),
+      purple_notify_info(ac->gc, qError,
                          _("Account not exists or not main display account"),
                          NULL);
       goto failed;
    }
    if (!buddy->token) {
-      purple_notify_info(ac->gc, _("Error"), _("Get friend information failed"),
+      purple_notify_info(ac->gc, qError, _("Get friend information failed"),
                          NULL);
       goto failed;
    }
@@ -2562,7 +2563,7 @@ static void merge_online_history(LwqqAsyncEvent* ev,LwqqBuddy* b,LwqqGroup* g,Lw
 	if(ev->result){
 		char buf[64]={0};
 		snprintf(buf,sizeof(buf),_("Error Code:%d"),ev->result);
-		purple_notify_warning(ac->account,_("Error"),buf,NULL);
+		purple_notify_warning(ac->account,qError,buf,NULL);
 		return ;
 	}
 	if(history->total == 0) return ;
@@ -2669,7 +2670,7 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
 		char* end;
 		int day = strtoul(ct->input,&end,10);
 		if(end == ct->input){
-			purple_notify_warning(ac->account,_("Error"),_("Input Invalid"),NULL);
+			purple_notify_warning(ac->account,qError,_("Input Invalid"),NULL);
 		}else{
 			LwqqHistoryMsgList* history = lwqq_historymsg_list();
 			history->row = 60;
@@ -2700,7 +2701,7 @@ static void qq_merge_online_history(PurpleBuddy* buddy)
 	LwqqBuddy* b = buddy->proto_data;
 	if(b == NULL){
 		if(strstr(buddy->name," ### "))
-			purple_notify_info(gc,_("Error"),_("Tempory Session not support this function"),NULL);
+			purple_notify_info(gc,qError,_("Tempory Session not support this function"),NULL);
 		return;
 	}
 	LwqqHistoryMsgList* history = lwqq_historymsg_list();
@@ -2881,7 +2882,7 @@ static void qq_add_buddies_to_discu(PurpleConnection* gc, int id,
    LwqqGroup* discu = find_group_by_qqnumber(lc, conv->name)
                           ?: find_group_by_gid(lc, conv->name);
    if (discu->type != LWQQ_GROUP_DISCU) {
-      purple_notify_info(gc, _("Error"),
+      purple_notify_info(gc, qError,
                          _("Only Discussion Can Add new member"), NULL);
       return;
    }
@@ -3025,8 +3026,12 @@ static void init_plugin(PurplePlugin* plugin)
    options = g_list_append(options, option);
    option = purple_account_option_int_new(_("Verbose"), "verbose", 0);
    options = g_list_append(options, option);
-   option = purple_account_option_string_new(_("Upload Server"), "upload_server", _("Upload Server Default"));
-   options = g_list_append(options, option);
+   options = g_list_append(
+       options, purple_account_option_string_new(qImageServer, "image_server",
+                                                 qImageServerDefault));
+   options = g_list_append(
+       options, purple_account_option_string_new(qFileServer, "file_server",
+                                                 qFileServerDefault));
    option = purple_account_option_int_new(_("Send Relink Time Interval(m)"),
                                           "relink_retry", 20);
    options = g_list_append(options, option);
@@ -3128,6 +3133,13 @@ static void init_client_events(LwqqClient* lc)
                       &lc->args->content, &lc->args->err));
 }
 
+static char* check_valid_string(const char* str)
+{
+   if(!str) return NULL;
+   if(strcmp(str,"")==0) return NULL;
+   return s_strdup(str);
+}
+
 static void start_login(PurpleAccount* account)
 {
 
@@ -3174,10 +3186,10 @@ static void start_login(PurpleAccount* account)
                                    SEND_VISUAL_DEFAULT));
    ac->settings.recent_group_name = s_strdup(purple_account_get_string(
        account, "recent_group_name", "Recent Contacts"));
-   const char* upload_server = purple_account_get_string(account, 
-            "upload_server", _("Upload Server Default"));
-   if(strcmp(upload_server, "") == 0) upload_server = NULL;
-   ac->settings.upload_server = upload_server?s_strdup(upload_server):NULL;
+   ac->settings.image_server = check_valid_string(
+       purple_account_get_string(account, "image_server", qImageServerDefault));
+   ac->settings.file_server = check_valid_string(
+       purple_account_get_string(account, "file_server", qFileServerDefault));
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
    int relink_retry = 0;

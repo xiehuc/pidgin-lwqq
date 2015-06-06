@@ -68,7 +68,8 @@ typedef struct qq_account {
    } font;
    struct {
       char* recent_group_name;
-      char* upload_server;
+      char* image_server;
+      char* file_server;
       unsigned relink_timer;
    } settings;
    enum {
@@ -151,6 +152,8 @@ LwqqStatus qq_status_from_str(const char* str);
 
 void vp_func_4pl(CALLBACK_FUNC func, vp_list* vp, void* p);
 
+//@note would break original string
+//@return shouldn't free
 char* strtrim(char* source);
 
 //-----------------------login.c------------------------
