@@ -2680,11 +2680,11 @@ static void download_online_history_begin(LwqqGroup* g,LwqqConfirmTable* ct,qq_a
 				lwqq_async_evset_add_event(set, ev);
 				ev = lwqq_info_get_group_detail_info(lc, g, NULL);
 				lwqq_async_evset_add_event(set, ev);
-				lwqq_async_add_evset_listener(set, 
+				lwqq_async_add_evset_listener(set,
 						_C_(4p,download_online_history_continue,ev,NULL,g,history));
 				lwqq_async_evset_unref(set);
 			}else
-				lwqq_async_add_event_listener(ev, 
+				lwqq_async_add_event_listener(ev,
 						_C_(4p,download_online_history_continue,ev,NULL,g,history));
 		}
 	}
@@ -3012,9 +3012,11 @@ static void init_plugin(PurplePlugin* plugin)
                                            "send_visualbility",
                                            SEND_VISUAL_DEFAULT);
    options = g_list_append(options, option);
+   option = purple_account_option_bool_new(
+       _("Do not use Expected:100 Continue when send offline message"),
+       "dont_expected_100_continue",FALSE);
+   options = g_list_append(options, option);
 #if 0 | DISABLED_AREA
-	option = purple_account_option_bool_new(_("Do not use Expected:100 Continue when send offline message"),"dont_expected_100_continue",FALSE);
-	options = g_list_append(options, option);
 	option = purple_account_option_bool_new(_("Debug File Transport"), "debug_file_send", FALSE);
 	options = g_list_append(options, option);
 #endif
