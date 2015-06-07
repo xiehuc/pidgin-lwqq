@@ -3133,13 +3133,6 @@ static void init_client_events(LwqqClient* lc)
                       &lc->args->content, &lc->args->err));
 }
 
-static char* check_valid_string(const char* str)
-{
-   if(!str) return NULL;
-   if(strcmp(str,"")==0) return NULL;
-   return s_strdup(str);
-}
-
 static void start_login(PurpleAccount* account)
 {
 
@@ -3186,10 +3179,8 @@ static void start_login(PurpleAccount* account)
                                    SEND_VISUAL_DEFAULT));
    ac->settings.recent_group_name = s_strdup(purple_account_get_string(
        account, "recent_group_name", "Recent Contacts"));
-   ac->settings.image_server = check_valid_string(
-       purple_account_get_string(account, "image_server", qImageServerDefault));
-   ac->settings.file_server = check_valid_string(
-       purple_account_get_string(account, "file_server", qFileServerDefault));
+   ac->settings.image_server = purple_account_get_string(account, "image_server", qImageServerDefault);
+   ac->settings.file_server = purple_account_get_string(account, "file_server", qFileServerDefault);
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
    int relink_retry = 0;
