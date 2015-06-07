@@ -1574,7 +1574,7 @@ static void send_receipt(LwqqAsyncEvent* ev, LwqqMsg* msg, char* serv_id,
    }
 
    if (err != 0) {
-      snprintf(buf, sizeof(buf), _("Send failed, err(%d):\n%s"), err, what);
+      snprintf(buf, sizeof(buf), qErrorFormatDetail, qSendMsgError, err, "", what);
       qq_sys_msg_write(ac, msg->type, serv_id, buf, PURPLE_MESSAGE_ERROR,
                        time(NULL));
    }
