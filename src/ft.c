@@ -124,7 +124,8 @@ static void download_file_from_server(PurpleXfer* xfer)
 static void cancel_upload(PurpleXfer* xfer)
 {
    LwqqMsgOffFile* file = xfer->data;
-   lwqq_http_cancel(file->req);
+   if(file && file->req)
+      lwqq_http_cancel(file->req);
 }
 
 static void cancel_download(PurpleXfer* xfer)
