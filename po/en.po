@@ -1,0 +1,976 @@
+# English translations for PACKAGE package.
+# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#  <lainme993@gmail.com>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-07 16:24+0800\n"
+"PO-Revision-Date: 2015-06-07 20:37+0800\n"
+"Last-Translator:  <lainme993@gmail.com>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../../src/webqq.c:223
+#, c-format
+msgid "About pidgin-lwqq %s"
+msgstr "About pidgin-lwqq %s"
+
+#: ../../src/webqq.c:244
+msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide"
+msgstr "https://github.com/xiehuc/pidgin-lwqq/wiki/simple-user-guide"
+
+#. the web page of faq
+#: ../../src/webqq.c:251
+msgid "https://github.com/xiehuc/pidgin-lwqq/wiki/FAQ"
+msgstr "https://github.com/xiehuc/pidgin-lwqq/wiki/FAQ"
+
+#. the web page of feedback
+#: ../../src/webqq.c:258
+msgid "https://github.com/xiehuc/pidgin-lwqq/issues"
+msgstr "https://github.com/xiehuc/pidgin-lwqq/issues"
+
+#: ../../src/webqq.c:320
+msgid "all reloaded,please relogin"
+msgstr "all reloaded,please relogin"
+
+#: ../../src/webqq.c:352
+msgid "Add Group failed"
+msgstr "Add Group failed"
+
+#: ../../src/webqq.c:378
+msgid "Error Message"
+msgstr "Error Message"
+
+#: ../../src/webqq.c:379
+msgid "Get QQ Group Infomation Failed"
+msgstr "Get QQ Group Infomation Failed"
+
+#: ../../src/webqq.c:385
+msgid "Confirm QQ Group"
+msgstr "Confirm QQ Group"
+
+#: ../../src/webqq.c:386
+msgid "Additional Reason"
+msgstr "Additional Reason"
+
+#: ../../src/webqq.c:388
+#, c-format
+msgid ":%s\n"
+msgstr ":%s\n"
+
+#. act = purple_plugin_action_new("好友管理",visit_my_qq_center);
+#. m = g_list_append(m, act);
+#: ../../src/webqq.c:410 ../../src/webqq.c:517
+msgid "Add QQ Group"
+msgstr "Add QQ Group"
+
+#: ../../src/webqq.c:410
+msgid "QQ Number"
+msgstr "QQ Number"
+
+#: ../../src/webqq.c:411
+msgid "Search"
+msgstr "Search"
+
+#: ../../src/webqq.c:412 ../../src/webqq.c:461 ../../src/webqq.c:1452
+#: ../../src/webqq.c:2440 ../../src/webqq.c:2503
+msgid "Cancel"
+msgstr "Cancel"
+
+#: ../../src/webqq.c:437 ../../src/webqq.c:2895
+msgid "Warning"
+msgstr "Warning"
+
+#: ../../src/webqq.c:438
+msgid "Couldn't find friend"
+msgstr "Couldn't find friend"
+
+#: ../../src/webqq.c:451
+msgid "Discussion Name"
+msgstr "Discussion Name"
+
+#: ../../src/webqq.c:452
+msgid "UnName Discussion"
+msgstr "UnName Discussion"
+
+#: ../../src/webqq.c:456
+msgid "members(seperate by ;)"
+msgstr "members(seperate by ;)"
+
+#: ../../src/webqq.c:460
+msgid "Create Discussion"
+msgstr "Create Discussion"
+
+#: ../../src/webqq.c:461
+msgid "Create"
+msgstr "Create"
+
+#: ../../src/webqq.c:477
+msgid "Modify Self Longnick"
+msgstr "Modify Self Longnick"
+
+#: ../../src/webqq.c:478 ../../src/webqq.c:803 ../../src/webqq.c:2319
+#: ../../src/webqq.c:2521 ../../src/webqq.c:2801
+msgid "Longnick"
+msgstr "Longnick"
+
+#: ../../src/webqq.c:505
+msgid "About pidgin-lwqq"
+msgstr "About pidgin-lwqq"
+
+#: ../../src/webqq.c:507
+msgid "User Help"
+msgstr "User Help"
+
+#: ../../src/webqq.c:509
+msgid "FAQ"
+msgstr "FAQ"
+
+#: ../../src/webqq.c:511
+msgid "Feedback"
+msgstr "Feedback"
+
+#: ../../src/webqq.c:513
+msgid "Self Center"
+msgstr "Self Center"
+
+#: ../../src/webqq.c:519
+msgid "Create Discussion Group"
+msgstr "Create Discussion Group"
+
+#: ../../src/webqq.c:522
+msgid "Modify Self LongNick"
+msgstr "Modify Self LongNick"
+
+#: ../../src/webqq.c:525
+msgid "All Reload(Debug)"
+msgstr "All Reload(Debug)"
+
+#: ../../src/webqq.c:546
+msgid "Available"
+msgstr "Available"
+
+#: ../../src/webqq.c:550 ../../src/webqq.c:572
+msgid "Online"
+msgstr "Online"
+
+#: ../../src/webqq.c:553
+msgid "Callme"
+msgstr "Callme"
+
+#: ../../src/webqq.c:556
+msgid "Away"
+msgstr "Away"
+
+#: ../../src/webqq.c:559
+msgid "Busy"
+msgstr "Busy"
+
+#: ../../src/webqq.c:562
+msgid "Slience"
+msgstr "Slience"
+
+#: ../../src/webqq.c:566
+msgid "Hidden"
+msgstr "Hidden"
+
+#: ../../src/webqq.c:569
+msgid "Offline"
+msgstr "Offline"
+
+#: ../../src/webqq.c:690
+msgid "Discussion"
+msgstr "Discussion"
+
+#: ../../src/webqq.c:764
+#, c-format
+msgid ""
+"You Got an Offline File: %s\n"
+"End timeline: %s<a href=\"%s\">Click to download</a>"
+msgstr ""
+"You Got an Offline File: %s\n"
+"End timeline: %s<a href=\"%s\">Click to download</a>"
+
+#: ../../src/webqq.c:776
+msgid "Refuse"
+msgstr "Refuse"
+
+#: ../../src/webqq.c:777 ../../src/webqq.c:3088
+msgid "Agree"
+msgstr "Agree"
+
+#: ../../src/webqq.c:778
+#, c-format
+msgid "Peer %s Accept receive Offline file(%s)\n"
+msgstr "Peer %s Accept receive Offline file(%s)\n"
+
+#. #define ADD_HEADER(s)     purple_notify_user_info_add_section_header(info,
+#. s)
+#. ADD_HEADER("基本信息");
+#: ../../src/webqq.c:801 ../../src/webqq.c:1805 ../../src/webqq.c:2518
+#: ../../src/webqq.c:2798
+msgid "QQ"
+msgstr "QQ"
+
+#: ../../src/webqq.c:802 ../../src/webqq.c:2315 ../../src/webqq.c:2799
+msgid "Nick"
+msgstr "Nick"
+
+#: ../../src/webqq.c:804 ../../src/webqq.c:2804
+msgid "Gender"
+msgstr "Gender"
+
+#: ../../src/webqq.c:805 ../../src/webqq.c:2805
+msgid "Shengxiao"
+msgstr "Shengxiao"
+
+#: ../../src/webqq.c:806 ../../src/webqq.c:2806
+msgid "Constellation"
+msgstr "Constellation"
+
+#: ../../src/webqq.c:807 ../../src/webqq.c:2807
+msgid "Blood Type"
+msgstr "Blood Type"
+
+#: ../../src/webqq.c:808 ../../src/webqq.c:2808
+msgid "Birthday"
+msgstr "Birthday"
+
+#: ../../src/webqq.c:809
+msgid "Country"
+msgstr "Country"
+
+#: ../../src/webqq.c:810 ../../src/webqq.c:2811
+msgid "Province"
+msgstr "Province"
+
+#: ../../src/webqq.c:811 ../../src/webqq.c:2812
+msgid "City"
+msgstr "City"
+
+#: ../../src/webqq.c:812 ../../src/webqq.c:2430 ../../src/webqq.c:2814
+#: ../../src/qq_types.c:34
+msgid "Phone"
+msgstr "Phone"
+
+#: ../../src/webqq.c:813 ../../src/webqq.c:2815
+msgid "Mobile"
+msgstr "Mobile"
+
+#: ../../src/webqq.c:814 ../../src/webqq.c:2432 ../../src/webqq.c:2816
+msgid "Email"
+msgstr "Email"
+
+#: ../../src/webqq.c:815 ../../src/webqq.c:2817
+msgid "Occupation"
+msgstr "Occupation"
+
+#: ../../src/webqq.c:816 ../../src/webqq.c:2818
+msgid "College"
+msgstr "College"
+
+#: ../../src/webqq.c:817 ../../src/webqq.c:2819
+msgid "Homepage"
+msgstr "Homepage"
+
+#: ../../src/webqq.c:837
+#, c-format
+msgid ""
+"Request QQ Group:%s\n"
+"Request Reason:%s\n"
+msgstr ""
+"Request QQ Group:%s\n"
+"Request Reason:%s\n"
+
+#: ../../src/webqq.c:841
+msgid "QQ Group Request Confirm"
+msgstr "QQ Group Request Confirm"
+
+#: ../../src/webqq.c:844
+msgid "Deny Reason"
+msgstr "Deny Reason"
+
+#: ../../src/webqq.c:858
+msgid "You create a new group"
+msgstr "You create a new group"
+
+#: ../../src/webqq.c:864
+#, c-format
+msgid ""
+"%s Added in QQ Group[%s]\n"
+"Admin:%s"
+msgstr ""
+"%s Added in QQ Group[%s]\n"
+"Admin:%s"
+
+#: ../../src/webqq.c:865 ../../src/webqq.c:877
+msgid "You"
+msgstr "You"
+
+#: ../../src/webqq.c:876
+#, c-format
+msgid "%s Leave QQ Group[%s]"
+msgstr "%s Leave QQ Group[%s]"
+
+#: ../../src/webqq.c:885
+#, c-format
+msgid "QQ Group [%s] refused your request"
+msgstr "QQ Group [%s] refused your request"
+
+#: ../../src/webqq.c:902
+msgid "QQ Group Sys Message"
+msgstr "QQ Group Sys Message"
+
+#: ../../src/webqq.c:1125
+msgid "Oups, You was kicked offline by somewhat"
+msgstr "Oups, You was kicked offline by somewhat"
+
+#: ../../src/webqq.c:1149 ../../src/webqq.c:2228
+msgid "Friend Confirm"
+msgstr "Friend Confirm"
+
+#: ../../src/webqq.c:1151
+#, c-format
+msgid ""
+"%s\n"
+"Request as your friend\n"
+"Additional Reason:%s\n"
+"\n"
+msgstr ""
+"%s\n"
+"Request as your friend\n"
+"Additional Reason:%s\n"
+"\n"
+
+#: ../../src/webqq.c:1155
+msgid "Agree and add back"
+msgstr "Agree and add back"
+
+#: ../../src/webqq.c:1156
+msgid "Refuse reason"
+msgstr "Refuse reason"
+
+#: ../../src/webqq.c:1167
+#, c-format
+msgid "%s accept your request,and add back you as friend too"
+msgstr "%s accept your request,and add back you as friend too"
+
+#: ../../src/webqq.c:1169 ../../src/webqq.c:1176
+msgid "System Message"
+msgstr "System Message"
+
+#: ../../src/webqq.c:1170 ../../src/webqq.c:1177
+msgid "Add Friend"
+msgstr "Add Friend"
+
+#: ../../src/webqq.c:1174
+#, c-format
+msgid "%s accept your request"
+msgstr "%s accept your request"
+
+#: ../../src/webqq.c:1273
+msgid "webqq lost connection,relogin now,please retry by hand later"
+msgstr "webqq lost connection,relogin now,please retry by hand later"
+
+#: ../../src/webqq.c:1372 ../../src/webqq.c:1379 ../../src/webqq.c:1385
+msgid "Send Pic Failed"
+msgstr "Send Pic Failed"
+
+#: ../../src/webqq.c:1378
+msgid "Send Pic over 1MB"
+msgstr "Send Pic over 1MB"
+
+#: ../../src/webqq.c:1384
+msgid "Send Custom Face over 250KB"
+msgstr "Send Custom Face over 250KB"
+
+#: ../../src/webqq.c:1450
+msgid "Captcha"
+msgstr "Captcha"
+
+#: ../../src/webqq.c:1450
+msgid "OK"
+msgstr "OK"
+
+#: ../../src/webqq.c:1452
+msgid "View Outside"
+msgstr "View Outside"
+
+#: ../../src/webqq.c:1502
+msgid "Please Select"
+msgstr "Please Select"
+
+#: ../../src/webqq.c:1503 ../../src/webqq.c:1520 ../../src/webqq.c:3089
+msgid "Deny"
+msgstr "Deny"
+
+#: ../../src/webqq.c:1504
+msgid "Accept"
+msgstr "Accept"
+
+#: ../../src/webqq.c:1518
+msgid "Confirm"
+msgstr "Confirm"
+
+#: ../../src/webqq.c:1520
+msgid "Ignore"
+msgstr "Ignore"
+
+#: ../../src/webqq.c:1547
+msgid "unable send message"
+msgstr "unable send message"
+
+#: ../../src/webqq.c:1584
+msgid "Upload content retry over limit"
+msgstr "Upload content retry over limit"
+
+#: ../../src/webqq.c:1808
+msgid "Type"
+msgstr "Type"
+
+#: ../../src/webqq.c:1985 ../../src/webqq.c:2037
+msgid "Change friend category failed"
+msgstr "Change friend category failed"
+
+#: ../../src/webqq.c:1986
+msgid "Server fault returns"
+msgstr "Server fault returns"
+
+#: ../../src/webqq.c:2001
+msgid "Add passerby as friend"
+msgstr "Add passerby as friend"
+
+#: ../../src/webqq.c:2002
+msgid "Send add request successful"
+msgstr "Send add request successful"
+
+#: ../../src/webqq.c:2005
+msgid "Add friend failed"
+msgstr "Add friend failed"
+
+#: ../../src/webqq.c:2005
+msgid "???"
+msgstr "???"
+
+#: ../../src/webqq.c:2038
+msgid "no such category exists"
+msgstr "no such category exists"
+
+#: ../../src/webqq.c:2086
+msgid "Delete Friend Oneside"
+msgstr "Delete Friend Oneside"
+
+#: ../../src/webqq.c:2087
+msgid ""
+"This would delete your friends,but keep yourself in friend's buddy list\n"
+"Are you sure?"
+msgstr ""
+"This would delete your friends,but keep yourself in friend's buddy list\n"
+"Are you sure?"
+
+#: ../../src/webqq.c:2186
+msgid "Invite Message"
+msgstr "Invite Message"
+
+#: ../../src/webqq.c:2195
+msgid "Add Friend Failed"
+msgstr "Add Friend Failed"
+
+#: ../../src/webqq.c:2218
+msgid "Account not exists or not main display account"
+msgstr "Account not exists or not main display account"
+
+#: ../../src/webqq.c:2223
+msgid "Get friend information failed"
+msgstr "Get friend information failed"
+
+#: ../../src/webqq.c:2317 ../../src/webqq.c:2520
+msgid "Mark"
+msgstr "Mark"
+
+#: ../../src/webqq.c:2321 ../../src/webqq.c:2802
+msgid "Level"
+msgstr "Level"
+
+#: ../../src/webqq.c:2322
+msgid "Client"
+msgstr "Client"
+
+#: ../../src/webqq.c:2375
+msgid "Block Setting"
+msgstr "Block Setting"
+
+#: ../../src/webqq.c:2376
+msgid "No Block"
+msgstr "No Block"
+
+#: ../../src/webqq.c:2377
+msgid "Slience Receive"
+msgstr "Slience Receive"
+
+#: ../../src/webqq.c:2378 ../../src/webqq.c:2767
+msgid "Block"
+msgstr "Block"
+
+#: ../../src/webqq.c:2428 ../../src/webqq.c:2519
+msgid "Name"
+msgstr "Name"
+
+#: ../../src/webqq.c:2434
+msgid "Remark"
+msgstr "Remark"
+
+#: ../../src/webqq.c:2439
+msgid "Group Business Card"
+msgstr "Group Business Card"
+
+#: ../../src/webqq.c:2440 ../../src/webqq.c:2503
+msgid "Update"
+msgstr "Update"
+
+#: ../../src/webqq.c:2502
+msgid "Modify Mark"
+msgstr "Modify Mark"
+
+#: ../../src/webqq.c:2502
+msgid "Input Mark"
+msgstr "Input Mark"
+
+#: ../../src/webqq.c:2507
+msgid "Set Topic"
+msgstr "Set Topic"
+
+#: ../../src/webqq.c:2507
+msgid "Input Topic"
+msgstr "Input Topic"
+
+#: ../../src/webqq.c:2508
+msgid ""
+"Note:You are setting discussion topic on server.\n"
+"Which would affect all discussion member"
+msgstr ""
+"Note:You are setting discussion topic on server.\n"
+"Which would affect all discussion member"
+
+#: ../../src/webqq.c:2563
+#, c-format
+msgid "Error Code:%d"
+msgstr "Error Code:%d"
+
+#: ../../src/webqq.c:2625
+#, c-format
+msgid "Merge %d Entry"
+msgstr "Merge %d Entry"
+
+#: ../../src/webqq.c:2626 ../../src/webqq.c:2636
+msgid "Merge Online History"
+msgstr "Merge Online History"
+
+#: ../../src/webqq.c:2636
+msgid "Merge 0 Entry"
+msgstr "Merge 0 Entry"
+
+#: ../../src/webqq.c:2671
+msgid "Input Invalid"
+msgstr "Input Invalid"
+
+#: ../../src/webqq.c:2702
+msgid "Tempory Session not support this function"
+msgstr "Tempory Session not support this function"
+
+#: ../../src/webqq.c:2720
+msgid "How many pages want to merge"
+msgstr "How many pages want to merge"
+
+#: ../../src/webqq.c:2721
+msgid "Each Page has 60 Entry"
+msgstr "Each Page has 60 Entry"
+
+#: ../../src/webqq.c:2722
+msgid "Pages"
+msgstr "Pages"
+
+#: ../../src/webqq.c:2735
+msgid "Visit QZone"
+msgstr "Visit QZone"
+
+#. webqq doesn't support send offline file anymore
+#. action = purple_menu_action_new(_("Send Offline
+#. File"),(PurpleCallback)qq_send_offline_file,node,NULL);
+#. act = g_list_append(act,action);
+#: ../../src/webqq.c:2741
+msgid "Send Email"
+msgstr "Send Email"
+
+#. action = purple_menu_action_new(_("Merge Online
+#. History"),(PurpleCallback)qq_merge_online_history,buddy,NULL);
+#. act = g_list_append(act,action);
+#: ../../src/webqq.c:2747
+msgid "Delete Oneside"
+msgstr "Delete Oneside"
+
+#: ../../src/webqq.c:2755
+msgid "Send File"
+msgstr "Send File"
+
+#: ../../src/webqq.c:2758
+msgid "Get Information"
+msgstr "Get Information"
+
+#: ../../src/webqq.c:2762
+msgid "Change Business Card"
+msgstr "Change Business Card"
+
+#: ../../src/webqq.c:2771
+msgid "Change Mark"
+msgstr "Change Mark"
+
+#: ../../src/webqq.c:2774
+msgid "Quit Group"
+msgstr "Quit Group"
+
+#: ../../src/webqq.c:2800
+msgid "Display name"
+msgstr "Display name"
+
+#: ../../src/webqq.c:2803
+msgid "Self Information"
+msgstr "Self Information"
+
+#: ../../src/webqq.c:2809
+msgid "Place Information"
+msgstr "Place Information"
+
+#: ../../src/webqq.c:2810
+msgid "Contry"
+msgstr "Contry"
+
+#: ../../src/webqq.c:2813
+msgid "Conmunicate Information"
+msgstr "Conmunicate Information"
+
+#: ../../src/webqq.c:2884
+msgid "Only Discussion Can Add new member"
+msgstr "Only Discussion Can Add new member"
+
+#: ../../src/webqq.c:2896
+msgid "Coundn't find friend"
+msgstr "Coundn't find friend"
+
+#: ../../src/webqq.c:2906
+msgid "Change discu member failed"
+msgstr "Change discu member failed"
+
+#: ../../src/webqq.c:2987
+msgid "Ignore Received Message Font Family"
+msgstr "Ignore Received Message Font Family"
+
+#: ../../src/webqq.c:2991
+msgid "Ignore Received Message Font Size"
+msgstr "Ignore Received Message Font Size"
+
+#: ../../src/webqq.c:2994
+msgid "Text Lighter In Dark Theme"
+msgstr "Text Lighter In Dark Theme"
+
+#: ../../src/webqq.c:2997
+msgid "SSL(encrypt on chat)"
+msgstr "SSL(encrypt on chat)"
+
+#: ../../src/webqq.c:3005
+msgid "Don't Download Group Pic(Reduce Network Transfer)"
+msgstr "Don't Download Group Pic(Reduce Network Transfer)"
+
+#: ../../src/webqq.c:3008
+msgid "Version Statics"
+msgstr "Version Statics"
+
+#: ../../src/webqq.c:3011
+msgid "What you seen Is What you send"
+msgstr "What you seen Is What you send"
+
+#: ../../src/webqq.c:3016
+msgid "Do not use Expected:100 Continue when send offline message"
+msgstr "Do not use Expected:100 Continue when send offline message"
+
+#: ../../src/webqq.c:3018
+msgid "Debug File Transport"
+msgstr "Debug File Transport"
+
+#: ../../src/webqq.c:3022
+msgid "Ignore Group(Compatible with recent plugin)"
+msgstr "Ignore Group(Compatible with recent plugin)"
+
+#: ../../src/webqq.c:3025
+msgid "Verbose"
+msgstr "Verbose"
+
+#: ../../src/webqq.c:3033
+msgid "Send Relink Time Interval(m)"
+msgstr "Send Relink Time Interval(m)"
+
+#: ../../src/webqq.c:3074
+msgid "Need Your Attention"
+msgstr "Need Your Attention"
+
+#: ../../src/webqq.c:3077
+#, c-format
+msgid ""
+"To Support the sustained development of pidgin-lwqq,\n"
+"Need statistics version count!Really Just a version number only!!,following "
+"releated information:\n"
+"Note:https://github.com/xiehuc/pidgin-lwqq/wiki/version-statistics\n"
+"Frequent:First run of each version\n"
+"Url:http://pidginlwqq.sinaapp.com/statics.php\n"
+"POST:v=%s\n"
+"Code:%s:%d\n"
+msgstr ""
+"To Support the sustained development of pidgin-lwqq,\n"
+"Need statistics version count!Really Just a version number only!!,following "
+"releated information:\n"
+"Note:https://github.com/xiehuc/pidgin-lwqq/wiki/version-statistics\n"
+"Frequent:First run of each version\n"
+"Url:http://pidginlwqq.sinaapp.com/statics.php\n"
+"POST:v=%s\n"
+"Code:%s:%d\n"
+
+#: ../../src/webqq.c:3143
+msgid "Password is empty"
+msgstr "Password is empty"
+
+#: ../../src/webqq.c:3149
+#, c-format
+msgid "lwqq version didn't match, found %s, require %s"
+msgstr "lwqq version didn't match, found %s, require %s"
+
+#: ../../src/ft.c:29
+msgid "Send offline file successful"
+msgstr "Send offline file successful"
+
+#: ../../src/ft.c:33
+#, c-format
+msgid "Send offline file failed,Error Code:%d"
+msgstr "Send offline file failed,Error Code:%d"
+
+#: ../../src/translate.c:441
+msgid "【DISABLE PIC】"
+msgstr "【DISABLE PIC】"
+
+#: ../../src/translate.c:444
+msgid "【PIC】"
+msgstr "【PIC】"
+
+#: ../../src/translate.c:447
+msgid "【PIC NOT FOUND】"
+msgstr "【PIC NOT FOUND】"
+
+#: ../../src/qq_types.c:11
+msgid "Mouth"
+msgstr "Mouth"
+
+#: ../../src/qq_types.c:11
+msgid "Cattle"
+msgstr "Cattle"
+
+#: ../../src/qq_types.c:12
+msgid "Tiger"
+msgstr "Tiger"
+
+#: ../../src/qq_types.c:12
+msgid "Rabbit"
+msgstr "Rabbit"
+
+#: ../../src/qq_types.c:13
+msgid "Dragon"
+msgstr "Dragon"
+
+#: ../../src/qq_types.c:13
+msgid "Snack"
+msgstr "Snack"
+
+#: ../../src/qq_types.c:14
+msgid "Horse"
+msgstr "Horse"
+
+#: ../../src/qq_types.c:14
+msgid "Sheep"
+msgstr "Sheep"
+
+#: ../../src/qq_types.c:15
+msgid "Monkey"
+msgstr "Monkey"
+
+#: ../../src/qq_types.c:15
+msgid "Chook"
+msgstr "Chook"
+
+#: ../../src/qq_types.c:16
+msgid "Dog"
+msgstr "Dog"
+
+#: ../../src/qq_types.c:16
+msgid "Pig"
+msgstr "Pig"
+
+#: ../../src/qq_types.c:19
+msgid "A"
+msgstr "A"
+
+#: ../../src/qq_types.c:19
+msgid "B"
+msgstr "B"
+
+#: ../../src/qq_types.c:19
+msgid "O"
+msgstr "O"
+
+#: ../../src/qq_types.c:20
+msgid "AB"
+msgstr "AB"
+
+#: ../../src/qq_types.c:20
+msgid "Other"
+msgstr "Other"
+
+#: ../../src/qq_types.c:23
+msgid "Aquarius"
+msgstr "Aquarius"
+
+#: ../../src/qq_types.c:23
+msgid "Pisces"
+msgstr "Pisces"
+
+#: ../../src/qq_types.c:24
+msgid "Aries"
+msgstr "Aries"
+
+#: ../../src/qq_types.c:24
+msgid "Taurus"
+msgstr "Taurus"
+
+#: ../../src/qq_types.c:25
+msgid "Gemini"
+msgstr "Gemini"
+
+#: ../../src/qq_types.c:25
+msgid "Cancer"
+msgstr "Cancer"
+
+#: ../../src/qq_types.c:26
+msgid "Leo"
+msgstr "Leo"
+
+#: ../../src/qq_types.c:26
+msgid "Virgo"
+msgstr "Virgo"
+
+#: ../../src/qq_types.c:26
+msgid "Libra"
+msgstr "Libra"
+
+#: ../../src/qq_types.c:27
+msgid "Scorpio"
+msgstr "Scorpio"
+
+#: ../../src/qq_types.c:27
+msgid "Sagittarius"
+msgstr "Sagittarius"
+
+#: ../../src/qq_types.c:28
+msgid "Capricornus"
+msgstr "Capricornus"
+
+#: ../../src/qq_types.c:31
+msgid "Female"
+msgstr "Female"
+
+#: ../../src/qq_types.c:31
+msgid "Male"
+msgstr "Male"
+
+#: ../../src/qq_types.c:34
+msgid "Desktop"
+msgstr "Desktop"
+
+#: ../../src/qq_types.c:35
+msgid "WebQQ"
+msgstr "WebQQ"
+
+#: ../../src/qq_types.c:35
+msgid "PadQQ"
+msgstr "PadQQ"
+
+#: ../../src/qq_types.h:29
+msgid "Friend"
+msgstr "Friend"
+
+#: ../../src/qq_types.h:30
+msgid "Passerby"
+msgstr "Passerby"
+
+#: ../../src/qq_types.h:31
+msgid "Chat"
+msgstr "Chat"
+
+#: ../../src/Localizable.h:2
+msgid "Error"
+msgstr "Error"
+
+#: ../../src/Localizable.h:5
+msgid "Upload Image Error"
+msgstr "Upload Image Error"
+
+#: ../../src/Localizable.h:6
+msgid "Upload File Error"
+msgstr "Upload File Error"
+
+#: ../../src/Localizable.h:7
+msgid "Send Message Failed"
+msgstr "Send Message Failed"
+
+#: ../../src/Localizable.h:9
+msgid "Get Friend List Failed"
+msgstr "Get Friend List Failed"
+
+#: ../../src/Localizable.h:10
+msgid "Get Group List Failed"
+msgstr "Get Group List Failed"
+
+#: ../../src/Localizable.h:11
+msgid "Get Online List Failed"
+msgstr "Get Online List Failed"
+
+#: ../../src/Localizable.h:12
+msgid "Get QQ Number Failed"
+msgstr "Get QQ Number Failed"
+
+#: ../../src/Localizable.h:13
+msgid "Get Other Info Failed"
+msgstr "Get Other Info Failed"
+
+#: ../../src/Localizable.h:15
+msgid "Image Server"
+msgstr "Image Server"
+
+#: ../../src/Localizable.h:16
+msgid "Image Server Default"
+msgstr "img.vim-cn.com"
+
+#: ../../src/Localizable.h:17
+msgid "File Server"
+msgstr "File Server"
+
+#: ../../src/Localizable.h:18
+msgid "File Server Default"
+msgstr "pidginlwqq.sinaapp.com/images.php"
+
+#: ../../src/Localizable.h:19
+msgid "Not set file server option"
+msgstr "Not set file server option"
