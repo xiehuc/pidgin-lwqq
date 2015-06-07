@@ -1,6 +1,10 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+version 0.6.0: (2015-06-07):
+	+  增加图片服务器
+	+  增加文件服务器
+
 version 0.5.0: (2015-04-24):
 	*  修正ubuntu 15.04 crash问题
 	*  对于curl支持异步dns则默认开启purple事件循环
