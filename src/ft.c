@@ -92,6 +92,7 @@ static void upload_file_to_server(PurpleXfer* xfer)
    LwqqHttpRequest* req = lwqq_http_request_new(ac->settings.file_server);
    file->req = req;
    LWQQ_HTTP_EV(req)->lc = lc;
+   if(ac->flag & QQ_DONT_EXPECT_100_CONTINUE) req->set_header(req, "Expect", "");
    req->add_form(req, LWQQ_FORM_CONTENT, "user", user);
    req->add_form(req, LWQQ_FORM_FILE, "name", xfer->local_filename);
    lwqq_http_on_progress(req, file_trans_on_progress, xfer);
@@ -219,6 +220,7 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, L
    void* buffer = s_malloc(len);
    memcpy(buffer, purple_imgstore_get_data(img), len);
    const char* ext = purple_imgstore_get_extension(img);
+   if(ac->flag & QQ_DONT_EXPECT_100_CONTINUE) req->set_header(req, "Expect", "");
    req->add_form(req, LWQQ_FORM_CONTENT, "user", ac->qq->myself->qqnumber);
    req->add_file_content(req, "name", name, buffer, len, ext);
    *Content = C;
