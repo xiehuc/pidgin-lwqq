@@ -96,7 +96,8 @@ static void upload_file_to_server(PurpleXfer* xfer)
    req->add_form(req, LWQQ_FORM_FILE, "name", xfer->local_filename);
    lwqq_http_on_progress(req, file_trans_on_progress, xfer);
    lwqq_http_set_option(req, LWQQ_HTTP_CANCELABLE, 1L);
-   req->do_request_async(req, 0, "", _C_(2p, send_file_message, req, xfer));
+   req->do_request_async(
+       req, 0, "", _C_(2p, send_file_message, req, xfer));
 }
 static void download_file_finish(PurpleXfer* xfer, LwqqHttpRequest* req)
 {
@@ -142,6 +143,7 @@ void qq_send_file(PurpleConnection* gc, const char* who, const char* filename)
       return;
    }
    PurpleXfer* xfer = purple_xfer_new(gc->account, PURPLE_XFER_SEND, who);
+   xfer->remote_port = LWQQ_MS_BUDDY_MSG; // use remote port to store special data
    purple_xfer_set_init_fnc(xfer, upload_file_to_server);
    purple_xfer_set_request_denied_fnc(xfer, NULL); // send offline file to server, would not denied
    purple_xfer_set_cancel_send_fnc(xfer, cancel_upload);
@@ -158,6 +160,7 @@ void qq_send_offline_file(PurpleBlistNode* node)
       return;
    }
    PurpleXfer* xfer = purple_xfer_new(account, PURPLE_XFER_SEND, get_name_from_chat(chat));
+   xfer->remote_port = LWQQ_MS_GROUP_MSG;
    purple_xfer_set_init_fnc(xfer, upload_file_to_server);
    purple_xfer_set_request_denied_fnc(xfer, NULL);
    purple_xfer_set_cancel_send_fnc(xfer, cancel_upload);
@@ -177,13 +180,19 @@ void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_i
    purple_xfer_request(xfer);
 }
 
-static void set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
+static int set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
 {
    char buffer[1024];
-   snprintf(buffer,sizeof(buffer),"%s ", strtrim(req->response)); // append a blank to url
-   C->data.ext.param[0] = s_strdup(buffer);
+   LwqqErrorCode err = req->err;
+   if(req->http_code == 200){
+      snprintf(buffer,sizeof(buffer),"%s ", strtrim(req->response)); // append a blank to url
+      C->data.ext.param[0] = s_strdup(buffer);
+   }else{
+      lwqq_msg_content_clean(C);
+   }
    s_free(data);
    lwqq_http_request_free(req);
+   return err;
 }
 
 static void replace_img_ext(LwqqHttpRequest* req, LwqqMsgContent* C)
@@ -202,7 +211,7 @@ static void replace_img_ext(LwqqHttpRequest* req, LwqqMsgContent* C)
 LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, LwqqMsgContent** Content)
 {
    const char* name = purple_imgstore_get_filename(img);
-   LwqqMsgContent* C = LWQQ_CONTENT_EXT_IMG(name);
+   LwqqMsgContent* C = LWQQ_CONTENT_EXT_IMG(NULL);
    LwqqHttpRequest* req
        = lwqq_http_request_new(ac->settings.image_server);
    req->lc = ac->qq;
@@ -213,7 +222,7 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img, L
    req->add_form(req, LWQQ_FORM_CONTENT, "user", ac->qq->myself->qqnumber);
    req->add_file_content(req, "name", name, buffer, len, ext);
    *Content = C;
-   return req->do_request_async(req, 0, "", _C_(3p, set_img_url, req, C, buffer));
+   return req->do_request_async(req, 0, "", _C_(3p_i, set_img_url, req, C, buffer));
 }
 
 LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C)
@@ -221,4 +230,12 @@ LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C)
    LwqqHttpRequest* req = lwqq_http_request_new(C->data.ext.param[0]);
    req->lc = ac->qq;
    return req->do_request_async(req, 0, "", _C_(2p, replace_img_ext, req, C));
+}
+void qq_upload_image_receipt(LwqqAsyncEvent* ev, LwqqMsgMessage* msg)
+{
+   if(!ev || ev->result == LWQQ_EC_OK) return;
+   char message[1024];
+   qq_account* ac = ev->lc->data;
+   snprintf(message, sizeof(message), qErrorFormat, qUploadImageError, -1, "");
+   qq_sys_msg_write(ac, msg->super.super.type, msg->super.to, message, PURPLE_MESSAGE_ERROR, time(0));
 }

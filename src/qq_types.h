@@ -130,6 +130,7 @@ LwqqAsyncEvent* upload_image_to_server(qq_account* ac, PurpleStoredImage* img,
 LwqqAsyncEvent* download_image_from_server(qq_account* ac, LwqqMsgContent* C);
 void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer);
 void qq_ask_download_file(qq_account* ac, LwqqMsgContent* C, const char* local_id);
+void qq_upload_image_receipt(LwqqAsyncEvent* ev, LwqqMsgMessage* msg);
 //=============================================================
 
 LwqqBuddy* find_buddy_by_qqnumber(LwqqClient* lc, const char* qqnum);

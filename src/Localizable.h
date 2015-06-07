@@ -1,5 +1,9 @@
 
 #define qError _("Error")
+#define qErrorFormat "%s(%d):%s"
+#define qUploadImageError _("Upload Image Error")
+#define qUploadFileError _("Upload File Error")
+
 #define qGetFriendListError _("Get Friend List Failed")
 #define qGetGroupListError _("Get Group List Failed")
 #define qGetOnlineListError _("Get Online List Failed")

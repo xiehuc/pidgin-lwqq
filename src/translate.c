@@ -225,6 +225,8 @@ static LwqqMsgContent* build_face_direct(int num)
    c->data.face = num;
    return c;
 }
+
+
 LwqqAsyncEvset* translate_message_to_struct(qq_account* ac, const char* to,
                                 const char* what, LwqqMsg* msg, int using_cface)
 {
@@ -268,8 +270,9 @@ LwqqAsyncEvset* translate_message_to_struct(qq_account* ac, const char* to,
          snprintf(buf, sizeof(buf), "%d", img_id);
          // record extra information to file_id
          if (ac->settings.image_server) {
-            lwqq_async_evset_add_event(set,
-                                       upload_image_to_server(ac, simg, &c));
+            LwqqAsyncEvent* ev = upload_image_to_server(ac, simg, &c);
+            lwqq_async_add_event_listener(ev, _C_(2p, qq_upload_image_receipt, ev, msg));
+            lwqq_async_evset_add_event(set, ev);
             c->data.ext.param[2]
                 = s_strdup(buf); // store a special value for echo
          } else if (using_cface || msg->type == LWQQ_MS_GROUP_MSG) {
