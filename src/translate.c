@@ -460,6 +460,8 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
             ds_cat(buf, piece);
          }
          break;
+      default:
+         break;
       }
    }
    ds_cat(buf, "</font>");

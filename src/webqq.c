@@ -1043,16 +1043,9 @@ static int group_message(LwqqClient* lc, LwqqMsgMessage* msg)
          ac->rewrite_pic_list = g_list_append(ac->rewrite_pic_list, entry);
          pic++;
       }
-      // first check there is a event on queue.
-      // if it is. it would do anything.
-      // so we didn't do in this.
-      LwqqAsyncEvent* ev = lwqq_async_queue_find(
-          &group->ev_queue, lwqq_info_get_group_detail_info);
-      if (ev == NULL) {
-         ev = lwqq_info_get_group_detail_info(lc, group, NULL);
-         lwqq_async_add_event_listener(
-             ev, _C_(3p, rewrite_whole_message_list, ev, ac, group));
-      }
+      LwqqAsyncEvent* ev = lwqq_info_get_group_detail_info(lc, group, NULL);
+      lwqq_async_add_event_listener(
+            ev, _C_(3p, rewrite_whole_message_list, ev, ac, group));
    } // else set user list in cgroup_got_msg
 
    qq_cgroup_got_msg(group->data, msg->group.send, PURPLE_MESSAGE_RECV,
@@ -1723,17 +1716,18 @@ void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer)
 {
    char message[1024];
    // now xfer is not valid.
-   LwqqErrorCode err = req->err;
+   LwqqAsyncEvent* ev = LWQQ_HTTP_EV(req);
+   LwqqErrorCode err = ev->err;
    if(err == LWQQ_EC_CANCELED)
       goto done;
-   LwqqClient* lc = req->lc;
+   LwqqClient* lc = ev->lc;
    qq_account* ac = lc->data;
    LwqqMsgOffFile* file = xfer->data;
    PurpleConvChat* chat;
    LwqqMsgType mt = xfer->remote_port;
    if (err) {
       snprintf(message, sizeof(message), qErrorFormat, qUploadFileError,
-               lwqq_http_impl_errno(req), lwqq_http_impl_errstr(req));
+               ev->conn_err, lwqq_http_impl_errstr(ev->conn_err));
       qq_sys_msg_write(ac, mt, file->super.to, message,
                        PURPLE_MESSAGE_ERROR, time(NULL));
    } else {
@@ -3068,7 +3062,7 @@ static void version_statics(qq_account* ac, LwqqConfirmTable* ct)
       char post[128];
       snprintf(post, sizeof(post), "v=%s", info.version);
       LwqqHttpRequest* req = lwqq_http_request_new(url);
-      req->lc = ac->qq;
+      LWQQ_HTTP_EV(req)->lc = ac->qq;
       req->do_request_async(req, 1, post, _C_(p, lwqq_http_request_free, req));
    }
 }
@@ -3183,8 +3177,8 @@ static void start_login(PurpleAccount* account)
                                    SEND_VISUAL_DEFAULT));
    ac->settings.recent_group_name = s_strdup(purple_account_get_string(
        account, "recent_group_name", "Recent Contacts"));
-   ac->settings.image_server = purple_account_get_string(account, "image_server", qImageServerDefault);
-   ac->settings.file_server = purple_account_get_string(account, "file_server", qFileServerDefault);
+   ac->settings.image_server = s_strdup(purple_account_get_string(account, "image_server", qImageServerDefault));
+   ac->settings.file_server = s_strdup(purple_account_get_string(account, "file_server", qFileServerDefault));
    lwqq_get_http_handle(ac->qq)->ssl
        = purple_account_get_bool(account, "ssl", FALSE);
    int relink_retry = 0;
