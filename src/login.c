@@ -1,4 +1,5 @@
 #include "qq_types.h"
+#include "Localizable.h"
 
 struct QQLoginStage {
    unsigned stage;
@@ -78,7 +79,7 @@ static void get_friend_list_cb(LwqqAsyncEvent* ev)
    if (ev->result != LWQQ_EC_OK) {
       purple_connection_error_reason(ac->gc,
                                      PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     _("Get Friend List Failed"));
+                                     qGetFriendListError);
       return;
    }
    const LwqqHashEntry* succ_hash = lwqq_hash_get_last(lc);
@@ -101,12 +102,12 @@ static LwqqAsyncEvset* get_group_list(qq_account* ac, struct QQLoginStage* s)
 static void get_group_list_cb(LwqqAsyncEvent* ev, qq_account* ac)
 {
    if (ev->result != LWQQ_EC_OK) {
-      purple_connection_error_reason(ac->gc,
-                                     PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
-                                     _("Get Group List Failed"));
+      purple_connection_error_reason(
+          ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, qGetGroupListError);
    }
 }
 
+static void get_online_buddies_cb(LwqqAsyncEvent* ev);
 static LwqqAsyncEvset* get_other_list(qq_account* ac, struct QQLoginStage* s)
 {
    LwqqAsyncEvset* set = lwqq_async_evset_new();
@@ -115,6 +116,7 @@ static LwqqAsyncEvset* get_other_list(qq_account* ac, struct QQLoginStage* s)
    ev = lwqq_info_get_discu_name_list(lc);
    lwqq_async_evset_add_event(set, ev);
    ev = lwqq_info_get_online_buddies(lc, NULL);
+   lwqq_async_add_event_listener(ev, _C_(p, get_online_buddies_cb, ev));
    lwqq_async_evset_add_event(set, ev);
 
    const char* alias = purple_account_get_alias(ac->account);
@@ -124,6 +126,13 @@ static LwqqAsyncEvset* get_other_list(qq_account* ac, struct QQLoginStage* s)
    }
    s->stage++;
    return set;
+}
+static void get_online_buddies_cb(LwqqAsyncEvent* ev)
+{
+   qq_account* ac = ev->lc->data;
+   if(ev->result!=LWQQ_EC_OK)
+      purple_connection_error_reason(
+          ac->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, qGetOnlineListError);
 }
 
 static void get_qq_numbers_cb(qq_account* ac);
