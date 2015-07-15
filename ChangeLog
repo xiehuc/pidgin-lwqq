@@ -1,6 +1,9 @@
 pidgin-lwqq : the webqq protocol for pidgin based on lwqq.
 author : xiehuc@gmail.com
 
+version 0.6.1: (2015-07-15):
+	*  lwqq版本号更新到0.6.1
+
 version 0.6.0: (2015-06-07):
 	+  增加图片服务器
 	+  增加文件服务器
