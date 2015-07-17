@@ -151,11 +151,6 @@ const char* qq_level_to_str(int level);
 const char* qq_status_to_str(LwqqStatus status);
 LwqqStatus qq_status_from_str(const char* str);
 
-void vp_func_4pl(CALLBACK_FUNC func, vp_list* vp, void* p);
-
-//@note would break original string
-//@return shouldn't free
-char* strtrim(char* source);
 
 //-----------------------login.c------------------------
 void qq_login(LwqqClient* lc, LwqqErrorCode* p_err);
@@ -169,4 +164,12 @@ void group_come(LwqqClient* lc, LwqqGroup** p_group);
 #define discu_come(lc, data) (group_come(lc, data))
 //======================================================
 
+void vp_func_4pl(CALLBACK_FUNC func, vp_list* vp, void* p);
+
+//@note would break original string
+//@return shouldn't free
+char* strtrim(char* source);
+//return pointer in original string.
+//so shouldn't free
+char* get_filename(char* path);
 #endif

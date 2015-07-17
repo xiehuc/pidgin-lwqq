@@ -62,7 +62,7 @@ static void build_smiley_exp_from_file(char* exp, const char* path)
    if (f == NULL)
       return;
    strcpy(file_dir, path);
-   *strrchr(file_dir, '/') = '\0'; // strip for the last dir
+   *get_filename(file_dir) = '\0';
    while (fscanf(f, "%s", smiley) != EOF) {
       num = strtoul(smiley, &end, 10);
       if (end - smiley == strlen(smiley)) { /* this is a number */
@@ -74,7 +74,7 @@ static void build_smiley_exp_from_file(char* exp, const char* path)
          const char* ext = smiley + strlen(smiley) - 3;
          if (strcmp(ext, "gif") == 0 || strcmp(ext, "png") == 0) {
             strncpy(last_file, smiley, 256);
-            snprintf(last_file, sizeof(last_file), "%s/%s", file_dir, smiley);
+            snprintf(last_file, sizeof(last_file), "%s%s", file_dir, smiley);
             last_mode = LAST_IS_PIC;
             continue;
          }

@@ -1734,7 +1734,7 @@ void send_file_message(LwqqHttpRequest* req, PurpleXfer* xfer)
       struct stat st = {0};
       stat(xfer->local_filename, &st);
       snprintf(message, sizeof(message), ":file:`%s ``%s``%lu`", req->response,
-               strrchr(xfer->local_filename, '/') + 1, st.st_size);
+               get_filename(xfer->local_filename), st.st_size);
       if(mt == LWQQ_MS_BUDDY_MSG)
          qq_send_im(xfer->account->gc, xfer->who, message, PURPLE_MESSAGE_SEND);
       else{

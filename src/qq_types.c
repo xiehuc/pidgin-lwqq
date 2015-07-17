@@ -429,3 +429,12 @@ const char* get_type_from_chat(PurpleChat* chat)
    GHashTable* table = purple_chat_get_components(chat);
    return g_hash_table_lookup(table, QQ_ROOM_TYPE);
 }
+
+char* get_filename(char* path)
+{
+#ifdef WIN32
+   return strrchr(path, '\\') + 1; // strip for the last dir
+#else
+   return strrchr(path, '/') + 1; // strip for the last dir
+#endif
+}
