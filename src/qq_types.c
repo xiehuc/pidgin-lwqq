@@ -432,9 +432,16 @@ const char* get_type_from_chat(PurpleChat* chat)
 
 char* get_filename(char* path)
 {
+   char* pos = NULL;
+   if (path == NULL)
+      return NULL;
 #ifdef WIN32
-   return strrchr(path, '\\') + 1; // strip for the last dir
+   pos = strrchr(path, '\\'); // strip for the last dir
 #else
-   return strrchr(path, '/') + 1; // strip for the last dir
+   pos = strrchr(path, '/'); // strip for the last dir
 #endif
+   if (pos)
+      return pos + 1;
+   else
+      return NULL;
 }

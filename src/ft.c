@@ -199,12 +199,13 @@ static int set_img_url(LwqqHttpRequest* req, LwqqMsgContent* C, void* data)
 static void replace_img_ext(LwqqHttpRequest* req, LwqqMsgContent* C)
 {
    char* name = s_strdup(C->data.ext.name);
+   char* url = s_strdup(C->data.ext.param[0]);
    lwqq_msg_content_clean(C);
    C->type = LWQQ_CONTENT_OFFPIC;
    C->data.img.name = name;
    C->data.img.data = req->response;
    C->data.img.size = req->resp_len;
-   C->data.img.url = s_strdup(name);
+   C->data.img.url = url;
    req->response = NULL;
    lwqq_http_request_free(req);
 }

@@ -428,8 +428,11 @@ struct ds translate_struct_to_message(qq_account* ac, LwqqMsgMessage* msg,
             ds_cat(buf, piece);
          } else {
             if (img_sz > 0) {
+               // img_url: when people save image, they would see the whole url, so they can download it alone, 
+               // especially for gif images (which purple doesn't save it)
                int img_id
-                   = purple_imgstore_add_with_id(*img_data, img_sz, NULL);
+                   = purple_imgstore_add_with_id(*img_data, img_sz, img_url);
+
                // let it freed by purple
                *img_data = NULL;
                // make it room to change num if necessary.
