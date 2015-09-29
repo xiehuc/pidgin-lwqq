@@ -1,6 +1,8 @@
 pidgin-lwqq
 ===========
 
+# 由于作者工作了没有时间维护了, 本项目停止更新, 早日拜苹果教是正道 #
+
 ![kuma企鹅](http://i.imgur.com/uxFYLIq.png)
 ![蚊香企鹅](http://i.imgur.com/NKpB4En.png)
 
